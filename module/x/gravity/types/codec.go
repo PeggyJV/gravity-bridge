@@ -28,6 +28,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgSetOrchestratorAddress{},
 		&MsgLogicCallExecutedClaim{},
 		&MsgCancelSendToEth{},
+		// TODO JNT: put evidence message into here
 	)
 
 	registry.RegisterInterface(
@@ -62,4 +63,5 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&ERC20Token{}, "gravity/ERC20Token", nil)
 	cdc.RegisterConcrete(&IDSet{}, "gravity/IDSet", nil)
 	cdc.RegisterConcrete(&Attestation{}, "gravity/Attestation", nil)
+	// TODO JNT: register evidence message in here
 }
