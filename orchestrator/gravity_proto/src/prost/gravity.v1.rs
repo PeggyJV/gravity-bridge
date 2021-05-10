@@ -75,7 +75,11 @@ pub struct ContractCallTx {
     #[prost(uint64, tag="1")]
     pub invalidation_nonce: u64,
     #[prost(bytes="vec", tag="2")]
+<<<<<<< Updated upstream
     pub invalidation_id: ::prost::alloc::vec::Vec<u8>,
+=======
+    pub invalidation_scope: ::prost::alloc::vec::Vec<u8>,
+>>>>>>> Stashed changes
     #[prost(string, tag="3")]
     pub contract_call_address: ::prost::alloc::string::String,
     #[prost(bytes="vec", tag="4")]
@@ -204,10 +208,17 @@ pub struct SendToCosmosEvent {
     #[prost(uint64, tag="6")]
     pub ethereum_height: u64,
 }
+<<<<<<< Updated upstream
 /// BatchTxExecutedEvent claims that a batch of BatchTxExecutedal operations on the bridge contract
 /// was executed successfully on ETH
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct BatchTxExecutedEvent {
+=======
+/// BatchExecutedEvent claims that a batch of BatchTxExecutedal operations on the bridge contract
+/// was executed successfully on ETH
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BatchExecutedEvent {
+>>>>>>> Stashed changes
     #[prost(string, tag="1")]
     pub token_contract: ::prost::alloc::string::String,
     #[prost(uint64, tag="2")]
@@ -215,12 +226,20 @@ pub struct BatchTxExecutedEvent {
     #[prost(uint64, tag="3")]
     pub ethereum_height: u64,
 }
+<<<<<<< Updated upstream
 // ContractCallTxExecutedEvent describes a contract call that has been
+=======
+// ContractCallExecutedEvent describes a contract call that has been
+>>>>>>> Stashed changes
 // successfully executed on Ethereum.
 
 /// NOTE: bytes.HexBytes is supposed to "help" with json encoding/decoding investigate?
 #[derive(Clone, PartialEq, ::prost::Message)]
+<<<<<<< Updated upstream
 pub struct ContractCallTxExecutedEvent {
+=======
+pub struct ContractCallExecutedEvent {
+>>>>>>> Stashed changes
     #[prost(uint64, tag="1")]
     pub event_nonce: u64,
     #[prost(bytes="vec", tag="2")]
@@ -230,10 +249,17 @@ pub struct ContractCallTxExecutedEvent {
     #[prost(uint64, tag="4")]
     pub ethereum_height: u64,
 }
+<<<<<<< Updated upstream
 /// CosmosERC20DeployedEvent is submitted when an ERC20 contract
 /// for a Cosmos SDK coin has been deployed on Ethereum.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CosmosErc20DeployedEvent {
+=======
+/// ERC20DeployedEvent is submitted when an ERC20 contract
+/// for a Cosmos SDK coin has been deployed on Ethereum.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Erc20DeployedEvent {
+>>>>>>> Stashed changes
     #[prost(uint64, tag="1")]
     pub event_nonce: u64,
     #[prost(string, tag="2")]
@@ -398,12 +424,22 @@ pub struct Erc20ToDenom {
     pub erc20: ::prost::alloc::string::String,
     #[prost(string, tag="2")]
     pub denom: ::prost::alloc::string::String,
+<<<<<<< Updated upstream
 }
 /// rpc Params
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ParamsRequest {
+=======
+>>>>>>> Stashed changes
+}
+/// rpc Params
+#[derive(Clone, PartialEq, ::prost::Message)]
+<<<<<<< Updated upstream
+=======
+pub struct ParamsRequest {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
+>>>>>>> Stashed changes
 pub struct ParamsResponse {
     #[prost(message, optional, tag="1")]
     pub params: ::core::option::Option<Params>,
