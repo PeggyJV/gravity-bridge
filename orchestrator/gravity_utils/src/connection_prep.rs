@@ -252,7 +252,7 @@ pub async fn check_delegate_addresses(
             let o = o.into_inner();
             let req_delegate_orchestrator_address: CosmosAddress =
                 e.orchestrator_address.parse().unwrap();
-            let req_delegate_eth_address: EthAddress = o.orchestrator_address.parse().unwrap();
+            let req_delegate_eth_address: EthAddress = o.validator_address.parse().unwrap();
             if req_delegate_eth_address != delegate_eth_address
                 && req_delegate_orchestrator_address != delegate_orchestrator_address
             {
@@ -285,7 +285,7 @@ pub async fn check_delegate_addresses(
                 exit(1);
             }
 
-            if e.validator_address != o.validator_address {
+            if e.orchestrator_address != o.validator_address {
                 error!("You are using delegate keys from two different validator addresses!");
                 error!("If you get this error message I would just blow everything away and start again");
                 exit(1);
