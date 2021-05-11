@@ -1,29 +1,12 @@
 use clarity::abi::Token;
 use clarity::Uint256;
 use clarity::{abi::encode_tokens, Address as EthAddress};
-use deep_space::address::Address as CosmosAddress;
 use gravity_utils::error::GravityError;
 use gravity_utils::types::*;
 use sha3::{Digest, Keccak256};
 use std::u128::MAX as U128MAX;
 use std::u64::MAX as U64MAX;
 use web30::{client::Web3, jsonrpc::error::Web3Error};
-
-pub fn get_correct_sig_for_address(
-    address: CosmosAddress,
-    confirms: &[ValsetConfirmResponse],
-) -> (Uint256, Uint256, Uint256) {
-    for sig in confirms {
-        if sig.orchestrator == address {
-            return (
-                sig.eth_signature.v.clone(),
-                sig.eth_signature.r.clone(),
-                sig.eth_signature.s.clone(),
-            );
-        }
-    }
-    panic!("Could not find that address!");
-}
 
 pub fn get_checkpoint_abi_encode(
     valset: &Valset,
