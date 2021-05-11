@@ -23,13 +23,13 @@ impl LogicCall {
         for token in input.tokens {
             transfers.push(Erc20Token {
                 amount: token.amount.parse()?,
-                token_contract_address: token.contract.parse()?,
+                token_contract_address: EthAddress::parse_and_validate(&token.denom)?,
             })
         }
         for fee in input.fees {
             fees.push(Erc20Token {
                 amount: fee.amount.parse()?,
-                token_contract_address: fee.contract.parse()?,
+                token_contract_address: EthAddress::parse_and_validate(&fee.denom)?,
             })
         }
         if transfers.is_empty() || fees.is_empty() {
