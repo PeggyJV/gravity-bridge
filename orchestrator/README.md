@@ -69,8 +69,12 @@ Proposing the name `gork` for the binary. This is short for `gravity-orchestrato
 ```
 gork
   tx
-    send-to-cosmos [from-eth-addr] [to-cosmos-addr] [erc20 conract] [erc20 amount] [[--times=int]]
-    send-to-eth [from-cosmos-addr] [to-eth-addr] [erc20-coin]
+    eth
+      send-to-cosmos [from-eth-key] [to-cosmos-addr] [erc20 conract] [erc20 amount] [[--times=int]]
+      send [from-key] [to-addr] [amount] [token-contract]
+    cosmos
+      send-to-eth [from-cosmos-key] [to-eth-addr] [erc20-coin] [[--times=int]]
+      send [from-key] [to-addr] [coin-amount]
   query
     eth
       balance [key-name]
