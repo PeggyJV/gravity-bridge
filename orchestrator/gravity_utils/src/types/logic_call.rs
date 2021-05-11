@@ -64,7 +64,7 @@ pub struct LogicCallConfirmResponse {
 
 impl LogicCallConfirmResponse {
     pub fn from_proto(
-        input: gravity_proto::gravity::MsgConfirmLogicCall,
+        input: gravity_proto::gravity::ContractCallTxSignature,
     ) -> Result<Self, GravityError> {
         Ok(LogicCallConfirmResponse {
             invalidation_id: hex_str_to_bytes(&input.invalidation_id).unwrap(),
