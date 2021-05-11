@@ -237,7 +237,7 @@ pub async fn check_delegate_addresses(
 ) {
     let eth_response = client
         .delegate_keys_by_validator(DelegateKeysByValidatorAddress {
-            eth_address: delegate_eth_address.to_string(),
+            validator_address: delegate_eth_address.to_string(),
         })
         .await;
     let orchestrator_response = client

@@ -325,20 +325,20 @@ impl Valset {
     }
 }
 
-impl From<gravity_proto::gravity::Valset> for Valset {
-    fn from(input: gravity_proto::gravity::Valset) -> Self {
+impl From<gravity_proto::gravity::UpdateSignerSetTx> for Valset {
+    fn from(input: gravity_proto::gravity::UpdateSignerSetTx) -> Self {
         Valset {
             nonce: input.nonce,
-            members: input.members.iter().map(|i| i.into()).collect(),
+            members: input.signers.iter().map(|i| i.into()).collect(),
         }
     }
 }
 
-impl From<&gravity_proto::gravity::Valset> for Valset {
-    fn from(input: &gravity_proto::gravity::Valset) -> Self {
+impl From<&gravity_proto::gravity::UpdateSignerSetTx> for Valset {
+    fn from(input: &gravity_proto::gravity::UpdateSignerSetTx) -> Self {
         Valset {
             nonce: input.nonce,
-            members: input.members.iter().map(|i| i.into()).collect(),
+            members: input.signers.iter().map(|i| i.into()).collect(),
         }
     }
 }
@@ -394,27 +394,27 @@ impl fmt::Display for ValsetMember {
     }
 }
 
-impl From<gravity_proto::gravity::BridgeValidator> for ValsetMember {
-    fn from(input: gravity_proto::gravity::BridgeValidator) -> Self {
+impl From<gravity_proto::gravity::EthereumSigner> for ValsetMember {
+    fn from(input: gravity_proto::gravity::EthereumSigner) -> Self {
         let eth_address = match input.ethereum_address.parse() {
             Ok(e) => Some(e),
             Err(_) => None,
         };
         ValsetMember {
-            power: input.power,
+            power: input.power.unsigned_abs(),
             eth_address,
         }
     }
 }
 
-impl From<&gravity_proto::gravity::BridgeValidator> for ValsetMember {
-    fn from(input: &gravity_proto::gravity::BridgeValidator) -> Self {
+impl From<&gravity_proto::gravity::EthereumSigner> for ValsetMember {
+    fn from(input: &gravity_proto::gravity::EthereumSigner) -> Self {
         let eth_address = match input.ethereum_address.parse() {
             Ok(e) => Some(e),
             Err(_) => None,
         };
         ValsetMember {
-            power: input.power,
+            power: input.power.unsigned_abs(),
             eth_address,
         }
     }
