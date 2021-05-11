@@ -46,7 +46,7 @@ impl LogicCall {
             logic_contract_address: input.contract_call_address.parse()?,
             payload: input.payload,
             timeout: input.timeout,
-            invalidation_id: input.invalidation_id,
+            invalidation_id: input.invalidation_scope,
             invalidation_nonce: input.invalidation_nonce,
         })
     }
