@@ -62,7 +62,7 @@ impl ValsetConfirmResponse {
         input: gravity_proto::gravity::UpdateSignerSetTxSignature,
     ) -> Result<Self, GravityError> {
         Ok(ValsetConfirmResponse {
-            eth_address: input.eth_signer.parse()?,
+            eth_address: input.ethereum_signer.parse()?,
             nonce: input.nonce,
             eth_signature: EthSignature::from_bytes(&input.signature)?,
         })
@@ -398,7 +398,7 @@ impl From<gravity_proto::gravity::EthereumSigner> for ValsetMember {
             Err(_) => None,
         };
         ValsetMember {
-            power: input.power.unsigned_abs(),
+            power: input.power,
             eth_address,
         }
     }
@@ -411,7 +411,7 @@ impl From<&gravity_proto::gravity::EthereumSigner> for ValsetMember {
             Err(_) => None,
         };
         ValsetMember {
-            power: input.power.unsigned_abs(),
+            power: input.power,
             eth_address,
         }
     }

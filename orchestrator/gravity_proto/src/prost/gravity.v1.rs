@@ -1,6 +1,6 @@
-/// EthereumEventVoteRecord is an event that is pending of confirmation by 2/3 of the signer set.
-/// The event is then attested and executed in the state machine once the required
-/// threshold is met.
+/// EthereumEventVoteRecord is an event that is pending of confirmation by 2/3 of
+/// the signer set. The event is then attested and executed in the state machine
+/// once the required threshold is met.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct EthereumEventVoteRecord {
     #[prost(message, optional, tag="1")]
@@ -10,8 +10,8 @@ pub struct EthereumEventVoteRecord {
     #[prost(bool, tag="3")]
     pub accepted: bool,
 }
-/// LatestEthereumBlockHeight defines the latest observed ethereum block height and the
-/// corresponding timestamp value in nanoseconds.
+/// LatestEthereumBlockHeight defines the latest observed ethereum block height
+/// and the corresponding timestamp value in nanoseconds.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct LatestEthereumBlockHeight {
     #[prost(uint64, tag="1")]
@@ -19,18 +19,19 @@ pub struct LatestEthereumBlockHeight {
     #[prost(uint64, tag="2")]
     pub cosmos_height: u64,
 }
-/// EthereumSigner represents a cosmos validator with its corresponding bridge operator
-/// ethereum address and its staking consensus power.
+/// EthereumSigner represents a cosmos validator with its corresponding bridge
+/// operator ethereum address and its staking consensus power.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct EthereumSigner {
-    #[prost(int64, tag="1")]
-    pub power: i64,
+    #[prost(uint64, tag="1")]
+    pub power: u64,
     #[prost(string, tag="2")]
     pub ethereum_address: ::prost::alloc::string::String,
 }
-/// UpdateSignerSetTx is the Ethereum Bridge multisig set that relays transactions
-/// the two chains. The staking validators keep ethereum keys which are used to
-/// check signatures on Ethereum in order to get significant gas savings.
+/// UpdateSignerSetTx is the Ethereum Bridge multisig set that relays
+/// transactions the two chains. The staking validators keep ethereum keys which
+/// are used to check signatures on Ethereum in order to get significant gas
+/// savings.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UpdateSignerSetTx {
     #[prost(uint64, tag="1")]
@@ -38,23 +39,24 @@ pub struct UpdateSignerSetTx {
     #[prost(message, repeated, tag="2")]
     pub signers: ::prost::alloc::vec::Vec<EthereumSigner>,
 }
-/// BatchTx represents a batch of transactions going from Cosmos to Ethereum. Batch
-/// txs are are identified by a unique hash and the token contract that is shared by
-/// all the SendToEthereum
+/// BatchTx represents a batch of transactions going from Cosmos to Ethereum.
+/// Batch txs are are identified by a unique hash and the token contract that is
+/// shared by all the SendToEthereum
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct BatchTx {
     #[prost(uint64, tag="1")]
     pub nonce: u64,
     #[prost(uint64, tag="2")]
     pub timeout: u64,
-    #[prost(bytes="vec", repeated, tag="3")]
-    pub transactions: ::prost::alloc::vec::Vec<::prost::alloc::vec::Vec<u8>>,
+    #[prost(message, repeated, tag="3")]
+    pub transactions: ::prost::alloc::vec::Vec<SendToEthereumTx>,
     #[prost(string, tag="4")]
     pub token_contract: ::prost::alloc::string::String,
     #[prost(uint64, tag="5")]
     pub ethereum_block: u64,
 }
-/// SendToEthereumTx represents an individual SendToEthereum from Cosmos to Ethereum
+/// SendToEthereumTx represents an individual SendToEthereum from Cosmos to
+/// Ethereum
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SendToEthereumTx {
     #[prost(uint64, tag="1")]
@@ -68,8 +70,8 @@ pub struct SendToEthereumTx {
     #[prost(message, optional, tag="5")]
     pub erc20_fee: ::core::option::Option<cosmos_sdk_proto::cosmos::base::v1beta1::Coin>,
 }
-/// ContractCallTx represents an individual arbitratry logic call transaction from
-/// Cosmos to Ethereum.
+/// ContractCallTx represents an individual arbitratry logic call transaction
+/// from Cosmos to Ethereum.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ContractCallTx {
     #[prost(uint64, tag="1")]
@@ -99,30 +101,31 @@ pub struct Erc20Token {
     #[prost(string, tag="2")]
     pub amount: ::prost::alloc::string::String,
 }
-/// MsgSendToEthereum submits a SendToEthereum attempt to bridge an asset over to Ethereum.
-/// The SendToEthereum will be stored and then included in a batch and then
-/// submitted to Ethereum.
+/// MsgSendToEthereum submits a SendToEthereum attempt to bridge an asset over to
+/// Ethereum. The SendToEthereum will be stored and then included in a batch and
+/// then submitted to Ethereum.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgSendToEthereum {
     #[prost(string, tag="1")]
     pub sender: ::prost::alloc::string::String,
     #[prost(string, tag="2")]
-    pub eth_recipient: ::prost::alloc::string::String,
+    pub ethereum_recipient: ::prost::alloc::string::String,
     #[prost(message, optional, tag="3")]
     pub amount: ::core::option::Option<cosmos_sdk_proto::cosmos::base::v1beta1::Coin>,
     #[prost(message, optional, tag="4")]
     pub bridge_fee: ::core::option::Option<cosmos_sdk_proto::cosmos::base::v1beta1::Coin>,
 }
-/// MsgSendToEthereumResponse returns the SendToEthereum transaction ID which will be included
-/// in the batch tx.
+/// MsgSendToEthereumResponse returns the SendToEthereum transaction ID which
+/// will be included in the batch tx.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgSendToEthereumResponse {
     #[prost(uint64, tag="1")]
     pub id: u64,
 }
-/// MsgCancelSendToEthereum allows the sender to cancel its own outgoing SendToEthereum tx
-/// and recieve a refund of the tokens and bridge fees. This tx will only succeed
-/// if the SendToEthereum tx hasn't been batched to be processed and relayed to Ethereum.
+/// MsgCancelSendToEthereum allows the sender to cancel its own outgoing
+/// SendToEthereum tx and recieve a refund of the tokens and bridge fees. This tx
+/// will only succeed if the SendToEthereum tx hasn't been batched to be
+/// processed and relayed to Ethereum.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgCancelSendToEthereum {
     #[prost(uint64, tag="1")]
@@ -133,8 +136,8 @@ pub struct MsgCancelSendToEthereum {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgCancelSendToEthereumResponse {
 }
-/// MsgRequestBatch requests a batch of transactions with a given coin denomination to send across
-/// the bridge to Ethereum.
+/// MsgRequestBatchTx requests a batch of transactions with a given coin
+/// denomination to send across the bridge to Ethereum.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgRequestBatchTx {
     #[prost(string, tag="1")]
@@ -145,7 +148,8 @@ pub struct MsgRequestBatchTx {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgRequestBatchTxResponse {
 }
-/// MsgSubmitEthereumSignature submits an ethereum signature for a given validator
+/// MsgSubmitEthereumSignature submits an ethereum signature for a given
+/// validator
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgSubmitEthereumSignature {
     /// TODO: can we make this take an array?
@@ -154,7 +158,8 @@ pub struct MsgSubmitEthereumSignature {
     #[prost(string, tag="2")]
     pub signer: ::prost::alloc::string::String,
 }
-/// ContractCallTxSignature is a signature on behalf of a validator for a ContractCallTx.
+/// ContractCallTxSignature is a signature on behalf of a validator for a
+/// ContractCallTx.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ContractCallTxSignature {
     #[prost(bytes="vec", tag="1")]
@@ -162,7 +167,7 @@ pub struct ContractCallTxSignature {
     #[prost(uint64, tag="2")]
     pub invalidation_nonce: u64,
     #[prost(string, tag="3")]
-    pub eth_signer: ::prost::alloc::string::String,
+    pub ethereum_signer: ::prost::alloc::string::String,
     #[prost(bytes="vec", tag="4")]
     pub signature: ::prost::alloc::vec::Vec<u8>,
 }
@@ -174,17 +179,18 @@ pub struct BatchTxSignature {
     #[prost(uint64, tag="2")]
     pub nonce: u64,
     #[prost(string, tag="3")]
-    pub eth_signer: ::prost::alloc::string::String,
+    pub ethereum_signer: ::prost::alloc::string::String,
     #[prost(bytes="vec", tag="4")]
     pub signature: ::prost::alloc::vec::Vec<u8>,
 }
-/// UpdateSignerSetTxSignature is a signature on behalf of a validator for a UpdateSignerSetTx
+/// UpdateSignerSetTxSignature is a signature on behalf of a validator for a
+/// UpdateSignerSetTx
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UpdateSignerSetTxSignature {
     #[prost(uint64, tag="1")]
     pub nonce: u64,
     #[prost(string, tag="2")]
-    pub eth_signer: ::prost::alloc::string::String,
+    pub ethereum_signer: ::prost::alloc::string::String,
     #[prost(bytes="vec", tag="3")]
     pub signature: ::prost::alloc::vec::Vec<u8>,
 }
@@ -199,16 +205,17 @@ pub struct MsgSubmitEthereumEvent {
     #[prost(string, tag="2")]
     pub signer: ::prost::alloc::string::String,
 }
-/// SendToCosmosEvent is submitted when the SendToCosmosEvent is emitted by they gravity contract. 
-/// ERC20 representation coins are minted to the cosmosreceiver address.
+/// SendToCosmosEvent is submitted when the SendToCosmosEvent is emitted by they
+/// gravity contract. ERC20 representation coins are minted to the cosmosreceiver
+/// address.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SendToCosmosEvent {
     #[prost(uint64, tag="1")]
     pub event_nonce: u64,
     #[prost(string, tag="2")]
     pub token_contract: ::prost::alloc::string::String,
-    #[prost(string, tag="3")]
-    pub amount: ::prost::alloc::string::String,
+    #[prost(bytes="vec", tag="3")]
+    pub amount: ::prost::alloc::vec::Vec<u8>,
     #[prost(string, tag="4")]
     pub ethereum_sender: ::prost::alloc::string::String,
     #[prost(string, tag="5")]
@@ -216,8 +223,8 @@ pub struct SendToCosmosEvent {
     #[prost(uint64, tag="6")]
     pub ethereum_height: u64,
 }
-/// BatchExecutedEvent claims that a batch of BatchTxExecutedal operations on the bridge contract
-/// was executed successfully on ETH
+/// BatchExecutedEvent claims that a batch of BatchTxExecutedal operations on the
+/// bridge contract was executed successfully on ETH
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct BatchExecutedEvent {
     #[prost(string, tag="1")]
@@ -230,7 +237,8 @@ pub struct BatchExecutedEvent {
 // ContractCallExecutedEvent describes a contract call that has been
 // successfully executed on Ethereum.
 
-/// NOTE: bytes.HexBytes is supposed to "help" with json encoding/decoding investigate?
+/// NOTE: bytes.HexBytes is supposed to "help" with json encoding/decoding
+/// investigate?
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ContractCallExecutedEvent {
     #[prost(uint64, tag="1")]
@@ -274,7 +282,7 @@ pub struct MsgDelegateKeys {
     #[prost(string, tag="2")]
     pub orchestrator_address: ::prost::alloc::string::String,
     #[prost(string, tag="3")]
-    pub eth_address: ::prost::alloc::string::String,
+    pub ethereum_address: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgDelegateKeysResponse {
@@ -315,30 +323,31 @@ pub struct MsgDelegateKeysResponse {
 /// These values represent the time in blocks that a validator has to submit
 /// a signature for a batch or valset, or to submit a claim for a particular
 /// attestation nonce. In the case of attestations this clock starts when the
-/// attestation is created, but only allows for slashing once the event has passed
+/// attestation is created, but only allows for slashing once the event has
+/// passed
 ///
 /// target_batch_timeout:
 ///
-/// This is the 'target' value for when batches time out, this is a target becuase
-/// Ethereum is a probabalistic chain and you can't say for sure what the block
-/// frequency is ahead of time.
+/// This is the 'target' value for when batches time out, this is a target
+/// because Ethereum is a probabalistic chain and you can't say for sure what the
+/// block frequency is ahead of time.
 ///
 /// average_block_time
 /// average_ethereum_block_time
 ///
-/// These values are the average Cosmos block time and Ethereum block time repsectively
-/// and they are used to copute what the target batch timeout is. It is important that
-/// governance updates these in case of any major, prolonged change in the time it takes
-/// to produce a block
+/// These values are the average Cosmos block time and Ethereum block time
+/// repsectively and they are used to copute what the target batch timeout is. It
+/// is important that governance updates these in case of any major, prolonged
+/// change in the time it takes to produce a block
 ///
 /// slash_fraction_valset
 /// slash_fraction_batch
 /// slash_fraction_claim
 /// slash_fraction_conflicting_claim
 ///
-/// The slashing fractions for the various gravity related slashing conditions. The first three
-/// refer to not submitting a particular message, the third for submitting a different claim
-/// for the same Ethereum event
+/// The slashing fractions for the various gravity related slashing conditions.
+/// The first three refer to not submitting a particular message, the third for
+/// submitting a different claim for the same Ethereum event
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Params {
     #[prost(string, tag="1")]
@@ -380,19 +389,19 @@ pub struct GenesisState {
     #[prost(message, optional, tag="1")]
     pub params: ::core::option::Option<Params>,
     #[prost(uint64, tag="2")]
-    pub last_observed_nonce: u64,
+    pub last_observed_event_nonce: u64,
     #[prost(message, repeated, tag="3")]
-    pub valsets: ::prost::alloc::vec::Vec<UpdateSignerSetTx>,
+    pub update_signer_set_txs: ::prost::alloc::vec::Vec<UpdateSignerSetTx>,
     #[prost(message, repeated, tag="4")]
-    pub valset_confirms: ::prost::alloc::vec::Vec<UpdateSignerSetTxSignature>,
+    pub update_signer_set_tx_signatures: ::prost::alloc::vec::Vec<UpdateSignerSetTxSignature>,
     #[prost(message, repeated, tag="5")]
-    pub batches: ::prost::alloc::vec::Vec<BatchTx>,
+    pub batch_txs: ::prost::alloc::vec::Vec<BatchTx>,
     #[prost(message, repeated, tag="6")]
-    pub batch_confirms: ::prost::alloc::vec::Vec<BatchTxSignature>,
+    pub batch_tx_signatures: ::prost::alloc::vec::Vec<BatchTxSignature>,
     #[prost(message, repeated, tag="7")]
-    pub logic_calls: ::prost::alloc::vec::Vec<ContractCallTx>,
+    pub contract_call_txs: ::prost::alloc::vec::Vec<ContractCallTx>,
     #[prost(message, repeated, tag="8")]
-    pub logic_call_confirms: ::prost::alloc::vec::Vec<ContractCallTxSignature>,
+    pub contract_call_tx_signatures: ::prost::alloc::vec::Vec<ContractCallTxSignature>,
     #[prost(message, repeated, tag="9")]
     pub ethereum_event_vote_records: ::prost::alloc::vec::Vec<EthereumEventVoteRecord>,
     #[prost(message, repeated, tag="10")]
@@ -486,7 +495,7 @@ pub struct UpdateSignerSetTxsResponse {
 /// rpc PendingUpdateSignerSetTxEthereumSignatures
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PendingUpdateSignerSetTxEthereumSignaturesRequest {
-    /// NOTE: this is an sdk.AccAddress and can represent either the 
+    /// NOTE: this is an sdk.AccAddress and can represent either the
     /// orchestartor address or the cooresponding validator address
     #[prost(string, tag="1")]
     pub address: ::prost::alloc::string::String,
@@ -498,7 +507,7 @@ pub struct PendingUpdateSignerSetTxEthereumSignaturesResponse {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PendingBatchTxEthereumSignaturesRequest {
-    /// NOTE: this is an sdk.AccAddress and can represent either the 
+    /// NOTE: this is an sdk.AccAddress and can represent either the
     /// orchestartor address or the cooresponding validator address
     #[prost(string, tag="1")]
     pub address: ::prost::alloc::string::String,
@@ -650,4 +659,4 @@ pub struct PendingSendToEthereumTxsResponse {
     #[prost(message, repeated, tag="2")]
     pub unbatched_send_to_ethereum_txs: ::prost::alloc::vec::Vec<SendToEthereumTx>,
 }
-# [doc = r" Generated client implementations."] pub mod query_client { # ! [allow (unused_variables , dead_code , missing_docs)] use tonic :: codegen :: * ; # [doc = " Query defines the gRPC querier service"] pub struct QueryClient < T > { inner : tonic :: client :: Grpc < T > , } impl QueryClient < tonic :: transport :: Channel > { # [doc = r" Attempt to create a new client by connecting to a given endpoint."] pub async fn connect < D > (dst : D) -> Result < Self , tonic :: transport :: Error > where D : std :: convert :: TryInto < tonic :: transport :: Endpoint > , D :: Error : Into < StdError > , { let conn = tonic :: transport :: Endpoint :: new (dst) ? . connect () . await ? ; Ok (Self :: new (conn)) } } impl < T > QueryClient < T > where T : tonic :: client :: GrpcService < tonic :: body :: BoxBody > , T :: ResponseBody : Body + HttpBody + Send + 'static , T :: Error : Into < StdError > , < T :: ResponseBody as HttpBody > :: Error : Into < StdError > + Send , { pub fn new (inner : T) -> Self { let inner = tonic :: client :: Grpc :: new (inner) ; Self { inner } } pub fn with_interceptor (inner : T , interceptor : impl Into < tonic :: Interceptor >) -> Self { let inner = tonic :: client :: Grpc :: with_interceptor (inner , interceptor) ; Self { inner } } # [doc = " Module parameters query"] pub async fn params (& mut self , request : impl tonic :: IntoRequest < super :: ParamsRequest > ,) -> Result < tonic :: Response < super :: ParamsResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/Params") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " get info on individual outgoing data"] pub async fn update_signer_set_tx (& mut self , request : impl tonic :: IntoRequest < super :: UpdateSignerSetTxRequest > ,) -> Result < tonic :: Response < super :: UpdateSignerSetTxResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/UpdateSignerSetTx") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn batch_tx (& mut self , request : impl tonic :: IntoRequest < super :: BatchTxRequest > ,) -> Result < tonic :: Response < super :: BatchTxResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/BatchTx") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn contract_call_tx (& mut self , request : impl tonic :: IntoRequest < super :: ContractCallTxRequest > ,) -> Result < tonic :: Response < super :: ContractCallTxResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/ContractCallTx") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " get collections of outgoing traffic from the bridge"] pub async fn update_signer_set_txs (& mut self , request : impl tonic :: IntoRequest < super :: UpdateSignerSetTxsRequest > ,) -> Result < tonic :: Response < super :: UpdateSignerSetTxsResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/UpdateSignerSetTxs") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn batch_txs (& mut self , request : impl tonic :: IntoRequest < super :: BatchTxsRequest > ,) -> Result < tonic :: Response < super :: BatchTxsResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/BatchTxs") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn contract_call_txs (& mut self , request : impl tonic :: IntoRequest < super :: ContractCallTxsRequest > ,) -> Result < tonic :: Response < super :: ContractCallTxsResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/ContractCallTxs") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " ethereum signature queries so validators can construct valid etherum transactions"] # [doc = " TODO: can/should we group these into one endpoint?"] pub async fn update_signer_set_tx_ethereum_signatures (& mut self , request : impl tonic :: IntoRequest < super :: UpdateSignerSetTxEthereumSignaturesRequest > ,) -> Result < tonic :: Response < super :: UpdateSignerSetTxEthereumSignaturesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/UpdateSignerSetTxEthereumSignatures") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn batch_tx_ethereum_signatures (& mut self , request : impl tonic :: IntoRequest < super :: BatchTxEthereumSignaturesRequest > ,) -> Result < tonic :: Response < super :: BatchTxEthereumSignaturesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/BatchTxEthereumSignatures") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn contract_call_tx_ethereum_signatures (& mut self , request : impl tonic :: IntoRequest < super :: ContractCallTxEthereumSignaturesRequest > ,) -> Result < tonic :: Response < super :: ContractCallTxEthereumSignaturesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/ContractCallTxEthereumSignatures") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " pending ethereum signature queries for orchestrators to figure out which signatures they are missing"] # [doc = " TODO: can/should we group this into one endpoint?"] pub async fn pending_update_signer_set_tx_ethereum_signatures (& mut self , request : impl tonic :: IntoRequest < super :: PendingUpdateSignerSetTxEthereumSignaturesRequest > ,) -> Result < tonic :: Response < super :: PendingUpdateSignerSetTxEthereumSignaturesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/PendingUpdateSignerSetTxEthereumSignatures") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn pending_batch_tx_ethereum_signatures (& mut self , request : impl tonic :: IntoRequest < super :: PendingBatchTxEthereumSignaturesRequest > ,) -> Result < tonic :: Response < super :: PendingBatchTxEthereumSignaturesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/PendingBatchTxEthereumSignatures") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn pending_contract_call_tx_ethereum_signatures (& mut self , request : impl tonic :: IntoRequest < super :: PendingContractCallTxEthereumSignaturesRequest > ,) -> Result < tonic :: Response < super :: PendingContractCallTxEthereumSignaturesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/PendingContractCallTxEthereumSignatures") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn last_submitted_ethereum_event (& mut self , request : impl tonic :: IntoRequest < super :: LastSubmittedEthereumEventRequest > ,) -> Result < tonic :: Response < super :: LastSubmittedEthereumEventResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/LastSubmittedEthereumEvent") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " Queries the fees for all pending batches, results are returned in sdk.Coin (fee_amount_int)(contract_address) style"] pub async fn batch_tx_fees (& mut self , request : impl tonic :: IntoRequest < super :: BatchTxFeesRequest > ,) -> Result < tonic :: Response < super :: BatchTxFeesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/BatchTxFees") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " Query for info about denoms tracked by gravity"] pub async fn erc20_to_denom (& mut self , request : impl tonic :: IntoRequest < super :: Erc20ToDenomRequest > ,) -> Result < tonic :: Response < super :: Erc20ToDenomResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/ERC20ToDenom") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " Query for info about denoms tracked by gravity"] pub async fn denom_to_erc20 (& mut self , request : impl tonic :: IntoRequest < super :: DenomToErc20Request > ,) -> Result < tonic :: Response < super :: DenomToErc20Response > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/DenomToERC20") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " Query for pending tranfertxs"] pub async fn pending_send_to_ethereum_txs (& mut self , request : impl tonic :: IntoRequest < super :: PendingSendToEthereumTxsRequest > ,) -> Result < tonic :: Response < super :: PendingSendToEthereumTxsResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/PendingSendToEthereumTxs") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " delegate keys"] pub async fn delegate_keys_by_validator (& mut self , request : impl tonic :: IntoRequest < super :: DelegateKeysByValidatorAddress > ,) -> Result < tonic :: Response < super :: DelegateKeysByValidatorAddressResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/DelegateKeysByValidator") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn delegate_keys_by_ethereum_signer (& mut self , request : impl tonic :: IntoRequest < super :: DelegateKeysByEthereumSignerRequest > ,) -> Result < tonic :: Response < super :: DelegateKeysByEthereumSignerResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/DelegateKeysByEthereumSigner") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn delegate_keys_by_orchestrator (& mut self , request : impl tonic :: IntoRequest < super :: DelegateKeysByOrchestratorAddress > ,) -> Result < tonic :: Response < super :: DelegateKeysByOrchestratorAddressResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/DelegateKeysByOrchestrator") ; self . inner . unary (request . into_request () , path , codec) . await } } impl < T : Clone > Clone for QueryClient < T > { fn clone (& self) -> Self { Self { inner : self . inner . clone () , } } } impl < T > std :: fmt :: Debug for QueryClient < T > { fn fmt (& self , f : & mut std :: fmt :: Formatter < '_ >) -> std :: fmt :: Result { write ! (f , "QueryClient {{ ... }}") } } }
+# [doc = r" Generated client implementations."] pub mod query_client { # ! [allow (unused_variables , dead_code , missing_docs)] use tonic :: codegen :: * ; # [doc = " Query defines the gRPC querier service"] pub struct QueryClient < T > { inner : tonic :: client :: Grpc < T > , } impl QueryClient < tonic :: transport :: Channel > { # [doc = r" Attempt to create a new client by connecting to a given endpoint."] pub async fn connect < D > (dst : D) -> Result < Self , tonic :: transport :: Error > where D : std :: convert :: TryInto < tonic :: transport :: Endpoint > , D :: Error : Into < StdError > , { let conn = tonic :: transport :: Endpoint :: new (dst) ? . connect () . await ? ; Ok (Self :: new (conn)) } } impl < T > QueryClient < T > where T : tonic :: client :: GrpcService < tonic :: body :: BoxBody > , T :: ResponseBody : Body + HttpBody + Send + 'static , T :: Error : Into < StdError > , < T :: ResponseBody as HttpBody > :: Error : Into < StdError > + Send , { pub fn new (inner : T) -> Self { let inner = tonic :: client :: Grpc :: new (inner) ; Self { inner } } pub fn with_interceptor (inner : T , interceptor : impl Into < tonic :: Interceptor >) -> Self { let inner = tonic :: client :: Grpc :: with_interceptor (inner , interceptor) ; Self { inner } } # [doc = " Module parameters query"] pub async fn params (& mut self , request : impl tonic :: IntoRequest < super :: ParamsRequest > ,) -> Result < tonic :: Response < super :: ParamsResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/Params") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " get info on individual outgoing data"] pub async fn update_signer_set_tx (& mut self , request : impl tonic :: IntoRequest < super :: UpdateSignerSetTxRequest > ,) -> Result < tonic :: Response < super :: UpdateSignerSetTxResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/UpdateSignerSetTx") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn batch_tx (& mut self , request : impl tonic :: IntoRequest < super :: BatchTxRequest > ,) -> Result < tonic :: Response < super :: BatchTxResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/BatchTx") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn contract_call_tx (& mut self , request : impl tonic :: IntoRequest < super :: ContractCallTxRequest > ,) -> Result < tonic :: Response < super :: ContractCallTxResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/ContractCallTx") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " get collections of outgoing traffic from the bridge"] pub async fn update_signer_set_txs (& mut self , request : impl tonic :: IntoRequest < super :: UpdateSignerSetTxsRequest > ,) -> Result < tonic :: Response < super :: UpdateSignerSetTxsResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/UpdateSignerSetTxs") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn batch_txs (& mut self , request : impl tonic :: IntoRequest < super :: BatchTxsRequest > ,) -> Result < tonic :: Response < super :: BatchTxsResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/BatchTxs") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn contract_call_txs (& mut self , request : impl tonic :: IntoRequest < super :: ContractCallTxsRequest > ,) -> Result < tonic :: Response < super :: ContractCallTxsResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/ContractCallTxs") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " ethereum signature queries so validators can construct valid etherum"] # [doc = " transactions"] # [doc = " TODO: can/should we group these into one endpoint?"] pub async fn update_signer_set_tx_ethereum_signatures (& mut self , request : impl tonic :: IntoRequest < super :: UpdateSignerSetTxEthereumSignaturesRequest > ,) -> Result < tonic :: Response < super :: UpdateSignerSetTxEthereumSignaturesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/UpdateSignerSetTxEthereumSignatures") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn batch_tx_ethereum_signatures (& mut self , request : impl tonic :: IntoRequest < super :: BatchTxEthereumSignaturesRequest > ,) -> Result < tonic :: Response < super :: BatchTxEthereumSignaturesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/BatchTxEthereumSignatures") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn contract_call_tx_ethereum_signatures (& mut self , request : impl tonic :: IntoRequest < super :: ContractCallTxEthereumSignaturesRequest > ,) -> Result < tonic :: Response < super :: ContractCallTxEthereumSignaturesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/ContractCallTxEthereumSignatures") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " pending ethereum signature queries for orchestrators to figure out which"] # [doc = " signatures they are missing"] # [doc = " TODO: can/should we group this into one endpoint?"] pub async fn pending_update_signer_set_tx_ethereum_signatures (& mut self , request : impl tonic :: IntoRequest < super :: PendingUpdateSignerSetTxEthereumSignaturesRequest > ,) -> Result < tonic :: Response < super :: PendingUpdateSignerSetTxEthereumSignaturesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/PendingUpdateSignerSetTxEthereumSignatures") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn pending_batch_tx_ethereum_signatures (& mut self , request : impl tonic :: IntoRequest < super :: PendingBatchTxEthereumSignaturesRequest > ,) -> Result < tonic :: Response < super :: PendingBatchTxEthereumSignaturesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/PendingBatchTxEthereumSignatures") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn pending_contract_call_tx_ethereum_signatures (& mut self , request : impl tonic :: IntoRequest < super :: PendingContractCallTxEthereumSignaturesRequest > ,) -> Result < tonic :: Response < super :: PendingContractCallTxEthereumSignaturesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/PendingContractCallTxEthereumSignatures") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn last_submitted_ethereum_event (& mut self , request : impl tonic :: IntoRequest < super :: LastSubmittedEthereumEventRequest > ,) -> Result < tonic :: Response < super :: LastSubmittedEthereumEventResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/LastSubmittedEthereumEvent") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " Queries the fees for all pending batches, results are returned in sdk.Coin"] # [doc = " (fee_amount_int)(contract_address) style"] pub async fn batch_tx_fees (& mut self , request : impl tonic :: IntoRequest < super :: BatchTxFeesRequest > ,) -> Result < tonic :: Response < super :: BatchTxFeesResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/BatchTxFees") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " Query for info about denoms tracked by gravity"] pub async fn erc20_to_denom (& mut self , request : impl tonic :: IntoRequest < super :: Erc20ToDenomRequest > ,) -> Result < tonic :: Response < super :: Erc20ToDenomResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/ERC20ToDenom") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " Query for info about denoms tracked by gravity"] pub async fn denom_to_erc20 (& mut self , request : impl tonic :: IntoRequest < super :: DenomToErc20Request > ,) -> Result < tonic :: Response < super :: DenomToErc20Response > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/DenomToERC20") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " Query for pending tranfertxs"] pub async fn pending_send_to_ethereum_txs (& mut self , request : impl tonic :: IntoRequest < super :: PendingSendToEthereumTxsRequest > ,) -> Result < tonic :: Response < super :: PendingSendToEthereumTxsResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/PendingSendToEthereumTxs") ; self . inner . unary (request . into_request () , path , codec) . await } # [doc = " delegate keys"] pub async fn delegate_keys_by_validator (& mut self , request : impl tonic :: IntoRequest < super :: DelegateKeysByValidatorAddress > ,) -> Result < tonic :: Response < super :: DelegateKeysByValidatorAddressResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/DelegateKeysByValidator") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn delegate_keys_by_ethereum_signer (& mut self , request : impl tonic :: IntoRequest < super :: DelegateKeysByEthereumSignerRequest > ,) -> Result < tonic :: Response < super :: DelegateKeysByEthereumSignerResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/DelegateKeysByEthereumSigner") ; self . inner . unary (request . into_request () , path , codec) . await } pub async fn delegate_keys_by_orchestrator (& mut self , request : impl tonic :: IntoRequest < super :: DelegateKeysByOrchestratorAddress > ,) -> Result < tonic :: Response < super :: DelegateKeysByOrchestratorAddressResponse > , tonic :: Status > { self . inner . ready () . await . map_err (| e | { tonic :: Status :: new (tonic :: Code :: Unknown , format ! ("Service was not ready: {}" , e . into ())) }) ? ; let codec = tonic :: codec :: ProstCodec :: default () ; let path = http :: uri :: PathAndQuery :: from_static ("/gravity.v1.Query/DelegateKeysByOrchestrator") ; self . inner . unary (request . into_request () , path , codec) . await } } impl < T : Clone > Clone for QueryClient < T > { fn clone (& self) -> Self { Self { inner : self . inner . clone () , } } } impl < T > std :: fmt :: Debug for QueryClient < T > { fn fmt (& self , f : & mut std :: fmt :: Formatter < '_ >) -> std :: fmt :: Result { write ! (f , "QueryClient {{ ... }}") } } }

@@ -114,7 +114,7 @@ impl BatchConfirmResponse {
         Ok(BatchConfirmResponse {
             nonce: input.nonce,
             token_contract: input.token_contract.parse()?,
-            ethereum_signer: input.eth_signer.parse()?,
+            ethereum_signer: input.ethereum_signer.parse()?,
             eth_signature: EthSignature::from_bytes(&input.signature)?,
         })
     }
