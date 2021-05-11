@@ -8,7 +8,7 @@ use deep_space::Address as CosmosAddress;
 use deep_space::Contact;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_proto::gravity::QueryDelegateKeysByEthAddress;
-use gravity_proto::gravity::QueryDelegateKeysByOrchestratorAddress;
+use gravity_proto::gravity::DelegateKeysByOrchestratorAddress;
 use std::process::exit;
 use std::time::Duration;
 use tokio::time::sleep as delay_for;
@@ -241,7 +241,7 @@ pub async fn check_delegate_addresses(
         })
         .await;
     let orchestrator_response = client
-        .get_delegate_key_by_orchestrator(QueryDelegateKeysByOrchestratorAddress {
+        .delegate_keys_by_orchestrator(DelegateKeysByOrchestratorAddress {
             orchestrator_address: delegate_orchestrator_address.to_bech32(prefix).unwrap(),
         })
         .await;

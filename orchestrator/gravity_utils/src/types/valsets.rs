@@ -61,7 +61,7 @@ pub struct ValsetConfirmResponse {
 
 impl ValsetConfirmResponse {
     pub fn from_proto(
-        input: gravity_proto::gravity::MsgValsetConfirm,
+        input: gravity_proto::gravity::UpdateSignerSetTxSignature,
     ) -> Result<Self, GravityError> {
         Ok(ValsetConfirmResponse {
             orchestrator: input.orchestrator.parse()?,

@@ -27,7 +27,7 @@ impl BatchTransaction {
         Ok(BatchTransaction {
             id: input.id,
             sender: input.sender.parse()?,
-            destination: input.dest_address.parse()?,
+            destination: input.ethereum_recipient.parse()?,
             erc20_token: Erc20Token::from_proto(input.erc20_token.unwrap())?,
             erc20_fee: Erc20Token::from_proto(input.erc20_fee.unwrap())?,
         })
