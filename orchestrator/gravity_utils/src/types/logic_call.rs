@@ -22,9 +22,9 @@ impl LogicCall {
     ) -> Result<Self, GravityError> {
         let mut transfers: Vec<Erc20Token> = Vec::new();
         let mut fees: Vec<Erc20Token> = Vec::new();
-        for transfer in input.transfers {
+        for token in input.tokens {
             transfers.push(Erc20Token {
-                amount: transfer.amount.parse()?,
+                amount: token.amount.parse()?,
                 token_contract_address: transfer.contract.parse()?,
             })
         }
