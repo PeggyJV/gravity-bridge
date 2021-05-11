@@ -84,8 +84,8 @@ impl TransactionBatch {
         }
         if let Some(total_fee) = running_total_fee {
             Ok(TransactionBatch {
-                batch_timeout: input.batch_timeout,
-                nonce: input.batch_nonce,
+                batch_timeout: input.timeout,
+                nonce: input.nonce,
                 transactions,
                 token_contract: total_fee.token_contract_address,
                 total_fee,
@@ -110,7 +110,7 @@ pub struct BatchConfirmResponse {
 
 impl BatchConfirmResponse {
     pub fn from_proto(
-        input: gravity_proto::gravity::MsgConfirmBatch,
+        input: gravity_proto::gravity::BatchTxSignature,
     ) -> Result<Self, GravityError> {
         Ok(BatchConfirmResponse {
             nonce: input.nonce,
