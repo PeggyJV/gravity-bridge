@@ -3,7 +3,6 @@ use crate::error::GravityError;
 use clarity::Address as EthAddress;
 use clarity::Signature as EthSignature;
 use deep_space::error::CosmosGrpcError;
-use deep_space::Address as CosmosAddress;
 use std::fmt::Debug;
 use std::{
     cmp::Ordering,
@@ -53,7 +52,6 @@ struct SignatureStatus {
 /// the response we get when querying for a valset confirmation
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ValsetConfirmResponse {
-    pub orchestrator: CosmosAddress,
     pub eth_address: EthAddress,
     pub nonce: u64,
     pub eth_signature: EthSignature,
@@ -64,10 +62,9 @@ impl ValsetConfirmResponse {
         input: gravity_proto::gravity::UpdateSignerSetTxSignature,
     ) -> Result<Self, GravityError> {
         Ok(ValsetConfirmResponse {
-            orchestrator: input.orchestrator.parse()?,
             eth_address: input.eth_signer.parse()?,
             nonce: input.nonce,
-            eth_signature: input.signature.parse()?,
+            eth_signature: EthSignature::from_bytes(&input.signature)?,
         })
     }
 }

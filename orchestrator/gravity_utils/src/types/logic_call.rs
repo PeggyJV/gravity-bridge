@@ -1,8 +1,6 @@
 use super::*;
 use crate::error::GravityError;
-use clarity::Signature as EthSignature;
-use clarity::{utils::hex_str_to_bytes, Address as EthAddress};
-use deep_space::Address as CosmosAddress;
+use clarity::{Signature as EthSignature, Address as EthAddress};
 
 /// the response we get when querying for a valset confirmation
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -58,7 +56,6 @@ pub struct LogicCallConfirmResponse {
     pub invalidation_id: Vec<u8>,
     pub invalidation_nonce: u64,
     pub ethereum_signer: EthAddress,
-    pub orchestrator: CosmosAddress,
     pub eth_signature: EthSignature,
 }
 
@@ -67,11 +64,10 @@ impl LogicCallConfirmResponse {
         input: gravity_proto::gravity::ContractCallTxSignature,
     ) -> Result<Self, GravityError> {
         Ok(LogicCallConfirmResponse {
-            invalidation_id: hex_str_to_bytes(&input.invalidation_id).unwrap(),
+            invalidation_id: input.invalidation_id,
             invalidation_nonce: input.invalidation_nonce,
-            orchestrator: input.orchestrator.parse()?,
             ethereum_signer: input.eth_signer.parse()?,
-            eth_signature: input.signature.parse()?,
+            eth_signature: EthSignature::from_bytes(&input.signature)?,
         })
     }
 }

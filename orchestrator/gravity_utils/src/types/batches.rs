@@ -102,7 +102,6 @@ impl TransactionBatch {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BatchConfirmResponse {
     pub nonce: u64,
-    pub orchestrator: CosmosAddress,
     pub token_contract: EthAddress,
     pub ethereum_signer: EthAddress,
     pub eth_signature: EthSignature,
@@ -114,10 +113,9 @@ impl BatchConfirmResponse {
     ) -> Result<Self, GravityError> {
         Ok(BatchConfirmResponse {
             nonce: input.nonce,
-            orchestrator: input.orchestrator.parse()?,
             token_contract: input.token_contract.parse()?,
             ethereum_signer: input.eth_signer.parse()?,
-            eth_signature: input.signature.parse()?,
+            eth_signature: EthSignature::from_bytes(&input.signature)?,
         })
     }
 }
