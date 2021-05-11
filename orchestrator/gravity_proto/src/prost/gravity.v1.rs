@@ -87,6 +87,18 @@ pub struct ContractCallTx {
     #[prost(message, repeated, tag="7")]
     pub fees: ::prost::alloc::vec::Vec<cosmos_sdk_proto::cosmos::base::v1beta1::Coin>,
 }
+/// ERC20Token unique identifier for an Ethereum ERC20 token.
+/// CONTRACT:
+/// The contract address on ETH of the token, this could be a Cosmos
+/// originated token, if so it will be the ERC20 address of the representation
+/// (note: developers should look up the token symbol using the address on ETH to display for UI)
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Erc20Token {
+    #[prost(string, tag="1")]
+    pub contract: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub amount: ::prost::alloc::string::String,
+}
 /// MsgSendToEthereum submits a SendToEthereum attempt to bridge an asset over to Ethereum.
 /// The SendToEthereum will be stored and then included in a batch and then
 /// submitted to Ethereum.
