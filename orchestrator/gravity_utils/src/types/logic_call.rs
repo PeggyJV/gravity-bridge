@@ -25,7 +25,7 @@ impl LogicCall {
         for token in input.tokens {
             transfers.push(Erc20Token {
                 amount: token.amount.parse()?,
-                token_contract_address: transfer.contract.parse()?,
+                token_contract_address: token.contract.parse()?,
             })
         }
         for fee in input.fees {
