@@ -7,7 +7,7 @@ use deep_space::client::ChainStatus;
 use deep_space::Address as CosmosAddress;
 use deep_space::Contact;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_proto::gravity::QueryDelegateKeysByEthAddress;
+use gravity_proto::gravity::DelegateKeysByValidatorAddress;
 use gravity_proto::gravity::DelegateKeysByOrchestratorAddress;
 use std::process::exit;
 use std::time::Duration;
@@ -236,7 +236,7 @@ pub async fn check_delegate_addresses(
     prefix: &str,
 ) {
     let eth_response = client
-        .get_delegate_key_by_eth(QueryDelegateKeysByEthAddress {
+        .delegate_keys_by_validator(DelegateKeysByValidatorAddress {
             eth_address: delegate_eth_address.to_string(),
         })
         .await;
@@ -252,7 +252,7 @@ pub async fn check_delegate_addresses(
             let o = o.into_inner();
             let req_delegate_orchestrator_address: CosmosAddress =
                 e.orchestrator_address.parse().unwrap();
-            let req_delegate_eth_address: EthAddress = o.eth_address.parse().unwrap();
+            let req_delegate_eth_address: EthAddress = o.orchestrator_address.parse().unwrap();
             if req_delegate_eth_address != delegate_eth_address
                 && req_delegate_orchestrator_address != delegate_orchestrator_address
             {

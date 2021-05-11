@@ -65,7 +65,7 @@ impl ValsetConfirmResponse {
     ) -> Result<Self, GravityError> {
         Ok(ValsetConfirmResponse {
             orchestrator: input.orchestrator.parse()?,
-            eth_address: input.eth_address.parse()?,
+            eth_address: input.eth_signer.parse()?,
             nonce: input.nonce,
             eth_signature: input.signature.parse()?,
         })
