@@ -107,18 +107,15 @@ gork
 ```
 
 ```json
-{
-    "gravity": {
-        "contract": "0x6b175474e89094c44da98b954eedeac495271d0f"
-    },
-    "ethereum": {
-        "key": "testkey",
-        "rpc": "http://localhost:8545",
-    },
-    "cosmos": {
-        "key": "testkey",
-        "grpc": "http://localhost:9090",
-        "prefix": "cosmos",
-    }
-}
+[gravity]
+	contract = "0x6b175474e89094c44da98b954eedeac495271d0f"
+	
+[ethereum]
+key = "testkey"
+rpc = "http://localhost:8545"
+
+[cosmos]
+key = "testkey"
+grpc = "http://localhost:9090"
+prefix = "cosmos"
 ```
