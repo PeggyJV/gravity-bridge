@@ -7,7 +7,7 @@ use gravity_proto::gravity::LastSubmittedEthereumEventRequest;
 use gravity_proto::gravity::QueryLastPendingBatchRequestByAddrRequest;
 use gravity_proto::gravity::QueryLastPendingLogicCallByAddrRequest;
 use gravity_proto::gravity::PendingUpdateSignerSetTxEthereumSignaturesRequest;
-use gravity_proto::gravity::QueryLastValsetRequestsRequest;
+use gravity_proto::gravity::UpdateSignerSetTxsRequest;
 use gravity_proto::gravity::QueryLogicConfirmsRequest;
 use gravity_proto::gravity::QueryOutgoingLogicCallsRequest;
 use gravity_proto::gravity::QueryOutgoingTxBatchesRequest;
@@ -76,9 +76,9 @@ pub async fn get_latest_valsets(
     client: &mut GravityQueryClient<Channel>,
 ) -> Result<Vec<Valset>, GravityError> {
     let request = client
-        .last_valset_requests(QueryLastValsetRequestsRequest {})
+        .update_signer_set_txs(UpdateSignerSetTxsRequest { count: 5 })
         .await?;
-    let valsets = request.into_inner().valsets;
+    let valsets = request.into_inner().signer_sets;
     Ok(valsets.iter().map(|v| v.into()).collect())
 }
 
