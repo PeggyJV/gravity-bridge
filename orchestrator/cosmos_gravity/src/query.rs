@@ -10,7 +10,7 @@ use gravity_proto::gravity::PendingUpdateSignerSetTxEthereumSignaturesRequest;
 use gravity_proto::gravity::UpdateSignerSetTxsRequest;
 use gravity_proto::gravity::QueryLogicConfirmsRequest;
 use gravity_proto::gravity::QueryOutgoingLogicCallsRequest;
-use gravity_proto::gravity::QueryOutgoingTxBatchesRequest;
+use gravity_proto::gravity::BatchTxsRequest;
 use gravity_proto::gravity::QueryValsetConfirmsByNonceRequest;
 use gravity_proto::gravity::QueryValsetRequestRequest;
 use gravity_utils::error::GravityError;
@@ -120,7 +120,7 @@ pub async fn get_latest_transaction_batches(
     client: &mut GravityQueryClient<Channel>,
 ) -> Result<Vec<TransactionBatch>, GravityError> {
     let request = client
-        .outgoing_tx_batches(QueryOutgoingTxBatchesRequest {})
+        .batch_txs(BatchTxsRequest {})
         .await?;
     let batches = request.into_inner().batches;
     let mut out = Vec::new();
