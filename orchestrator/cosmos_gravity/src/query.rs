@@ -1,7 +1,7 @@
 use clarity::Address as EthAddress;
 use deep_space::address::Address;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_proto::gravity::QueryBatchConfirmsRequest;
+use gravity_proto::gravity::BatchTxEthereumSignaturesRequest;
 use gravity_proto::gravity::QueryCurrentValsetRequest;
 use gravity_proto::gravity::QueryLastEventNonceByAddrRequest;
 use gravity_proto::gravity::QueryLastPendingBatchRequestByAddrRequest;
@@ -137,7 +137,7 @@ pub async fn get_transaction_batch_signatures(
     contract_address: EthAddress,
 ) -> Result<Vec<BatchConfirmResponse>, GravityError> {
     let request = client
-        .batch_confirms(QueryBatchConfirmsRequest {
+        .batch_confirms(BatchTxEthereumSignaturesRequest {
             nonce,
             contract_address: contract_address.to_string(),
         })
