@@ -3,7 +3,7 @@ use deep_space::address::Address;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_proto::gravity::BatchTxEthereumSignaturesRequest;
 use gravity_proto::gravity::QueryCurrentValsetRequest;
-use gravity_proto::gravity::QueryLastEventNonceByAddrRequest;
+use gravity_proto::gravity::LastSubmittedEthereumEventRequest;
 use gravity_proto::gravity::QueryLastPendingBatchRequestByAddrRequest;
 use gravity_proto::gravity::QueryLastPendingLogicCallByAddrRequest;
 use gravity_proto::gravity::QueryLastPendingValsetRequestByAddrRequest;
@@ -157,7 +157,7 @@ pub async fn get_last_event_nonce(
     address: Address,
 ) -> Result<u64, GravityError> {
     let request = client
-        .last_event_nonce_by_addr(QueryLastEventNonceByAddrRequest {
+        .last_submitted_ethereum_event(LastSubmittedEthereumEventRequest {
             address: address.to_string(),
         })
         .await?;
