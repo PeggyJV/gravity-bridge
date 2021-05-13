@@ -1,5 +1,6 @@
 use clarity::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
+use clarity::Uint256;
 use deep_space::address::Address;
 use deep_space::error::CosmosGrpcError;
 use deep_space::private_key::PrivateKey;
@@ -15,7 +16,7 @@ use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastTxRequest;
 use gravity_proto::gravity::BatchTxSignature;
 use gravity_proto::gravity::ContractCallTxSignature;
 use gravity_proto::gravity::MsgDepositClaim;
-use gravity_proto::gravity::MsgErc20DeployedClaim;
+use gravity_proto::gravity::Erc20DeployedEvent;
 use gravity_proto::gravity::MsgLogicCallExecutedClaim;
 use gravity_proto::gravity::MsgRequestBatchTx;
 use gravity_proto::gravity::MsgSendToEthereum;
@@ -309,18 +310,17 @@ pub async fn send_ethereum_claims(
         unordered_msgs.insert(withdraw.event_nonce.clone(), msg);
     }
     for deploy in erc20_deploys {
-        let claim = MsgErc20DeployedClaim {
-            event_nonce: downcast_uint256(deploy.event_nonce.clone()).unwrap(),
-            block_height: downcast_uint256(deploy.block_height).unwrap(),
+        let claim = Erc20DeployedEvent {
+            event_nonce: deploy.event_nonce,
+            ethereum_height: deploy.ethereum_height,
             cosmos_denom: deploy.cosmos_denom,
-            token_contract: deploy.erc20_address.to_string(),
-            name: deploy.name,
-            symbol: deploy.symbol,
-            decimals: deploy.decimals as u64,
-            orchestrator: our_address.to_string(),
+            token_contract: deploy.token_contract.to_string(),
+            erc20_name: deploy.erc20_name,
+            erc20_symbol: deploy.erc20_symbol,
+            erc20_decimals: deploy.erc20_decimals,
         };
-        let msg = Msg::new("/gravity.v1.MsgERC20DeployedClaim", claim);
-        unordered_msgs.insert(deploy.event_nonce.clone(), msg);
+        let msg = Msg::new("/gravity.v1.Erc20DeployedEvent", claim);
+        unordered_msgs.insert(Uint256::from(deploy.event_nonce.clone()), msg);
     }
     for call in logic_calls {
         let claim = MsgLogicCallExecutedClaim {
