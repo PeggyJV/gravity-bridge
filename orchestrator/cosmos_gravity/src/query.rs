@@ -12,7 +12,7 @@ use gravity_proto::gravity::QueryLogicConfirmsRequest;
 use gravity_proto::gravity::QueryOutgoingLogicCallsRequest;
 use gravity_proto::gravity::BatchTxsRequest;
 use gravity_proto::gravity::QueryValsetConfirmsByNonceRequest;
-use gravity_proto::gravity::QueryValsetRequestRequest;
+use gravity_proto::gravity::UpdateSignerSetTxRequest;
 use gravity_utils::error::GravityError;
 use gravity_utils::types::*;
 use tonic::transport::Channel;
@@ -23,9 +23,9 @@ pub async fn get_valset(
     nonce: u64,
 ) -> Result<Option<Valset>, GravityError> {
     let request = client
-        .valset_request(QueryValsetRequestRequest { nonce })
+        .update_signer_set_tx(UpdateSignerSetTxRequest { nonce })
         .await?;
-    let valset = request.into_inner().valset;
+    let valset = request.into_inner().signer_set;
     let valset = match valset {
         Some(v) => Some(v.into()),
         None => None,
