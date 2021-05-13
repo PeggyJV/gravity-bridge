@@ -12,7 +12,7 @@ use gravity_proto::cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
 use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::service_client::ServiceClient as TxServiceClient;
 use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastTxRequest;
-use gravity_proto::gravity::MsgConfirmBatch;
+use gravity_proto::gravity::BatchTxSignature;
 use gravity_proto::gravity::MsgConfirmLogicCall;
 use gravity_proto::gravity::MsgDepositClaim;
 use gravity_proto::gravity::MsgErc20DeployedClaim;
@@ -179,14 +179,13 @@ pub async fn send_batch_confirm(
             our_eth_address,
             bytes_to_hex_str(&eth_signature.to_bytes())
         );
-        let confirm = MsgConfirmBatch {
+        let confirm = BatchTxSignature {
             token_contract: batch.token_contract.to_string(),
-            orchestrator: our_address.to_string(),
-            eth_signer: our_eth_address.to_string(),
+            ethereum_signer: our_eth_address.to_string(),
             nonce: batch.nonce,
-            signature: bytes_to_hex_str(&eth_signature.to_bytes()),
+            signature: eth_signature.to_bytes().to_vec(),
         };
-        let msg = Msg::new("/gravity.v1.MsgConfirmBatch", confirm);
+        let msg = Msg::new("/gravity.v1.BatchTxSignature", confirm);
         messages.push(msg);
     }
     let args = contact.get_message_args(our_address, fee).await?;
