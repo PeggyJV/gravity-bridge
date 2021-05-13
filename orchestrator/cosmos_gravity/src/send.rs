@@ -17,7 +17,7 @@ use gravity_proto::gravity::MsgConfirmLogicCall;
 use gravity_proto::gravity::MsgDepositClaim;
 use gravity_proto::gravity::MsgErc20DeployedClaim;
 use gravity_proto::gravity::MsgLogicCallExecutedClaim;
-use gravity_proto::gravity::MsgRequestBatch;
+use gravity_proto::gravity::MsgRequestBatchTx;
 use gravity_proto::gravity::MsgSendToEthereum;
 use gravity_proto::gravity::MsgSetOrchestratorAddress;
 use gravity_proto::gravity::MsgValsetConfirm;
@@ -453,9 +453,9 @@ pub async fn send_request_batch(
 ) -> Result<TxResponse, CosmosGrpcError> {
     let our_address = private_key.to_address(&contact.get_prefix()).unwrap();
 
-    let msg_request_batch = MsgRequestBatch {
-        sender: our_address.to_string(),
+    let msg_request_batch = MsgRequestBatchTx {
         denom,
+        signer: our_address.to_string(),
     };
 
     let fee = Fee {
@@ -465,7 +465,7 @@ pub async fn send_request_batch(
         payer: None,
     };
 
-    let msg = Msg::new("/gravity.v1.MsgRequestBatch", msg_request_batch);
+    let msg = Msg::new("/gravity.v1.MsgRequestBatchTx", msg_request_batch);
 
     let args = contact.get_message_args(our_address, fee).await?;
     trace!("got optional tx info");
