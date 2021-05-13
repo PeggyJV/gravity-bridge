@@ -15,7 +15,7 @@ use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastTxRequest;
 use gravity_proto::gravity::BatchTxSignature;
 use gravity_proto::gravity::ContractCallTxSignature;
-use gravity_proto::gravity::MsgDepositClaim;
+use gravity_proto::gravity::SendToCosmosEvent;
 use gravity_proto::gravity::Erc20DeployedEvent;
 use gravity_proto::gravity::MsgLogicCallExecutedClaim;
 use gravity_proto::gravity::MsgRequestBatchTx;
@@ -286,16 +286,15 @@ pub async fn send_ethereum_claims(
     // We index the events by event nonce in an unordered hashmap and then play them back in order into a vec
     let mut unordered_msgs = HashMap::new();
     for deposit in deposits {
-        let claim = MsgDepositClaim {
-            event_nonce: downcast_uint256(deposit.event_nonce.clone()).unwrap(),
-            block_height: downcast_uint256(deposit.block_height).unwrap(),
-            token_contract: deposit.erc20.to_string(),
-            amount: deposit.amount.to_string(),
-            cosmos_receiver: deposit.destination.to_string(),
-            ethereum_sender: deposit.sender.to_string(),
-            orchestrator: our_address.to_string(),
+        let claim = SendToCosmosEvent {
+            event_nonce: deposit.event_nonce,
+            ethereum_height: deposit.ethereum_height,
+            token_contract: deposit.token_contract,
+            amount: deposit.amount,
+            cosmos_receiver: deposit.cosmos_receiver,
+            ethereum_sender: deposit.ethereum_sender,
         };
-        let msg = Msg::new("/gravity.v1.MsgDepositClaim", claim);
+        let msg = Msg::new("/gravity.v1.SendToCosmosEvent", claim);
         unordered_msgs.insert(deposit.event_nonce.clone(), msg);
     }
     for withdraw in withdraws {
@@ -320,7 +319,7 @@ pub async fn send_ethereum_claims(
             erc20_decimals: deploy.erc20_decimals,
         };
         let msg = Msg::new("/gravity.v1.Erc20DeployedEvent", claim);
-        unordered_msgs.insert(Uint256::from(deploy.event_nonce.clone()), msg);
+        unordered_msgs.insert(deploy.event_nonce, msg);
     }
     for call in logic_calls {
         let claim = MsgLogicCallExecutedClaim {
