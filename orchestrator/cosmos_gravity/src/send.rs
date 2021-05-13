@@ -13,7 +13,7 @@ use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::service_client::Servic
 use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastTxRequest;
 use gravity_proto::gravity::BatchTxSignature;
-use gravity_proto::gravity::MsgConfirmLogicCall;
+use gravity_proto::gravity::ContractCallTxSignature;
 use gravity_proto::gravity::MsgDepositClaim;
 use gravity_proto::gravity::MsgErc20DeployedClaim;
 use gravity_proto::gravity::MsgLogicCallExecutedClaim;
@@ -237,14 +237,13 @@ pub async fn send_logic_call_confirm(
             our_eth_address,
             bytes_to_hex_str(&eth_signature.to_bytes())
         );
-        let confirm = MsgConfirmLogicCall {
-            orchestrator: our_address.to_string(),
-            eth_signer: our_eth_address.to_string(),
-            signature: bytes_to_hex_str(&eth_signature.to_bytes()),
-            invalidation_id: bytes_to_hex_str(&call.invalidation_id),
+        let confirm = ContractCallTxSignature {
+            ethereum_signer: our_eth_address.to_string(),
+            signature: eth_signature.to_bytes().to_vec(),
+            invalidation_id: call.invalidation_id,
             invalidation_nonce: call.invalidation_nonce,
         };
-        let msg = Msg::new("/gravity.v1.MsgConfirmLogicCall", confirm);
+        let msg = Msg::new("/gravity.v1.ContractCallTxSignature", confirm);
         messages.push(msg);
     }
     let args = contact.get_message_args(our_address, fee).await?;
