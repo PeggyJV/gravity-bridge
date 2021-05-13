@@ -18,7 +18,7 @@ use gravity_proto::gravity::MsgDepositClaim;
 use gravity_proto::gravity::MsgErc20DeployedClaim;
 use gravity_proto::gravity::MsgLogicCallExecutedClaim;
 use gravity_proto::gravity::MsgRequestBatch;
-use gravity_proto::gravity::MsgSendToEth;
+use gravity_proto::gravity::MsgSendToEthereum;
 use gravity_proto::gravity::MsgSetOrchestratorAddress;
 use gravity_proto::gravity::MsgValsetConfirm;
 use gravity_proto::gravity::MsgWithdrawClaim;
@@ -410,9 +410,9 @@ pub async fn send_to_eth(
         )));
     }
 
-    let msg_send_to_eth = MsgSendToEth {
+    let msg_send_to_eth = MsgSendToEthereum {
         sender: our_address.to_string(),
-        eth_dest: destination.to_string(),
+        ethereum_recipient: destination.to_string(),
         amount: Some(amount.into()),
         bridge_fee: Some(fee.clone().into()),
     };
@@ -424,7 +424,7 @@ pub async fn send_to_eth(
         payer: None,
     };
 
-    let msg = Msg::new("/gravity.v1.MsgSendToEth", msg_send_to_eth);
+    let msg = Msg::new("/gravity.v1.MsgSendToEthereum", msg_send_to_eth);
 
     let args = contact.get_message_args(our_address, fee).await?;
     trace!("got optional tx info");
