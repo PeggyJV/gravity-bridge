@@ -20,7 +20,7 @@ use gravity_proto::gravity::MsgLogicCallExecutedClaim;
 use gravity_proto::gravity::MsgRequestBatchTx;
 use gravity_proto::gravity::MsgSendToEthereum;
 use gravity_proto::gravity::MsgSetOrchestratorAddress;
-use gravity_proto::gravity::MsgValsetConfirm;
+use gravity_proto::gravity::UpdateSignerSetTxSignature;
 use gravity_proto::gravity::MsgWithdrawClaim;
 use gravity_utils::message_signatures::{
     encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
@@ -121,13 +121,12 @@ pub async fn send_valset_confirms(
             our_eth_address,
             bytes_to_hex_str(&eth_signature.to_bytes())
         );
-        let confirm = MsgValsetConfirm {
-            orchestrator: our_address.to_string(),
-            eth_address: our_eth_address.to_string(),
+        let confirm = UpdateSignerSetTxSignature {
+            ethereum_signer: our_eth_address.to_string(),
             nonce: valset.nonce,
-            signature: bytes_to_hex_str(&eth_signature.to_bytes()),
+            signature: eth_signature.to_bytes().to_vec(),
         };
-        let msg = Msg::new("/gravity.v1.MsgValsetConfirm", confirm);
+        let msg = Msg::new("/gravity.v1.UpdateSignerSetTxSignature", confirm);
         messages.push(msg);
     }
     let args = contact.get_message_args(our_address, fee).await?;
