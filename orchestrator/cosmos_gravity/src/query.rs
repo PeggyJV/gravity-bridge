@@ -6,7 +6,7 @@ use gravity_proto::gravity::QueryCurrentValsetRequest;
 use gravity_proto::gravity::LastSubmittedEthereumEventRequest;
 use gravity_proto::gravity::QueryLastPendingBatchRequestByAddrRequest;
 use gravity_proto::gravity::QueryLastPendingLogicCallByAddrRequest;
-use gravity_proto::gravity::QueryLastPendingValsetRequestByAddrRequest;
+use gravity_proto::gravity::PendingUpdateSignerSetTxEthereumSignaturesRequest;
 use gravity_proto::gravity::QueryLastValsetRequestsRequest;
 use gravity_proto::gravity::QueryLogicConfirmsRequest;
 use gravity_proto::gravity::QueryOutgoingLogicCallsRequest;
@@ -60,11 +60,11 @@ pub async fn get_oldest_unsigned_valsets(
     address: Address,
 ) -> Result<Vec<Valset>, GravityError> {
     let request = client
-        .last_pending_valset_request_by_addr(QueryLastPendingValsetRequestByAddrRequest {
+        .pending_update_signer_set_tx_ethereum_signatures(PendingUpdateSignerSetTxEthereumSignaturesRequest {
             address: address.to_string(),
         })
         .await?;
-    let valsets = request.into_inner().valsets;
+    let valsets = request.into_inner().signer_sets;
     // convert from proto valset type to rust valset type
     let valsets = valsets.iter().map(|v| v.into()).collect();
     Ok(valsets)
