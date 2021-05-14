@@ -22,7 +22,7 @@ use gravity_proto::gravity::MsgRequestBatchTx;
 use gravity_proto::gravity::MsgSendToEthereum;
 use gravity_proto::gravity::MsgSetOrchestratorAddress;
 use gravity_proto::gravity::UpdateSignerSetTxSignature;
-use gravity_proto::gravity::MsgWithdrawClaim;
+use gravity_proto::gravity::BatchExecutedEvent;
 use gravity_utils::message_signatures::{
     encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
 };
@@ -298,15 +298,13 @@ pub async fn send_ethereum_claims(
         unordered_msgs.insert(deposit.event_nonce.clone(), msg);
     }
     for withdraw in withdraws {
-        let claim = MsgWithdrawClaim {
+        let claim = BatchExecutedEvent {
             event_nonce: downcast_uint256(withdraw.event_nonce.clone()).unwrap(),
-            block_height: downcast_uint256(withdraw.block_height).unwrap(),
+            ethereum_height: downcast_uint256(withdraw.block_height).unwrap(),
             token_contract: withdraw.erc20.to_string(),
-            batch_nonce: downcast_uint256(withdraw.batch_nonce).unwrap(),
-            orchestrator: our_address.to_string(),
         };
-        let msg = Msg::new("/gravity.v1.MsgWithdrawClaim", claim);
-        unordered_msgs.insert(withdraw.event_nonce.clone(), msg);
+        let msg = Msg::new("/gravity.v1.BatchExecutedEvent", claim);
+        unordered_msgs.insert(withdraw.event_nonce, msg);
     }
     for deploy in erc20_deploys {
         let claim = Erc20DeployedEvent {
@@ -330,7 +328,7 @@ pub async fn send_ethereum_claims(
             orchestrator: our_address.to_string(),
         };
         let msg = Msg::new("/gravity.v1.MsgLogicCallExecutedClaim", claim);
-        unordered_msgs.insert(call.event_nonce.clone(), msg);
+        unordered_msgs.insert(call.event_nonce, msg);
     }
     let mut keys = Vec::new();
     for (key, _) in unordered_msgs.iter() {
