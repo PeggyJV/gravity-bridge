@@ -172,6 +172,8 @@ func (k Keeper) GetLastOutgoingBatchByTokenType(ctx sdk.Context, token common.Ad
 
 	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		btx, _ := otx.(*types.BatchTx)
+		// TODO: if we had an additional token type prefix on these, we could simply just take
+		// the first one, iterating only once.
 		if common.HexToAddress(btx.TokenContract) == token && btx.Nonce > lastNonce {
 			lastBatch = btx
 			lastNonce = btx.Nonce
@@ -189,11 +191,7 @@ func (k Keeper) SetLastSlashedBatchBlock(ctx sdk.Context, blockHeight uint64) {
 
 // GetLastSlashedBatchBlock returns the latest slashed Batch block
 func (k Keeper) GetLastSlashedBatchBlock(ctx sdk.Context) uint64 {
-	if bz := ctx.KVStore(k.storeKey).Get([]byte{types.LastSlashedBatchBlockKey}); bz == nil {
-		return 0
-	} else {
-		return types.UInt64FromBytes(bz)
-	}
+	return types.UInt64FromBytes(ctx.KVStore(k.storeKey).Get([]byte{types.LastSlashedBatchBlockKey}))
 }
 
 // GetUnSlashedBatches returns all the unslashed batches in state
