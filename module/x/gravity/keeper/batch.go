@@ -184,26 +184,24 @@ func (k Keeper) GetLastOutgoingBatchByTokenType(ctx sdk.Context, token common.Ad
 	return lastBatch
 }
 
-// SetLastSlashedBatchBlock sets the latest slashed Batch block height
-func (k Keeper) SetLastSlashedBatchBlock(ctx sdk.Context, blockHeight uint64) {
+// SetLastSlashedBatchBlockHeight sets the latest slashed Batch block height
+func (k Keeper) SetLastSlashedBatchBlockHeight(ctx sdk.Context, blockHeight uint64) {
 	ctx.KVStore(k.storeKey).Set([]byte{types.LastSlashedBatchBlockKey}, types.UInt64Bytes(blockHeight))
 }
 
-// GetLastSlashedBatchBlock returns the latest slashed Batch block
-func (k Keeper) GetLastSlashedBatchBlock(ctx sdk.Context) uint64 {
+// GetLastSlashedBatchBlockHeight returns the latest slashed Batch block
+func (k Keeper) GetLastSlashedBatchBlockHeight(ctx sdk.Context) uint64 {
 	return types.UInt64FromBytes(ctx.KVStore(k.storeKey).Get([]byte{types.LastSlashedBatchBlockKey}))
 }
 
 // GetUnSlashedBatches returns all the unslashed batches in state
 func (k Keeper) GetUnSlashedBatches(ctx sdk.Context, maxHeight uint64) (out []*types.BatchTx) {
-	lastSlashedBatchBlock := k.GetLastSlashedBatchBlock(ctx)
+	lastSlashedBatchBlockHeight := k.GetLastSlashedBatchBlockHeight(ctx)
 	k.IterateBatchBySlashedBatchBlock(ctx,
-		lastSlashedBatchBlock,
+		lastSlashedBatchBlockHeight,
 		maxHeight,
 		func(_ []byte, batch *types.BatchTx) bool {
-			if batch.Height > lastSlashedBatchBlock {
-				out = append(out, batch)
-			}
+			out = append(out, batch)
 			return false
 		})
 	return

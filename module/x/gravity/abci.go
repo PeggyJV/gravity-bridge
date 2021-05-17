@@ -243,7 +243,7 @@ func BatchSlashing(ctx sdk.Context, k keeper.Keeper, params types.Params) {
 	unslashedBatches := k.GetUnSlashedBatches(ctx, maxHeight)
 	for _, batch := range unslashedBatches {
 
-		// SLASH BONDED VALIDTORS who didn't attest batch requests
+		// SLASH BONDED VALIDATORS who didn't sign batch txs
 		currentBondedSet := k.StakingKeeper.GetBondedValidatorsByPower(ctx)
 		signatures := k.GetEthereumSignatures(ctx, batch.GetStoreIndex())
 		for _, val := range currentBondedSet {
@@ -262,7 +262,7 @@ func BatchSlashing(ctx sdk.Context, k keeper.Keeper, params types.Params) {
 			}
 		}
 		// then we set the latest slashed batch block
-		k.SetLastSlashedBatchBlock(ctx, batch.Height)
+		k.SetLastSlashedBatchBlockHeight(ctx, batch.Height)
 
 	}
 }
