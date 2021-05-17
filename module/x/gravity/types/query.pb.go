@@ -400,7 +400,8 @@ func (m *ContractCallTxResponse) GetLogicCall() *ContractCallTx {
 type SignerSetTxEthereumSignaturesRequest struct {
 	// NOTE: if address is passed, return only the signature from that validator
 	Nonce uint64 `protobuf:"varint,1,opt,name=nonce,proto3" json:"nonce,omitempty"`
-	// NOTE: this address can be either a validator or an orchestrator address to filter by
+	// NOTE: this address can be either a validator or an orchestrator address to
+	// filter by
 	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 }
 
