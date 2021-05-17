@@ -40,7 +40,7 @@ const (
 	LastObservedEventNonceKey
 	LatestSignerSetTxNonceKey
 	LastSlashedBatchBlockKey
-	LastSlashedValsetNonceKey
+	LastSlashedSignerSetTxNonceKey
 	LastOutgoingBatchNonceKey
 
 	// SecondIndexSendToEthereumFeeKey indexes fee amounts by token contract address

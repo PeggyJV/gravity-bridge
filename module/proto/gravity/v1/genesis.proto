@@ -42,10 +42,10 @@ option go_package = "github.com/cosmos/gravity-bridge/module/x/gravity/types";
 // signed_ethereum_signatures_window
 //
 // These values represent the time in blocks that a validator has to submit
-// a signature for a batch or valset, or to submit a ethereum_signature for a particular
-// attestation nonce. In the case of attestations this clock starts when the
-// attestation is created, but only allows for slashing once the event has
-// passed
+// a signature for a batch or valset, or to submit a ethereum_signature for a
+// particular attestation nonce. In the case of attestations this clock starts
+// when the attestation is created, but only allows for slashing once the event
+// has passed
 //
 // target_batch_timeout:
 //
@@ -110,8 +110,7 @@ message GenesisState {
   uint64 last_observed_event_nonce = 2;
   repeated google.protobuf.Any outgoing_txs = 3;
   repeated google.protobuf.Any signatures = 4;
-  repeated EthereumEventVoteRecord ethereum_event_vote_records = 9
-      [ (gogoproto.nullable) = false ];
+  repeated EthereumEventVoteRecord ethereum_event_vote_records = 9;
   repeated MsgDelegateKeys delegate_keys = 10;
   repeated ERC20ToDenom erc20_to_denoms = 11;
   repeated SendToEthereum unbatched_send_to_ethereum_txs = 12;

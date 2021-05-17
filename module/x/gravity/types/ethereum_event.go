@@ -1,10 +1,12 @@
 package types
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
@@ -18,6 +20,12 @@ var (
 	_ EthereumEvent = &ERC20DeployedEvent{}
 	_ EthereumEvent = &SignerSetTxExecutedEvent{}
 )
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (m *EthereumEventVoteRecord) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+	var event EthereumEvent
+	return unpacker.UnpackAny(m.Event, &event)
+}
 
 //////////////
 // GetNonce //
@@ -47,32 +55,67 @@ func (sse *SignerSetTxExecutedEvent) GetNonce() uint64 {
 // Hash //
 //////////
 
+// TODO: rewrite all hashes to match this one
 func (stce *SendToCosmosEvent) Hash() tmbytes.HexBytes {
-	path := fmt.Sprintf("%s/%s/%s/", stce.TokenContract, stce.EthereumSender, stce.CosmosReceiver)
+	rcv, _ := sdk.AccAddressFromBech32(stce.CosmosReceiver)
+	path := bytes.Join(
+		[][]byte{
+			sdk.Uint64ToBigEndian(stce.EventNonce),
+			stce.Amount.BigInt().Bytes(),
+			common.Hex2Bytes(stce.TokenContract),
+			common.Hex2Bytes(stce.EthereumSender),
+			rcv.Bytes(),
+		},
+		[]byte{},
+	)
 	hash := sha256.Sum256([]byte(path))
 	return hash[:]
 }
 
 func (bee *BatchExecutedEvent) Hash() tmbytes.HexBytes {
-	path := fmt.Sprintf("%s/%d/", bee.TokenContract, bee.EventNonce)
+	path := append(common.HexToAddress(bee.TokenContract).Bytes(), sdk.Uint64ToBigEndian(bee.EventNonce)...)
 	hash := sha256.Sum256([]byte(path))
 	return hash[:]
 }
 
 func (ccee *ContractCallExecutedEvent) Hash() tmbytes.HexBytes {
-	path := fmt.Sprintf("%s/%d/", ccee.InvalidationId, ccee.InvalidationNonce)
+	path := bytes.Join(
+		[][]byte{
+			ccee.InvalidationId,
+			sdk.Uint64ToBigEndian(ccee.InvalidationNonce),
+			sdk.Uint64ToBigEndian(ccee.EventNonce),
+		},
+		[]byte{},
+	)
 	hash := sha256.Sum256([]byte(path))
 	return hash[:]
 }
 
 func (e20de *ERC20DeployedEvent) Hash() tmbytes.HexBytes {
-	path := fmt.Sprintf("%s/%s/%s/%s/%d/", e20de.CosmosDenom, e20de.TokenContract, e20de.Erc20Name, e20de.Erc20Symbol, e20de.Erc20Decimals)
+	path := bytes.Join(
+		[][]byte{
+			[]byte(e20de.CosmosDenom),
+			common.HexToAddress(e20de.TokenContract).Bytes(),
+			[]byte(e20de.Erc20Name),
+			[]byte(e20de.Erc20Symbol),
+			sdk.Uint64ToBigEndian(e20de.Erc20Decimals),
+			sdk.Uint64ToBigEndian(e20de.EventNonce),
+		},
+		[]byte{},
+	)
 	hash := sha256.Sum256([]byte(path))
 	return hash[:]
 }
 
 func (sse *SignerSetTxExecutedEvent) Hash() tmbytes.HexBytes {
-	path := fmt.Sprintf("%s/%s/%s", sse.EthereumHeight, sse.EventNonce, sse.SignerSetTxNonce)
+	path := bytes.Join(
+		[][]byte{
+			sdk.Uint64ToBigEndian(sse.SignerSetTxNonce),
+			sdk.Uint64ToBigEndian(sse.EventNonce),
+			EthereumSigners(sse.Members).Hash(),
+		},
+		[]byte{},
+	)
 	hash := sha256.Sum256(([]byte(path)))
 	return hash[:]
 }
