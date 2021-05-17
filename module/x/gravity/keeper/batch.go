@@ -109,11 +109,11 @@ func (k Keeper) BatchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 	// Iterate through remaining batches
 	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		// If the iterated batches nonce is lower than the one that was just executed, cancel it
-		iterBatch, _ := otx.(*types.BatchTx)
+		btx, _ := otx.(*types.BatchTx)
 		// todo: reformat the store to additionally prefix by token type,
 		// and also sort by nonce, to save on needless iteration
-		if (iterBatch.Nonce < batchTx.Nonce) && (batchTx.TokenContract == tokenContract.Hex()) {
-			err = k.CancelBatchTx(ctx, tokenContract, iterBatch.Nonce)
+		if (btx.Nonce < batchTx.Nonce) && (batchTx.TokenContract == tokenContract.Hex()) {
+			err = k.CancelBatchTx(ctx, tokenContract, btx.Nonce)
 		}
 		return false
 	})
@@ -132,13 +132,9 @@ func (k Keeper) PickUnbatchedTX(
 	var selectedTx []*types.SendToEthereum
 	var err error
 	k.IterateOutgoingPoolByFee(ctx, contractAddress, func(txID uint64, tx *types.SendToEthereum) bool {
-		if tx != nil && tx.Erc20Fee.GravityCoin().IsZero() {
-			selectedTx = append(selectedTx, tx)
-			err = k.removeFromUnbatchedTXIndex(ctx, tx.Erc20Fee, txID)
-			return err != nil || len(selectedTx) == maxElements
-		}
-
-		return true
+		selectedTx = append(selectedTx, tx)
+		err = k.removeFromUnbatchedTXIndex(ctx, tx.Erc20Fee, txID)
+		return err != nil || len(selectedTx) == maxElements
 	})
 	return selectedTx, err
 }
