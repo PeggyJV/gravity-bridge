@@ -19,7 +19,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/gravity-bridge/module/x/gravity/client/cli"
-	"github.com/cosmos/gravity-bridge/module/x/gravity/client/rest"
+	// "github.com/cosmos/gravity-bridge/module/x/gravity/client/rest"
 	"github.com/cosmos/gravity-bridge/module/x/gravity/keeper"
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
 )
@@ -58,7 +58,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, _ client.TxEncodi
 
 // RegisterRESTRoutes implements app module basic
 func (AppModuleBasic) RegisterRESTRoutes(ctx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(ctx, rtr, types.StoreKey)
+	// rest.RegisterRoutes(ctx, rtr, types.StoreKey)
 }
 
 // GetQueryCmd implements app module basic
@@ -120,7 +120,9 @@ func (am AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns the distribution module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {}
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+	return nil
+}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
