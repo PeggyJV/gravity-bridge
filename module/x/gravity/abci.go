@@ -14,7 +14,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// Question: what here can be epoched?
 	slashing(ctx, k)
 	attestationTally(ctx, k)
-	cleanupTimedOutBatcheTxs(ctx, k)
+	cleanupTimedOutBatchTxs(ctx, k)
 	cleanupTimedOutContractCallTxs(ctx, k)
 	createSignerSetTxs(ctx, k)
 	pruneSignerSetTxs(ctx, k)
@@ -114,7 +114,7 @@ func attestationTally(ctx sdk.Context, k keeper.Keeper) {
 	}
 }
 
-// cleanupTimedOutBatcheTxs deletes batches that have passed their expiration on Ethereum
+// cleanupTimedOutBatchTxs deletes batches that have passed their expiration on Ethereum
 // keep in mind several things when modifying this function
 // A) unlike nonces timeouts are not monotonically increasing, meaning batch 5 can have a later timeout than batch 6
 //    this means that we MUST only cleanup a single batch at a time
@@ -123,7 +123,7 @@ func attestationTally(ctx sdk.Context, k keeper.Keeper) {
 //    here is the Ethereum block height at the time of the last Deposit or Withdraw to be observed. It's very important we do not
 //    project, if we do a slowdown on ethereum could cause a double spend. Instead timeouts will *only* occur after the timeout period
 //    AND any deposit or withdraw has occurred to update the Ethereum block height.
-func cleanupTimedOutBatcheTxs(ctx sdk.Context, k keeper.Keeper) {
+func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 	ethereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight
 	batches := k.GetBatchTxes(ctx)
 	for _, batch := range batches {
@@ -133,7 +133,7 @@ func cleanupTimedOutBatcheTxs(ctx sdk.Context, k keeper.Keeper) {
 	}
 }
 
-// cleanupTimedOutBatcheTxs deletes logic calls that have passed their expiration on Ethereum
+// cleanupTimedOutBatchTxs deletes logic calls that have passed their expiration on Ethereum
 // keep in mind several things when modifying this function
 // A) unlike nonces timeouts are not monotonically increasing, meaning call 5 can have a later timeout than batch 6
 //    this means that we MUST only cleanup a single call at a time
@@ -257,33 +257,5 @@ func BatchSlashing(ctx sdk.Context, k keeper.Keeper, params types.Params) {
 		// then we set the latest slashed batch block
 		k.SetLastSlashedBatchBlock(ctx, batch.Height)
 
-	}
-}
-
-// TestingEndBlocker is a second endblocker function only imported in the Gravity codebase itself
-// if you are a consuming Cosmos chain DO NOT IMPORT THIS, it simulates a chain using the arbitrary
-// logic API to request logic calls
-func TestingEndBlocker(ctx sdk.Context, k keeper.Keeper) {
-	// if this is nil we have not set our test outgoing logic call yet
-	if k.GetContractCallTx(ctx, []byte("GravityTesting"), 0).Payload == nil {
-		// TODO this call isn't actually very useful for testing, since it always
-		// throws, being just junk data that's expected. But it prevents us from checking
-		// the full lifecycle of the call. We need to find some way for this to read data
-		// and encode a simple testing call, probably to one of the already deployed ERC20
-		// contracts so that we can get the full lifecycle.
-		token := []types.ERC20Token{{
-			Contract: "0x7580bfe88dd3d07947908fae12d95872a260f2d8",
-			Amount:   sdk.NewIntFromUint64(5000),
-		}}
-		_ = types.ContractCallTx{
-			Tokens:            token,
-			Fees:              token,
-			Address:           "0x510ab76899430424d209a6c9a5b9951fb8a6f47d",
-			Payload:           []byte("fake bytes"),
-			Timeout:           10000,
-			InvalidationScope: []byte("GravityTesting"),
-			InvalidationNonce: 1,
-		}
-		//k.SetContractCallTx(ctx, &call)
 	}
 }

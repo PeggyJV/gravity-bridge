@@ -1,7 +1,6 @@
 package gravity
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -74,9 +73,7 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the distribution module.
 // also implements app modeul basic
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
-}
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {}
 
 // RegisterInterfaces implements app bmodule basic
 func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
@@ -123,9 +120,7 @@ func (am AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns the distribution module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper)
-}
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -153,9 +148,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock implements app module
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	EndBlocker(ctx, am.keeper)
-	// this begin blocker is only for testing purposes, don't import into your
-	// own chain running gravity
-	TestingEndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
 }
 
