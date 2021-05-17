@@ -169,34 +169,20 @@ func (k Keeper) CancelBatchTx(ctx sdk.Context, tokenContract common.Address, non
 	return nil
 }
 
-// IterateBatchTxs iterates through all outgoing batches in DESC order.
-func (k Keeper) IterateBatchTxs(ctx sdk.Context, cb func(key []byte, batch *types.BatchTx) bool) {
-	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
-		btx, _ := otx.(*types.BatchTx)
-		return cb(key, btx)
-	})
-}
-
-// GetBatchTxes returns the outgoing tx batches
-func (k Keeper) GetBatchTxes(ctx sdk.Context) (out []*types.BatchTx) {
-	k.IterateBatchTxs(ctx, func(_ []byte, batch *types.BatchTx) bool {
-		out = append(out, batch)
-		return false
-	})
-	return
-}
-
 // GetLastOutgoingBatchByTokenType gets the latest outgoing tx batch by token type
 func (k Keeper) GetLastOutgoingBatchByTokenType(ctx sdk.Context, token common.Address) *types.BatchTx {
-	batches := k.GetBatchTxes(ctx)
 	var lastBatch *types.BatchTx = nil
 	lastNonce := uint64(0)
-	for _, batch := range batches {
-		if common.HexToAddress(batch.TokenContract) == token && batch.Nonce > lastNonce {
-			lastBatch = batch
-			lastNonce = batch.Nonce
+
+	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
+		btx, _ := otx.(*types.BatchTx)
+		if common.HexToAddress(btx.TokenContract) == token && btx.Nonce > lastNonce {
+			lastBatch = btx
+			lastNonce = btx.Nonce
 		}
-	}
+		return false
+	})
+
 	return lastBatch
 }
 

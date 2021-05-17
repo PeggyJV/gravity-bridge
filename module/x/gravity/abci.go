@@ -128,12 +128,15 @@ func attestationTally(ctx sdk.Context, k keeper.Keeper) {
 //    AND any deposit or withdraw has occurred to update the Ethereum block height.
 func cleanupTimedOutBatches(ctx sdk.Context, k keeper.Keeper) {
 	ethereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight
-	batches := k.GetBatchTxes(ctx)
-	for _, batch := range batches {
-		if batch.Timeout < ethereumHeight {
-			k.CancelBatchTx(ctx, common.HexToAddress(batch.TokenContract), batch.Nonce)
+	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
+		btx, _ := otx.(*types.BatchTx)
+
+		if btx.Timeout < ethereumHeight {
+			k.CancelBatchTx(ctx, common.HexToAddress(btx.TokenContract), btx.Nonce)
 		}
-	}
+
+		return false
+	})
 }
 
 // cleanupTimedOutBatches deletes logic calls that have passed their expiration on Ethereum
