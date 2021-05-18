@@ -305,9 +305,8 @@ func (k Keeper) createBatchFees(ctx sdk.Context) map[string]*types.ERC20Token {
 		// If len(ids.Ids) > 1, multiply fee amount with len(ids.Ids) and add it to total fee amount
 
 		key := iter.Key()
-		tokenContractBytes := key[:types.ETHContractAddressLen]
-		tokenContractAddr := common.BytesToAddress(tokenContractBytes).Hex()
-		//tokenContractAddr := string(tokenContractBytes)
+		tokenContractBytes := key[:common.AddressLength]
+		tokenContractAddr := common.Bytes2Hex(tokenContractBytes)
 
 		feeAmountBytes := key[len(tokenContractBytes):]
 		feeAmount := big.NewInt(0).SetBytes(feeAmountBytes)
