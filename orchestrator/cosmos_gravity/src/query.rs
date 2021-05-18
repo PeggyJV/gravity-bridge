@@ -138,12 +138,13 @@ pub async fn get_transaction_batch_signatures(
     contract_address: EthAddress,
 ) -> Result<Vec<BatchConfirmResponse>, GravityError> {
     let request = client
-        .batch_confirms(BatchTxEthereumSignaturesRequest {
+        .batch_tx_ethereum_signatures(BatchTxEthereumSignaturesRequest {
             nonce,
             contract_address: contract_address.to_string(),
+            address: String::from(""),
         })
         .await?;
-    let batch_confirms = request.into_inner().confirms;
+    let batch_confirms = request.into_inner().signature;
     let mut out = Vec::new();
     for confirm in batch_confirms {
         out.push(BatchConfirmResponse::from_proto(confirm)?)

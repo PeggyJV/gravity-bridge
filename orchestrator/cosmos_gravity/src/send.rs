@@ -239,7 +239,7 @@ pub async fn send_logic_call_confirm(
         let confirm = ContractCallTxSignature {
             ethereum_signer: our_eth_address.to_string(),
             signature: eth_signature.to_bytes().to_vec(),
-            invalidation_id: call.invalidation_id,
+            invalidation_scope: call.invalidation_id,
             invalidation_nonce: call.invalidation_nonce,
         };
         let msg = Msg::new("/gravity.v1.ContractCallTxSignature", confirm);
