@@ -265,17 +265,8 @@ func (k Keeper) IterateOutgoingPoolByFee(ctx sdk.Context, contract common.Addres
 	}
 }
 
-// GetBatchFeesByTokenType gets the fees the next batch of a given token type would
-// have if created. This info is both presented to relayers for the purpose of determining
-// when to request batches and also used by the batch creation process to decide not to create
-// a new batch
-func (k Keeper) GetBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr common.Address) *types.ERC20Token {
-	batchFeesMap := k.createBatchFees(ctx)
-	return batchFeesMap[tokenContractAddr.Hex()]
-}
-
 // GetAllBatchFees creates a fee entry for every batch type currently in the store
-// this can be used by relayers to determine what batch types are desireable to request
+// this can be used by relayers to determine what batch types are desirable to request
 func (k Keeper) GetAllBatchFees(ctx sdk.Context) (batchFees []*types.ERC20Token) {
 	batchFeesMap := k.createBatchFees(ctx)
 	// create array of batchFees
@@ -315,7 +306,8 @@ func (k Keeper) createBatchFees(ctx sdk.Context) map[string]*types.ERC20Token {
 
 		key := iter.Key()
 		tokenContractBytes := key[:types.ETHContractAddressLen]
-		tokenContractAddr := string(tokenContractBytes)
+		tokenContractAddr := common.BytesToAddress(tokenContractBytes).Hex()
+		//tokenContractAddr := string(tokenContractBytes)
 
 		feeAmountBytes := key[len(tokenContractBytes):]
 		feeAmount := big.NewInt(0).SetBytes(feeAmountBytes)
