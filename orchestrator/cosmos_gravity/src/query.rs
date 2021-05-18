@@ -4,15 +4,14 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_proto::gravity::BatchTxEthereumSignaturesRequest;
 use gravity_proto::gravity::SignerSetTxRequest;
 use gravity_proto::gravity::LastSubmittedEthereumEventRequest;
-use gravity_proto::gravity::PendingBatchTxEthereumSignatures;
-use gravity_proto::gravity::QueryLastPendingLogicCallByAddrRequest;
+use gravity_proto::gravity::PendingBatchTxEthereumSignaturesRequest;
+use gravity_proto::gravity::PendingContractCallTxEthereumSignaturesRequest;
 use gravity_proto::gravity::PendingSignerSetTxEthereumSignaturesRequest;
 use gravity_proto::gravity::SignerSetTxsRequest;
-use gravity_proto::gravity::QueryLogicConfirmsRequest;
+use gravity_proto::gravity::ContractCallTxEthereumSignaturesRequest;
 use gravity_proto::gravity::QueryOutgoingLogicCallsRequest;
 use gravity_proto::gravity::BatchTxsRequest;
 use gravity_proto::gravity::QueryValsetConfirmsByNonceRequest;
-use gravity_proto::gravity::SignerSetTxRequest;
 use gravity_utils::error::GravityError;
 use gravity_utils::types::*;
 use tonic::transport::Channel;
@@ -103,14 +102,15 @@ pub async fn get_oldest_unsigned_transaction_batch(
     address: Address,
 ) -> Result<Option<TransactionBatch>, GravityError> {
     let request = client
-        .pending_batch_tx_ethereum_signatures(PendingBatchTxEthereumSignatures {
+        .pending_batch_tx_ethereum_signatures(PendingBatchTxEthereumSignaturesRequest {
             address: address.to_string(),
         })
         .await?;
     // TODO(levi) is this really getting the oldest; feels like newest?
-    let batch = request.into_inner().batches.get(0);
+    let batches = request.into_inner().batches;
+    let batch = batches.get(0);
     match batch {
-        Some(batch) => Ok(Some(TransactionBatch::from_proto(*batch)?)),
+        Some(batch) => Ok(Some(TransactionBatch::from_proto(batch.clone())?)),
         None => Ok(None),
     }
 }
@@ -182,16 +182,17 @@ pub async fn get_latest_logic_calls(
 
 pub async fn get_logic_call_signatures(
     client: &mut GravityQueryClient<Channel>,
-    invalidation_id: Vec<u8>,
+    invalidation_scope: Vec<u8>,
     invalidation_nonce: u64,
 ) -> Result<Vec<LogicCallConfirmResponse>, GravityError> {
     let request = client
-        .logic_confirms(QueryLogicConfirmsRequest {
-            invalidation_id,
+        .contract_call_tx_ethereum_signatures(ContractCallTxEthereumSignaturesRequest {
+            invalidation_scope,
             invalidation_nonce,
+            address: String::from(""),
         })
         .await?;
-    let call_confirms = request.into_inner().confirms;
+    let call_confirms = request.into_inner().signature;
     let mut out = Vec::new();
     for confirm in call_confirms {
         out.push(LogicCallConfirmResponse::from_proto(confirm)?)
@@ -204,13 +205,14 @@ pub async fn get_oldest_unsigned_logic_call(
     address: Address,
 ) -> Result<Option<LogicCall>, GravityError> {
     let request = client
-        .last_pending_logic_call_by_addr(QueryLastPendingLogicCallByAddrRequest {
+        .pending_contract_call_tx_ethereum_signatures(PendingContractCallTxEthereumSignaturesRequest {
             address: address.to_string(),
         })
         .await?;
-    let call = request.into_inner().call;
+    let calls = request.into_inner().calls;
+    let call = calls.get(0);
     match call {
-        Some(call) => Ok(Some(LogicCall::from_proto(call)?)),
+        Some(call) => Ok(Some(LogicCall::from_proto(call.clone())?)),
         None => Ok(None),
     }
 }
