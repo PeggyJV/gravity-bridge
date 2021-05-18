@@ -307,9 +307,9 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	_, err := h(ctx, msg)
 	require.NoError(t, err)
 
-	require.Equal(t, k.GetValidatorEthereumAddress(ctx, valAddress), ethAddress)
-	require.Equal(t, k.GetOrchestratorValidatorAddress(ctx, cosmosAddress), valAddress)
-	require.Equal(t, k.GetEthereumOrchestratorAddress(ctx, common.HexToAddress(ethAddress)), cosmosAddress)
+	require.Equal(t, ethAddress, k.GetValidatorEthereumAddress(ctx, valAddress).Hex())
+	require.Equal(t, valAddress, k.GetOrchestratorValidatorAddress(ctx, cosmosAddress))
+	require.Equal(t, cosmosAddress, k.GetEthereumOrchestratorAddress(ctx, common.HexToAddress(ethAddress)))
 
 	_, err = k.DelegateKeysByOrchestrator(wctx, &types.DelegateKeysByOrchestratorAddress{OrchestratorAddress: cosmosAddress.String()})
 	require.NoError(t, err)
@@ -317,7 +317,7 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	_, err = k.DelegateKeysByEthereumSigner(wctx, &types.DelegateKeysByEthereumSignerRequest{EthereumSigner: ethAddress})
 	require.NoError(t, err)
 
-	_, err = k.DelegateKeysByValidator(wctx, &types.DelegateKeysByValidatorAddress{ValidatorAddress: string(valAddress)})
+	_, err = k.DelegateKeysByValidator(wctx, &types.DelegateKeysByValidatorAddress{ValidatorAddress: valAddress.String()})
 	require.NoError(t, err)
 
 	// delegate new orch and eth addrs for same validator
@@ -326,9 +326,9 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	_, err = h(ctx, msg)
 	require.NoError(t, err)
 
-	require.Equal(t, k.GetValidatorEthereumAddress(ctx, valAddress), ethAddress2)
-	require.Equal(t, k.GetOrchestratorValidatorAddress(ctx, cosmosAddress2), valAddress)
-	require.Equal(t, k.GetEthereumOrchestratorAddress(ctx, common.HexToAddress(ethAddress2)), valAddress)
+	require.Equal(t, ethAddress2, k.GetValidatorEthereumAddress(ctx, valAddress).Hex())
+	require.Equal(t, valAddress, k.GetOrchestratorValidatorAddress(ctx, cosmosAddress2))
+	require.Equal(t, cosmosAddress2, k.GetEthereumOrchestratorAddress(ctx, common.HexToAddress(ethAddress2)))
 
 	_, err = k.DelegateKeysByOrchestrator(wctx, &types.DelegateKeysByOrchestratorAddress{OrchestratorAddress: cosmosAddress2.String()})
 	require.NoError(t, err)
@@ -336,6 +336,6 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	_, err = k.DelegateKeysByEthereumSigner(wctx, &types.DelegateKeysByEthereumSignerRequest{EthereumSigner: ethAddress2})
 	require.NoError(t, err)
 
-	_, err = k.DelegateKeysByValidator(wctx, &types.DelegateKeysByValidatorAddress{ValidatorAddress: string(valAddress)})
+	_, err = k.DelegateKeysByValidator(wctx, &types.DelegateKeysByValidatorAddress{ValidatorAddress: valAddress.String()})
 	require.NoError(t, err)
 }
