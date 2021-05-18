@@ -89,16 +89,18 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 	)
 	input := keeper.CreateTestEnv(t)
 	ctx := input.Context
-	input.GravityKeeper.StakingKeeper = keeper.NewStakingKeeperMock(myValAddr)
-	input.GravityKeeper.SetOrchestratorValidatorAddress(ctx, myValAddr, myOrchestratorAddr)
-	h := NewHandler(input.GravityKeeper)
+	gk := input.GravityKeeper
+	bk := input.BankKeeper
+	gk.StakingKeeper = keeper.NewStakingKeeperMock(myValAddr)
+	gk.SetOrchestratorValidatorAddress(ctx, myValAddr, myOrchestratorAddr)
+	h := NewHandler(gk)
 
 	myErc20 := types.ERC20Token{
 		Amount:   amountA,
 		Contract: tokenETHAddr,
 	}
 
-	sendToCosmosEvent := types.SendToCosmosEvent{
+	sendToCosmosEvent := &types.SendToCosmosEvent{
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
@@ -106,37 +108,37 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 
-	eva, err := types.PackEvent(&sendToCosmosEvent)
+	eva, err := types.PackEvent(sendToCosmosEvent)
 	require.NoError(t, err)
 
 	msgSubmitEvent := &types.MsgSubmitEthereumEvent{eva, myOrchestratorAddr.String()}
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
 	_, err = h(ctx, msgSubmitEvent)
-	EndBlocker(ctx, input.GravityKeeper)
+	EndBlocker(ctx, gk)
 	require.NoError(t, err)
 
 	// and attestation persisted
-	a := input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, sendToCosmosEvent.Hash())
+	a := gk.GetEthereumEventVoteRecord(ctx, myNonce, sendToCosmosEvent.Hash())
 	require.NotNil(t, a)
 	// and vouchers added to the account
 
-	balance := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
+	balance := bk.GetAllBalances(ctx, myCosmosAddr)
 	require.Equal(t, sdk.Coins{sdk.NewCoin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", amountA)}, balance)
 
 	// Test to reject duplicate deposit
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
 	_, err = h(ctx, msgSubmitEvent)
-	EndBlocker(ctx, input.GravityKeeper)
+	EndBlocker(ctx, gk)
 	// then
 	require.Error(t, err)
-	balance = input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
+	balance = bk.GetAllBalances(ctx, myCosmosAddr)
 	require.Equal(t, sdk.Coins{sdk.NewCoin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", amountA)}, balance)
 
 	// Test to reject skipped nonce
 
-	sendToCosmosEvent = types.SendToCosmosEvent{
+	sendToCosmosEvent = &types.SendToCosmosEvent{
 		EventNonce:     uint64(3),
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
@@ -144,7 +146,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 
-	eva, err = types.PackEvent(&sendToCosmosEvent)
+	eva, err = types.PackEvent(sendToCosmosEvent)
 	require.NoError(t, err)
 
 	msgSubmitEvent = &types.MsgSubmitEthereumEvent{eva, myOrchestratorAddr.String()}
@@ -154,13 +156,13 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 	_, err = h(ctx, msgSubmitEvent)
 	require.Error(t, err)
 
-	EndBlocker(ctx, input.GravityKeeper)
+	EndBlocker(ctx, gk)
 	// then
-	balance = input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
+	balance = bk.GetAllBalances(ctx, myCosmosAddr)
 	require.Equal(t, sdk.Coins{sdk.NewCoin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", amountA)}, balance)
 
 	// Test to finally accept consecutive nonce
-	sendToCosmosEvent = types.SendToCosmosEvent{
+	sendToCosmosEvent = &types.SendToCosmosEvent{
 		EventNonce:     uint64(2),
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
@@ -168,18 +170,18 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 
-	eva, err = types.PackEvent(&sendToCosmosEvent)
+	eva, err = types.PackEvent(sendToCosmosEvent)
 	require.NoError(t, err)
 
 	msgSubmitEvent = &types.MsgSubmitEthereumEvent{eva, myOrchestratorAddr.String()}
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
 	_, err = h(ctx, msgSubmitEvent)
-	EndBlocker(ctx, input.GravityKeeper)
+	EndBlocker(ctx, gk)
 
 	// then
 	require.NoError(t, err)
-	balance = input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
+	balance = bk.GetAllBalances(ctx, myCosmosAddr)
 	require.Equal(t, sdk.Coins{sdk.NewCoin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", amountB)}, balance)
 }
 

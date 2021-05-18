@@ -133,9 +133,13 @@ func (k Keeper) SetEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, c
 
 // GetEthereumEventVoteRecord return a vote record given a nonce
 func (k Keeper) GetEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte) *types.EthereumEventVoteRecord {
-	var out types.EthereumEventVoteRecord
-	k.cdc.MustUnmarshalBinaryBare(ctx.KVStore(k.storeKey).Get(types.GetEthereumEventVoteRecordKey(eventNonce, claimHash)), &out)
-	return &out
+	if bz := ctx.KVStore(k.storeKey).Get(types.GetEthereumEventVoteRecordKey(eventNonce, claimHash)); bz == nil {
+		return nil
+	} else {
+		var out types.EthereumEventVoteRecord
+		k.cdc.MustUnmarshalBinaryBare(bz, &out)
+		return &out
+	}
 }
 
 // DeleteEthereumEventVoteRecord deletes an attestation given an event nonce and claim
@@ -151,11 +155,6 @@ func (k Keeper) GetEthereumEventVoteRecordMapping(ctx sdk.Context) (out map[uint
 		if err != nil {
 			panic(err)
 		}
-
-		fmt.Println("HERERERE")
-		fmt.Println(eventVoteRecord.Event)
-		fmt.Println(event)
-		fmt.Println(eventVoteRecord)
 		if val, ok := out[event.GetNonce()]; !ok {
 			out[event.GetNonce()] = []*types.EthereumEventVoteRecord{eventVoteRecord}
 		} else {
@@ -172,11 +171,10 @@ func (k Keeper) IterateEthereumEventVoteRecords(ctx sdk.Context, cb func([]byte,
 	iter := store.Iterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		att := types.EthereumEventVoteRecord{}
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &att)
-		fmt.Println("herere", att.Event)
+		att := &types.EthereumEventVoteRecord{}
+		k.cdc.MustUnmarshalBinaryBare(iter.Value(), att)
 		// cb returns true to stop early
-		if cb(iter.Key(), &att) {
+		if cb(iter.Key(), att) {
 			return
 		}
 	}
