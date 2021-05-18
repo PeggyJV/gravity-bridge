@@ -75,7 +75,7 @@ pub async fn get_latest_valsets(
     client: &mut GravityQueryClient<Channel>,
 ) -> Result<Vec<Valset>, GravityError> {
     let request = client
-        .update_signer_set_txs(SignerSetTxsRequest { count: 5 })
+        .signer_set_txs(SignerSetTxsRequest { count: 5 })
         .await?;
     let valsets = request.into_inner().signer_sets;
     Ok(valsets.iter().map(|v| v.into()).collect())

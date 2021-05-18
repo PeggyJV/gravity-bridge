@@ -1,6 +1,5 @@
 use clarity::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
-use clarity::Uint256;
 use deep_space::address::Address;
 use deep_space::error::CosmosGrpcError;
 use deep_space::private_key::PrivateKey;
@@ -21,7 +20,7 @@ use gravity_proto::gravity::MsgLogicCallExecutedClaim;
 use gravity_proto::gravity::MsgRequestBatchTx;
 use gravity_proto::gravity::MsgSendToEthereum;
 use gravity_proto::gravity::MsgSetOrchestratorAddress;
-use gravity_proto::gravity::UpdateSignerSetTxSignature;
+use gravity_proto::gravity::SignerSetTxSignature;
 use gravity_proto::gravity::BatchExecutedEvent;
 use gravity_utils::message_signatures::{
     encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
@@ -122,12 +121,12 @@ pub async fn send_valset_confirms(
             our_eth_address,
             bytes_to_hex_str(&eth_signature.to_bytes())
         );
-        let confirm = UpdateSignerSetTxSignature {
+        let confirm = SignerSetTxSignature {
             ethereum_signer: our_eth_address.to_string(),
             nonce: valset.nonce,
             signature: eth_signature.to_bytes().to_vec(),
         };
-        let msg = Msg::new("/gravity.v1.UpdateSignerSetTxSignature", confirm);
+        let msg = Msg::new("/gravity.v1.SignerSetTxSignature", confirm);
         messages.push(msg);
     }
     let args = contact.get_message_args(our_address, fee).await?;
