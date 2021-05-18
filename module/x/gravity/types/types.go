@@ -1,6 +1,8 @@
 package types
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"math"
 	"sort"
@@ -8,6 +10,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // UInt64FromBytes create uint from binary big endian representation
@@ -57,15 +60,36 @@ func (b EthereumSigners) Sort() {
 	})
 }
 
+// Hash takes the sha256sum of a representation of the signer set
+func (b EthereumSigners) Hash() []byte {
+	b.Sort()
+	var out bytes.Buffer
+	for _, s := range b {
+		out.Write(append(common.HexToAddress(s.EthereumAddress).Bytes(), UInt64Bytes(s.Power)...))
+	}
+	hash := sha256.Sum256(out.Bytes())
+	return hash[:]
+}
+
 // PowerDiff returns the difference in power between two bridge validator sets
-// TODO: this needs to be potentially refactored
+// note this is Gravity bridge power *not* Cosmos voting power. Cosmos voting
+// power is based on the absolute number of tokens in the staking pool at any given
+// time Gravity bridge power is normalized using the equation.
+//
+// validators cosmos voting power / total cosmos voting power in this block = gravity bridge power / u32_max
+//
+// As an example if someone has 52% of the Cosmos voting power when a validator set is created their Gravity
+// bridge voting power is u32_max * .52
+//
+// Normalized voting power dramatically reduces how often we have to produce new validator set updates. For example
+// if the total on chain voting power increases by 1% due to inflation, we shouldn't have to generate a new validator
+// set, after all the validators retained their relative percentages during inflation and normalized Gravity bridge power
+// shows no difference.
 func (b EthereumSigners) PowerDiff(c EthereumSigners) float64 {
-	powers := map[string]int64{}
-	var totalB int64
 	// loop over b and initialize the map with their powers
+	powers := map[string]int64{}
 	for _, bv := range b {
 		powers[bv.EthereumAddress] = int64(bv.Power)
-		totalB += int64(bv.Power)
 	}
 
 	// subtract c powers from powers in the map, initializing
@@ -84,7 +108,7 @@ func (b EthereumSigners) PowerDiff(c EthereumSigners) float64 {
 		delta += math.Abs(float64(v))
 	}
 
-	return math.Abs(delta / float64(totalB))
+	return math.Abs(delta / float64(math.MaxUint32))
 }
 
 // TotalPower returns the total power in the bridge validator set
@@ -131,22 +155,22 @@ func (b EthereumSigners) ValidateBasic() error {
 	return nil
 }
 
-// NewValset returns a new valset
-func NewValset(nonce, height uint64, members EthereumSigners) *UpdateSignerSetTx {
+// NewSignerSetTx returns a new valset
+func NewSignerSetTx(nonce, height uint64, members EthereumSigners) *SignerSetTx {
 	members.Sort()
-	var mem []EthereumSigner
+	var mem []*EthereumSigner
 	for _, val := range members {
-		mem = append(mem, *val)
+		mem = append(mem, val)
 	}
-	return &UpdateSignerSetTx{Nonce: nonce, Signers: mem}
+	return &SignerSetTx{Nonce: nonce, Height: height, Signers: mem}
 }
 
 // WithoutEmptyMembers returns a new Valset without member that have 0 power or an empty Ethereum address.
-func (v *UpdateSignerSetTx) WithoutEmptyMembers() *UpdateSignerSetTx {
+func (v *SignerSetTx) WithoutEmptyMembers() *SignerSetTx {
 	if v == nil {
 		return nil
 	}
-	r := UpdateSignerSetTx{Nonce: v.Nonce, Signers: make([]EthereumSigner, 0, len(v.Signers))}
+	r := SignerSetTx{Nonce: v.Nonce, Signers: make([]*EthereumSigner, 0, len(v.Signers))}
 	for i := range v.Signers {
 		if err := v.Signers[i].ValidateBasic(); err == nil {
 			r.Signers = append(r.Signers, v.Signers[i])
@@ -155,18 +179,18 @@ func (v *UpdateSignerSetTx) WithoutEmptyMembers() *UpdateSignerSetTx {
 	return &r
 }
 
-// UpdateSignerSetTxs is a collection of valset
-type UpdateSignerSetTxs []*UpdateSignerSetTx
+// SignerSetTxs is a collection of valset
+type SignerSetTxs []*SignerSetTx
 
-func (v UpdateSignerSetTxs) Len() int {
+func (v SignerSetTxs) Len() int {
 	return len(v)
 }
 
-func (v UpdateSignerSetTxs) Less(i, j int) bool {
+func (v SignerSetTxs) Less(i, j int) bool {
 	return v[i].Nonce > v[j].Nonce
 }
 
-func (v UpdateSignerSetTxs) Swap(i, j int) {
+func (v SignerSetTxs) Swap(i, j int) {
 	v[i], v[j] = v[j], v[i]
 }
 

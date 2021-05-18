@@ -17,6 +17,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgRequestBatchTx{},
 		&MsgSubmitEthereumEvent{},
 		&MsgSubmitEthereumSignature{},
+		&MsgDelegateKeys{},
 	)
 
 	registry.RegisterInterface(
@@ -26,14 +27,23 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&BatchExecutedEvent{},
 		&ERC20DeployedEvent{},
 		&ContractCallExecutedEvent{},
+		&SignerSetTxExecutedEvent{},
 	)
 
 	registry.RegisterInterface(
-		"gravity.v1.Confirm",
+		"gravity.v1.EthereumSignature",
 		(*EthereumSignature)(nil),
 		&BatchTxSignature{},
 		&ContractCallTxSignature{},
-		&UpdateSignerSetTxSignature{},
+		&SignerSetTxSignature{},
+	)
+
+	registry.RegisterInterface(
+		"gravity.v1.OutgoingTx",
+		(*OutgoingTx)(nil),
+		&SignerSetTx{},
+		&BatchTx{},
+		&ContractCallTx{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
@@ -68,6 +78,20 @@ func UnpackEvent(any *types.Any) (EthereumEvent, error) {
 	return event, nil
 }
 
+func PackSignature(signature EthereumSignature) (*types.Any, error) {
+	msg, ok := signature.(proto.Message)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", signature)
+	}
+
+	anyEvent, err := types.NewAnyWithValue(msg)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrPackAny, err.Error())
+	}
+
+	return anyEvent, nil
+}
+
 // UnpackSignature unpacks an Any into a Confirm interface. It returns an error if the
 // confirm can't be unpacked.
 func UnpackSignature(any *types.Any) (EthereumSignature, error) {
@@ -83,11 +107,10 @@ func UnpackSignature(any *types.Any) (EthereumSignature, error) {
 	return confirm, nil
 }
 
-
-func PackSignature(signature EthereumSignature) (*types.Any, error) {
-	msg, ok := signature.(proto.Message)
+func PackOutgoingTx(outgoing OutgoingTx) (*types.Any, error) {
+	msg, ok := outgoing.(proto.Message)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", signature)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", outgoing)
 	}
 
 	anyEvent, err := types.NewAnyWithValue(msg)
@@ -96,4 +119,25 @@ func PackSignature(signature EthereumSignature) (*types.Any, error) {
 	}
 
 	return anyEvent, nil
+}
+
+func UnpackOutgoingTx(any *types.Any) (OutgoingTx, error) {
+	if any == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, "protobuf Any message cannot be nil")
+	}
+
+	confirm, ok := any.GetCachedValue().(OutgoingTx)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnpackAny, "cannot unpack Any into OutgoingTx %T", any)
+	}
+
+	return confirm, nil
+}
+
+func MustUnpackOutgoingTx(any *types.Any) OutgoingTx {
+	out, err := UnpackOutgoingTx(any)
+	if err != nil {
+		panic(err)
+	}
+	return out
 }

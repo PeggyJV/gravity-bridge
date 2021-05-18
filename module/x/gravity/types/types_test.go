@@ -25,32 +25,16 @@ func TestValsetConfirmHash(t *testing.T) {
 		}
 	}
 
-	var mem []EthereumSigner
+	var mem []*EthereumSigner
 	for _, m := range members {
-		mem = append(mem, *m)
+		mem = append(mem, m)
 	}
-	v := UpdateSignerSetTx{Signers: mem}
+	v := SignerSetTx{Signers: mem}
 	// TODO: this is hardcoded to foo, replace?
-	hash, err := v.GetCheckpoint([]byte("foo"))
-	assert.NoError(t, err, "failed to get checkpoint")
+	hash := v.GetCheckpoint([]byte("foo"))
 	hexHash := hex.EncodeToString(hash)
 	correctHash := "88165860d955aee7dc3e83d9d1156a5864b708841965585d206dbef6e9e1a499"
 	assert.Equal(t, correctHash, hexHash)
-}
-
-func TestValsetCheckpointGold1(t *testing.T) {
-	src := NewValset(0xc, 0xc, EthereumSigners{{
-		Power:           0xffffffff,
-		EthereumAddress: gethcommon.Address{0xb4, 0x62, 0x86, 0x4e, 0x39, 0x5d, 0x88, 0xd6, 0xbc, 0x7c, 0x5d, 0xd5, 0xf3, 0xf5, 0xeb, 0x4c, 0xc2, 0x59, 0x92, 0x55}.String(),
-	}})
-
-	// TODO: this is hardcoded to foo, replace
-	ourHash, err := src.GetCheckpoint([]byte("foo"))
-	assert.NoError(t, err, "unable to get checkpoint")
-
-	// hash from bridge contract
-	goldHash := "0xf024ab7404464494d3919e5a7f0d8ac40804fb9bd39ad5d16cdb3e66aa219b64"[2:]
-	assert.Equal(t, goldHash, hex.EncodeToString(ourHash))
 }
 
 func TestValsetPowerDiff(t *testing.T) {

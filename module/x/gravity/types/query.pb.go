@@ -6,8 +6,10 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
+	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
@@ -29,7 +31,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// rpc Params
+//  rpc Params
 type ParamsRequest struct {
 }
 
@@ -110,24 +112,23 @@ func (m *ParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-// rpc UpdateSignerSetTx
-type UpdateSignerSetTxRequest struct {
-	// NOTE: if nonce is not passed, then return the current
+//  rpc SignerSetTx
+type SignerSetTxRequest struct {
 	Nonce uint64 `protobuf:"varint,1,opt,name=nonce,proto3" json:"nonce,omitempty"`
 }
 
-func (m *UpdateSignerSetTxRequest) Reset()         { *m = UpdateSignerSetTxRequest{} }
-func (m *UpdateSignerSetTxRequest) String() string { return proto.CompactTextString(m) }
-func (*UpdateSignerSetTxRequest) ProtoMessage()    {}
-func (*UpdateSignerSetTxRequest) Descriptor() ([]byte, []int) {
+func (m *SignerSetTxRequest) Reset()         { *m = SignerSetTxRequest{} }
+func (m *SignerSetTxRequest) String() string { return proto.CompactTextString(m) }
+func (*SignerSetTxRequest) ProtoMessage()    {}
+func (*SignerSetTxRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_29a9d4192703013c, []int{2}
 }
-func (m *UpdateSignerSetTxRequest) XXX_Unmarshal(b []byte) error {
+func (m *SignerSetTxRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *UpdateSignerSetTxRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *SignerSetTxRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_UpdateSignerSetTxRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_SignerSetTxRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -137,41 +138,41 @@ func (m *UpdateSignerSetTxRequest) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *UpdateSignerSetTxRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpdateSignerSetTxRequest.Merge(m, src)
+func (m *SignerSetTxRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SignerSetTxRequest.Merge(m, src)
 }
-func (m *UpdateSignerSetTxRequest) XXX_Size() int {
+func (m *SignerSetTxRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *UpdateSignerSetTxRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpdateSignerSetTxRequest.DiscardUnknown(m)
+func (m *SignerSetTxRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SignerSetTxRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UpdateSignerSetTxRequest proto.InternalMessageInfo
+var xxx_messageInfo_SignerSetTxRequest proto.InternalMessageInfo
 
-func (m *UpdateSignerSetTxRequest) GetNonce() uint64 {
+func (m *SignerSetTxRequest) GetNonce() uint64 {
 	if m != nil {
 		return m.Nonce
 	}
 	return 0
 }
 
-type UpdateSignerSetTxResponse struct {
-	SignerSet *UpdateSignerSetTx `protobuf:"bytes,1,opt,name=signer_set,json=signerSet,proto3" json:"signer_set,omitempty"`
+type SignerSetTxResponse struct {
+	SignerSet *SignerSetTx `protobuf:"bytes,1,opt,name=signer_set,json=signerSet,proto3" json:"signer_set,omitempty"`
 }
 
-func (m *UpdateSignerSetTxResponse) Reset()         { *m = UpdateSignerSetTxResponse{} }
-func (m *UpdateSignerSetTxResponse) String() string { return proto.CompactTextString(m) }
-func (*UpdateSignerSetTxResponse) ProtoMessage()    {}
-func (*UpdateSignerSetTxResponse) Descriptor() ([]byte, []int) {
+func (m *SignerSetTxResponse) Reset()         { *m = SignerSetTxResponse{} }
+func (m *SignerSetTxResponse) String() string { return proto.CompactTextString(m) }
+func (*SignerSetTxResponse) ProtoMessage()    {}
+func (*SignerSetTxResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_29a9d4192703013c, []int{3}
 }
-func (m *UpdateSignerSetTxResponse) XXX_Unmarshal(b []byte) error {
+func (m *SignerSetTxResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *UpdateSignerSetTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *SignerSetTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_UpdateSignerSetTxResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_SignerSetTxResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -181,29 +182,32 @@ func (m *UpdateSignerSetTxResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *UpdateSignerSetTxResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpdateSignerSetTxResponse.Merge(m, src)
+func (m *SignerSetTxResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SignerSetTxResponse.Merge(m, src)
 }
-func (m *UpdateSignerSetTxResponse) XXX_Size() int {
+func (m *SignerSetTxResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *UpdateSignerSetTxResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpdateSignerSetTxResponse.DiscardUnknown(m)
+func (m *SignerSetTxResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SignerSetTxResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UpdateSignerSetTxResponse proto.InternalMessageInfo
+var xxx_messageInfo_SignerSetTxResponse proto.InternalMessageInfo
 
-func (m *UpdateSignerSetTxResponse) GetSignerSet() *UpdateSignerSetTx {
+func (m *SignerSetTxResponse) GetSignerSet() *SignerSetTx {
 	if m != nil {
 		return m.SignerSet
 	}
 	return nil
 }
 
-// rpc BatchTx
+//  rpc BatchTx
 type BatchTxRequest struct {
-	Nonce           uint64 `protobuf:"varint,1,opt,name=nonce,proto3" json:"nonce,omitempty"`
-	ContractAddress string `protobuf:"bytes,2,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
+	// NOTE: if nonce is zero then return the current / last batch
+	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
+	// TODO(levi) propose rename to 'token_contract' since that's what
+	// BatchTx uses or rename BatchTx.token_contract to contract_address
+	Nonce uint64 `protobuf:"varint,2,opt,name=nonce,proto3" json:"nonce,omitempty"`
 }
 
 func (m *BatchTxRequest) Reset()         { *m = BatchTxRequest{} }
@@ -239,18 +243,18 @@ func (m *BatchTxRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BatchTxRequest proto.InternalMessageInfo
 
-func (m *BatchTxRequest) GetNonce() uint64 {
-	if m != nil {
-		return m.Nonce
-	}
-	return 0
-}
-
 func (m *BatchTxRequest) GetContractAddress() string {
 	if m != nil {
 		return m.ContractAddress
 	}
 	return ""
+}
+
+func (m *BatchTxRequest) GetNonce() uint64 {
+	if m != nil {
+		return m.Nonce
+	}
+	return 0
 }
 
 type BatchTxResponse struct {
@@ -297,9 +301,9 @@ func (m *BatchTxResponse) GetBatch() *BatchTx {
 	return nil
 }
 
-// rpc ContractCallTx
+//  rpc ContractCallTx
 type ContractCallTxRequest struct {
-	InvalidationId    []byte `protobuf:"bytes,1,opt,name=invalidation_id,json=invalidationId,proto3" json:"invalidation_id,omitempty"`
+	InvalidationScope []byte `protobuf:"bytes,1,opt,name=invalidation_scope,json=invalidationScope,proto3" json:"invalidation_scope,omitempty"`
 	InvalidationNonce uint64 `protobuf:"varint,2,opt,name=invalidation_nonce,json=invalidationNonce,proto3" json:"invalidation_nonce,omitempty"`
 }
 
@@ -336,9 +340,9 @@ func (m *ContractCallTxRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ContractCallTxRequest proto.InternalMessageInfo
 
-func (m *ContractCallTxRequest) GetInvalidationId() []byte {
+func (m *ContractCallTxRequest) GetInvalidationScope() []byte {
 	if m != nil {
-		return m.InvalidationId
+		return m.InvalidationScope
 	}
 	return nil
 }
@@ -394,29 +398,27 @@ func (m *ContractCallTxResponse) GetLogicCall() *ContractCallTx {
 	return nil
 }
 
-// rpc UpdateSignerSetTxEthereumSignatures
-type UpdateSignerSetTxEthereumSignaturesRequest struct {
-	Nonce uint64 `protobuf:"varint,1,opt,name=nonce,proto3" json:"nonce,omitempty"`
+// rpc SignerSetTxEthereumSignatures
+type SignerSetTxEthereumSignaturesRequest struct {
 	// NOTE: if address is passed, return only the signature from that validator
+	Nonce uint64 `protobuf:"varint,1,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	// NOTE: this address can be either a validator or an orchestrator address to
+	// filter by
 	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 }
 
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) Reset() {
-	*m = UpdateSignerSetTxEthereumSignaturesRequest{}
-}
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) String() string {
-	return proto.CompactTextString(m)
-}
-func (*UpdateSignerSetTxEthereumSignaturesRequest) ProtoMessage() {}
-func (*UpdateSignerSetTxEthereumSignaturesRequest) Descriptor() ([]byte, []int) {
+func (m *SignerSetTxEthereumSignaturesRequest) Reset()         { *m = SignerSetTxEthereumSignaturesRequest{} }
+func (m *SignerSetTxEthereumSignaturesRequest) String() string { return proto.CompactTextString(m) }
+func (*SignerSetTxEthereumSignaturesRequest) ProtoMessage()    {}
+func (*SignerSetTxEthereumSignaturesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_29a9d4192703013c, []int{8}
 }
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) XXX_Unmarshal(b []byte) error {
+func (m *SignerSetTxEthereumSignaturesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *SignerSetTxEthereumSignaturesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_UpdateSignerSetTxEthereumSignaturesRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_SignerSetTxEthereumSignaturesRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -426,52 +428,51 @@ func (m *UpdateSignerSetTxEthereumSignaturesRequest) XXX_Marshal(b []byte, deter
 		return b[:n], nil
 	}
 }
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpdateSignerSetTxEthereumSignaturesRequest.Merge(m, src)
+func (m *SignerSetTxEthereumSignaturesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SignerSetTxEthereumSignaturesRequest.Merge(m, src)
 }
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) XXX_Size() int {
+func (m *SignerSetTxEthereumSignaturesRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpdateSignerSetTxEthereumSignaturesRequest.DiscardUnknown(m)
+func (m *SignerSetTxEthereumSignaturesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SignerSetTxEthereumSignaturesRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UpdateSignerSetTxEthereumSignaturesRequest proto.InternalMessageInfo
+var xxx_messageInfo_SignerSetTxEthereumSignaturesRequest proto.InternalMessageInfo
 
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) GetNonce() uint64 {
+func (m *SignerSetTxEthereumSignaturesRequest) GetNonce() uint64 {
 	if m != nil {
 		return m.Nonce
 	}
 	return 0
 }
 
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) GetAddress() string {
+func (m *SignerSetTxEthereumSignaturesRequest) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-type UpdateSignerSetTxEthereumSignaturesResponse struct {
-	Confirm []*UpdateSignerSetTxSignature `protobuf:"bytes,1,rep,name=confirm,proto3" json:"confirm,omitempty"`
+type SignerSetTxEthereumSignaturesResponse struct {
+	// repeated SignerSetTxSignature confirm = 1;
+	// TODO(levi) confirm orchestrator just needs the sigs from all the
+	// validators:
+	Signature [][]byte `protobuf:"bytes,1,rep,name=signature,proto3" json:"signature,omitempty"`
 }
 
-func (m *UpdateSignerSetTxEthereumSignaturesResponse) Reset() {
-	*m = UpdateSignerSetTxEthereumSignaturesResponse{}
-}
-func (m *UpdateSignerSetTxEthereumSignaturesResponse) String() string {
-	return proto.CompactTextString(m)
-}
-func (*UpdateSignerSetTxEthereumSignaturesResponse) ProtoMessage() {}
-func (*UpdateSignerSetTxEthereumSignaturesResponse) Descriptor() ([]byte, []int) {
+func (m *SignerSetTxEthereumSignaturesResponse) Reset()         { *m = SignerSetTxEthereumSignaturesResponse{} }
+func (m *SignerSetTxEthereumSignaturesResponse) String() string { return proto.CompactTextString(m) }
+func (*SignerSetTxEthereumSignaturesResponse) ProtoMessage()    {}
+func (*SignerSetTxEthereumSignaturesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_29a9d4192703013c, []int{9}
 }
-func (m *UpdateSignerSetTxEthereumSignaturesResponse) XXX_Unmarshal(b []byte) error {
+func (m *SignerSetTxEthereumSignaturesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *UpdateSignerSetTxEthereumSignaturesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *SignerSetTxEthereumSignaturesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_UpdateSignerSetTxEthereumSignaturesResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_SignerSetTxEthereumSignaturesResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -481,42 +482,42 @@ func (m *UpdateSignerSetTxEthereumSignaturesResponse) XXX_Marshal(b []byte, dete
 		return b[:n], nil
 	}
 }
-func (m *UpdateSignerSetTxEthereumSignaturesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpdateSignerSetTxEthereumSignaturesResponse.Merge(m, src)
+func (m *SignerSetTxEthereumSignaturesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SignerSetTxEthereumSignaturesResponse.Merge(m, src)
 }
-func (m *UpdateSignerSetTxEthereumSignaturesResponse) XXX_Size() int {
+func (m *SignerSetTxEthereumSignaturesResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *UpdateSignerSetTxEthereumSignaturesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpdateSignerSetTxEthereumSignaturesResponse.DiscardUnknown(m)
+func (m *SignerSetTxEthereumSignaturesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SignerSetTxEthereumSignaturesResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UpdateSignerSetTxEthereumSignaturesResponse proto.InternalMessageInfo
+var xxx_messageInfo_SignerSetTxEthereumSignaturesResponse proto.InternalMessageInfo
 
-func (m *UpdateSignerSetTxEthereumSignaturesResponse) GetConfirm() []*UpdateSignerSetTxSignature {
+func (m *SignerSetTxEthereumSignaturesResponse) GetSignature() [][]byte {
 	if m != nil {
-		return m.Confirm
+		return m.Signature
 	}
 	return nil
 }
 
-// rpc UpdateSignerSetTxs
-type UpdateSignerSetTxsRequest struct {
+//  rpc SignerSetTxs
+type SignerSetTxsRequest struct {
 	Count int64 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
 }
 
-func (m *UpdateSignerSetTxsRequest) Reset()         { *m = UpdateSignerSetTxsRequest{} }
-func (m *UpdateSignerSetTxsRequest) String() string { return proto.CompactTextString(m) }
-func (*UpdateSignerSetTxsRequest) ProtoMessage()    {}
-func (*UpdateSignerSetTxsRequest) Descriptor() ([]byte, []int) {
+func (m *SignerSetTxsRequest) Reset()         { *m = SignerSetTxsRequest{} }
+func (m *SignerSetTxsRequest) String() string { return proto.CompactTextString(m) }
+func (*SignerSetTxsRequest) ProtoMessage()    {}
+func (*SignerSetTxsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_29a9d4192703013c, []int{10}
 }
-func (m *UpdateSignerSetTxsRequest) XXX_Unmarshal(b []byte) error {
+func (m *SignerSetTxsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *UpdateSignerSetTxsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *SignerSetTxsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_UpdateSignerSetTxsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_SignerSetTxsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -526,41 +527,41 @@ func (m *UpdateSignerSetTxsRequest) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *UpdateSignerSetTxsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpdateSignerSetTxsRequest.Merge(m, src)
+func (m *SignerSetTxsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SignerSetTxsRequest.Merge(m, src)
 }
-func (m *UpdateSignerSetTxsRequest) XXX_Size() int {
+func (m *SignerSetTxsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *UpdateSignerSetTxsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpdateSignerSetTxsRequest.DiscardUnknown(m)
+func (m *SignerSetTxsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SignerSetTxsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UpdateSignerSetTxsRequest proto.InternalMessageInfo
+var xxx_messageInfo_SignerSetTxsRequest proto.InternalMessageInfo
 
-func (m *UpdateSignerSetTxsRequest) GetCount() int64 {
+func (m *SignerSetTxsRequest) GetCount() int64 {
 	if m != nil {
 		return m.Count
 	}
 	return 0
 }
 
-type UpdateSignerSetTxsResponse struct {
-	SignerSets []*UpdateSignerSetTx `protobuf:"bytes,1,rep,name=signer_sets,json=signerSets,proto3" json:"signer_sets,omitempty"`
+type SignerSetTxsResponse struct {
+	SignerSets []*SignerSetTx `protobuf:"bytes,1,rep,name=signer_sets,json=signerSets,proto3" json:"signer_sets,omitempty"`
 }
 
-func (m *UpdateSignerSetTxsResponse) Reset()         { *m = UpdateSignerSetTxsResponse{} }
-func (m *UpdateSignerSetTxsResponse) String() string { return proto.CompactTextString(m) }
-func (*UpdateSignerSetTxsResponse) ProtoMessage()    {}
-func (*UpdateSignerSetTxsResponse) Descriptor() ([]byte, []int) {
+func (m *SignerSetTxsResponse) Reset()         { *m = SignerSetTxsResponse{} }
+func (m *SignerSetTxsResponse) String() string { return proto.CompactTextString(m) }
+func (*SignerSetTxsResponse) ProtoMessage()    {}
+func (*SignerSetTxsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_29a9d4192703013c, []int{11}
 }
-func (m *UpdateSignerSetTxsResponse) XXX_Unmarshal(b []byte) error {
+func (m *SignerSetTxsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *UpdateSignerSetTxsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *SignerSetTxsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_UpdateSignerSetTxsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_SignerSetTxsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -570,48 +571,41 @@ func (m *UpdateSignerSetTxsResponse) XXX_Marshal(b []byte, deterministic bool) (
 		return b[:n], nil
 	}
 }
-func (m *UpdateSignerSetTxsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpdateSignerSetTxsResponse.Merge(m, src)
+func (m *SignerSetTxsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SignerSetTxsResponse.Merge(m, src)
 }
-func (m *UpdateSignerSetTxsResponse) XXX_Size() int {
+func (m *SignerSetTxsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *UpdateSignerSetTxsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpdateSignerSetTxsResponse.DiscardUnknown(m)
+func (m *SignerSetTxsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_SignerSetTxsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UpdateSignerSetTxsResponse proto.InternalMessageInfo
+var xxx_messageInfo_SignerSetTxsResponse proto.InternalMessageInfo
 
-func (m *UpdateSignerSetTxsResponse) GetSignerSets() []*UpdateSignerSetTx {
+func (m *SignerSetTxsResponse) GetSignerSets() []*SignerSetTx {
 	if m != nil {
 		return m.SignerSets
 	}
 	return nil
 }
 
-// rpc PendingUpdateSignerSetTxEthereumSignatures
-type PendingUpdateSignerSetTxEthereumSignaturesRequest struct {
-	// NOTE: this is an sdk.AccAddress and can represent either the
-	// orchestartor address or the cooresponding validator address
-	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+//  rpc BatchTxs
+type BatchTxsRequest struct {
 }
 
-func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) Reset() {
-	*m = PendingUpdateSignerSetTxEthereumSignaturesRequest{}
-}
-func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) String() string {
-	return proto.CompactTextString(m)
-}
-func (*PendingUpdateSignerSetTxEthereumSignaturesRequest) ProtoMessage() {}
-func (*PendingUpdateSignerSetTxEthereumSignaturesRequest) Descriptor() ([]byte, []int) {
+func (m *BatchTxsRequest) Reset()         { *m = BatchTxsRequest{} }
+func (m *BatchTxsRequest) String() string { return proto.CompactTextString(m) }
+func (*BatchTxsRequest) ProtoMessage()    {}
+func (*BatchTxsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_29a9d4192703013c, []int{12}
 }
-func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) XXX_Unmarshal(b []byte) error {
+func (m *BatchTxsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *BatchTxsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PendingUpdateSignerSetTxEthereumSignaturesRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_BatchTxsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -621,45 +615,214 @@ func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) XXX_Marshal(b []byte
 		return b[:n], nil
 	}
 }
-func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PendingUpdateSignerSetTxEthereumSignaturesRequest.Merge(m, src)
+func (m *BatchTxsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BatchTxsRequest.Merge(m, src)
 }
-func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) XXX_Size() int {
+func (m *BatchTxsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_PendingUpdateSignerSetTxEthereumSignaturesRequest.DiscardUnknown(m)
+func (m *BatchTxsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_BatchTxsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PendingUpdateSignerSetTxEthereumSignaturesRequest proto.InternalMessageInfo
+var xxx_messageInfo_BatchTxsRequest proto.InternalMessageInfo
 
-func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) GetAddress() string {
+type BatchTxsResponse struct {
+	Batches []*BatchTx `protobuf:"bytes,1,rep,name=batches,proto3" json:"batches,omitempty"`
+}
+
+func (m *BatchTxsResponse) Reset()         { *m = BatchTxsResponse{} }
+func (m *BatchTxsResponse) String() string { return proto.CompactTextString(m) }
+func (*BatchTxsResponse) ProtoMessage()    {}
+func (*BatchTxsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_29a9d4192703013c, []int{13}
+}
+func (m *BatchTxsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BatchTxsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BatchTxsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BatchTxsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BatchTxsResponse.Merge(m, src)
+}
+func (m *BatchTxsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *BatchTxsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_BatchTxsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BatchTxsResponse proto.InternalMessageInfo
+
+func (m *BatchTxsResponse) GetBatches() []*BatchTx {
+	if m != nil {
+		return m.Batches
+	}
+	return nil
+}
+
+//  rpc ContractCallTxs
+type ContractCallTxsRequest struct {
+}
+
+func (m *ContractCallTxsRequest) Reset()         { *m = ContractCallTxsRequest{} }
+func (m *ContractCallTxsRequest) String() string { return proto.CompactTextString(m) }
+func (*ContractCallTxsRequest) ProtoMessage()    {}
+func (*ContractCallTxsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_29a9d4192703013c, []int{14}
+}
+func (m *ContractCallTxsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ContractCallTxsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ContractCallTxsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ContractCallTxsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ContractCallTxsRequest.Merge(m, src)
+}
+func (m *ContractCallTxsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ContractCallTxsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ContractCallTxsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ContractCallTxsRequest proto.InternalMessageInfo
+
+type ContractCallTxsResponse struct {
+	Calls []*ContractCallTx `protobuf:"bytes,1,rep,name=calls,proto3" json:"calls,omitempty"`
+}
+
+func (m *ContractCallTxsResponse) Reset()         { *m = ContractCallTxsResponse{} }
+func (m *ContractCallTxsResponse) String() string { return proto.CompactTextString(m) }
+func (*ContractCallTxsResponse) ProtoMessage()    {}
+func (*ContractCallTxsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_29a9d4192703013c, []int{15}
+}
+func (m *ContractCallTxsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ContractCallTxsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ContractCallTxsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ContractCallTxsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ContractCallTxsResponse.Merge(m, src)
+}
+func (m *ContractCallTxsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ContractCallTxsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ContractCallTxsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ContractCallTxsResponse proto.InternalMessageInfo
+
+func (m *ContractCallTxsResponse) GetCalls() []*ContractCallTx {
+	if m != nil {
+		return m.Calls
+	}
+	return nil
+}
+
+// rpc PendingSignerSetTxEthereumSignatures
+type PendingSignerSetTxEthereumSignaturesRequest struct {
+	// NOTE: this is an sdk.AccAddress and can represent either the
+	// orchestartor address or the cooresponding validator address
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *PendingSignerSetTxEthereumSignaturesRequest) Reset() {
+	*m = PendingSignerSetTxEthereumSignaturesRequest{}
+}
+func (m *PendingSignerSetTxEthereumSignaturesRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*PendingSignerSetTxEthereumSignaturesRequest) ProtoMessage() {}
+func (*PendingSignerSetTxEthereumSignaturesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_29a9d4192703013c, []int{16}
+}
+func (m *PendingSignerSetTxEthereumSignaturesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PendingSignerSetTxEthereumSignaturesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PendingSignerSetTxEthereumSignaturesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PendingSignerSetTxEthereumSignaturesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PendingSignerSetTxEthereumSignaturesRequest.Merge(m, src)
+}
+func (m *PendingSignerSetTxEthereumSignaturesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *PendingSignerSetTxEthereumSignaturesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PendingSignerSetTxEthereumSignaturesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PendingSignerSetTxEthereumSignaturesRequest proto.InternalMessageInfo
+
+func (m *PendingSignerSetTxEthereumSignaturesRequest) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-type PendingUpdateSignerSetTxEthereumSignaturesResponse struct {
-	SignerSets []*UpdateSignerSetTx `protobuf:"bytes,1,rep,name=signer_sets,json=signerSets,proto3" json:"signer_sets,omitempty"`
+type PendingSignerSetTxEthereumSignaturesResponse struct {
+	SignerSets []*SignerSetTx `protobuf:"bytes,1,rep,name=signer_sets,json=signerSets,proto3" json:"signer_sets,omitempty"`
 }
 
-func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) Reset() {
-	*m = PendingUpdateSignerSetTxEthereumSignaturesResponse{}
+func (m *PendingSignerSetTxEthereumSignaturesResponse) Reset() {
+	*m = PendingSignerSetTxEthereumSignaturesResponse{}
 }
-func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) String() string {
+func (m *PendingSignerSetTxEthereumSignaturesResponse) String() string {
 	return proto.CompactTextString(m)
 }
-func (*PendingUpdateSignerSetTxEthereumSignaturesResponse) ProtoMessage() {}
-func (*PendingUpdateSignerSetTxEthereumSignaturesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_29a9d4192703013c, []int{13}
+func (*PendingSignerSetTxEthereumSignaturesResponse) ProtoMessage() {}
+func (*PendingSignerSetTxEthereumSignaturesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_29a9d4192703013c, []int{17}
 }
-func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) XXX_Unmarshal(b []byte) error {
+func (m *PendingSignerSetTxEthereumSignaturesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *PendingSignerSetTxEthereumSignaturesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PendingUpdateSignerSetTxEthereumSignaturesResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_PendingSignerSetTxEthereumSignaturesResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -669,19 +832,19 @@ func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) XXX_Marshal(b []byt
 		return b[:n], nil
 	}
 }
-func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PendingUpdateSignerSetTxEthereumSignaturesResponse.Merge(m, src)
+func (m *PendingSignerSetTxEthereumSignaturesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PendingSignerSetTxEthereumSignaturesResponse.Merge(m, src)
 }
-func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) XXX_Size() int {
+func (m *PendingSignerSetTxEthereumSignaturesResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_PendingUpdateSignerSetTxEthereumSignaturesResponse.DiscardUnknown(m)
+func (m *PendingSignerSetTxEthereumSignaturesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PendingSignerSetTxEthereumSignaturesResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PendingUpdateSignerSetTxEthereumSignaturesResponse proto.InternalMessageInfo
+var xxx_messageInfo_PendingSignerSetTxEthereumSignaturesResponse proto.InternalMessageInfo
 
-func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) GetSignerSets() []*UpdateSignerSetTx {
+func (m *PendingSignerSetTxEthereumSignaturesResponse) GetSignerSets() []*SignerSetTx {
 	if m != nil {
 		return m.SignerSets
 	}
@@ -700,7 +863,7 @@ func (m *PendingBatchTxEthereumSignaturesRequest) Reset() {
 func (m *PendingBatchTxEthereumSignaturesRequest) String() string { return proto.CompactTextString(m) }
 func (*PendingBatchTxEthereumSignaturesRequest) ProtoMessage()    {}
 func (*PendingBatchTxEthereumSignaturesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_29a9d4192703013c, []int{14}
+	return fileDescriptor_29a9d4192703013c, []int{18}
 }
 func (m *PendingBatchTxEthereumSignaturesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -747,7 +910,7 @@ func (m *PendingBatchTxEthereumSignaturesResponse) Reset() {
 func (m *PendingBatchTxEthereumSignaturesResponse) String() string { return proto.CompactTextString(m) }
 func (*PendingBatchTxEthereumSignaturesResponse) ProtoMessage()    {}
 func (*PendingBatchTxEthereumSignaturesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_29a9d4192703013c, []int{15}
+	return fileDescriptor_29a9d4192703013c, []int{19}
 }
 func (m *PendingBatchTxEthereumSignaturesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -783,6 +946,7 @@ func (m *PendingBatchTxEthereumSignaturesResponse) GetBatches() []*BatchTx {
 	return nil
 }
 
+//  rpc PendingContractCallTxEthereumSignatures
 type PendingContractCallTxEthereumSignaturesRequest struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
@@ -795,7 +959,7 @@ func (m *PendingContractCallTxEthereumSignaturesRequest) String() string {
 }
 func (*PendingContractCallTxEthereumSignaturesRequest) ProtoMessage() {}
 func (*PendingContractCallTxEthereumSignaturesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_29a9d4192703013c, []int{16}
+	return fileDescriptor_29a9d4192703013c, []int{20}
 }
 func (m *PendingContractCallTxEthereumSignaturesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -843,7 +1007,7 @@ func (m *PendingContractCallTxEthereumSignaturesResponse) String() string {
 }
 func (*PendingContractCallTxEthereumSignaturesResponse) ProtoMessage() {}
 func (*PendingContractCallTxEthereumSignaturesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_29a9d4192703013c, []int{17}
+	return fileDescriptor_29a9d4192703013c, []int{21}
 }
 func (m *PendingContractCallTxEthereumSignaturesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -886,7 +1050,7 @@ func (m *BatchTxFeesRequest) Reset()         { *m = BatchTxFeesRequest{} }
 func (m *BatchTxFeesRequest) String() string { return proto.CompactTextString(m) }
 func (*BatchTxFeesRequest) ProtoMessage()    {}
 func (*BatchTxFeesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_29a9d4192703013c, []int{18}
+	return fileDescriptor_29a9d4192703013c, []int{22}
 }
 func (m *BatchTxFeesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -916,14 +1080,14 @@ func (m *BatchTxFeesRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_BatchTxFeesRequest proto.InternalMessageInfo
 
 type BatchTxFeesResponse struct {
-	Fees []types.Coin `protobuf:"bytes,1,rep,name=fees,proto3" json:"fees"`
+	Fees github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=fees,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"fees"`
 }
 
 func (m *BatchTxFeesResponse) Reset()         { *m = BatchTxFeesResponse{} }
 func (m *BatchTxFeesResponse) String() string { return proto.CompactTextString(m) }
 func (*BatchTxFeesResponse) ProtoMessage()    {}
 func (*BatchTxFeesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_29a9d4192703013c, []int{19}
+	return fileDescriptor_29a9d4192703013c, []int{23}
 }
 func (m *BatchTxFeesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -952,7 +1116,7 @@ func (m *BatchTxFeesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BatchTxFeesResponse proto.InternalMessageInfo
 
-func (m *BatchTxFeesResponse) GetFees() []types.Coin {
+func (m *BatchTxFeesResponse) GetFees() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.Fees
 	}
@@ -960,7 +1124,11 @@ func (m *BatchTxFeesResponse) GetFees() []types.Coin {
 }
 
 type ContractCallTxEthereumSignaturesRequest struct {
-	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	InvalidationScope []byte `protobuf:"bytes,1,opt,name=invalidation_scope,json=invalidationScope,proto3" json:"invalidation_scope,omitempty"`
+	InvalidationNonce uint64 `protobuf:"varint,2,opt,name=invalidation_nonce,json=invalidationNonce,proto3" json:"invalidation_nonce,omitempty"`
+	// NOTE: this is an sdk.AccAddress and can represent either the
+	// orchestartor address or the cooresponding validator address
+	Address string `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
 }
 
 func (m *ContractCallTxEthereumSignaturesRequest) Reset() {
@@ -969,7 +1137,7 @@ func (m *ContractCallTxEthereumSignaturesRequest) Reset() {
 func (m *ContractCallTxEthereumSignaturesRequest) String() string { return proto.CompactTextString(m) }
 func (*ContractCallTxEthereumSignaturesRequest) ProtoMessage()    {}
 func (*ContractCallTxEthereumSignaturesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_29a9d4192703013c, []int{20}
+	return fileDescriptor_29a9d4192703013c, []int{24}
 }
 func (m *ContractCallTxEthereumSignaturesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -998,6 +1166,20 @@ func (m *ContractCallTxEthereumSignaturesRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ContractCallTxEthereumSignaturesRequest proto.InternalMessageInfo
 
+func (m *ContractCallTxEthereumSignaturesRequest) GetInvalidationScope() []byte {
+	if m != nil {
+		return m.InvalidationScope
+	}
+	return nil
+}
+
+func (m *ContractCallTxEthereumSignaturesRequest) GetInvalidationNonce() uint64 {
+	if m != nil {
+		return m.InvalidationNonce
+	}
+	return 0
+}
+
 func (m *ContractCallTxEthereumSignaturesRequest) GetAddress() string {
 	if m != nil {
 		return m.Address
@@ -1007,7 +1189,9 @@ func (m *ContractCallTxEthereumSignaturesRequest) GetAddress() string {
 
 type ContractCallTxEthereumSignaturesResponse struct {
 	// Note these are returned with the signature empty
-	LogicCallConfirms []*ContractCallTx `protobuf:"bytes,1,rep,name=logic_call_confirms,json=logicCallConfirms,proto3" json:"logic_call_confirms,omitempty"`
+	// TODO(levi) review rust to ensure we can have bytes repeated ContractCallTx
+	// logic_call_confirms = 1;
+	Signature [][]byte `protobuf:"bytes,1,rep,name=signature,proto3" json:"signature,omitempty"`
 }
 
 func (m *ContractCallTxEthereumSignaturesResponse) Reset() {
@@ -1016,7 +1200,7 @@ func (m *ContractCallTxEthereumSignaturesResponse) Reset() {
 func (m *ContractCallTxEthereumSignaturesResponse) String() string { return proto.CompactTextString(m) }
 func (*ContractCallTxEthereumSignaturesResponse) ProtoMessage()    {}
 func (*ContractCallTxEthereumSignaturesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_29a9d4192703013c, []int{21}
+	return fileDescriptor_29a9d4192703013c, []int{25}
 }
 func (m *ContractCallTxEthereumSignaturesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1045,169 +1229,9 @@ func (m *ContractCallTxEthereumSignaturesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ContractCallTxEthereumSignaturesResponse proto.InternalMessageInfo
 
-func (m *ContractCallTxEthereumSignaturesResponse) GetLogicCallConfirms() []*ContractCallTx {
+func (m *ContractCallTxEthereumSignaturesResponse) GetSignature() [][]byte {
 	if m != nil {
-		return m.LogicCallConfirms
-	}
-	return nil
-}
-
-type BatchTxsRequest struct {
-}
-
-func (m *BatchTxsRequest) Reset()         { *m = BatchTxsRequest{} }
-func (m *BatchTxsRequest) String() string { return proto.CompactTextString(m) }
-func (*BatchTxsRequest) ProtoMessage()    {}
-func (*BatchTxsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_29a9d4192703013c, []int{22}
-}
-func (m *BatchTxsRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *BatchTxsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_BatchTxsRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *BatchTxsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BatchTxsRequest.Merge(m, src)
-}
-func (m *BatchTxsRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *BatchTxsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_BatchTxsRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_BatchTxsRequest proto.InternalMessageInfo
-
-type BatchTxsResponse struct {
-	Batches []*BatchTx `protobuf:"bytes,1,rep,name=batches,proto3" json:"batches,omitempty"`
-}
-
-func (m *BatchTxsResponse) Reset()         { *m = BatchTxsResponse{} }
-func (m *BatchTxsResponse) String() string { return proto.CompactTextString(m) }
-func (*BatchTxsResponse) ProtoMessage()    {}
-func (*BatchTxsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_29a9d4192703013c, []int{23}
-}
-func (m *BatchTxsResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *BatchTxsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_BatchTxsResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *BatchTxsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BatchTxsResponse.Merge(m, src)
-}
-func (m *BatchTxsResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *BatchTxsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_BatchTxsResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_BatchTxsResponse proto.InternalMessageInfo
-
-func (m *BatchTxsResponse) GetBatches() []*BatchTx {
-	if m != nil {
-		return m.Batches
-	}
-	return nil
-}
-
-type ContractCallTxsRequest struct {
-}
-
-func (m *ContractCallTxsRequest) Reset()         { *m = ContractCallTxsRequest{} }
-func (m *ContractCallTxsRequest) String() string { return proto.CompactTextString(m) }
-func (*ContractCallTxsRequest) ProtoMessage()    {}
-func (*ContractCallTxsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_29a9d4192703013c, []int{24}
-}
-func (m *ContractCallTxsRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *ContractCallTxsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ContractCallTxsRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *ContractCallTxsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ContractCallTxsRequest.Merge(m, src)
-}
-func (m *ContractCallTxsRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *ContractCallTxsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ContractCallTxsRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ContractCallTxsRequest proto.InternalMessageInfo
-
-type ContractCallTxsResponse struct {
-	Calls []*ContractCallTx `protobuf:"bytes,1,rep,name=calls,proto3" json:"calls,omitempty"`
-}
-
-func (m *ContractCallTxsResponse) Reset()         { *m = ContractCallTxsResponse{} }
-func (m *ContractCallTxsResponse) String() string { return proto.CompactTextString(m) }
-func (*ContractCallTxsResponse) ProtoMessage()    {}
-func (*ContractCallTxsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_29a9d4192703013c, []int{25}
-}
-func (m *ContractCallTxsResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *ContractCallTxsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ContractCallTxsResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *ContractCallTxsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ContractCallTxsResponse.Merge(m, src)
-}
-func (m *ContractCallTxsResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *ContractCallTxsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ContractCallTxsResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ContractCallTxsResponse proto.InternalMessageInfo
-
-func (m *ContractCallTxsResponse) GetCalls() []*ContractCallTx {
-	if m != nil {
-		return m.Calls
+		return m.Signature
 	}
 	return nil
 }
@@ -1215,6 +1239,9 @@ func (m *ContractCallTxsResponse) GetCalls() []*ContractCallTx {
 type BatchTxEthereumSignaturesRequest struct {
 	Nonce           uint64 `protobuf:"varint,1,opt,name=nonce,proto3" json:"nonce,omitempty"`
 	ContractAddress string `protobuf:"bytes,2,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
+	// note if this address is empty return all sigs for a given batch.
+	// if not return only the signature for the give validator or orchestrator key
+	Address string `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
 }
 
 func (m *BatchTxEthereumSignaturesRequest) Reset()         { *m = BatchTxEthereumSignaturesRequest{} }
@@ -1264,8 +1291,17 @@ func (m *BatchTxEthereumSignaturesRequest) GetContractAddress() string {
 	return ""
 }
 
+func (m *BatchTxEthereumSignaturesRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
 type BatchTxEthereumSignaturesResponse struct {
-	Confirms []*BatchTxSignature `protobuf:"bytes,1,rep,name=confirms,proto3" json:"confirms,omitempty"`
+	// TODO(levi) review rust to ensure we can have bytes repeated
+	// BatchTxSignature confirms = 1;
+	Signature [][]byte `protobuf:"bytes,1,rep,name=signature,proto3" json:"signature,omitempty"`
 }
 
 func (m *BatchTxEthereumSignaturesResponse) Reset()         { *m = BatchTxEthereumSignaturesResponse{} }
@@ -1301,9 +1337,9 @@ func (m *BatchTxEthereumSignaturesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BatchTxEthereumSignaturesResponse proto.InternalMessageInfo
 
-func (m *BatchTxEthereumSignaturesResponse) GetConfirms() []*BatchTxSignature {
+func (m *BatchTxEthereumSignaturesResponse) GetSignature() [][]byte {
 	if m != nil {
-		return m.Confirms
+		return m.Signature
 	}
 	return nil
 }
@@ -1884,22 +1920,22 @@ func (m *DelegateKeysByOrchestratorAddressResponse) GetEthereumSigner() string {
 
 // NOTE: if there is no sender address, return all
 // TODO: pagination
-type PendingSendToEthereumTxsRequest struct {
+type PendingSendToEthereumsRequest struct {
 	SenderAddress string `protobuf:"bytes,1,opt,name=sender_address,json=senderAddress,proto3" json:"sender_address,omitempty"`
 }
 
-func (m *PendingSendToEthereumTxsRequest) Reset()         { *m = PendingSendToEthereumTxsRequest{} }
-func (m *PendingSendToEthereumTxsRequest) String() string { return proto.CompactTextString(m) }
-func (*PendingSendToEthereumTxsRequest) ProtoMessage()    {}
-func (*PendingSendToEthereumTxsRequest) Descriptor() ([]byte, []int) {
+func (m *PendingSendToEthereumsRequest) Reset()         { *m = PendingSendToEthereumsRequest{} }
+func (m *PendingSendToEthereumsRequest) String() string { return proto.CompactTextString(m) }
+func (*PendingSendToEthereumsRequest) ProtoMessage()    {}
+func (*PendingSendToEthereumsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_29a9d4192703013c, []int{40}
 }
-func (m *PendingSendToEthereumTxsRequest) XXX_Unmarshal(b []byte) error {
+func (m *PendingSendToEthereumsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PendingSendToEthereumTxsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *PendingSendToEthereumsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PendingSendToEthereumTxsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_PendingSendToEthereumsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1909,42 +1945,42 @@ func (m *PendingSendToEthereumTxsRequest) XXX_Marshal(b []byte, deterministic bo
 		return b[:n], nil
 	}
 }
-func (m *PendingSendToEthereumTxsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PendingSendToEthereumTxsRequest.Merge(m, src)
+func (m *PendingSendToEthereumsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PendingSendToEthereumsRequest.Merge(m, src)
 }
-func (m *PendingSendToEthereumTxsRequest) XXX_Size() int {
+func (m *PendingSendToEthereumsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *PendingSendToEthereumTxsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_PendingSendToEthereumTxsRequest.DiscardUnknown(m)
+func (m *PendingSendToEthereumsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PendingSendToEthereumsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PendingSendToEthereumTxsRequest proto.InternalMessageInfo
+var xxx_messageInfo_PendingSendToEthereumsRequest proto.InternalMessageInfo
 
-func (m *PendingSendToEthereumTxsRequest) GetSenderAddress() string {
+func (m *PendingSendToEthereumsRequest) GetSenderAddress() string {
 	if m != nil {
 		return m.SenderAddress
 	}
 	return ""
 }
 
-type PendingSendToEthereumTxsResponse struct {
-	BatchedSendToEthereumTxs   []*SendToEthereumTx `protobuf:"bytes,1,rep,name=batched_send_to_ethereum_txs,json=batchedSendToEthereumTxs,proto3" json:"batched_send_to_ethereum_txs,omitempty"`
-	UnbatchedSendToEthereumTxs []*SendToEthereumTx `protobuf:"bytes,2,rep,name=unbatched_send_to_ethereum_txs,json=unbatchedSendToEthereumTxs,proto3" json:"unbatched_send_to_ethereum_txs,omitempty"`
+type PendingSendToEthereumsResponse struct {
+	BatchedSendToEthereumTxs   []*SendToEthereum `protobuf:"bytes,1,rep,name=batched_send_to_ethereum_txs,json=batchedSendToEthereumTxs,proto3" json:"batched_send_to_ethereum_txs,omitempty"`
+	UnbatchedSendToEthereumTxs []*SendToEthereum `protobuf:"bytes,2,rep,name=unbatched_send_to_ethereum_txs,json=unbatchedSendToEthereumTxs,proto3" json:"unbatched_send_to_ethereum_txs,omitempty"`
 }
 
-func (m *PendingSendToEthereumTxsResponse) Reset()         { *m = PendingSendToEthereumTxsResponse{} }
-func (m *PendingSendToEthereumTxsResponse) String() string { return proto.CompactTextString(m) }
-func (*PendingSendToEthereumTxsResponse) ProtoMessage()    {}
-func (*PendingSendToEthereumTxsResponse) Descriptor() ([]byte, []int) {
+func (m *PendingSendToEthereumsResponse) Reset()         { *m = PendingSendToEthereumsResponse{} }
+func (m *PendingSendToEthereumsResponse) String() string { return proto.CompactTextString(m) }
+func (*PendingSendToEthereumsResponse) ProtoMessage()    {}
+func (*PendingSendToEthereumsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_29a9d4192703013c, []int{41}
 }
-func (m *PendingSendToEthereumTxsResponse) XXX_Unmarshal(b []byte) error {
+func (m *PendingSendToEthereumsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PendingSendToEthereumTxsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *PendingSendToEthereumsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PendingSendToEthereumTxsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_PendingSendToEthereumsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -1954,26 +1990,26 @@ func (m *PendingSendToEthereumTxsResponse) XXX_Marshal(b []byte, deterministic b
 		return b[:n], nil
 	}
 }
-func (m *PendingSendToEthereumTxsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PendingSendToEthereumTxsResponse.Merge(m, src)
+func (m *PendingSendToEthereumsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PendingSendToEthereumsResponse.Merge(m, src)
 }
-func (m *PendingSendToEthereumTxsResponse) XXX_Size() int {
+func (m *PendingSendToEthereumsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *PendingSendToEthereumTxsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_PendingSendToEthereumTxsResponse.DiscardUnknown(m)
+func (m *PendingSendToEthereumsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PendingSendToEthereumsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PendingSendToEthereumTxsResponse proto.InternalMessageInfo
+var xxx_messageInfo_PendingSendToEthereumsResponse proto.InternalMessageInfo
 
-func (m *PendingSendToEthereumTxsResponse) GetBatchedSendToEthereumTxs() []*SendToEthereumTx {
+func (m *PendingSendToEthereumsResponse) GetBatchedSendToEthereumTxs() []*SendToEthereum {
 	if m != nil {
 		return m.BatchedSendToEthereumTxs
 	}
 	return nil
 }
 
-func (m *PendingSendToEthereumTxsResponse) GetUnbatchedSendToEthereumTxs() []*SendToEthereumTx {
+func (m *PendingSendToEthereumsResponse) GetUnbatchedSendToEthereumTxs() []*SendToEthereum {
 	if m != nil {
 		return m.UnbatchedSendToEthereumTxs
 	}
@@ -1983,18 +2019,22 @@ func (m *PendingSendToEthereumTxsResponse) GetUnbatchedSendToEthereumTxs() []*Se
 func init() {
 	proto.RegisterType((*ParamsRequest)(nil), "gravity.v1.ParamsRequest")
 	proto.RegisterType((*ParamsResponse)(nil), "gravity.v1.ParamsResponse")
-	proto.RegisterType((*UpdateSignerSetTxRequest)(nil), "gravity.v1.UpdateSignerSetTxRequest")
-	proto.RegisterType((*UpdateSignerSetTxResponse)(nil), "gravity.v1.UpdateSignerSetTxResponse")
+	proto.RegisterType((*SignerSetTxRequest)(nil), "gravity.v1.SignerSetTxRequest")
+	proto.RegisterType((*SignerSetTxResponse)(nil), "gravity.v1.SignerSetTxResponse")
 	proto.RegisterType((*BatchTxRequest)(nil), "gravity.v1.BatchTxRequest")
 	proto.RegisterType((*BatchTxResponse)(nil), "gravity.v1.BatchTxResponse")
 	proto.RegisterType((*ContractCallTxRequest)(nil), "gravity.v1.ContractCallTxRequest")
 	proto.RegisterType((*ContractCallTxResponse)(nil), "gravity.v1.ContractCallTxResponse")
-	proto.RegisterType((*UpdateSignerSetTxEthereumSignaturesRequest)(nil), "gravity.v1.UpdateSignerSetTxEthereumSignaturesRequest")
-	proto.RegisterType((*UpdateSignerSetTxEthereumSignaturesResponse)(nil), "gravity.v1.UpdateSignerSetTxEthereumSignaturesResponse")
-	proto.RegisterType((*UpdateSignerSetTxsRequest)(nil), "gravity.v1.UpdateSignerSetTxsRequest")
-	proto.RegisterType((*UpdateSignerSetTxsResponse)(nil), "gravity.v1.UpdateSignerSetTxsResponse")
-	proto.RegisterType((*PendingUpdateSignerSetTxEthereumSignaturesRequest)(nil), "gravity.v1.PendingUpdateSignerSetTxEthereumSignaturesRequest")
-	proto.RegisterType((*PendingUpdateSignerSetTxEthereumSignaturesResponse)(nil), "gravity.v1.PendingUpdateSignerSetTxEthereumSignaturesResponse")
+	proto.RegisterType((*SignerSetTxEthereumSignaturesRequest)(nil), "gravity.v1.SignerSetTxEthereumSignaturesRequest")
+	proto.RegisterType((*SignerSetTxEthereumSignaturesResponse)(nil), "gravity.v1.SignerSetTxEthereumSignaturesResponse")
+	proto.RegisterType((*SignerSetTxsRequest)(nil), "gravity.v1.SignerSetTxsRequest")
+	proto.RegisterType((*SignerSetTxsResponse)(nil), "gravity.v1.SignerSetTxsResponse")
+	proto.RegisterType((*BatchTxsRequest)(nil), "gravity.v1.BatchTxsRequest")
+	proto.RegisterType((*BatchTxsResponse)(nil), "gravity.v1.BatchTxsResponse")
+	proto.RegisterType((*ContractCallTxsRequest)(nil), "gravity.v1.ContractCallTxsRequest")
+	proto.RegisterType((*ContractCallTxsResponse)(nil), "gravity.v1.ContractCallTxsResponse")
+	proto.RegisterType((*PendingSignerSetTxEthereumSignaturesRequest)(nil), "gravity.v1.PendingSignerSetTxEthereumSignaturesRequest")
+	proto.RegisterType((*PendingSignerSetTxEthereumSignaturesResponse)(nil), "gravity.v1.PendingSignerSetTxEthereumSignaturesResponse")
 	proto.RegisterType((*PendingBatchTxEthereumSignaturesRequest)(nil), "gravity.v1.PendingBatchTxEthereumSignaturesRequest")
 	proto.RegisterType((*PendingBatchTxEthereumSignaturesResponse)(nil), "gravity.v1.PendingBatchTxEthereumSignaturesResponse")
 	proto.RegisterType((*PendingContractCallTxEthereumSignaturesRequest)(nil), "gravity.v1.PendingContractCallTxEthereumSignaturesRequest")
@@ -2003,10 +2043,6 @@ func init() {
 	proto.RegisterType((*BatchTxFeesResponse)(nil), "gravity.v1.BatchTxFeesResponse")
 	proto.RegisterType((*ContractCallTxEthereumSignaturesRequest)(nil), "gravity.v1.ContractCallTxEthereumSignaturesRequest")
 	proto.RegisterType((*ContractCallTxEthereumSignaturesResponse)(nil), "gravity.v1.ContractCallTxEthereumSignaturesResponse")
-	proto.RegisterType((*BatchTxsRequest)(nil), "gravity.v1.BatchTxsRequest")
-	proto.RegisterType((*BatchTxsResponse)(nil), "gravity.v1.BatchTxsResponse")
-	proto.RegisterType((*ContractCallTxsRequest)(nil), "gravity.v1.ContractCallTxsRequest")
-	proto.RegisterType((*ContractCallTxsResponse)(nil), "gravity.v1.ContractCallTxsResponse")
 	proto.RegisterType((*BatchTxEthereumSignaturesRequest)(nil), "gravity.v1.BatchTxEthereumSignaturesRequest")
 	proto.RegisterType((*BatchTxEthereumSignaturesResponse)(nil), "gravity.v1.BatchTxEthereumSignaturesResponse")
 	proto.RegisterType((*LastSubmittedEthereumEventRequest)(nil), "gravity.v1.LastSubmittedEthereumEventRequest")
@@ -2021,126 +2057,127 @@ func init() {
 	proto.RegisterType((*DelegateKeysByEthereumSignerResponse)(nil), "gravity.v1.DelegateKeysByEthereumSignerResponse")
 	proto.RegisterType((*DelegateKeysByOrchestratorAddress)(nil), "gravity.v1.DelegateKeysByOrchestratorAddress")
 	proto.RegisterType((*DelegateKeysByOrchestratorAddressResponse)(nil), "gravity.v1.DelegateKeysByOrchestratorAddressResponse")
-	proto.RegisterType((*PendingSendToEthereumTxsRequest)(nil), "gravity.v1.PendingSendToEthereumTxsRequest")
-	proto.RegisterType((*PendingSendToEthereumTxsResponse)(nil), "gravity.v1.PendingSendToEthereumTxsResponse")
+	proto.RegisterType((*PendingSendToEthereumsRequest)(nil), "gravity.v1.PendingSendToEthereumsRequest")
+	proto.RegisterType((*PendingSendToEthereumsResponse)(nil), "gravity.v1.PendingSendToEthereumsResponse")
 }
 
 func init() { proto.RegisterFile("gravity/v1/query.proto", fileDescriptor_29a9d4192703013c) }
 
 var fileDescriptor_29a9d4192703013c = []byte{
-	// 1787 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x59, 0xdd, 0x6f, 0x14, 0x55,
-	0x14, 0xef, 0x14, 0x4a, 0xe1, 0x14, 0xfa, 0x71, 0x5b, 0x60, 0x3b, 0x94, 0xed, 0x76, 0x4a, 0xa1,
-	0xf4, 0x63, 0x67, 0x77, 0x29, 0x14, 0x15, 0x88, 0xb4, 0xd4, 0x28, 0xc8, 0xd7, 0xb6, 0x92, 0xa0,
-	0x98, 0x75, 0xba, 0x73, 0xd9, 0x8e, 0xec, 0xce, 0x5d, 0x66, 0x66, 0x37, 0x34, 0xa5, 0x89, 0x18,
-	0xa3, 0xaf, 0x1a, 0xff, 0x05, 0x9f, 0x48, 0x7c, 0xf1, 0xd9, 0xc4, 0xf8, 0x86, 0x3e, 0x91, 0xf8,
-	0xa2, 0x2f, 0x6a, 0x8a, 0xfe, 0x1f, 0x66, 0xee, 0xdc, 0x99, 0xbd, 0xb3, 0xf3, 0xb1, 0x1f, 0xf8,
-	0xd4, 0xbd, 0xe7, 0x9e, 0x73, 0x7e, 0xbf, 0x73, 0xee, 0xb9, 0x1f, 0x67, 0x0a, 0xc7, 0x4a, 0x86,
-	0x52, 0xd7, 0xac, 0x6d, 0xb9, 0x9e, 0x95, 0x1f, 0xd7, 0xb0, 0xb1, 0x9d, 0xae, 0x1a, 0xc4, 0x22,
-	0x08, 0x98, 0x3c, 0x5d, 0xcf, 0x8a, 0x09, 0x4e, 0xa7, 0x84, 0x75, 0x6c, 0x6a, 0xa6, 0xa3, 0xe5,
-	0x9f, 0x61, 0x06, 0xce, 0xcc, 0x51, 0x6e, 0xa6, 0x62, 0x96, 0x5c, 0x83, 0x64, 0x91, 0x98, 0x15,
-	0x62, 0xca, 0x9b, 0x8a, 0x89, 0xe5, 0x7a, 0x76, 0x13, 0x5b, 0x4a, 0x56, 0x2e, 0x12, 0x4d, 0x67,
-	0xf3, 0x13, 0x25, 0x42, 0x4a, 0x65, 0x2c, 0x2b, 0x55, 0x4d, 0x56, 0x74, 0x9d, 0x58, 0x8a, 0xa5,
-	0x11, 0xdd, 0xb5, 0x1e, 0x2b, 0x91, 0x12, 0xa1, 0x3f, 0x65, 0xfb, 0x97, 0x23, 0x95, 0x86, 0xe0,
-	0xc8, 0x1d, 0xc5, 0x50, 0x2a, 0x66, 0x1e, 0x3f, 0xae, 0x61, 0xd3, 0x92, 0x56, 0x60, 0xd0, 0x15,
-	0x98, 0x55, 0xa2, 0x9b, 0x18, 0x65, 0xe0, 0x40, 0x95, 0x4a, 0x12, 0x42, 0x4a, 0x98, 0x1d, 0xc8,
-	0xa1, 0x74, 0x23, 0xbc, 0xb4, 0xa3, 0xbb, 0xb2, 0xff, 0xc5, 0x9f, 0x93, 0x3d, 0x79, 0xa6, 0x27,
-	0x65, 0x20, 0xf1, 0x41, 0x55, 0x55, 0x2c, 0xbc, 0xae, 0x95, 0x74, 0x6c, 0xac, 0x63, 0x6b, 0xe3,
-	0x09, 0xf3, 0x8f, 0xc6, 0xa0, 0x4f, 0x27, 0x7a, 0x11, 0x53, 0x67, 0xfb, 0xf3, 0xce, 0x40, 0xba,
-	0x0f, 0xe3, 0x21, 0x16, 0x8c, 0xc0, 0x25, 0x00, 0x93, 0x8a, 0x0b, 0x26, 0xb6, 0x18, 0x89, 0x93,
-	0x3c, 0x89, 0xa0, 0xe9, 0x21, 0xd3, 0x1d, 0x48, 0x77, 0x61, 0x70, 0x45, 0xb1, 0x8a, 0x5b, 0x2d,
-	0x28, 0xa0, 0xb3, 0x30, 0x5c, 0x24, 0xba, 0x65, 0x28, 0x45, 0xab, 0xa0, 0xa8, 0xaa, 0x81, 0x4d,
-	0x33, 0xd1, 0x9b, 0x12, 0x66, 0x0f, 0xe5, 0x87, 0x5c, 0xf9, 0x55, 0x47, 0x2c, 0x5d, 0x82, 0x21,
-	0xcf, 0x25, 0xe3, 0x78, 0x16, 0xfa, 0x36, 0x6d, 0x11, 0xa3, 0x37, 0xca, 0xd3, 0x73, 0x75, 0x1d,
-	0x0d, 0x89, 0xc0, 0xd1, 0x55, 0xe6, 0x70, 0x55, 0x29, 0x97, 0x1b, 0xbc, 0xce, 0xc0, 0x90, 0xa6,
-	0xd7, 0x95, 0xb2, 0xa6, 0xd2, 0x85, 0x2b, 0x68, 0x2a, 0xf5, 0x76, 0x38, 0x3f, 0xc8, 0x8b, 0xdf,
-	0x53, 0xd1, 0x22, 0x20, 0x9f, 0xa2, 0x13, 0x4d, 0x2f, 0x8d, 0x66, 0x84, 0x9f, 0xb9, 0x45, 0x93,
-	0xbb, 0x0e, 0xc7, 0x9a, 0x01, 0x19, 0xeb, 0x37, 0x00, 0xca, 0xa4, 0xa4, 0x15, 0x0b, 0x45, 0xa5,
-	0x5c, 0x66, 0xd4, 0x45, 0x9e, 0x7a, 0x93, 0xdd, 0x21, 0xaa, 0x6d, 0x0f, 0xa4, 0x07, 0x30, 0x17,
-	0x48, 0xfb, 0x9a, 0xb5, 0x85, 0x0d, 0x5c, 0xab, 0xd8, 0x22, 0xc5, 0xaa, 0x19, 0xd8, 0x8c, 0x4f,
-	0x79, 0x02, 0xfa, 0xfd, 0x99, 0x76, 0x87, 0x12, 0x81, 0xf9, 0xb6, 0xbc, 0xb3, 0x38, 0xde, 0x86,
-	0xfe, 0x22, 0xd1, 0x1f, 0x6a, 0x46, 0x25, 0x21, 0xa4, 0xf6, 0xcd, 0x0e, 0xe4, 0x4e, 0xc7, 0x96,
-	0x87, 0xe7, 0x21, 0xef, 0x9a, 0x49, 0xd9, 0x90, 0x02, 0xe4, 0xd9, 0x17, 0x49, 0x4d, 0x77, 0x6a,
-	0x6f, 0x5f, 0xde, 0x19, 0x48, 0x0f, 0x40, 0x0c, 0x33, 0x61, 0x94, 0xae, 0xc0, 0x40, 0xa3, 0x68,
-	0x4d, 0x46, 0xab, 0x45, 0xd5, 0x82, 0x57, 0xb5, 0xa6, 0x74, 0x13, 0xb2, 0x77, 0xb0, 0xae, 0x6a,
-	0x7a, 0xa9, 0x83, 0x34, 0x73, 0x09, 0x15, 0xfc, 0x09, 0xb5, 0x20, 0xd7, 0x89, 0xbb, 0xff, 0x29,
-	0x88, 0x55, 0x38, 0xc3, 0x50, 0xd9, 0x1e, 0xe8, 0x86, 0xfa, 0x7d, 0x98, 0x6d, 0xed, 0x84, 0x11,
-	0x5e, 0x84, 0x7e, 0xba, 0xc9, 0xb0, 0x4b, 0x36, 0x74, 0x23, 0xba, 0x3a, 0xd2, 0x75, 0x48, 0x33,
-	0xd7, 0xfe, 0x42, 0xef, 0x86, 0x66, 0x11, 0xe4, 0xb6, 0x7d, 0x79, 0x27, 0x6b, 0x9f, 0xbd, 0xf1,
-	0x5c, 0xae, 0x71, 0x3b, 0xcf, 0x51, 0x94, 0xc6, 0x00, 0xb1, 0x20, 0xde, 0xc1, 0x1e, 0x29, 0xa9,
-	0x0e, 0xa3, 0x3e, 0x29, 0x73, 0x5f, 0x80, 0xfd, 0x0f, 0xb1, 0x97, 0x89, 0xf1, 0xb4, 0x73, 0x7d,
-	0xa4, 0xed, 0xeb, 0x23, 0xcd, 0xae, 0x8f, 0xf4, 0x2a, 0xd1, 0xf4, 0x95, 0x8c, 0x7d, 0x7a, 0x3f,
-	0xff, 0x6b, 0x72, 0xb6, 0xa4, 0x59, 0x5b, 0xb5, 0xcd, 0x74, 0x91, 0x54, 0x64, 0x76, 0xd7, 0x38,
-	0x7f, 0x16, 0x4d, 0xf5, 0x91, 0x6c, 0x6d, 0x57, 0xb1, 0x49, 0x0d, 0xcc, 0x3c, 0x75, 0x6c, 0x2f,
-	0xef, 0xeb, 0xe7, 0xad, 0x0e, 0xb3, 0x6d, 0x27, 0xec, 0x3a, 0x8c, 0x36, 0xce, 0xab, 0x02, 0xdb,
-	0xbb, 0xed, 0xa4, 0x6f, 0xc4, 0x3b, 0xb8, 0x56, 0x99, 0x91, 0x34, 0xe2, 0x1d, 0xe2, 0x5e, 0x1e,
-	0xaf, 0xc2, 0x70, 0x43, 0xd4, 0x5d, 0x45, 0x25, 0x9a, 0xcf, 0x5a, 0xcf, 0xf9, 0x0d, 0x38, 0x1e,
-	0x98, 0xe9, 0xba, 0x0e, 0x8a, 0x90, 0x6a, 0xb9, 0xa3, 0x5e, 0xfb, 0x9a, 0xfb, 0x18, 0xa6, 0x5a,
-	0xef, 0xb8, 0x8b, 0x70, 0xb0, 0x69, 0x1d, 0x26, 0x42, 0x12, 0xd4, 0x38, 0x71, 0x3d, 0x6d, 0xe9,
-	0x32, 0x4c, 0xbd, 0xaf, 0x98, 0xd6, 0x7a, 0x6d, 0xb3, 0xa2, 0x59, 0x16, 0x56, 0x5d, 0x90, 0xb5,
-	0x3a, 0xd6, 0xad, 0xd6, 0x75, 0xb3, 0x06, 0x52, 0x9c, 0x39, 0xa3, 0x37, 0x09, 0x03, 0xd8, 0x16,
-	0x14, 0xf8, 0x54, 0x00, 0x15, 0x39, 0x97, 0xe3, 0x3c, 0x8c, 0xae, 0xe5, 0x57, 0x73, 0x99, 0x0d,
-	0x72, 0x0d, 0xeb, 0xa4, 0xc2, 0x25, 0x0f, 0x1b, 0xc5, 0x5c, 0x86, 0xa1, 0x3a, 0x03, 0xe9, 0x3e,
-	0x8c, 0xf9, 0x95, 0x19, 0xca, 0x18, 0xf4, 0xa9, 0xb6, 0xc0, 0xd5, 0xa6, 0x03, 0x34, 0x0f, 0x23,
-	0xce, 0xf6, 0x29, 0x10, 0x43, 0x2b, 0x69, 0xba, 0x62, 0x61, 0x95, 0xe6, 0xfa, 0x60, 0x7e, 0xd8,
-	0x99, 0xb8, 0xed, 0xc9, 0x6d, 0x1e, 0xd4, 0xe7, 0x06, 0xa1, 0x08, 0x1c, 0x8f, 0xa0, 0x67, 0x9b,
-	0x87, 0x5f, 0xb9, 0xc1, 0x23, 0xc8, 0xba, 0x33, 0x1e, 0x37, 0x21, 0x79, 0x0d, 0x97, 0x71, 0x49,
-	0xb1, 0xf0, 0x0d, 0xbc, 0x6d, 0xae, 0x6c, 0xdf, 0x73, 0x5e, 0x13, 0xc4, 0x60, 0x65, 0x61, 0xbb,
-	0xab, 0xbb, 0xb2, 0x82, 0x7f, 0x71, 0x86, 0xeb, 0x4d, 0xca, 0xd2, 0x53, 0x38, 0x1d, 0xef, 0xce,
-	0xb7, 0x52, 0xd6, 0x56, 0x93, 0x43, 0xc0, 0xd6, 0x96, 0x8b, 0x9b, 0x85, 0x31, 0x62, 0xd8, 0x9b,
-	0xcc, 0x32, 0x7c, 0xd0, 0x4e, 0xf5, 0x8e, 0xf2, 0x73, 0x2e, 0xfa, 0x2d, 0x98, 0xf6, 0xa3, 0xf3,
-	0x85, 0x8c, 0x0d, 0xee, 0xe1, 0x85, 0xd9, 0x44, 0xc1, 0xb9, 0xbd, 0x18, 0xfc, 0x20, 0xf6, 0xe9,
-	0x4b, 0x5f, 0x0a, 0x70, 0x2a, 0xde, 0x21, 0x0b, 0xa6, 0x93, 0x1c, 0x75, 0x13, 0xd8, 0x3d, 0x98,
-	0xf2, 0xf3, 0xb8, 0x1d, 0x54, 0x8a, 0xf4, 0x2b, 0x44, 0xfb, 0x7d, 0x26, 0xc0, 0xd9, 0x96, 0x8e,
-	0xbb, 0x8b, 0x32, 0x24, 0xc9, 0xbd, 0xa1, 0x49, 0x7e, 0x17, 0x26, 0xd9, 0x45, 0xba, 0x8e, 0x75,
-	0x75, 0x83, 0xb8, 0x29, 0xe6, 0x1e, 0x64, 0x33, 0x30, 0x68, 0x62, 0x5d, 0xc5, 0xcd, 0xa8, 0x47,
-	0x1c, 0xa9, 0x1b, 0xcd, 0x9e, 0x00, 0xa9, 0x68, 0x57, 0x2c, 0x88, 0x07, 0x30, 0xe1, 0x1c, 0xde,
-	0x6a, 0xc1, 0xb6, 0x2e, 0x58, 0xa4, 0xe0, 0xf1, 0xb4, 0x9e, 0x84, 0x1e, 0x6a, 0xcd, 0xce, 0xf2,
-	0x09, 0xe6, 0x21, 0x80, 0x82, 0x3e, 0x81, 0x64, 0x4d, 0x8f, 0xf5, 0xdf, 0xdb, 0x86, 0x7f, 0xd1,
-	0xf3, 0x11, 0x40, 0xc8, 0xfd, 0x22, 0x42, 0xdf, 0x5d, 0xbb, 0xf9, 0x44, 0x1f, 0xc1, 0x01, 0xa7,
-	0x1d, 0x43, 0xe3, 0xc1, 0x16, 0x8d, 0xa5, 0x4e, 0x14, 0xc3, 0xa6, 0x9c, 0x54, 0x48, 0xe2, 0xe7,
-	0xbf, 0xfd, 0xf3, 0x6d, 0xef, 0x18, 0x42, 0x32, 0xd7, 0x80, 0x3a, 0x3d, 0x1d, 0xfa, 0x4c, 0x80,
-	0x91, 0xc0, 0x63, 0x0f, 0x9d, 0x8a, 0x7f, 0x0b, 0x32, 0xcc, 0x99, 0x16, 0x5a, 0x0c, 0x3e, 0x49,
-	0xe1, 0x13, 0xe8, 0x18, 0x0f, 0xdf, 0x78, 0x7f, 0xa2, 0xa7, 0xd0, 0xcf, 0xae, 0x13, 0x24, 0x86,
-	0x5d, 0xc2, 0x0c, 0xed, 0x44, 0xe8, 0x1c, 0xc3, 0xb8, 0x48, 0x31, 0x72, 0x28, 0xc3, 0x63, 0xd0,
-	0xdc, 0xda, 0x8b, 0x21, 0xef, 0x34, 0xdf, 0x8d, 0xbb, 0xf2, 0x0e, 0xbd, 0x39, 0x76, 0xd1, 0x37,
-	0x02, 0x0c, 0xfa, 0x2f, 0x63, 0x34, 0x15, 0x73, 0x51, 0x33, 0x32, 0x52, 0x9c, 0xca, 0x6b, 0x73,
-	0xfa, 0x42, 0x00, 0x14, 0xec, 0x41, 0x50, 0x7c, 0xbe, 0xbd, 0x52, 0x38, 0xdd, 0x4a, 0x8d, 0xf1,
-	0x9b, 0xa4, 0xfc, 0xc6, 0xd1, 0xf1, 0xf0, 0x75, 0x31, 0xd1, 0xa7, 0x70, 0xd0, 0x7d, 0x37, 0xa1,
-	0xb0, 0xec, 0x7b, 0x88, 0x13, 0xe1, 0x93, 0x0c, 0x67, 0x9a, 0xe2, 0x9c, 0x44, 0x27, 0x02, 0x79,
-	0x68, 0x64, 0x03, 0x3d, 0x13, 0x60, 0xa8, 0xe9, 0x1d, 0x85, 0x62, 0x92, 0xec, 0x41, 0x4f, 0xc7,
-	0xea, 0x30, 0x06, 0x33, 0x94, 0xc1, 0x24, 0x3a, 0x19, 0x64, 0xd0, 0x78, 0x77, 0x9a, 0xe8, 0x57,
-	0x01, 0xa6, 0xdb, 0x68, 0xa3, 0xd0, 0x85, 0xd8, 0x04, 0x47, 0xbe, 0xdc, 0xc4, 0xe5, 0x8e, 0xed,
-	0x18, 0xff, 0x1c, 0xe5, 0xbf, 0x80, 0xe6, 0x22, 0x56, 0x4a, 0x0e, 0x21, 0xf9, 0x5c, 0x80, 0xf1,
-	0xc8, 0x67, 0x1e, 0x5a, 0x08, 0x59, 0xb1, 0x68, 0xe2, 0x8b, 0x6d, 0x6a, 0x33, 0xba, 0x19, 0x4a,
-	0x77, 0x0e, 0xcd, 0x86, 0x17, 0x7e, 0x08, 0x9d, 0x9f, 0x05, 0x48, 0xb5, 0xea, 0x16, 0xd0, 0xb9,
-	0xe8, 0xa5, 0x8e, 0xa6, 0xbe, 0xd4, 0x99, 0x51, 0x5c, 0xc2, 0xb9, 0x52, 0x09, 0x8b, 0xe1, 0x5f,
-	0x01, 0xe6, 0xda, 0xef, 0xc5, 0xd1, 0x65, 0xdf, 0x81, 0xdd, 0xe9, 0x27, 0x01, 0xf1, 0x4a, 0xb7,
-	0xe6, 0x71, 0x87, 0x53, 0xf0, 0xb0, 0x90, 0x77, 0xbc, 0xc3, 0xa9, 0xea, 0x80, 0xa0, 0x1f, 0x1b,
-	0xb7, 0x6f, 0x74, 0x7d, 0x9d, 0x0b, 0xa1, 0xd7, 0xb2, 0xcc, 0x96, 0x3a, 0x33, 0x62, 0x91, 0x2c,
-	0xd2, 0x48, 0xce, 0xa0, 0x99, 0x40, 0xb5, 0xe1, 0x30, 0xfa, 0x7f, 0x08, 0xde, 0xc7, 0x8b, 0x96,
-	0x15, 0xf7, 0x66, 0x08, 0xa1, 0x76, 0x0b, 0xef, 0xad, 0xae, 0x6c, 0x59, 0x4c, 0xe7, 0x69, 0x4c,
-	0x32, 0x5a, 0xe4, 0x63, 0x6a, 0x3a, 0xdd, 0x42, 0x62, 0xfb, 0x5e, 0x00, 0x31, 0xba, 0x79, 0x42,
-	0xbe, 0x6d, 0xdc, 0xb2, 0x47, 0x13, 0xd3, 0xed, 0xaa, 0xc7, 0x6d, 0x7b, 0x62, 0x28, 0xc5, 0x32,
-	0x96, 0xb9, 0x66, 0xad, 0xc1, 0x1b, 0x55, 0x61, 0x80, 0xfb, 0xc0, 0x81, 0x92, 0x21, 0xc7, 0x0c,
-	0xf7, 0x3d, 0x44, 0x9c, 0x8c, 0x9c, 0x67, 0x0c, 0x52, 0x94, 0x81, 0x88, 0x12, 0x61, 0xa5, 0xf0,
-	0xd0, 0x86, 0xf8, 0x4a, 0x80, 0xc3, 0x7c, 0xab, 0x87, 0x7c, 0x3e, 0x43, 0x3a, 0x46, 0x31, 0x15,
-	0xad, 0xc0, 0x50, 0x97, 0x28, 0x6a, 0x1a, 0x2d, 0xf0, 0xa8, 0x81, 0xce, 0x4c, 0xa6, 0x4d, 0x9b,
-	0xfd, 0x4c, 0x74, 0xba, 0x48, 0x9b, 0x09, 0xdf, 0xec, 0xf9, 0x99, 0x84, 0xf4, 0x8c, 0x7e, 0x26,
-	0x61, 0x7d, 0x62, 0xbb, 0x4c, 0x28, 0x01, 0xfa, 0x60, 0xa5, 0x7d, 0xe4, 0x77, 0x02, 0x24, 0xa2,
-	0x9e, 0xd3, 0x68, 0x3e, 0xa4, 0x8c, 0xa3, 0xde, 0xef, 0xe2, 0x42, 0x7b, 0xca, 0x71, 0x1b, 0x97,
-	0xfe, 0xbf, 0xa5, 0xc0, 0x0a, 0x9a, 0x7f, 0x59, 0xa3, 0x1f, 0x04, 0x38, 0x1e, 0xd1, 0x73, 0xa2,
-	0x39, 0x7f, 0x6a, 0xe2, 0x1a, 0x53, 0x31, 0xd7, 0xbe, 0xae, 0x47, 0x75, 0x99, 0x52, 0xcd, 0x22,
-	0x99, 0xa7, 0xaa, 0x32, 0xdb, 0xc2, 0x23, 0xbc, 0x6d, 0xca, 0x5e, 0x63, 0x24, 0xef, 0x78, 0x3f,
-	0x77, 0xd1, 0x4f, 0x02, 0x4c, 0xc4, 0x75, 0x96, 0x48, 0x8e, 0x66, 0x13, 0xda, 0xd4, 0x8a, 0x99,
-	0xf6, 0x0d, 0x18, 0xf9, 0x4b, 0x94, 0xfc, 0x05, 0xb4, 0x14, 0x4d, 0xde, 0xed, 0x5c, 0xe4, 0x9d,
-	0xa6, 0x5e, 0x6e, 0xd7, 0xbe, 0x9a, 0xc5, 0xe8, 0xd6, 0xd1, 0x7f, 0xa6, 0xb4, 0x6c, 0x31, 0xc5,
-	0xf3, 0x1d, 0xa9, 0x7b, 0x21, 0x5c, 0xa6, 0x21, 0x2c, 0xa3, 0xf3, 0xd1, 0x21, 0xf0, 0x6d, 0xaf,
-	0xbc, 0xc3, 0x8f, 0x76, 0x57, 0xee, 0xbe, 0xd8, 0x4b, 0x0a, 0x2f, 0xf7, 0x92, 0xc2, 0xdf, 0x7b,
-	0x49, 0xe1, 0xeb, 0x57, 0xc9, 0x9e, 0x97, 0xaf, 0x92, 0x3d, 0xbf, 0xbf, 0x4a, 0xf6, 0x7c, 0xb8,
-	0x1c, 0xfc, 0x34, 0xca, 0x10, 0x16, 0x37, 0x0d, 0x4d, 0x2d, 0x61, 0xb9, 0x42, 0xd4, 0x5a, 0x19,
-	0xcb, 0x4f, 0x3c, 0x64, 0xfa, 0xbd, 0x74, 0xf3, 0x00, 0xfd, 0x3f, 0xdb, 0xb9, 0xff, 0x02, 0x00,
-	0x00, 0xff, 0xff, 0x6e, 0x0e, 0x1d, 0xcc, 0x2c, 0x1c, 0x00, 0x00,
+	// 1803 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x59, 0x4b, 0x6f, 0xdb, 0xc6,
+	0x16, 0x36, 0x9d, 0x38, 0x8f, 0x63, 0xc7, 0x8f, 0xb1, 0x62, 0xcb, 0x8c, 0x23, 0xdb, 0x74, 0x7c,
+	0xfd, 0x90, 0x25, 0x4a, 0xce, 0xc3, 0xb9, 0xf7, 0x26, 0x8b, 0xd8, 0x71, 0xee, 0xc5, 0xcd, 0x5b,
+	0x36, 0x02, 0x24, 0x17, 0xa8, 0x40, 0x4b, 0x13, 0x99, 0x8d, 0x44, 0x2a, 0x24, 0x25, 0xd8, 0x70,
+	0xbc, 0x68, 0x17, 0xcd, 0x36, 0x40, 0xf7, 0x05, 0xba, 0xe8, 0xa6, 0x45, 0x37, 0xdd, 0x15, 0x28,
+	0x50, 0xb4, 0xab, 0x6c, 0x0a, 0x04, 0xe8, 0xa6, 0x05, 0x8a, 0xb6, 0x48, 0xfa, 0x43, 0x0a, 0x0e,
+	0x87, 0xd4, 0x8c, 0x34, 0xa4, 0x68, 0x17, 0x5d, 0x59, 0x3c, 0x73, 0xe6, 0x9c, 0xef, 0x3c, 0x38,
+	0x73, 0x3e, 0x1a, 0xc6, 0x2a, 0x96, 0xd6, 0xd4, 0x9d, 0x3d, 0xb5, 0x99, 0x57, 0x9f, 0x37, 0xb0,
+	0xb5, 0x97, 0xad, 0x5b, 0xa6, 0x63, 0x22, 0xa0, 0xf2, 0x6c, 0x33, 0x2f, 0xa7, 0x4a, 0xa6, 0x5d,
+	0x33, 0x6d, 0x75, 0x5b, 0xb3, 0xb1, 0xda, 0xcc, 0x6f, 0x63, 0x47, 0xcb, 0xab, 0x25, 0x53, 0x37,
+	0x3c, 0x5d, 0x39, 0x51, 0x31, 0x2b, 0x26, 0xf9, 0xa9, 0xba, 0xbf, 0xa8, 0x74, 0xb2, 0x62, 0x9a,
+	0x95, 0x2a, 0x56, 0xb5, 0xba, 0xae, 0x6a, 0x86, 0x61, 0x3a, 0x9a, 0xa3, 0x9b, 0x86, 0x4d, 0x57,
+	0x93, 0x8c, 0xdf, 0x0a, 0x36, 0xb0, 0xad, 0x0b, 0x57, 0x28, 0x08, 0x6f, 0xe5, 0x2c, 0xb3, 0x52,
+	0xb3, 0x2b, 0x74, 0x83, 0x32, 0x04, 0x67, 0x1e, 0x68, 0x96, 0x56, 0xb3, 0x0b, 0xf8, 0x79, 0x03,
+	0xdb, 0x8e, 0xb2, 0x06, 0x83, 0xbe, 0xc0, 0xae, 0x9b, 0x86, 0x8d, 0x51, 0x0e, 0x4e, 0xd4, 0x89,
+	0x24, 0x29, 0x4d, 0x4b, 0x0b, 0xfd, 0x2b, 0x28, 0xdb, 0x0a, 0x2f, 0xeb, 0xe9, 0xae, 0x1d, 0x7f,
+	0xfd, 0xeb, 0x54, 0x4f, 0x81, 0xea, 0x29, 0x4b, 0x80, 0x36, 0xf5, 0x8a, 0x81, 0xad, 0x4d, 0xec,
+	0x6c, 0xed, 0x52, 0xcb, 0x28, 0x01, 0x7d, 0x86, 0x69, 0x94, 0x30, 0x31, 0x73, 0xbc, 0xe0, 0x3d,
+	0x28, 0x77, 0x61, 0x94, 0xd3, 0xa5, 0x4e, 0xaf, 0x00, 0xd8, 0x44, 0x5c, 0xb4, 0xb1, 0x43, 0x1d,
+	0x8f, 0xb3, 0x8e, 0xd9, 0x4d, 0xa7, 0x6d, 0xff, 0x41, 0x79, 0x08, 0x83, 0x6b, 0x9a, 0x53, 0xda,
+	0x69, 0xb9, 0x5d, 0x84, 0xe1, 0x92, 0x69, 0x38, 0x96, 0x56, 0x72, 0x8a, 0x5a, 0xb9, 0x6c, 0x61,
+	0xdb, 0x0b, 0xe4, 0x74, 0x61, 0xc8, 0x97, 0xdf, 0xf0, 0xc4, 0x2d, 0x84, 0xbd, 0x2c, 0xc2, 0x6b,
+	0x30, 0x14, 0x98, 0xa4, 0xe8, 0x16, 0xa1, 0x6f, 0xdb, 0x15, 0x51, 0x60, 0xa3, 0x2c, 0x30, 0x5f,
+	0xd7, 0xd3, 0x50, 0x1a, 0x70, 0x76, 0x9d, 0xba, 0x59, 0xd7, 0xaa, 0xd5, 0x16, 0xae, 0x0c, 0x20,
+	0xdd, 0x68, 0x6a, 0x55, 0xbd, 0x4c, 0x6a, 0x5b, 0xb4, 0x4b, 0x66, 0xdd, 0xcb, 0xcd, 0x40, 0x61,
+	0x84, 0x5d, 0xd9, 0x74, 0x17, 0x3a, 0xd4, 0x59, 0xa0, 0x9c, 0xfa, 0x3d, 0x02, 0x7a, 0x13, 0xc6,
+	0xda, 0xdd, 0x52, 0xec, 0xff, 0x04, 0xa8, 0x9a, 0x15, 0xbd, 0x54, 0x2c, 0x69, 0xd5, 0x2a, 0x0d,
+	0x40, 0x66, 0x03, 0x68, 0xdb, 0x77, 0x9a, 0x68, 0xbb, 0x0f, 0xca, 0x23, 0xb8, 0xc0, 0xa4, 0x7d,
+	0xc3, 0xd9, 0xc1, 0x16, 0x6e, 0xd4, 0x5c, 0x91, 0xe6, 0x34, 0x2c, 0x6c, 0x47, 0x56, 0x1a, 0x25,
+	0xe1, 0xa4, 0x9f, 0xff, 0x5e, 0x92, 0x7f, 0xff, 0x51, 0xd9, 0x80, 0xb9, 0x2e, 0x76, 0x29, 0xf6,
+	0x49, 0x20, 0xa5, 0x26, 0xd2, 0xa4, 0x34, 0x7d, 0x6c, 0x61, 0xa0, 0xd0, 0x12, 0x28, 0x69, 0xae,
+	0x95, 0x58, 0x34, 0x25, 0xb3, 0x61, 0x78, 0x5d, 0x74, 0xac, 0xe0, 0x3d, 0x28, 0x0f, 0x20, 0xc1,
+	0x2b, 0x53, 0x17, 0x57, 0xa1, 0xbf, 0xd5, 0x78, 0x36, 0x71, 0x12, 0xd1, 0x79, 0x10, 0x74, 0x9e,
+	0xad, 0x8c, 0x04, 0x7d, 0x12, 0xbc, 0x4c, 0x37, 0x60, 0xb8, 0x25, 0xa2, 0x0e, 0x32, 0x70, 0x92,
+	0x74, 0x06, 0xf6, 0x8d, 0x0b, 0xbb, 0xc7, 0xd7, 0x51, 0x92, 0xed, 0x85, 0x0c, 0x8c, 0xdf, 0x86,
+	0xf1, 0x8e, 0x95, 0xe0, 0x95, 0xed, 0x73, 0xab, 0xeb, 0x7b, 0x88, 0x2a, 0xaf, 0xa7, 0xa8, 0xfc,
+	0x07, 0xd2, 0x0f, 0xb0, 0x51, 0xd6, 0x8d, 0x4a, 0xac, 0x0a, 0x33, 0xb5, 0x94, 0xf8, 0x5a, 0xee,
+	0xc0, 0x72, 0x3c, 0x43, 0x7f, 0x39, 0xdf, 0xeb, 0x30, 0x4f, 0x3d, 0xd1, 0xa4, 0x1d, 0x05, 0xee,
+	0x63, 0x58, 0xe8, 0x6e, 0xe4, 0x68, 0x95, 0xfb, 0x1f, 0x64, 0xa9, 0x69, 0x3e, 0xe5, 0x47, 0x81,
+	0x59, 0x02, 0x35, 0xb6, 0xad, 0x23, 0xf7, 0x40, 0x02, 0x10, 0x0d, 0xe2, 0x16, 0x0e, 0x40, 0x29,
+	0x4d, 0x18, 0xe5, 0xa4, 0xd4, 0x7c, 0x11, 0x8e, 0x3f, 0xc5, 0x41, 0x26, 0x26, 0xb2, 0xde, 0x35,
+	0x97, 0x75, 0xaf, 0xb9, 0x2c, 0xbd, 0xe6, 0xb2, 0xeb, 0xa6, 0x6e, 0xac, 0xe5, 0xdc, 0xab, 0xe1,
+	0xf3, 0xdf, 0xa6, 0x16, 0x2a, 0xba, 0xb3, 0xd3, 0xd8, 0xce, 0x96, 0xcc, 0x9a, 0x4a, 0xef, 0x44,
+	0xef, 0x4f, 0xc6, 0x2e, 0x3f, 0x53, 0x9d, 0xbd, 0x3a, 0xb6, 0xc9, 0x06, 0xbb, 0x40, 0x0c, 0x2b,
+	0x9f, 0x4a, 0x30, 0x1f, 0x37, 0x71, 0x7f, 0xeb, 0x59, 0xca, 0x96, 0xe5, 0x18, 0x5f, 0x96, 0xff,
+	0xc2, 0x42, 0xec, 0x7a, 0x44, 0x9f, 0x5d, 0x07, 0x30, 0xdd, 0xb5, 0x8b, 0xc5, 0xc7, 0xaa, 0xe8,
+	0x7e, 0xeb, 0x15, 0xdf, 0x6f, 0xe1, 0x81, 0xdc, 0x80, 0x99, 0xee, 0xfd, 0x1f, 0x1d, 0xc1, 0x75,
+	0x98, 0xb9, 0xa3, 0xd9, 0xce, 0x66, 0x63, 0xbb, 0xa6, 0x3b, 0x0e, 0x2e, 0xfb, 0x86, 0x36, 0x9a,
+	0xd8, 0x70, 0xba, 0x77, 0xf8, 0x06, 0x28, 0x51, 0xdb, 0x29, 0x84, 0x29, 0xe8, 0xc7, 0xae, 0xa0,
+	0xc8, 0x26, 0x02, 0x88, 0xc8, 0xbb, 0xf7, 0xd2, 0x30, 0xba, 0x51, 0x58, 0x5f, 0xc9, 0x6d, 0x99,
+	0x37, 0xb1, 0x61, 0xd6, 0x98, 0xd4, 0x61, 0xab, 0xb4, 0x92, 0xa3, 0x5e, 0xbd, 0x07, 0xe5, 0x31,
+	0x24, 0x78, 0x65, 0xea, 0x25, 0x01, 0x7d, 0x65, 0x57, 0xe0, 0x6b, 0x93, 0x07, 0x94, 0x86, 0x11,
+	0xaf, 0x61, 0x8b, 0xa6, 0xa5, 0x57, 0x74, 0x43, 0x73, 0x70, 0x99, 0x64, 0xfa, 0x54, 0x61, 0xd8,
+	0x5b, 0xb8, 0x1f, 0xc8, 0x5d, 0x1c, 0xc4, 0xe6, 0x96, 0x49, 0x3c, 0x30, 0x38, 0x3a, 0x2d, 0xbb,
+	0x38, 0x78, 0xe5, 0x16, 0x8e, 0x4e, 0xd4, 0x87, 0xc3, 0x71, 0x17, 0x52, 0x37, 0x71, 0x15, 0x57,
+	0x34, 0x07, 0xdf, 0xc6, 0x7b, 0xf6, 0xda, 0xde, 0x23, 0xaf, 0xb9, 0x4d, 0xcb, 0x6f, 0x8a, 0x34,
+	0x8c, 0x34, 0x7d, 0x59, 0xdb, 0x80, 0x34, 0xdc, 0x6c, 0x53, 0x56, 0x5e, 0xc0, 0x3f, 0xa2, 0xcd,
+	0x71, 0x95, 0x72, 0x76, 0xda, 0x0c, 0x02, 0x76, 0x76, 0x7c, 0xbf, 0x79, 0x48, 0x98, 0x96, 0x7b,
+	0x50, 0x3a, 0x16, 0xe7, 0xda, 0xeb, 0xdd, 0x51, 0x76, 0xcd, 0xf7, 0x7e, 0x0f, 0x66, 0x79, 0xef,
+	0x6c, 0xb3, 0x62, 0xcb, 0x4f, 0xf2, 0x3c, 0x0c, 0x61, 0xba, 0x50, 0xf4, 0xee, 0x0b, 0xea, 0x7e,
+	0x10, 0x73, 0xfa, 0xca, 0x47, 0x12, 0x5c, 0x88, 0x36, 0x48, 0x83, 0x39, 0x4c, 0x8e, 0x8e, 0x12,
+	0xd8, 0x23, 0x98, 0xe1, 0x71, 0xdc, 0xef, 0x54, 0x0a, 0xb5, 0x2b, 0x85, 0xdb, 0xfd, 0x40, 0x82,
+	0xc5, 0xae, 0x86, 0x8f, 0x16, 0xa5, 0x20, 0xc9, 0xbd, 0xc2, 0x24, 0xdf, 0x82, 0xf3, 0xfe, 0x40,
+	0x80, 0x8d, 0xf2, 0x96, 0xe9, 0xa7, 0x38, 0x38, 0xd6, 0xe6, 0x60, 0xd0, 0xc6, 0x46, 0x19, 0xb7,
+	0xfb, 0x3c, 0xe3, 0x49, 0xfd, 0x58, 0x7e, 0x91, 0x20, 0x15, 0x66, 0x88, 0x06, 0xf0, 0x04, 0x26,
+	0xbd, 0xcb, 0xb7, 0x5c, 0x74, 0xf7, 0x16, 0x1d, 0xb3, 0x18, 0x60, 0x74, 0x76, 0x85, 0x37, 0x21,
+	0x6f, 0xaa, 0x90, 0xa4, 0xfb, 0x79, 0xf1, 0xd6, 0xae, 0x8d, 0xde, 0x83, 0x54, 0xc3, 0x88, 0xb4,
+	0xde, 0xdb, 0xd5, 0xba, 0x1c, 0x58, 0xe8, 0xb0, 0xbf, 0xf2, 0x4a, 0x86, 0xbe, 0x87, 0x2e, 0x87,
+	0x44, 0xff, 0x87, 0x13, 0x1e, 0xab, 0x42, 0x13, 0x9d, 0x4c, 0x8b, 0x26, 0x4d, 0x96, 0x45, 0x4b,
+	0x5e, 0x1a, 0x14, 0xf9, 0xc3, 0x1f, 0xff, 0xf8, 0xb8, 0x37, 0x81, 0x90, 0xca, 0x70, 0x3e, 0x8f,
+	0x9a, 0x21, 0x03, 0xfa, 0x99, 0x79, 0x0a, 0xa5, 0xc2, 0x06, 0x2d, 0xea, 0x66, 0x2a, 0x74, 0x9d,
+	0xfa, 0x4a, 0x11, 0x5f, 0x49, 0x34, 0xc6, 0xfa, 0x6a, 0x0d, 0x74, 0xe8, 0x05, 0x9c, 0xa4, 0x17,
+	0x0b, 0x92, 0x45, 0xd3, 0x12, 0xf5, 0x73, 0x4e, 0xb8, 0x46, 0x7d, 0x5c, 0x25, 0x3e, 0x56, 0x50,
+	0x8e, 0xf5, 0x41, 0x12, 0xe9, 0xe6, 0x5d, 0xdd, 0x6f, 0xbf, 0xfe, 0x0e, 0xd4, 0x7d, 0x72, 0x3d,
+	0x1c, 0xa0, 0xcf, 0x24, 0x18, 0xe4, 0x2f, 0x68, 0x34, 0x13, 0x31, 0x07, 0x51, 0x30, 0x4a, 0x94,
+	0x0a, 0xc5, 0x74, 0x87, 0x60, 0xba, 0x85, 0x6e, 0xb2, 0x98, 0x02, 0x20, 0xee, 0x3c, 0xe5, 0x61,
+	0xe3, 0xe6, 0x0c, 0xbd, 0x7c, 0xd0, 0x26, 0xa1, 0x38, 0x2d, 0x18, 0x60, 0xc9, 0x08, 0x0a, 0x4b,
+	0x7b, 0x50, 0xfe, 0xe9, 0x70, 0x05, 0x0a, 0x70, 0x8a, 0x00, 0x9c, 0x40, 0xe3, 0xe2, 0xc2, 0xd8,
+	0xe8, 0x7d, 0x38, 0xe5, 0x73, 0x13, 0x24, 0x4a, 0x7f, 0xe0, 0x6b, 0x52, 0xbc, 0x48, 0xfd, 0xcc,
+	0x12, 0x3f, 0xe7, 0xd1, 0xb9, 0x8e, 0xe2, 0xb4, 0x4a, 0x84, 0x5e, 0x4a, 0x30, 0xd4, 0xc6, 0x55,
+	0x50, 0x44, 0x96, 0x03, 0xd7, 0xb3, 0x91, 0x3a, 0x14, 0x41, 0x9a, 0x20, 0x98, 0x43, 0xb3, 0x9d,
+	0x08, 0x3a, 0x0a, 0x82, 0xbe, 0x96, 0xe0, 0x7c, 0x24, 0x31, 0x41, 0xb9, 0x90, 0xd4, 0x86, 0xce,
+	0x65, 0x72, 0xfe, 0x10, 0x3b, 0x28, 0xe6, 0x8b, 0x04, 0x73, 0x06, 0xa5, 0x43, 0xaa, 0xa3, 0x72,
+	0x67, 0x2b, 0x45, 0xf6, 0x85, 0x04, 0x13, 0xa1, 0x53, 0x1a, 0x5a, 0x16, 0x94, 0x29, 0x1c, 0x73,
+	0x26, 0xa6, 0x36, 0xc5, 0x9b, 0x27, 0x78, 0xd3, 0x68, 0x51, 0xfc, 0x0a, 0x8a, 0xd0, 0x7e, 0x2f,
+	0xc1, 0x74, 0xb7, 0xe1, 0x18, 0x5d, 0x0c, 0x2f, 0x70, 0x38, 0xf6, 0x4b, 0x87, 0xdb, 0x14, 0x95,
+	0xf2, 0xd6, 0x97, 0x10, 0x71, 0x10, 0x3f, 0x48, 0x70, 0x21, 0x0e, 0x9d, 0x45, 0xab, 0xdc, 0x79,
+	0x1c, 0x9f, 0x49, 0xcb, 0x57, 0x0f, 0xbf, 0x91, 0x06, 0xb4, 0x42, 0x02, 0x5a, 0x46, 0x4b, 0x6c,
+	0x40, 0xec, 0x59, 0xa0, 0xee, 0x07, 0x07, 0x62, 0xdd, 0x33, 0x8c, 0xbe, 0x91, 0x60, 0xba, 0x1b,
+	0xdf, 0xe5, 0x8b, 0x12, 0x93, 0x62, 0xf3, 0x45, 0x89, 0x4b, 0xa9, 0x95, 0x0c, 0x89, 0x61, 0x1e,
+	0xcd, 0x75, 0xf4, 0x15, 0x16, 0xc1, 0xff, 0x59, 0x0a, 0x38, 0x7f, 0xd7, 0xd6, 0xfa, 0x97, 0x00,
+	0x50, 0xdc, 0x0e, 0xfb, 0xf7, 0x91, 0xf6, 0xd2, 0x98, 0x2e, 0x93, 0x98, 0x54, 0x94, 0x61, 0x63,
+	0x6a, 0x3b, 0xbc, 0x04, 0xb1, 0x7d, 0x29, 0x81, 0x1c, 0xce, 0x80, 0x10, 0xf7, 0xc2, 0x76, 0x25,
+	0x5a, 0x72, 0x36, 0xae, 0x3a, 0x05, 0x9d, 0x23, 0xa0, 0x97, 0xd0, 0x02, 0x0b, 0xda, 0xb4, 0xb4,
+	0x52, 0x15, 0xab, 0x0c, 0xe3, 0x6a, 0xe1, 0x46, 0x75, 0xe8, 0x67, 0xbe, 0x0b, 0xf0, 0x93, 0x44,
+	0xe7, 0x67, 0x04, 0x7e, 0x92, 0x10, 0x7c, 0x50, 0x50, 0xa6, 0x09, 0x02, 0x19, 0x25, 0x45, 0xad,
+	0xf0, 0xd4, 0x75, 0xf1, 0x52, 0x82, 0x01, 0x96, 0xaf, 0xf1, 0xd7, 0xa4, 0x80, 0xf6, 0xf1, 0xd7,
+	0xa4, 0x88, 0xea, 0x29, 0x97, 0x88, 0xd7, 0x2c, 0x5a, 0xe6, 0xef, 0xf1, 0x36, 0x7a, 0xa5, 0x12,
+	0xe6, 0xe5, 0x4e, 0x7c, 0x1e, 0x15, 0x74, 0x91, 0xb0, 0x8c, 0x8d, 0x47, 0x22, 0x20, 0x7e, 0x3c,
+	0x12, 0x11, 0xd9, 0x8b, 0x8b, 0x84, 0x00, 0x20, 0xb3, 0x27, 0x21, 0x83, 0x9f, 0x48, 0x30, 0x26,
+	0x9e, 0x8a, 0xd1, 0xa2, 0xe8, 0x64, 0x11, 0x8e, 0xe0, 0xf2, 0x52, 0x1c, 0xd5, 0xa8, 0x57, 0x96,
+	0xfc, 0xf7, 0xa3, 0x48, 0x5b, 0x99, 0x1d, 0x8f, 0xd1, 0x57, 0x12, 0x8c, 0x87, 0x50, 0x46, 0xb4,
+	0xc4, 0x27, 0x25, 0x8a, 0x57, 0xca, 0x2b, 0xf1, 0x75, 0x03, 0xa8, 0xab, 0x04, 0x6a, 0x1e, 0xa9,
+	0x2c, 0xd4, 0x32, 0xdd, 0x5b, 0x7c, 0x86, 0xf7, 0x6c, 0x35, 0xe0, 0x35, 0xea, 0x7e, 0xf0, 0xf3,
+	0x00, 0x7d, 0x2b, 0xc1, 0x64, 0x14, 0x31, 0x44, 0x6a, 0x38, 0x1a, 0x21, 0x27, 0x95, 0x73, 0xf1,
+	0x37, 0x50, 0xf0, 0xd7, 0x08, 0xf8, 0x2b, 0xe8, 0x52, 0x38, 0x78, 0xff, 0xc6, 0x52, 0xf7, 0xdb,
+	0xa8, 0xd8, 0x01, 0xfa, 0x4e, 0x02, 0x39, 0x9c, 0xf9, 0xf1, 0xa7, 0x49, 0x57, 0x86, 0x28, 0x5f,
+	0x3e, 0x94, 0x7a, 0x10, 0xc2, 0x75, 0x12, 0xc2, 0x2a, 0xba, 0x1c, 0x1e, 0x02, 0xcb, 0x5a, 0xd5,
+	0x7d, 0xf6, 0xe9, 0x60, 0xed, 0xe1, 0xeb, 0xb7, 0x29, 0xe9, 0xcd, 0xdb, 0x94, 0xf4, 0xfb, 0xdb,
+	0x94, 0xf4, 0xea, 0x5d, 0xaa, 0xe7, 0xcd, 0xbb, 0x54, 0xcf, 0x4f, 0xef, 0x52, 0x3d, 0x4f, 0x56,
+	0x3b, 0xbf, 0x25, 0x52, 0x0f, 0x99, 0x6d, 0x4b, 0x2f, 0x57, 0xb0, 0x5a, 0x33, 0xcb, 0x8d, 0x2a,
+	0x56, 0x77, 0x03, 0xcf, 0xe4, 0x03, 0xe3, 0xf6, 0x09, 0xf2, 0x5f, 0xaf, 0x8b, 0x7f, 0x06, 0x00,
+	0x00, 0xff, 0xff, 0xf9, 0xc2, 0x87, 0xe9, 0xba, 0x1b, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2158,23 +2195,21 @@ type QueryClient interface {
 	// Module parameters query
 	Params(ctx context.Context, in *ParamsRequest, opts ...grpc.CallOption) (*ParamsResponse, error)
 	// get info on individual outgoing data
-	UpdateSignerSetTx(ctx context.Context, in *UpdateSignerSetTxRequest, opts ...grpc.CallOption) (*UpdateSignerSetTxResponse, error)
+	SignerSetTx(ctx context.Context, in *SignerSetTxRequest, opts ...grpc.CallOption) (*SignerSetTxResponse, error)
 	BatchTx(ctx context.Context, in *BatchTxRequest, opts ...grpc.CallOption) (*BatchTxResponse, error)
 	ContractCallTx(ctx context.Context, in *ContractCallTxRequest, opts ...grpc.CallOption) (*ContractCallTxResponse, error)
 	// get collections of outgoing traffic from the bridge
-	UpdateSignerSetTxs(ctx context.Context, in *UpdateSignerSetTxsRequest, opts ...grpc.CallOption) (*UpdateSignerSetTxsResponse, error)
+	SignerSetTxs(ctx context.Context, in *SignerSetTxsRequest, opts ...grpc.CallOption) (*SignerSetTxsResponse, error)
 	BatchTxs(ctx context.Context, in *BatchTxsRequest, opts ...grpc.CallOption) (*BatchTxsResponse, error)
 	ContractCallTxs(ctx context.Context, in *ContractCallTxsRequest, opts ...grpc.CallOption) (*ContractCallTxsResponse, error)
-	// ethereum signature queries so validators can construct valid etherum
-	// transactions
 	// TODO: can/should we group these into one endpoint?
-	UpdateSignerSetTxEthereumSignatures(ctx context.Context, in *UpdateSignerSetTxEthereumSignaturesRequest, opts ...grpc.CallOption) (*UpdateSignerSetTxEthereumSignaturesResponse, error)
+	SignerSetTxEthereumSignatures(ctx context.Context, in *SignerSetTxEthereumSignaturesRequest, opts ...grpc.CallOption) (*SignerSetTxEthereumSignaturesResponse, error)
 	BatchTxEthereumSignatures(ctx context.Context, in *BatchTxEthereumSignaturesRequest, opts ...grpc.CallOption) (*BatchTxEthereumSignaturesResponse, error)
 	ContractCallTxEthereumSignatures(ctx context.Context, in *ContractCallTxEthereumSignaturesRequest, opts ...grpc.CallOption) (*ContractCallTxEthereumSignaturesResponse, error)
 	// pending ethereum signature queries for orchestrators to figure out which
 	// signatures they are missing
 	// TODO: can/should we group this into one endpoint?
-	PendingUpdateSignerSetTxEthereumSignatures(ctx context.Context, in *PendingUpdateSignerSetTxEthereumSignaturesRequest, opts ...grpc.CallOption) (*PendingUpdateSignerSetTxEthereumSignaturesResponse, error)
+	PendingSignerSetTxEthereumSignatures(ctx context.Context, in *PendingSignerSetTxEthereumSignaturesRequest, opts ...grpc.CallOption) (*PendingSignerSetTxEthereumSignaturesResponse, error)
 	PendingBatchTxEthereumSignatures(ctx context.Context, in *PendingBatchTxEthereumSignaturesRequest, opts ...grpc.CallOption) (*PendingBatchTxEthereumSignaturesResponse, error)
 	PendingContractCallTxEthereumSignatures(ctx context.Context, in *PendingContractCallTxEthereumSignaturesRequest, opts ...grpc.CallOption) (*PendingContractCallTxEthereumSignaturesResponse, error)
 	LastSubmittedEthereumEvent(ctx context.Context, in *LastSubmittedEthereumEventRequest, opts ...grpc.CallOption) (*LastSubmittedEthereumEventResponse, error)
@@ -2186,7 +2221,7 @@ type QueryClient interface {
 	// Query for info about denoms tracked by gravity
 	DenomToERC20(ctx context.Context, in *DenomToERC20Request, opts ...grpc.CallOption) (*DenomToERC20Response, error)
 	// Query for pending tranfertxs
-	PendingSendToEthereumTxs(ctx context.Context, in *PendingSendToEthereumTxsRequest, opts ...grpc.CallOption) (*PendingSendToEthereumTxsResponse, error)
+	PendingSendToEthereums(ctx context.Context, in *PendingSendToEthereumsRequest, opts ...grpc.CallOption) (*PendingSendToEthereumsResponse, error)
 	// delegate keys
 	DelegateKeysByValidator(ctx context.Context, in *DelegateKeysByValidatorAddress, opts ...grpc.CallOption) (*DelegateKeysByValidatorAddressResponse, error)
 	DelegateKeysByEthereumSigner(ctx context.Context, in *DelegateKeysByEthereumSignerRequest, opts ...grpc.CallOption) (*DelegateKeysByEthereumSignerResponse, error)
@@ -2194,10 +2229,10 @@ type QueryClient interface {
 }
 
 type queryClient struct {
-	cc *grpc.ClientConn
+	cc grpc1.ClientConn
 }
 
-func NewQueryClient(cc *grpc.ClientConn) QueryClient {
+func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
@@ -2210,9 +2245,9 @@ func (c *queryClient) Params(ctx context.Context, in *ParamsRequest, opts ...grp
 	return out, nil
 }
 
-func (c *queryClient) UpdateSignerSetTx(ctx context.Context, in *UpdateSignerSetTxRequest, opts ...grpc.CallOption) (*UpdateSignerSetTxResponse, error) {
-	out := new(UpdateSignerSetTxResponse)
-	err := c.cc.Invoke(ctx, "/gravity.v1.Query/UpdateSignerSetTx", in, out, opts...)
+func (c *queryClient) SignerSetTx(ctx context.Context, in *SignerSetTxRequest, opts ...grpc.CallOption) (*SignerSetTxResponse, error) {
+	out := new(SignerSetTxResponse)
+	err := c.cc.Invoke(ctx, "/gravity.v1.Query/SignerSetTx", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2237,9 +2272,9 @@ func (c *queryClient) ContractCallTx(ctx context.Context, in *ContractCallTxRequ
 	return out, nil
 }
 
-func (c *queryClient) UpdateSignerSetTxs(ctx context.Context, in *UpdateSignerSetTxsRequest, opts ...grpc.CallOption) (*UpdateSignerSetTxsResponse, error) {
-	out := new(UpdateSignerSetTxsResponse)
-	err := c.cc.Invoke(ctx, "/gravity.v1.Query/UpdateSignerSetTxs", in, out, opts...)
+func (c *queryClient) SignerSetTxs(ctx context.Context, in *SignerSetTxsRequest, opts ...grpc.CallOption) (*SignerSetTxsResponse, error) {
+	out := new(SignerSetTxsResponse)
+	err := c.cc.Invoke(ctx, "/gravity.v1.Query/SignerSetTxs", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2264,9 +2299,9 @@ func (c *queryClient) ContractCallTxs(ctx context.Context, in *ContractCallTxsRe
 	return out, nil
 }
 
-func (c *queryClient) UpdateSignerSetTxEthereumSignatures(ctx context.Context, in *UpdateSignerSetTxEthereumSignaturesRequest, opts ...grpc.CallOption) (*UpdateSignerSetTxEthereumSignaturesResponse, error) {
-	out := new(UpdateSignerSetTxEthereumSignaturesResponse)
-	err := c.cc.Invoke(ctx, "/gravity.v1.Query/UpdateSignerSetTxEthereumSignatures", in, out, opts...)
+func (c *queryClient) SignerSetTxEthereumSignatures(ctx context.Context, in *SignerSetTxEthereumSignaturesRequest, opts ...grpc.CallOption) (*SignerSetTxEthereumSignaturesResponse, error) {
+	out := new(SignerSetTxEthereumSignaturesResponse)
+	err := c.cc.Invoke(ctx, "/gravity.v1.Query/SignerSetTxEthereumSignatures", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2291,9 +2326,9 @@ func (c *queryClient) ContractCallTxEthereumSignatures(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *queryClient) PendingUpdateSignerSetTxEthereumSignatures(ctx context.Context, in *PendingUpdateSignerSetTxEthereumSignaturesRequest, opts ...grpc.CallOption) (*PendingUpdateSignerSetTxEthereumSignaturesResponse, error) {
-	out := new(PendingUpdateSignerSetTxEthereumSignaturesResponse)
-	err := c.cc.Invoke(ctx, "/gravity.v1.Query/PendingUpdateSignerSetTxEthereumSignatures", in, out, opts...)
+func (c *queryClient) PendingSignerSetTxEthereumSignatures(ctx context.Context, in *PendingSignerSetTxEthereumSignaturesRequest, opts ...grpc.CallOption) (*PendingSignerSetTxEthereumSignaturesResponse, error) {
+	out := new(PendingSignerSetTxEthereumSignaturesResponse)
+	err := c.cc.Invoke(ctx, "/gravity.v1.Query/PendingSignerSetTxEthereumSignatures", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2354,9 +2389,9 @@ func (c *queryClient) DenomToERC20(ctx context.Context, in *DenomToERC20Request,
 	return out, nil
 }
 
-func (c *queryClient) PendingSendToEthereumTxs(ctx context.Context, in *PendingSendToEthereumTxsRequest, opts ...grpc.CallOption) (*PendingSendToEthereumTxsResponse, error) {
-	out := new(PendingSendToEthereumTxsResponse)
-	err := c.cc.Invoke(ctx, "/gravity.v1.Query/PendingSendToEthereumTxs", in, out, opts...)
+func (c *queryClient) PendingSendToEthereums(ctx context.Context, in *PendingSendToEthereumsRequest, opts ...grpc.CallOption) (*PendingSendToEthereumsResponse, error) {
+	out := new(PendingSendToEthereumsResponse)
+	err := c.cc.Invoke(ctx, "/gravity.v1.Query/PendingSendToEthereums", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2395,23 +2430,21 @@ type QueryServer interface {
 	// Module parameters query
 	Params(context.Context, *ParamsRequest) (*ParamsResponse, error)
 	// get info on individual outgoing data
-	UpdateSignerSetTx(context.Context, *UpdateSignerSetTxRequest) (*UpdateSignerSetTxResponse, error)
+	SignerSetTx(context.Context, *SignerSetTxRequest) (*SignerSetTxResponse, error)
 	BatchTx(context.Context, *BatchTxRequest) (*BatchTxResponse, error)
 	ContractCallTx(context.Context, *ContractCallTxRequest) (*ContractCallTxResponse, error)
 	// get collections of outgoing traffic from the bridge
-	UpdateSignerSetTxs(context.Context, *UpdateSignerSetTxsRequest) (*UpdateSignerSetTxsResponse, error)
+	SignerSetTxs(context.Context, *SignerSetTxsRequest) (*SignerSetTxsResponse, error)
 	BatchTxs(context.Context, *BatchTxsRequest) (*BatchTxsResponse, error)
 	ContractCallTxs(context.Context, *ContractCallTxsRequest) (*ContractCallTxsResponse, error)
-	// ethereum signature queries so validators can construct valid etherum
-	// transactions
 	// TODO: can/should we group these into one endpoint?
-	UpdateSignerSetTxEthereumSignatures(context.Context, *UpdateSignerSetTxEthereumSignaturesRequest) (*UpdateSignerSetTxEthereumSignaturesResponse, error)
+	SignerSetTxEthereumSignatures(context.Context, *SignerSetTxEthereumSignaturesRequest) (*SignerSetTxEthereumSignaturesResponse, error)
 	BatchTxEthereumSignatures(context.Context, *BatchTxEthereumSignaturesRequest) (*BatchTxEthereumSignaturesResponse, error)
 	ContractCallTxEthereumSignatures(context.Context, *ContractCallTxEthereumSignaturesRequest) (*ContractCallTxEthereumSignaturesResponse, error)
 	// pending ethereum signature queries for orchestrators to figure out which
 	// signatures they are missing
 	// TODO: can/should we group this into one endpoint?
-	PendingUpdateSignerSetTxEthereumSignatures(context.Context, *PendingUpdateSignerSetTxEthereumSignaturesRequest) (*PendingUpdateSignerSetTxEthereumSignaturesResponse, error)
+	PendingSignerSetTxEthereumSignatures(context.Context, *PendingSignerSetTxEthereumSignaturesRequest) (*PendingSignerSetTxEthereumSignaturesResponse, error)
 	PendingBatchTxEthereumSignatures(context.Context, *PendingBatchTxEthereumSignaturesRequest) (*PendingBatchTxEthereumSignaturesResponse, error)
 	PendingContractCallTxEthereumSignatures(context.Context, *PendingContractCallTxEthereumSignaturesRequest) (*PendingContractCallTxEthereumSignaturesResponse, error)
 	LastSubmittedEthereumEvent(context.Context, *LastSubmittedEthereumEventRequest) (*LastSubmittedEthereumEventResponse, error)
@@ -2423,7 +2456,7 @@ type QueryServer interface {
 	// Query for info about denoms tracked by gravity
 	DenomToERC20(context.Context, *DenomToERC20Request) (*DenomToERC20Response, error)
 	// Query for pending tranfertxs
-	PendingSendToEthereumTxs(context.Context, *PendingSendToEthereumTxsRequest) (*PendingSendToEthereumTxsResponse, error)
+	PendingSendToEthereums(context.Context, *PendingSendToEthereumsRequest) (*PendingSendToEthereumsResponse, error)
 	// delegate keys
 	DelegateKeysByValidator(context.Context, *DelegateKeysByValidatorAddress) (*DelegateKeysByValidatorAddressResponse, error)
 	DelegateKeysByEthereumSigner(context.Context, *DelegateKeysByEthereumSignerRequest) (*DelegateKeysByEthereumSignerResponse, error)
@@ -2437,8 +2470,8 @@ type UnimplementedQueryServer struct {
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *ParamsRequest) (*ParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
-func (*UnimplementedQueryServer) UpdateSignerSetTx(ctx context.Context, req *UpdateSignerSetTxRequest) (*UpdateSignerSetTxResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateSignerSetTx not implemented")
+func (*UnimplementedQueryServer) SignerSetTx(ctx context.Context, req *SignerSetTxRequest) (*SignerSetTxResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SignerSetTx not implemented")
 }
 func (*UnimplementedQueryServer) BatchTx(ctx context.Context, req *BatchTxRequest) (*BatchTxResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchTx not implemented")
@@ -2446,8 +2479,8 @@ func (*UnimplementedQueryServer) BatchTx(ctx context.Context, req *BatchTxReques
 func (*UnimplementedQueryServer) ContractCallTx(ctx context.Context, req *ContractCallTxRequest) (*ContractCallTxResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ContractCallTx not implemented")
 }
-func (*UnimplementedQueryServer) UpdateSignerSetTxs(ctx context.Context, req *UpdateSignerSetTxsRequest) (*UpdateSignerSetTxsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateSignerSetTxs not implemented")
+func (*UnimplementedQueryServer) SignerSetTxs(ctx context.Context, req *SignerSetTxsRequest) (*SignerSetTxsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SignerSetTxs not implemented")
 }
 func (*UnimplementedQueryServer) BatchTxs(ctx context.Context, req *BatchTxsRequest) (*BatchTxsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchTxs not implemented")
@@ -2455,8 +2488,8 @@ func (*UnimplementedQueryServer) BatchTxs(ctx context.Context, req *BatchTxsRequ
 func (*UnimplementedQueryServer) ContractCallTxs(ctx context.Context, req *ContractCallTxsRequest) (*ContractCallTxsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ContractCallTxs not implemented")
 }
-func (*UnimplementedQueryServer) UpdateSignerSetTxEthereumSignatures(ctx context.Context, req *UpdateSignerSetTxEthereumSignaturesRequest) (*UpdateSignerSetTxEthereumSignaturesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateSignerSetTxEthereumSignatures not implemented")
+func (*UnimplementedQueryServer) SignerSetTxEthereumSignatures(ctx context.Context, req *SignerSetTxEthereumSignaturesRequest) (*SignerSetTxEthereumSignaturesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SignerSetTxEthereumSignatures not implemented")
 }
 func (*UnimplementedQueryServer) BatchTxEthereumSignatures(ctx context.Context, req *BatchTxEthereumSignaturesRequest) (*BatchTxEthereumSignaturesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchTxEthereumSignatures not implemented")
@@ -2464,8 +2497,8 @@ func (*UnimplementedQueryServer) BatchTxEthereumSignatures(ctx context.Context, 
 func (*UnimplementedQueryServer) ContractCallTxEthereumSignatures(ctx context.Context, req *ContractCallTxEthereumSignaturesRequest) (*ContractCallTxEthereumSignaturesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ContractCallTxEthereumSignatures not implemented")
 }
-func (*UnimplementedQueryServer) PendingUpdateSignerSetTxEthereumSignatures(ctx context.Context, req *PendingUpdateSignerSetTxEthereumSignaturesRequest) (*PendingUpdateSignerSetTxEthereumSignaturesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PendingUpdateSignerSetTxEthereumSignatures not implemented")
+func (*UnimplementedQueryServer) PendingSignerSetTxEthereumSignatures(ctx context.Context, req *PendingSignerSetTxEthereumSignaturesRequest) (*PendingSignerSetTxEthereumSignaturesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PendingSignerSetTxEthereumSignatures not implemented")
 }
 func (*UnimplementedQueryServer) PendingBatchTxEthereumSignatures(ctx context.Context, req *PendingBatchTxEthereumSignaturesRequest) (*PendingBatchTxEthereumSignaturesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PendingBatchTxEthereumSignatures not implemented")
@@ -2485,8 +2518,8 @@ func (*UnimplementedQueryServer) ERC20ToDenom(ctx context.Context, req *ERC20ToD
 func (*UnimplementedQueryServer) DenomToERC20(ctx context.Context, req *DenomToERC20Request) (*DenomToERC20Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DenomToERC20 not implemented")
 }
-func (*UnimplementedQueryServer) PendingSendToEthereumTxs(ctx context.Context, req *PendingSendToEthereumTxsRequest) (*PendingSendToEthereumTxsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PendingSendToEthereumTxs not implemented")
+func (*UnimplementedQueryServer) PendingSendToEthereums(ctx context.Context, req *PendingSendToEthereumsRequest) (*PendingSendToEthereumsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PendingSendToEthereums not implemented")
 }
 func (*UnimplementedQueryServer) DelegateKeysByValidator(ctx context.Context, req *DelegateKeysByValidatorAddress) (*DelegateKeysByValidatorAddressResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegateKeysByValidator not implemented")
@@ -2498,7 +2531,7 @@ func (*UnimplementedQueryServer) DelegateKeysByOrchestrator(ctx context.Context,
 	return nil, status.Errorf(codes.Unimplemented, "method DelegateKeysByOrchestrator not implemented")
 }
 
-func RegisterQueryServer(s *grpc.Server, srv QueryServer) {
+func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
@@ -2520,20 +2553,20 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_UpdateSignerSetTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateSignerSetTxRequest)
+func _Query_SignerSetTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignerSetTxRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).UpdateSignerSetTx(ctx, in)
+		return srv.(QueryServer).SignerSetTx(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gravity.v1.Query/UpdateSignerSetTx",
+		FullMethod: "/gravity.v1.Query/SignerSetTx",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).UpdateSignerSetTx(ctx, req.(*UpdateSignerSetTxRequest))
+		return srv.(QueryServer).SignerSetTx(ctx, req.(*SignerSetTxRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2574,20 +2607,20 @@ func _Query_ContractCallTx_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_UpdateSignerSetTxs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateSignerSetTxsRequest)
+func _Query_SignerSetTxs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignerSetTxsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).UpdateSignerSetTxs(ctx, in)
+		return srv.(QueryServer).SignerSetTxs(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gravity.v1.Query/UpdateSignerSetTxs",
+		FullMethod: "/gravity.v1.Query/SignerSetTxs",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).UpdateSignerSetTxs(ctx, req.(*UpdateSignerSetTxsRequest))
+		return srv.(QueryServer).SignerSetTxs(ctx, req.(*SignerSetTxsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2628,20 +2661,20 @@ func _Query_ContractCallTxs_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_UpdateSignerSetTxEthereumSignatures_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateSignerSetTxEthereumSignaturesRequest)
+func _Query_SignerSetTxEthereumSignatures_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignerSetTxEthereumSignaturesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).UpdateSignerSetTxEthereumSignatures(ctx, in)
+		return srv.(QueryServer).SignerSetTxEthereumSignatures(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gravity.v1.Query/UpdateSignerSetTxEthereumSignatures",
+		FullMethod: "/gravity.v1.Query/SignerSetTxEthereumSignatures",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).UpdateSignerSetTxEthereumSignatures(ctx, req.(*UpdateSignerSetTxEthereumSignaturesRequest))
+		return srv.(QueryServer).SignerSetTxEthereumSignatures(ctx, req.(*SignerSetTxEthereumSignaturesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2682,20 +2715,20 @@ func _Query_ContractCallTxEthereumSignatures_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_PendingUpdateSignerSetTxEthereumSignatures_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PendingUpdateSignerSetTxEthereumSignaturesRequest)
+func _Query_PendingSignerSetTxEthereumSignatures_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PendingSignerSetTxEthereumSignaturesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).PendingUpdateSignerSetTxEthereumSignatures(ctx, in)
+		return srv.(QueryServer).PendingSignerSetTxEthereumSignatures(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gravity.v1.Query/PendingUpdateSignerSetTxEthereumSignatures",
+		FullMethod: "/gravity.v1.Query/PendingSignerSetTxEthereumSignatures",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).PendingUpdateSignerSetTxEthereumSignatures(ctx, req.(*PendingUpdateSignerSetTxEthereumSignaturesRequest))
+		return srv.(QueryServer).PendingSignerSetTxEthereumSignatures(ctx, req.(*PendingSignerSetTxEthereumSignaturesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2808,20 +2841,20 @@ func _Query_DenomToERC20_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_PendingSendToEthereumTxs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PendingSendToEthereumTxsRequest)
+func _Query_PendingSendToEthereums_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PendingSendToEthereumsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).PendingSendToEthereumTxs(ctx, in)
+		return srv.(QueryServer).PendingSendToEthereums(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gravity.v1.Query/PendingSendToEthereumTxs",
+		FullMethod: "/gravity.v1.Query/PendingSendToEthereums",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).PendingSendToEthereumTxs(ctx, req.(*PendingSendToEthereumTxsRequest))
+		return srv.(QueryServer).PendingSendToEthereums(ctx, req.(*PendingSendToEthereumsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2889,8 +2922,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Params_Handler,
 		},
 		{
-			MethodName: "UpdateSignerSetTx",
-			Handler:    _Query_UpdateSignerSetTx_Handler,
+			MethodName: "SignerSetTx",
+			Handler:    _Query_SignerSetTx_Handler,
 		},
 		{
 			MethodName: "BatchTx",
@@ -2901,8 +2934,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_ContractCallTx_Handler,
 		},
 		{
-			MethodName: "UpdateSignerSetTxs",
-			Handler:    _Query_UpdateSignerSetTxs_Handler,
+			MethodName: "SignerSetTxs",
+			Handler:    _Query_SignerSetTxs_Handler,
 		},
 		{
 			MethodName: "BatchTxs",
@@ -2913,8 +2946,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_ContractCallTxs_Handler,
 		},
 		{
-			MethodName: "UpdateSignerSetTxEthereumSignatures",
-			Handler:    _Query_UpdateSignerSetTxEthereumSignatures_Handler,
+			MethodName: "SignerSetTxEthereumSignatures",
+			Handler:    _Query_SignerSetTxEthereumSignatures_Handler,
 		},
 		{
 			MethodName: "BatchTxEthereumSignatures",
@@ -2925,8 +2958,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_ContractCallTxEthereumSignatures_Handler,
 		},
 		{
-			MethodName: "PendingUpdateSignerSetTxEthereumSignatures",
-			Handler:    _Query_PendingUpdateSignerSetTxEthereumSignatures_Handler,
+			MethodName: "PendingSignerSetTxEthereumSignatures",
+			Handler:    _Query_PendingSignerSetTxEthereumSignatures_Handler,
 		},
 		{
 			MethodName: "PendingBatchTxEthereumSignatures",
@@ -2953,8 +2986,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_DenomToERC20_Handler,
 		},
 		{
-			MethodName: "PendingSendToEthereumTxs",
-			Handler:    _Query_PendingSendToEthereumTxs_Handler,
+			MethodName: "PendingSendToEthereums",
+			Handler:    _Query_PendingSendToEthereums_Handler,
 		},
 		{
 			MethodName: "DelegateKeysByValidator",
@@ -3029,7 +3062,7 @@ func (m *ParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *UpdateSignerSetTxRequest) Marshal() (dAtA []byte, err error) {
+func (m *SignerSetTxRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3039,12 +3072,12 @@ func (m *UpdateSignerSetTxRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *UpdateSignerSetTxRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *SignerSetTxRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *UpdateSignerSetTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *SignerSetTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3057,7 +3090,7 @@ func (m *UpdateSignerSetTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
-func (m *UpdateSignerSetTxResponse) Marshal() (dAtA []byte, err error) {
+func (m *SignerSetTxResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3067,12 +3100,12 @@ func (m *UpdateSignerSetTxResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *UpdateSignerSetTxResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *SignerSetTxResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *UpdateSignerSetTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *SignerSetTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3112,17 +3145,17 @@ func (m *BatchTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Nonce != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Nonce))
+		i--
+		dAtA[i] = 0x10
+	}
 	if len(m.ContractAddress) > 0 {
 		i -= len(m.ContractAddress)
 		copy(dAtA[i:], m.ContractAddress)
 		i = encodeVarintQuery(dAtA, i, uint64(len(m.ContractAddress)))
 		i--
-		dAtA[i] = 0x12
-	}
-	if m.Nonce != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.Nonce))
-		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -3187,10 +3220,10 @@ func (m *ContractCallTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x10
 	}
-	if len(m.InvalidationId) > 0 {
-		i -= len(m.InvalidationId)
-		copy(dAtA[i:], m.InvalidationId)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.InvalidationId)))
+	if len(m.InvalidationScope) > 0 {
+		i -= len(m.InvalidationScope)
+		copy(dAtA[i:], m.InvalidationScope)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.InvalidationScope)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -3232,7 +3265,7 @@ func (m *ContractCallTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) Marshal() (dAtA []byte, err error) {
+func (m *SignerSetTxEthereumSignaturesRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3242,12 +3275,12 @@ func (m *UpdateSignerSetTxEthereumSignaturesRequest) Marshal() (dAtA []byte, err
 	return dAtA[:n], nil
 }
 
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *SignerSetTxEthereumSignaturesRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *SignerSetTxEthereumSignaturesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3267,7 +3300,7 @@ func (m *UpdateSignerSetTxEthereumSignaturesRequest) MarshalToSizedBuffer(dAtA [
 	return len(dAtA) - i, nil
 }
 
-func (m *UpdateSignerSetTxEthereumSignaturesResponse) Marshal() (dAtA []byte, err error) {
+func (m *SignerSetTxEthereumSignaturesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3277,26 +3310,21 @@ func (m *UpdateSignerSetTxEthereumSignaturesResponse) Marshal() (dAtA []byte, er
 	return dAtA[:n], nil
 }
 
-func (m *UpdateSignerSetTxEthereumSignaturesResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *SignerSetTxEthereumSignaturesResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *UpdateSignerSetTxEthereumSignaturesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *SignerSetTxEthereumSignaturesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Confirm) > 0 {
-		for iNdEx := len(m.Confirm) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Confirm[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
-			}
+	if len(m.Signature) > 0 {
+		for iNdEx := len(m.Signature) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Signature[iNdEx])
+			copy(dAtA[i:], m.Signature[iNdEx])
+			i = encodeVarintQuery(dAtA, i, uint64(len(m.Signature[iNdEx])))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -3304,7 +3332,7 @@ func (m *UpdateSignerSetTxEthereumSignaturesResponse) MarshalToSizedBuffer(dAtA 
 	return len(dAtA) - i, nil
 }
 
-func (m *UpdateSignerSetTxsRequest) Marshal() (dAtA []byte, err error) {
+func (m *SignerSetTxsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3314,12 +3342,12 @@ func (m *UpdateSignerSetTxsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *UpdateSignerSetTxsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *SignerSetTxsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *UpdateSignerSetTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *SignerSetTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3332,7 +3360,7 @@ func (m *UpdateSignerSetTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *UpdateSignerSetTxsResponse) Marshal() (dAtA []byte, err error) {
+func (m *SignerSetTxsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3342,12 +3370,12 @@ func (m *UpdateSignerSetTxsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *UpdateSignerSetTxsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *SignerSetTxsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *UpdateSignerSetTxsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *SignerSetTxsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3369,7 +3397,7 @@ func (m *UpdateSignerSetTxsResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) Marshal() (dAtA []byte, err error) {
+func (m *BatchTxsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3379,12 +3407,132 @@ func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) Marshal() (dAtA []by
 	return dAtA[:n], nil
 }
 
-func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *BatchTxsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *BatchTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *BatchTxsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BatchTxsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BatchTxsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Batches) > 0 {
+		for iNdEx := len(m.Batches) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Batches[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ContractCallTxsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ContractCallTxsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ContractCallTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *ContractCallTxsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ContractCallTxsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ContractCallTxsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Calls) > 0 {
+		for iNdEx := len(m.Calls) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Calls[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PendingSignerSetTxEthereumSignaturesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PendingSignerSetTxEthereumSignaturesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PendingSignerSetTxEthereumSignaturesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3399,7 +3547,7 @@ func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) MarshalToSizedBuffer
 	return len(dAtA) - i, nil
 }
 
-func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) Marshal() (dAtA []byte, err error) {
+func (m *PendingSignerSetTxEthereumSignaturesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3409,12 +3557,12 @@ func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) Marshal() (dAtA []b
 	return dAtA[:n], nil
 }
 
-func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *PendingSignerSetTxEthereumSignaturesResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *PendingSignerSetTxEthereumSignaturesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3655,6 +3803,18 @@ func (m *ContractCallTxEthereumSignaturesRequest) MarshalToSizedBuffer(dAtA []by
 		copy(dAtA[i:], m.Address)
 		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
 		i--
+		dAtA[i] = 0x1a
+	}
+	if m.InvalidationNonce != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.InvalidationNonce))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.InvalidationScope) > 0 {
+		i -= len(m.InvalidationScope)
+		copy(dAtA[i:], m.InvalidationScope)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.InvalidationScope)))
+		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
@@ -3680,136 +3840,11 @@ func (m *ContractCallTxEthereumSignaturesResponse) MarshalToSizedBuffer(dAtA []b
 	_ = i
 	var l int
 	_ = l
-	if len(m.LogicCallConfirms) > 0 {
-		for iNdEx := len(m.LogicCallConfirms) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.LogicCallConfirms[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *BatchTxsRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BatchTxsRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *BatchTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *BatchTxsResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BatchTxsResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *BatchTxsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Batches) > 0 {
-		for iNdEx := len(m.Batches) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Batches[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *ContractCallTxsRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ContractCallTxsRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ContractCallTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *ContractCallTxsResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ContractCallTxsResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ContractCallTxsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Calls) > 0 {
-		for iNdEx := len(m.Calls) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Calls[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
-			}
+	if len(m.Signature) > 0 {
+		for iNdEx := len(m.Signature) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Signature[iNdEx])
+			copy(dAtA[i:], m.Signature[iNdEx])
+			i = encodeVarintQuery(dAtA, i, uint64(len(m.Signature[iNdEx])))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -3837,6 +3872,13 @@ func (m *BatchTxEthereumSignaturesRequest) MarshalToSizedBuffer(dAtA []byte) (in
 	_ = i
 	var l int
 	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0x1a
+	}
 	if len(m.ContractAddress) > 0 {
 		i -= len(m.ContractAddress)
 		copy(dAtA[i:], m.ContractAddress)
@@ -3872,16 +3914,11 @@ func (m *BatchTxEthereumSignaturesResponse) MarshalToSizedBuffer(dAtA []byte) (i
 	_ = i
 	var l int
 	_ = l
-	if len(m.Confirms) > 0 {
-		for iNdEx := len(m.Confirms) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Confirms[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintQuery(dAtA, i, uint64(size))
-			}
+	if len(m.Signature) > 0 {
+		for iNdEx := len(m.Signature) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Signature[iNdEx])
+			copy(dAtA[i:], m.Signature[iNdEx])
+			i = encodeVarintQuery(dAtA, i, uint64(len(m.Signature[iNdEx])))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -4288,7 +4325,7 @@ func (m *DelegateKeysByOrchestratorAddressResponse) MarshalToSizedBuffer(dAtA []
 	return len(dAtA) - i, nil
 }
 
-func (m *PendingSendToEthereumTxsRequest) Marshal() (dAtA []byte, err error) {
+func (m *PendingSendToEthereumsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -4298,12 +4335,12 @@ func (m *PendingSendToEthereumTxsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PendingSendToEthereumTxsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *PendingSendToEthereumsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PendingSendToEthereumTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *PendingSendToEthereumsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -4318,7 +4355,7 @@ func (m *PendingSendToEthereumTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *PendingSendToEthereumTxsResponse) Marshal() (dAtA []byte, err error) {
+func (m *PendingSendToEthereumsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -4328,12 +4365,12 @@ func (m *PendingSendToEthereumTxsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PendingSendToEthereumTxsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *PendingSendToEthereumsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PendingSendToEthereumTxsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *PendingSendToEthereumsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -4400,7 +4437,7 @@ func (m *ParamsResponse) Size() (n int) {
 	return n
 }
 
-func (m *UpdateSignerSetTxRequest) Size() (n int) {
+func (m *SignerSetTxRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4412,7 +4449,7 @@ func (m *UpdateSignerSetTxRequest) Size() (n int) {
 	return n
 }
 
-func (m *UpdateSignerSetTxResponse) Size() (n int) {
+func (m *SignerSetTxResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4431,12 +4468,12 @@ func (m *BatchTxRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Nonce != 0 {
-		n += 1 + sovQuery(uint64(m.Nonce))
-	}
 	l = len(m.ContractAddress)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Nonce != 0 {
+		n += 1 + sovQuery(uint64(m.Nonce))
 	}
 	return n
 }
@@ -4460,7 +4497,7 @@ func (m *ContractCallTxRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.InvalidationId)
+	l = len(m.InvalidationScope)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
@@ -4483,7 +4520,7 @@ func (m *ContractCallTxResponse) Size() (n int) {
 	return n
 }
 
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) Size() (n int) {
+func (m *SignerSetTxEthereumSignaturesRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4499,22 +4536,22 @@ func (m *UpdateSignerSetTxEthereumSignaturesRequest) Size() (n int) {
 	return n
 }
 
-func (m *UpdateSignerSetTxEthereumSignaturesResponse) Size() (n int) {
+func (m *SignerSetTxEthereumSignaturesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.Confirm) > 0 {
-		for _, e := range m.Confirm {
-			l = e.Size()
+	if len(m.Signature) > 0 {
+		for _, b := range m.Signature {
+			l = len(b)
 			n += 1 + l + sovQuery(uint64(l))
 		}
 	}
 	return n
 }
 
-func (m *UpdateSignerSetTxsRequest) Size() (n int) {
+func (m *SignerSetTxsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4526,7 +4563,7 @@ func (m *UpdateSignerSetTxsRequest) Size() (n int) {
 	return n
 }
 
-func (m *UpdateSignerSetTxsResponse) Size() (n int) {
+func (m *SignerSetTxsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4541,7 +4578,55 @@ func (m *UpdateSignerSetTxsResponse) Size() (n int) {
 	return n
 }
 
-func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) Size() (n int) {
+func (m *BatchTxsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *BatchTxsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Batches) > 0 {
+		for _, e := range m.Batches {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ContractCallTxsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *ContractCallTxsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Calls) > 0 {
+		for _, e := range m.Calls {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *PendingSignerSetTxEthereumSignaturesRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4554,7 +4639,7 @@ func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) Size() (n int) {
 	return n
 }
 
-func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) Size() (n int) {
+func (m *PendingSignerSetTxEthereumSignaturesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4655,6 +4740,13 @@ func (m *ContractCallTxEthereumSignaturesRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.InvalidationScope)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.InvalidationNonce != 0 {
+		n += 1 + sovQuery(uint64(m.InvalidationNonce))
+	}
 	l = len(m.Address)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
@@ -4668,57 +4760,9 @@ func (m *ContractCallTxEthereumSignaturesResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.LogicCallConfirms) > 0 {
-		for _, e := range m.LogicCallConfirms {
-			l = e.Size()
-			n += 1 + l + sovQuery(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *BatchTxsRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *BatchTxsResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Batches) > 0 {
-		for _, e := range m.Batches {
-			l = e.Size()
-			n += 1 + l + sovQuery(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *ContractCallTxsRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *ContractCallTxsResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Calls) > 0 {
-		for _, e := range m.Calls {
-			l = e.Size()
+	if len(m.Signature) > 0 {
+		for _, b := range m.Signature {
+			l = len(b)
 			n += 1 + l + sovQuery(uint64(l))
 		}
 	}
@@ -4738,6 +4782,10 @@ func (m *BatchTxEthereumSignaturesRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -4747,9 +4795,9 @@ func (m *BatchTxEthereumSignaturesResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.Confirms) > 0 {
-		for _, e := range m.Confirms {
-			l = e.Size()
+	if len(m.Signature) > 0 {
+		for _, b := range m.Signature {
+			l = len(b)
 			n += 1 + l + sovQuery(uint64(l))
 		}
 	}
@@ -4929,7 +4977,7 @@ func (m *DelegateKeysByOrchestratorAddressResponse) Size() (n int) {
 	return n
 }
 
-func (m *PendingSendToEthereumTxsRequest) Size() (n int) {
+func (m *PendingSendToEthereumsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4942,7 +4990,7 @@ func (m *PendingSendToEthereumTxsRequest) Size() (n int) {
 	return n
 }
 
-func (m *PendingSendToEthereumTxsResponse) Size() (n int) {
+func (m *PendingSendToEthereumsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -5102,7 +5150,7 @@ func (m *ParamsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *UpdateSignerSetTxRequest) Unmarshal(dAtA []byte) error {
+func (m *SignerSetTxRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5125,10 +5173,10 @@ func (m *UpdateSignerSetTxRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: UpdateSignerSetTxRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: SignerSetTxRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpdateSignerSetTxRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SignerSetTxRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5171,7 +5219,7 @@ func (m *UpdateSignerSetTxRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *UpdateSignerSetTxResponse) Unmarshal(dAtA []byte) error {
+func (m *SignerSetTxResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5194,10 +5242,10 @@ func (m *UpdateSignerSetTxResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: UpdateSignerSetTxResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: SignerSetTxResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpdateSignerSetTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SignerSetTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5230,7 +5278,7 @@ func (m *UpdateSignerSetTxResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.SignerSet == nil {
-				m.SignerSet = &UpdateSignerSetTx{}
+				m.SignerSet = &SignerSetTx{}
 			}
 			if err := m.SignerSet.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -5287,25 +5335,6 @@ func (m *BatchTxRequest) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Nonce", wireType)
-			}
-			m.Nonce = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Nonce |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ContractAddress", wireType)
 			}
@@ -5337,6 +5366,25 @@ func (m *BatchTxRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.ContractAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Nonce", wireType)
+			}
+			m.Nonce = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Nonce |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -5475,7 +5523,7 @@ func (m *ContractCallTxRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InvalidationId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field InvalidationScope", wireType)
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
@@ -5502,9 +5550,9 @@ func (m *ContractCallTxRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InvalidationId = append(m.InvalidationId[:0], dAtA[iNdEx:postIndex]...)
-			if m.InvalidationId == nil {
-				m.InvalidationId = []byte{}
+			m.InvalidationScope = append(m.InvalidationScope[:0], dAtA[iNdEx:postIndex]...)
+			if m.InvalidationScope == nil {
+				m.InvalidationScope = []byte{}
 			}
 			iNdEx = postIndex
 		case 2:
@@ -5633,7 +5681,7 @@ func (m *ContractCallTxResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *UpdateSignerSetTxEthereumSignaturesRequest) Unmarshal(dAtA []byte) error {
+func (m *SignerSetTxEthereumSignaturesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5656,10 +5704,10 @@ func (m *UpdateSignerSetTxEthereumSignaturesRequest) Unmarshal(dAtA []byte) erro
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: UpdateSignerSetTxEthereumSignaturesRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: SignerSetTxEthereumSignaturesRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpdateSignerSetTxEthereumSignaturesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SignerSetTxEthereumSignaturesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5734,7 +5782,7 @@ func (m *UpdateSignerSetTxEthereumSignaturesRequest) Unmarshal(dAtA []byte) erro
 	}
 	return nil
 }
-func (m *UpdateSignerSetTxEthereumSignaturesResponse) Unmarshal(dAtA []byte) error {
+func (m *SignerSetTxEthereumSignaturesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5757,17 +5805,17 @@ func (m *UpdateSignerSetTxEthereumSignaturesResponse) Unmarshal(dAtA []byte) err
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: UpdateSignerSetTxEthereumSignaturesResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: SignerSetTxEthereumSignaturesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpdateSignerSetTxEthereumSignaturesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SignerSetTxEthereumSignaturesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Confirm", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signature", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -5777,25 +5825,23 @@ func (m *UpdateSignerSetTxEthereumSignaturesResponse) Unmarshal(dAtA []byte) err
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Confirm = append(m.Confirm, &UpdateSignerSetTxSignature{})
-			if err := m.Confirm[len(m.Confirm)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Signature = append(m.Signature, make([]byte, postIndex-iNdEx))
+			copy(m.Signature[len(m.Signature)-1], dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -5818,7 +5864,7 @@ func (m *UpdateSignerSetTxEthereumSignaturesResponse) Unmarshal(dAtA []byte) err
 	}
 	return nil
 }
-func (m *UpdateSignerSetTxsRequest) Unmarshal(dAtA []byte) error {
+func (m *SignerSetTxsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5841,10 +5887,10 @@ func (m *UpdateSignerSetTxsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: UpdateSignerSetTxsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: SignerSetTxsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpdateSignerSetTxsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SignerSetTxsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5887,7 +5933,7 @@ func (m *UpdateSignerSetTxsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *UpdateSignerSetTxsResponse) Unmarshal(dAtA []byte) error {
+func (m *SignerSetTxsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5910,10 +5956,10 @@ func (m *UpdateSignerSetTxsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: UpdateSignerSetTxsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: SignerSetTxsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpdateSignerSetTxsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SignerSetTxsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5945,7 +5991,7 @@ func (m *UpdateSignerSetTxsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.SignerSets = append(m.SignerSets, &UpdateSignerSetTx{})
+			m.SignerSets = append(m.SignerSets, &SignerSetTx{})
 			if err := m.SignerSets[len(m.SignerSets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -5971,7 +6017,7 @@ func (m *UpdateSignerSetTxsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) Unmarshal(dAtA []byte) error {
+func (m *BatchTxsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5994,10 +6040,278 @@ func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) Unmarshal(dAtA []byt
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PendingUpdateSignerSetTxEthereumSignaturesRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: BatchTxsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PendingUpdateSignerSetTxEthereumSignaturesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: BatchTxsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BatchTxsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BatchTxsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BatchTxsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Batches", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Batches = append(m.Batches, &BatchTx{})
+			if err := m.Batches[len(m.Batches)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ContractCallTxsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ContractCallTxsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ContractCallTxsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ContractCallTxsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ContractCallTxsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ContractCallTxsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Calls", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Calls = append(m.Calls, &ContractCallTx{})
+			if err := m.Calls[len(m.Calls)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PendingSignerSetTxEthereumSignaturesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PendingSignerSetTxEthereumSignaturesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PendingSignerSetTxEthereumSignaturesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -6053,7 +6367,7 @@ func (m *PendingUpdateSignerSetTxEthereumSignaturesRequest) Unmarshal(dAtA []byt
 	}
 	return nil
 }
-func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) Unmarshal(dAtA []byte) error {
+func (m *PendingSignerSetTxEthereumSignaturesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6076,10 +6390,10 @@ func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) Unmarshal(dAtA []by
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PendingUpdateSignerSetTxEthereumSignaturesResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: PendingSignerSetTxEthereumSignaturesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PendingUpdateSignerSetTxEthereumSignaturesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: PendingSignerSetTxEthereumSignaturesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -6111,7 +6425,7 @@ func (m *PendingUpdateSignerSetTxEthereumSignaturesResponse) Unmarshal(dAtA []by
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.SignerSets = append(m.SignerSets, &UpdateSignerSetTx{})
+			m.SignerSets = append(m.SignerSets, &SignerSetTx{})
 			if err := m.SignerSets[len(m.SignerSets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -6634,6 +6948,59 @@ func (m *ContractCallTxEthereumSignaturesRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InvalidationScope", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InvalidationScope = append(m.InvalidationScope[:0], dAtA[iNdEx:postIndex]...)
+			if m.InvalidationScope == nil {
+				m.InvalidationScope = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InvalidationNonce", wireType)
+			}
+			m.InvalidationNonce = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.InvalidationNonce |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
 			}
 			var stringLen uint64
@@ -6716,9 +7083,9 @@ func (m *ContractCallTxEthereumSignaturesResponse) Unmarshal(dAtA []byte) error 
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LogicCallConfirms", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signature", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -6728,293 +7095,23 @@ func (m *ContractCallTxEthereumSignaturesResponse) Unmarshal(dAtA []byte) error 
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.LogicCallConfirms = append(m.LogicCallConfirms, &ContractCallTx{})
-			if err := m.LogicCallConfirms[len(m.LogicCallConfirms)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BatchTxsRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BatchTxsRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BatchTxsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BatchTxsResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BatchTxsResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BatchTxsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Batches", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Batches = append(m.Batches, &BatchTx{})
-			if err := m.Batches[len(m.Batches)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ContractCallTxsRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ContractCallTxsRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ContractCallTxsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ContractCallTxsResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ContractCallTxsResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ContractCallTxsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Calls", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Calls = append(m.Calls, &ContractCallTx{})
-			if err := m.Calls[len(m.Calls)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Signature = append(m.Signature, make([]byte, postIndex-iNdEx))
+			copy(m.Signature[len(m.Signature)-1], dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -7117,6 +7214,38 @@ func (m *BatchTxEthereumSignaturesRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.ContractAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -7169,9 +7298,9 @@ func (m *BatchTxEthereumSignaturesResponse) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Confirms", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signature", wireType)
 			}
-			var msglen int
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -7181,25 +7310,23 @@ func (m *BatchTxEthereumSignaturesResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			if byteLen < 0 {
 				return ErrInvalidLengthQuery
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
 				return ErrInvalidLengthQuery
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Confirms = append(m.Confirms, &BatchTxSignature{})
-			if err := m.Confirms[len(m.Confirms)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.Signature = append(m.Signature, make([]byte, postIndex-iNdEx))
+			copy(m.Signature[len(m.Signature)-1], dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -8329,7 +8456,7 @@ func (m *DelegateKeysByOrchestratorAddressResponse) Unmarshal(dAtA []byte) error
 	}
 	return nil
 }
-func (m *PendingSendToEthereumTxsRequest) Unmarshal(dAtA []byte) error {
+func (m *PendingSendToEthereumsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -8352,10 +8479,10 @@ func (m *PendingSendToEthereumTxsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PendingSendToEthereumTxsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: PendingSendToEthereumsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PendingSendToEthereumTxsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: PendingSendToEthereumsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -8411,7 +8538,7 @@ func (m *PendingSendToEthereumTxsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PendingSendToEthereumTxsResponse) Unmarshal(dAtA []byte) error {
+func (m *PendingSendToEthereumsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -8434,10 +8561,10 @@ func (m *PendingSendToEthereumTxsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PendingSendToEthereumTxsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: PendingSendToEthereumsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PendingSendToEthereumTxsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: PendingSendToEthereumsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -8469,7 +8596,7 @@ func (m *PendingSendToEthereumTxsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.BatchedSendToEthereumTxs = append(m.BatchedSendToEthereumTxs, &SendToEthereumTx{})
+			m.BatchedSendToEthereumTxs = append(m.BatchedSendToEthereumTxs, &SendToEthereum{})
 			if err := m.BatchedSendToEthereumTxs[len(m.BatchedSendToEthereumTxs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -8503,7 +8630,7 @@ func (m *PendingSendToEthereumTxsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.UnbatchedSendToEthereumTxs = append(m.UnbatchedSendToEthereumTxs, &SendToEthereumTx{})
+			m.UnbatchedSendToEthereumTxs = append(m.UnbatchedSendToEthereumTxs, &SendToEthereum{})
 			if err := m.UnbatchedSendToEthereumTxs[len(m.UnbatchedSendToEthereumTxs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

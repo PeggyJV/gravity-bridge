@@ -145,6 +145,7 @@ pub struct MsgRequestBatchTx {
     #[prost(string, tag="2")]
     pub signer: ::prost::alloc::string::String,
 }
+/// ContractCallTxSignature is a signature on behalf of a validator for a ContractCallTx.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgRequestBatchTxResponse {
 }
@@ -424,6 +425,7 @@ pub struct Erc20ToDenom {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ParamsRequest {
 }
+/// rpc Params
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ParamsResponse {
     #[prost(message, optional, tag="1")]
