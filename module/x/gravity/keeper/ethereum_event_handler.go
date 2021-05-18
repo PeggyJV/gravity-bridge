@@ -38,7 +38,7 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 		if existingERC20, exists := a.keeper.GetCosmosOriginatedERC20(ctx, event.CosmosDenom); exists {
 			return sdkerrors.Wrap(
 				types.ErrInvalid,
-				fmt.Sprintf("ERC20 %s already exists for denom %s", existingERC20, event.CosmosDenom))
+				fmt.Sprintf("ERC20 %s already exists for denom %s", existingERC20.Hex(), event.CosmosDenom))
 		}
 
 		// Check if denom exists
