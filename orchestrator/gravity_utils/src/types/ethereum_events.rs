@@ -440,7 +440,7 @@ pub struct LogicCallExecutedEvent {
 }
 
 impl LogicCallExecutedEvent {
-    pub fn from_log(input: &Log) -> Result<LogicCallExecutedEvent, GravityError> {
+    pub fn from_log(_input: &Log) -> Result<LogicCallExecutedEvent, GravityError> {
         unimplemented!()
     }
     pub fn from_logs(input: &[Log]) -> Result<Vec<LogicCallExecutedEvent>, GravityError> {
