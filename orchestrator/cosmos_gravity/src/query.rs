@@ -9,7 +9,7 @@ use gravity_proto::gravity::PendingContractCallTxEthereumSignaturesRequest;
 use gravity_proto::gravity::PendingSignerSetTxEthereumSignaturesRequest;
 use gravity_proto::gravity::SignerSetTxsRequest;
 use gravity_proto::gravity::ContractCallTxEthereumSignaturesRequest;
-use gravity_proto::gravity::QueryOutgoingLogicCallsRequest;
+use gravity_proto::gravity::ContractCallTxsRequest;
 use gravity_proto::gravity::BatchTxsRequest;
 use gravity_proto::gravity::QueryValsetConfirmsByNonceRequest;
 use gravity_utils::error::GravityError;
@@ -170,7 +170,7 @@ pub async fn get_latest_logic_calls(
     client: &mut GravityQueryClient<Channel>,
 ) -> Result<Vec<LogicCall>, GravityError> {
     let request = client
-        .outgoing_logic_calls(QueryOutgoingLogicCallsRequest {})
+        .contract_call_txs(ContractCallTxsRequest {})
         .await?;
     let calls = request.into_inner().calls;
     let mut out = Vec::new();
