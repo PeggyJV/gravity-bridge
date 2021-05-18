@@ -59,7 +59,7 @@ pub struct ValsetConfirmResponse {
 
 impl ValsetConfirmResponse {
     pub fn from_proto(
-        input: gravity_proto::gravity::UpdateSignerSetTxSignature,
+        input: gravity_proto::gravity::SignerSetTxSignature,
     ) -> Result<Self, GravityError> {
         Ok(ValsetConfirmResponse {
             eth_address: input.ethereum_signer.parse()?,
@@ -322,8 +322,8 @@ impl Valset {
     }
 }
 
-impl From<gravity_proto::gravity::UpdateSignerSetTx> for Valset {
-    fn from(input: gravity_proto::gravity::UpdateSignerSetTx) -> Self {
+impl From<gravity_proto::gravity::SignerSetTx> for Valset {
+    fn from(input: gravity_proto::gravity::SignerSetTx) -> Self {
         Valset {
             nonce: input.nonce,
             members: input.signers.iter().map(|i| i.into()).collect(),
@@ -331,8 +331,8 @@ impl From<gravity_proto::gravity::UpdateSignerSetTx> for Valset {
     }
 }
 
-impl From<&gravity_proto::gravity::UpdateSignerSetTx> for Valset {
-    fn from(input: &gravity_proto::gravity::UpdateSignerSetTx) -> Self {
+impl From<&gravity_proto::gravity::SignerSetTx> for Valset {
+    fn from(input: &gravity_proto::gravity::SignerSetTx) -> Self {
         Valset {
             nonce: input.nonce,
             members: input.signers.iter().map(|i| i.into()).collect(),

@@ -2,17 +2,17 @@ use clarity::Address as EthAddress;
 use deep_space::address::Address;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_proto::gravity::BatchTxEthereumSignaturesRequest;
-use gravity_proto::gravity::QueryCurrentValsetRequest;
+use gravity_proto::gravity::SignerSetTxRequest;
 use gravity_proto::gravity::LastSubmittedEthereumEventRequest;
-use gravity_proto::gravity::QueryLastPendingBatchRequestByAddrRequest;
+use gravity_proto::gravity::PendingBatchTxEthereumSignatures;
 use gravity_proto::gravity::QueryLastPendingLogicCallByAddrRequest;
-use gravity_proto::gravity::PendingUpdateSignerSetTxEthereumSignaturesRequest;
-use gravity_proto::gravity::UpdateSignerSetTxsRequest;
+use gravity_proto::gravity::PendingSignerSetTxEthereumSignaturesRequest;
+use gravity_proto::gravity::SignerSetTxsRequest;
 use gravity_proto::gravity::QueryLogicConfirmsRequest;
 use gravity_proto::gravity::QueryOutgoingLogicCallsRequest;
 use gravity_proto::gravity::BatchTxsRequest;
 use gravity_proto::gravity::QueryValsetConfirmsByNonceRequest;
-use gravity_proto::gravity::UpdateSignerSetTxRequest;
+use gravity_proto::gravity::SignerSetTxRequest;
 use gravity_utils::error::GravityError;
 use gravity_utils::types::*;
 use tonic::transport::Channel;
@@ -23,7 +23,7 @@ pub async fn get_valset(
     nonce: u64,
 ) -> Result<Option<Valset>, GravityError> {
     let request = client
-        .update_signer_set_tx(UpdateSignerSetTxRequest { nonce })
+        .signer_set_tx(SignerSetTxRequest { nonce })
         .await?;
     let valset = request.into_inner().signer_set;
     let valset = match valset {
@@ -41,8 +41,8 @@ pub async fn get_valset(
 pub async fn get_current_valset(
     client: &mut GravityQueryClient<Channel>,
 ) -> Result<Valset, GravityError> {
-    let request = client.current_valset(QueryCurrentValsetRequest {}).await?;
-    let valset = request.into_inner().valset;
+    let request = client.signer_set_tx(SignerSetTxRequest { nonce: 0 }).await?;
+    let valset = request.into_inner().signer_set;
     if let Some(valset) = valset {
         Ok(valset.into())
     } else {
@@ -60,7 +60,7 @@ pub async fn get_oldest_unsigned_valsets(
     address: Address,
 ) -> Result<Vec<Valset>, GravityError> {
     let request = client
-        .pending_update_signer_set_tx_ethereum_signatures(PendingUpdateSignerSetTxEthereumSignaturesRequest {
+        .pending_signer_set_tx_ethereum_signatures(PendingSignerSetTxEthereumSignaturesRequest {
             address: address.to_string(),
         })
         .await?;
@@ -76,7 +76,7 @@ pub async fn get_latest_valsets(
     client: &mut GravityQueryClient<Channel>,
 ) -> Result<Vec<Valset>, GravityError> {
     let request = client
-        .update_signer_set_txs(UpdateSignerSetTxsRequest { count: 5 })
+        .update_signer_set_txs(SignerSetTxsRequest { count: 5 })
         .await?;
     let valsets = request.into_inner().signer_sets;
     Ok(valsets.iter().map(|v| v.into()).collect())
@@ -103,13 +103,14 @@ pub async fn get_oldest_unsigned_transaction_batch(
     address: Address,
 ) -> Result<Option<TransactionBatch>, GravityError> {
     let request = client
-        .last_pending_batch_request_by_addr(QueryLastPendingBatchRequestByAddrRequest {
+        .pending_batch_tx_ethereum_signatures(PendingBatchTxEthereumSignatures {
             address: address.to_string(),
         })
         .await?;
-    let batch = request.into_inner().batch;
+    // TODO(levi) is this really getting the oldest; feels like newest?
+    let batch = request.into_inner().batches.get(0);
     match batch {
-        Some(batch) => Ok(Some(TransactionBatch::from_proto(batch)?)),
+        Some(batch) => Ok(Some(TransactionBatch::from_proto(*batch)?)),
         None => Ok(None),
     }
 }

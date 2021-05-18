@@ -21,16 +21,10 @@ impl LogicCall {
         let mut transfers: Vec<Erc20Token> = Vec::new();
         let mut fees: Vec<Erc20Token> = Vec::new();
         for token in input.tokens {
-            transfers.push(Erc20Token {
-                amount: token.amount.parse()?,
-                token_contract_address: EthAddress::parse_and_validate(&token.denom)?,
-            })
+            transfers.push(Erc20Token::from_proto(token)?)
         }
         for fee in input.fees {
-            fees.push(Erc20Token {
-                amount: fee.amount.parse()?,
-                token_contract_address: EthAddress::parse_and_validate(&fee.denom)?,
-            })
+            fees.push(Erc20Token::from_proto(fee)?)
         }
         if transfers.is_empty() || fees.is_empty() {
             return Err(GravityError::InvalidBridgeStateError(
@@ -41,7 +35,7 @@ impl LogicCall {
         Ok(LogicCall {
             transfers,
             fees,
-            logic_contract_address: input.contract_call_address.parse()?,
+            logic_contract_address: input.address.parse()?,
             payload: input.payload,
             timeout: input.timeout,
             invalidation_id: input.invalidation_scope,
@@ -64,7 +58,7 @@ impl LogicCallConfirmResponse {
         input: gravity_proto::gravity::ContractCallTxSignature,
     ) -> Result<Self, GravityError> {
         Ok(LogicCallConfirmResponse {
-            invalidation_id: input.invalidation_id,
+            invalidation_id: input.invalidation_scope,
             invalidation_nonce: input.invalidation_nonce,
             ethereum_signer: input.ethereum_signer.parse()?,
             eth_signature: EthSignature::from_bytes(&input.signature)?,

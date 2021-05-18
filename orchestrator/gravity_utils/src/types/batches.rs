@@ -5,9 +5,9 @@ use clarity::{abi::Token, Address as EthAddress};
 use deep_space::Address as CosmosAddress;
 
 /// This represents an individual transaction being bridged over to Ethereum
-/// parallel is the SendToEthereumTx in x/gravity/types/batch.go
+/// parallel is the SendToEthereum in x/gravity/types/batch.go
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct BatchTransaction {
+pub struct BatchTransaction { // TODO(levi) rename this to match SendToEthereum
     pub id: u64,
     pub sender: CosmosAddress,
     pub destination: EthAddress,
@@ -17,7 +17,7 @@ pub struct BatchTransaction {
 
 impl BatchTransaction {
     pub fn from_proto(
-        input: gravity_proto::gravity::SendToEthereumTx,
+        input: gravity_proto::gravity::SendToEthereum,
     ) -> Result<Self, GravityError> {
         if input.erc20_fee.is_none() || input.erc20_token.is_none() {
             return Err(GravityError::InvalidBridgeStateError(
