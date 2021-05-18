@@ -147,8 +147,8 @@ func (k Keeper) DeleteEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64
 func (k Keeper) GetEthereumEventVoteRecordMapping(ctx sdk.Context) (out map[uint64][]*types.EthereumEventVoteRecord) {
 	out = make(map[uint64][]*types.EthereumEventVoteRecord)
 	k.IterateEthereumEventVoteRecords(ctx, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
-		var event types.EthereumEvent
-		if err := k.cdc.UnpackAny(eventVoteRecord.Event, &event); err != nil {
+		event, err := types.UnpackEvent(eventVoteRecord.Event)
+		if err != nil {
 			panic(err)
 		}
 
