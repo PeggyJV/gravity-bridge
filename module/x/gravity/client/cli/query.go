@@ -19,7 +19,7 @@ func GetQueryCmd() *cobra.Command {
 	}
 	gravityQueryCmd.AddCommand(
 		CmdParams(),
-		// CmdSignerSetTx(),
+		CmdSignerSetTx(),
 		// CmdBatchTx(),
 		// CmdContractCallTx(),
 		// CmdSignerSetTxs(),
@@ -54,13 +54,54 @@ func CmdParams() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			res, err := types.NewQueryClient(clientCtx).Params(context.Background(), &types.ParamsRequest{})
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := types.ParamsRequest{}
+
+			res, err := queryClient.Params(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
+
 			return clientCtx.PrintProto(res)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdSignerSetTx() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "signer-set-tx [nonce]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				nonce uint64 // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.SignerSetTxRequest{
+				Nonce: nonce,
+			}
+
+			res, err := queryClient.SignerSetTx(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }

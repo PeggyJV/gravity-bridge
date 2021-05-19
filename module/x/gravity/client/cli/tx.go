@@ -75,7 +75,6 @@ func CmdSendToEthereum() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-
 	return cmd
 }
 
@@ -108,7 +107,6 @@ func CmdCancelSendToEthereum() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-
 	return cmd
 }
 
@@ -137,7 +135,6 @@ func CmdRequestBatchTx() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-
 	return cmd
 }
 
@@ -165,7 +162,6 @@ func CmdSubmitEthereumSignature() *cobra.Command { // TODO(levi) confirm this cm
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-
 	return cmd
 }
 
@@ -186,7 +182,6 @@ func CmdSubmitEthereumEvent() *cobra.Command { // TODO(levi) confirm this cmd ma
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-
 	return cmd
 }
 
@@ -202,12 +197,12 @@ func CmdSetDelegateKeys() *cobra.Command {
 			}
 
 			var ( // args
-				valAddr  sdk.ValAddress // TODO(levi) init and validate from args[0]
-				orchAddr sdk.AccAddress // TODO(levi) init and validate from args[1]
-				ethAddr  string         // TODO(levi) init and validate from args[2]
+				valAddr sdk.ValAddress // TODO(levi) init and validate from args[0]
+				orcAddr sdk.AccAddress // TODO(levi) init and validate from args[1]
+				ethAddr string         // TODO(levi) init and validate from args[2]
 			)
 
-			msg := types.NewMsgDelegateKeys(valAddr, orchAddr, ethAddr)
+			msg := types.NewMsgDelegateKeys(valAddr, orcAddr, ethAddr)
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -216,7 +211,6 @@ func CmdSetDelegateKeys() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-
 	return cmd
 }
 
