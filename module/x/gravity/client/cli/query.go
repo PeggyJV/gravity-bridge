@@ -25,7 +25,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdContractCallTxs(),
 		CmdSignerSetTxEthereumSignatures(),
 		CmdBatchTxEthereumSignatures(),
-		// CmdContractCallTxEthereumSignatures(),
+		CmdContractCallTxEthereumSignatures(),
 		// CmdPendingSignerSetTxEthereumSignatures(),
 		// CmdPendingBatchTxEthereumSignatures(),
 		// CmdPendingContractCallTxEthereumSignatures(),
@@ -305,7 +305,7 @@ func CmdSignerSetTxEthereumSignatures() *cobra.Command {
 func CmdBatchTxEthereumSignatures() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "batch-tx-ethereum-signatures [nonce] [contract-address] [validator-or-orchestrator-address]",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.MinimumNArgs(2),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -328,6 +328,44 @@ func CmdBatchTxEthereumSignatures() *cobra.Command {
 			}
 
 			res, err := queryClient.BatchTxEthereumSignatures(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdContractCallTxEthereumSignatures() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "contract-call-tx-ethereum-signatures [invalidation-scope] [invalidation-nonce] [validator-or-orchestrator-address]",
+		Args:  cobra.MinimumNArgs(2),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				invalidationScope []byte // TODO(levi) init and validate from args[0]
+				invalidationNonce uint64 // TODO(levi) init and validate from args[1]
+				address           string // TODO(levi) init and validate from args[2]
+			)
+
+			req := types.ContractCallTxEthereumSignaturesRequest{
+				InvalidationNonce: invalidationNonce,
+				InvalidationScope: invalidationScope,
+				Address:           address,
+			}
+
+			res, err := queryClient.ContractCallTxEthereumSignatures(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
