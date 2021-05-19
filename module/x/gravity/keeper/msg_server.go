@@ -82,7 +82,7 @@ func (k msgServer) SubmitEthereumSignature(c context.Context, msg *types.MsgSubm
 
 	ethAddress := k.GetValidatorEthereumAddress(ctx, val)
 	if ethAddress != signature.GetSigner() {
-		return nil, sdkerrors.Wrap(types.ErrEmpty, "eth address")
+		return nil, sdkerrors.Wrap(types.ErrInvalid, "eth address does not match signer eth address")
 	}
 
 	if err = types.ValidateEthereumSignature(checkpoint, signature.GetSignature(), ethAddress); err != nil {
@@ -91,7 +91,7 @@ func (k msgServer) SubmitEthereumSignature(c context.Context, msg *types.MsgSubm
 
 	// TODO: should validators be able to overwrite their signatures?
 	if k.getEthereumSignature(ctx, signature.GetStoreIndex(), val) != nil {
-		return nil, sdkerrors.Wrap(types.ErrDuplicate, "signature duplicate")
+		return nil, sdkerrors.Wrap(types.ErrInvalid, "signature duplicate")
 	}
 
 	key := k.SetEthereumSignature(ctx, signature, val)
@@ -240,9 +240,9 @@ func (k Keeper) getSignerValidator(ctx sdk.Context, signerString string) (sdk.Va
 	}
 
 	if validatorI == nil {
-		return nil, sdkerrors.Wrap(types.ErrUnknown, "not orchestrator or validator")
+		return nil, sdkerrors.Wrap(types.ErrInvalid, "not orchestrator or validator")
 	} else if !validatorI.IsBonded() {
-		return nil, sdkerrors.Wrap(types.ErrUnbonded, fmt.Sprintf("validator: %s", validatorI.GetOperator()))
+		return nil, sdkerrors.Wrap(types.ErrInvalid, fmt.Sprintf("validator is not bonded: %s", validatorI.GetOperator()))
 	}
 
 	return validatorI.GetOperator(), nil

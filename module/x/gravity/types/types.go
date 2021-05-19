@@ -35,13 +35,13 @@ func UInt64FromString(s string) (uint64, error) {
 // ValidateBasic performs stateless checks on validity
 func (b *EthereumSigner) ValidateBasic() error {
 	if b.Power == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "power")
+		return sdkerrors.Wrap(ErrInvalid, "msg does not include power")
 	}
 	if err := ValidateEthereumAddress(b.EthereumAddress); err != nil {
 		return sdkerrors.Wrap(err, "ethereum address")
 	}
 	if b.EthereumAddress == "" {
-		return sdkerrors.Wrap(ErrEmpty, "address")
+		return sdkerrors.Wrap(ErrInvalid, "msg does not include address")
 	}
 	return nil
 }
@@ -141,7 +141,7 @@ func (b EthereumSigners) GetPowers() []uint64 {
 func (b EthereumSigners) ValidateBasic() error {
 	// TODO: check if the set is sorted here?
 	if len(b) == 0 {
-		return ErrEmpty
+		return ErrInvalid
 	}
 	for i := range b {
 		if err := b[i].ValidateBasic(); err != nil {
@@ -149,7 +149,7 @@ func (b EthereumSigners) ValidateBasic() error {
 		}
 	}
 	if b.HasDuplicates() {
-		return sdkerrors.Wrap(ErrDuplicate, "addresses")
+		return sdkerrors.Wrap(ErrInvalid, "duplicate addresses")
 	}
 
 	return nil

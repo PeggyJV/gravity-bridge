@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
 )
@@ -21,7 +22,7 @@ func (k Keeper) recordEventVote(
 	// and prevents validators from submitting two claims with the same nonce
 	lastEventNonce := k.getLastEventNonceByValidator(ctx, val)
 	if event.GetNonce() != lastEventNonce+1 {
-		return nil, types.ErrNonContiguousEventNonce
+		return nil, sdkerrors.Wrap(types.ErrInvalid, "non contiguous event nonce")
 	}
 
 	// Tries to get an EthereumEventVoteRecord with the same eventNonce and event as the event that was submitted.
