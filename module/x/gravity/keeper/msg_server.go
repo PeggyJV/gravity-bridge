@@ -202,20 +202,8 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 
 func (k msgServer) CancelSendToEthereum(c context.Context, msg *types.MsgCancelSendToEthereum) (*types.MsgCancelSendToEthereumResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	sender, _ := sdk.AccAddressFromBech32(msg.Sender)
 
-	var send *types.SendToEthereum
-	for _, ste := range k.GetUnbatchedSendToEthereums(ctx) {
-		if ste.Id == msg.Id {
-			send = ste
-		}
-	}
-
-	if sender.String() != send.Sender {
-		return nil, fmt.Errorf("can't cancel a message you didn't send")
-	}
-
-	err := k.Keeper.CancelSendToEthereum(ctx, send)
+	err := k.Keeper.CancelSendToEthereum(ctx, msg.Id, msg.Sender)
 	if err != nil {
 		return nil, err
 	}

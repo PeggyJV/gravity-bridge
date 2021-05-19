@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 
@@ -63,12 +64,27 @@ func (k Keeper) CreateSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, cou
 // - checks that the provided tx actually exists
 // - deletes the unbatched tx from the pool
 // - issues the tokens back to the sender
-func (k Keeper) CancelSendToEthereum(ctx sdk.Context, send *types.SendToEthereum) error {
+func (k Keeper) CancelSendToEthereum(ctx sdk.Context, id uint64, s string) error {
+	sender, _ := sdk.AccAddressFromBech32(s)
+
+	var send *types.SendToEthereum
+	for _, ste := range k.GetUnbatchedSendToEthereums(ctx) {
+		if ste.Id == id {
+			send = ste
+		}
+	}
+	if send == nil {
+		return sdkerrors.Wrap(types.ErrInvalid, "id not found in send to ethereum pool")
+	}
+
+	if sender.String() != send.Sender {
+		return fmt.Errorf("can't cancel a message you didn't send")
+	}
+
 	totalToRefund := send.Erc20Token.GravityCoin()
 	totalToRefund.Amount = totalToRefund.Amount.Add(send.Erc20Fee.Amount)
 	totalToRefundCoins := sdk.NewCoins(totalToRefund)
 	isCosmosOriginated, _ := k.ERC20ToDenomLookup(ctx, send.Erc20Token.Contract)
-	sender, _ := sdk.AccAddressFromBech32(send.Sender)
 
 	// If it is not cosmos-originated the coins are minted
 	if !isCosmosOriginated {

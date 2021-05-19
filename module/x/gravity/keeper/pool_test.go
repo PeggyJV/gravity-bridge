@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
@@ -38,11 +37,18 @@ func TestAddToOutgoingPool(t *testing.T) {
 		got = append(got, tx)
 		return false
 	})
+
 	exp := []*types.SendToEthereum{
 		types.NewSendToEthereumTx(2, myTokenContractAddr, mySender, myReceiver, 101, 3),
-		types.NewSendToEthereumTx(1, myTokenContractAddr, mySender, myReceiver, 100, 2),
 		types.NewSendToEthereumTx(3, myTokenContractAddr, mySender, myReceiver, 102, 2),
+		types.NewSendToEthereumTx(1, myTokenContractAddr, mySender, myReceiver, 100, 2),
 		types.NewSendToEthereumTx(4, myTokenContractAddr, mySender, myReceiver, 103, 1),
 	}
-	assert.Equal(t, exp, got)
+	require.Equal(t, exp, got)
+	require.EqualValues(t, exp[0], got[0])
+	require.EqualValues(t, exp[1], got[1])
+	require.EqualValues(t, exp[2], got[2])
+	require.EqualValues(t, exp[3], got[3])
+
+	require.Len(t, got, 4)
 }
