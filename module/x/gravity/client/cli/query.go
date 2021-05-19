@@ -31,7 +31,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdPendingContractCallTxEthereumSignatures(),
 		CmdLastSubmittedEthereumEvent(),
 		CmdBatchTxFees(),
-		// CmdERC20ToDenom(),
+		CmdERC20ToDenom(),
 		// CmdDenomToERC20(),
 		// CmdPendingSendToEthereums(),
 		// CmdDelegateKeysByValidator(),
@@ -530,6 +530,40 @@ func CmdBatchTxFees() *cobra.Command {
 			req := types.BatchTxFeesRequest{}
 
 			res, err := queryClient.BatchTxFees(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdERC20ToDenom() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "erc20-to-denom [erc20]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				erc20 string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.ERC20ToDenomRequest{
+				Erc20: erc20,
+			}
+
+			res, err := queryClient.ERC20ToDenom(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
