@@ -29,7 +29,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdPendingSignerSetTxEthereumSignatures(),
 		CmdPendingBatchTxEthereumSignatures(),
 		CmdPendingContractCallTxEthereumSignatures(),
-		// CmdLastSubmittedEthereumEvent(),
+		CmdLastSubmittedEthereumEvent(),
 		// CmdBatchTxFees(),
 		// CmdERC20ToDenom(),
 		// CmdDenomToERC20(),
@@ -468,6 +468,40 @@ func CmdPendingContractCallTxEthereumSignatures() *cobra.Command {
 			}
 
 			res, err := queryClient.PendingContractCallTxEthereumSignatures(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdLastSubmittedEthereumEvent() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "last-submitted-ethereum-event [address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				address string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.LastSubmittedEthereumEventRequest{
+				Address: address,
+			}
+
+			res, err := queryClient.LastSubmittedEthereumEvent(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
