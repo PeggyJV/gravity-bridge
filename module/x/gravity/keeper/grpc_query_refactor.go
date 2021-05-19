@@ -20,7 +20,7 @@ func (k Keeper) Params(c context.Context, req *types.ParamsRequest) (*types.Para
 func (k Keeper) SignerSetTx(c context.Context, req *types.SignerSetTxRequest) (*types.SignerSetTxResponse, error) {
 	// TODO: audit once we finalize storage
 	storeIndex := sdk.Uint64ToBigEndian(req.Nonce)
-	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.GetOutgoingTxKey(storeIndex))
+	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.MakeOutgoingTxKey(storeIndex))
 	if otx == nil {
 		// handle not found case
 	}
@@ -44,7 +44,7 @@ func (k Keeper) BatchTx(c context.Context, req *types.BatchTxRequest) (*types.Ba
 
 	// TODO: audit once we finalize storage
 	storeIndex := append(sdk.Uint64ToBigEndian(req.Nonce), common.Hex2Bytes(req.ContractAddress)...)
-	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.GetOutgoingTxKey(storeIndex))
+	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.MakeOutgoingTxKey(storeIndex))
 	if otx == nil {
 		// handle not found case
 	}
@@ -61,7 +61,7 @@ func (k Keeper) BatchTx(c context.Context, req *types.BatchTxRequest) (*types.Ba
 
 func (k Keeper) ContractCallTx(c context.Context, req *types.ContractCallTxRequest) (*types.ContractCallTxResponse, error) {
 	storeIndex := append(sdk.Uint64ToBigEndian(req.InvalidationNonce), req.InvalidationScope...)
-	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.GetOutgoingTxKey(storeIndex))
+	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.MakeOutgoingTxKey(storeIndex))
 	if otx == nil {
 		// handle not found case
 	}
@@ -78,7 +78,7 @@ func (k Keeper) ContractCallTx(c context.Context, req *types.ContractCallTxReque
 
 func (k Keeper) SignerSetTxs(c context.Context, req *types.SignerSetTxsRequest) (*types.SignerSetTxsResponse, error) {
 	var signers []*types.SignerSetTx
-	k.IterateOutgoingTxs(sdk.UnwrapSDKContext(c), types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(sdk.UnwrapSDKContext(c), types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		signer, ok := otx.(*types.SignerSetTx)
 		if !ok {
 			// todo: handle error case
@@ -92,7 +92,7 @@ func (k Keeper) SignerSetTxs(c context.Context, req *types.SignerSetTxsRequest) 
 
 func (k Keeper) BatchTxs(c context.Context, req *types.BatchTxsRequest) (*types.BatchTxsResponse, error) {
 	var batches []*types.BatchTx
-	k.IterateOutgoingTxs(sdk.UnwrapSDKContext(c), types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(sdk.UnwrapSDKContext(c), types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		batch, ok := otx.(*types.BatchTx)
 		if !ok {
 			// todo: handle error case
@@ -105,7 +105,7 @@ func (k Keeper) BatchTxs(c context.Context, req *types.BatchTxsRequest) (*types.
 
 func (k Keeper) ContractCallTxs(c context.Context, req *types.ContractCallTxsRequest) (*types.ContractCallTxsResponse, error) {
 	var calls []*types.ContractCallTx
-	k.IterateOutgoingTxs(sdk.UnwrapSDKContext(c), types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(sdk.UnwrapSDKContext(c), types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		call, ok := otx.(*types.ContractCallTx)
 		if !ok {
 			// todo: handle error case
@@ -180,7 +180,7 @@ func (k Keeper) PendingSignerSetTxEthereumSignatures(c context.Context, req *typ
 		return nil, err
 	}
 	var signerSets []*types.SignerSetTx
-	k.IterateOutgoingTxs(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		sig := k.GetEthereumSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 { // it's pending
 			signerSet, ok := otx.(*types.SignerSetTx)
@@ -201,7 +201,7 @@ func (k Keeper) PendingBatchTxEthereumSignatures(c context.Context, req *types.P
 		return nil, err
 	}
 	var batches []*types.BatchTx
-	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		sig := k.GetEthereumSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 { // it's pending
 			batch, ok := otx.(*types.BatchTx)
@@ -222,7 +222,7 @@ func (k Keeper) PendingContractCallTxEthereumSignatures(c context.Context, req *
 		return nil, err
 	}
 	var calls []*types.ContractCallTx
-	k.IterateOutgoingTxs(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		sig := k.GetEthereumSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 { // it's pending
 			call, ok := otx.(*types.ContractCallTx)
@@ -244,7 +244,7 @@ func (k Keeper) BatchTxFees(c context.Context, req *types.BatchTxFeesRequest) (*
 	ctx := sdk.UnwrapSDKContext(c)
 	res := &types.BatchTxFeesResponse{}
 
-	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		btx, _ := otx.(*types.BatchTx)
 		for _, tx := range btx.Transactions {
 			res.Fees = append(res.Fees, tx.Erc20Fee.GravityCoin())

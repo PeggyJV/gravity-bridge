@@ -4,21 +4,29 @@ import (
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gravity-bridge/module/x/gravity/keeper"
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// EndBlocker is called at the end of every block
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
-	// Question: what here can be epoched?
-	slashing(ctx, k)
-	eventVoteRecordTally(ctx, k)
+// BeginBlocker is called at the beginning of every block
+// NOTE: begin blocker also emits events which are helpful for
+// clients listening to the chain and creating transactions
+// based on the events (i.e. orchestrators)
+func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	cleanupTimedOutBatchTxs(ctx, k)
 	cleanupTimedOutContractCallTxs(ctx, k)
 	createSignerSetTxs(ctx, k)
 	createBatchTxs(ctx, k)
 	pruneSignerSetTxs(ctx, k)
+}
+
+// EndBlocker is called at the end of every block
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
+	outgoingTxSlashing(ctx, k)
+	eventVoteRecordTally(ctx, k)
 }
 
 func createBatchTxs(ctx sdk.Context, k keeper.Keeper) {
@@ -36,28 +44,30 @@ func createBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 		}
 
 		for _, c := range contracts {
+			// NOTE: this doesn't emit events which would be helpful for client processes
 			k.BuildBatchTx(ctx, common.HexToAddress(c), 100)
 		}
 	}
 }
 
 func createSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
-	// Auto ValsetRequest Creation.
-	// 1. If there are no valset requests, create a new one.
+	// Auto signerset tx creation.
+	// 1. If there are no signer set requests, create a new one.
 	// 2. If there is at least one validator who started unbonding in current block. (we persist last unbonded block height in hooks.go)
 	//      This will make sure the unbonding validator has to provide an ethereum signature to a new signer set tx
 	//	    that excludes him before he completely Unbonds.  Otherwise he will be slashed
-	// 3. If power change between validators of CurrentValset and latest valset request is > 5%
+	// 3. If power change between validators of Current signer set and latest signer set request is > 5%
 	latesetSignerSetTx := k.GetLatestSignerSetTx(ctx)
 	lastUnbondingHeight := k.GetLastUnBondingBlockHeight(ctx)
 	if latesetSignerSetTx == nil {
-		k.SetOutgoingTx(ctx, k.NewSignerSetTx(ctx))
+		k.CreateSignerSetTx(ctx)
 		return
 	}
-	powerDiff := types.EthereumSigners(latesetSignerSetTx.Signers).PowerDiff(latesetSignerSetTx.Signers)
+	powerDiff := types.EthereumSigners(k.CurrentSignerSet(ctx)).PowerDiff(latesetSignerSetTx.Signers)
 	if (latesetSignerSetTx == nil) || (lastUnbondingHeight == uint64(ctx.BlockHeight())) || (powerDiff > 0.05) {
-		k.SetOutgoingTx(ctx, k.NewSignerSetTx(ctx))
+		k.CreateSignerSetTx(ctx)
 	}
+
 }
 
 func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
@@ -79,20 +89,6 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 			}
 		}
 	}
-}
-
-func slashing(ctx sdk.Context, k keeper.Keeper) {
-
-	params := k.GetParams(ctx)
-
-	// Slash validator for not confirming valset requests, batch requests and not attesting claims rightfully
-	SignerSetTxSlashing(ctx, k, params)
-	BatchSlashing(ctx, k, params)
-	// TODO slashing for arbitrary logic is missing
-
-	// TODO: prune validator sets, older than 6 months, this time is chosen out of an abundance of caution
-	// TODO: prune outgoing tx batches while looping over them above, older than 15h and confirmed
-	// TODO: prune claims, attestations
 }
 
 // Iterate over all attestations currently being voted on in order of nonce and
@@ -150,7 +146,7 @@ func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper) {
 //    AND any deposit or withdraw has occurred to update the Ethereum block height.
 func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 	ethereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight
-	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		btx, _ := otx.(*types.BatchTx)
 
 		if btx.Timeout < ethereumHeight {
@@ -172,7 +168,7 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 //    AND any deposit or withdraw has occurred to update the Ethereum block height.
 func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper) {
 	ethereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight
-	k.IterateOutgoingTxs(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		cctx, _ := otx.(*types.ContractCallTx)
 		if cctx.Timeout < ethereumHeight {
 			k.DeleteOutgoingTx(ctx, cctx.GetStoreIndex())
@@ -181,109 +177,87 @@ func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper) {
 	})
 }
 
-func SignerSetTxSlashing(ctx sdk.Context, k keeper.Keeper, params types.Params) {
-
+func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
+	params := k.GetParams(ctx)
 	maxHeight := uint64(0)
-
-	// don't slash in the beginning before there aren't even SignedValsetsWindow blocks yet
-	if uint64(ctx.BlockHeight()) > params.SignedSignerSetTxsWindow {
-		maxHeight = uint64(ctx.BlockHeight()) - params.SignedSignerSetTxsWindow
-	}
-
-	unslashedsignerSetTxs := k.GetUnSlashedSignerSetTxs(ctx, maxHeight)
-
-	// unslashedsignerSetTxs are sorted by nonce in ASC order
-	for _, sstx := range unslashedsignerSetTxs {
-		signatures := k.GetEthereumSignatures(ctx, sstx.GetStoreIndex())
-
-		// SLASH BONDED VALIDTORS who didn't attest valset request
-		for _, val := range k.StakingKeeper.GetBondedValidatorsByPower(ctx) {
-			consAddr, _ := val.GetConsAddr()
-			valSigningInfo, exist := k.SlashingKeeper.GetValidatorSigningInfo(ctx, consAddr)
-
-			//  Slash validator ONLY if he joined after valset is created
-			if exist && valSigningInfo.StartHeight < int64(sstx.Height) {
-				if _, found := signatures[val.GetOperator().String()]; !found {
-					if !val.IsJailed() {
-						// TODO: do we want to slash jailed validators?
-						k.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), val.ConsensusPower(), params.SlashFractionBatch)
-						k.StakingKeeper.Jail(ctx, consAddr)
-					}
-				}
-			}
-		}
-
-		// SLASH UNBONDING VALIDATORS who didn't attest valset request
-		blockTime := ctx.BlockTime().Add(k.StakingKeeper.GetParams(ctx).UnbondingTime)
-		blockHeight := ctx.BlockHeight()
-		unbondingValIterator := k.StakingKeeper.ValidatorQueueIterator(ctx, blockTime, blockHeight)
-		defer unbondingValIterator.Close()
-
-		// All unbonding validators
-		for ; unbondingValIterator.Valid(); unbondingValIterator.Next() {
-			unbondingValidators := k.GetUnbondingvalidators(unbondingValIterator.Value())
-
-			for _, valAddr := range unbondingValidators.Addresses {
-				addr, _ := sdk.ValAddressFromBech32(valAddr)
-				validator, _ := k.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addr))
-				valConsAddr, _ := validator.GetConsAddr()
-				valSigningInfo, exist := k.SlashingKeeper.GetValidatorSigningInfo(ctx, valConsAddr)
-
-				// Only slash validators who joined after valset is created and they are unbonding and UNBOND_SLASHING_WINDOW didn't pass
-				if exist && valSigningInfo.StartHeight < int64(sstx.Nonce) && validator.IsUnbonding() && sstx.Height < uint64(validator.UnbondingHeight)+params.UnbondSlashingSignerSetTxsWindow {
-					// Check if validator has confirmed valset or not
-					if _, found := signatures[validator.GetOperator().String()]; !found {
-						if !validator.IsJailed() {
-							// TODO: do we want to slash jailed validators
-							k.StakingKeeper.Slash(ctx, valConsAddr, ctx.BlockHeight(), validator.ConsensusPower(), params.SlashFractionSignerSetTx)
-							k.StakingKeeper.Jail(ctx, valConsAddr)
-						}
-					}
-				}
-			}
-		}
-		// then we set the latest slashed valset  nonce
-		k.SetLastSlashedSignerSetTxNonce(ctx, sstx.Nonce)
-	}
-}
-
-func BatchSlashing(ctx sdk.Context, k keeper.Keeper, params types.Params) {
-
-	// #2 condition
-	// We look through the full bonded set (not just the active set, include unbonding validators)
-	// and we slash users who haven't signed a batch confirmation that is >15hrs in blocks old
-	maxHeight := uint64(0)
-
-	// don't slash in the beginning before there aren't even SignedBatchesWindow blocks yet
 	if uint64(ctx.BlockHeight()) > params.SignedBatchesWindow {
 		maxHeight = uint64(ctx.BlockHeight()) - params.SignedBatchesWindow
 	} else {
 		return
 	}
 
-	unslashedBatches := k.GetUnSlashedBatches(ctx, maxHeight)
-	for _, batch := range unslashedBatches {
+	usotxs := k.GetUnSlashedOutgoingTxs(ctx, maxHeight)
+	if len(usotxs) == 0 {
+		return
+	}
 
+	// get signing info for each validator
+	type valInfo struct {
+		val   stakingtypes.Validator
+		exist bool
+		sigs  slashingtypes.ValidatorSigningInfo
+		cons  sdk.ConsAddress
+	}
+
+	var valInfos []valInfo
+
+	for _, val := range k.StakingKeeper.GetBondedValidatorsByPower(ctx) {
+		consAddr, _ := val.GetConsAddr()
+		sigs, exist := k.SlashingKeeper.GetValidatorSigningInfo(ctx, consAddr)
+		valInfos = append(valInfos, valInfo{val, exist, sigs, consAddr})
+	}
+
+	var unbondingValInfos []valInfo
+
+	blockTime := ctx.BlockTime().Add(k.StakingKeeper.GetParams(ctx).UnbondingTime)
+	blockHeight := ctx.BlockHeight()
+	unbondingValIterator := k.StakingKeeper.ValidatorQueueIterator(ctx, blockTime, blockHeight)
+	defer unbondingValIterator.Close()
+
+	// All unbonding validators
+	for ; unbondingValIterator.Valid(); unbondingValIterator.Next() {
+		unbondingValidators := k.GetUnbondingvalidators(unbondingValIterator.Value())
+		for _, valAddr := range unbondingValidators.Addresses {
+			addr, _ := sdk.ValAddressFromBech32(valAddr)
+			validator, _ := k.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addr))
+			valConsAddr, _ := validator.GetConsAddr()
+			valSigningInfo, exist := k.SlashingKeeper.GetValidatorSigningInfo(ctx, valConsAddr)
+			unbondingValInfos = append(unbondingValInfos, valInfo{validator, exist, valSigningInfo, valConsAddr})
+		}
+	}
+
+	for _, otx := range usotxs {
 		// SLASH BONDED VALIDATORS who didn't sign batch txs
-		currentBondedSet := k.StakingKeeper.GetBondedValidatorsByPower(ctx)
-		signatures := k.GetEthereumSignatures(ctx, batch.GetStoreIndex())
-		for _, val := range currentBondedSet {
-			// Don't slash validators who joined after batch is created
-			consAddr, _ := val.GetConsAddr()
-			valSigningInfo, exist := k.SlashingKeeper.GetValidatorSigningInfo(ctx, consAddr)
-			if exist && valSigningInfo.StartHeight > int64(batch.Height) {
-				continue
-			}
-
-			if _, ok := signatures[val.GetOperator().String()]; !ok {
-				k.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), val.ConsensusPower(), params.SlashFractionBatch)
-				if !val.IsJailed() {
-					k.StakingKeeper.Jail(ctx, consAddr)
+		signatures := k.GetEthereumSignatures(ctx, otx.GetStoreIndex())
+		for _, valInfo := range valInfos {
+			// Don't slash validators who joined after outgoingtx is created
+			if valInfo.exist && valInfo.sigs.StartHeight < int64(otx.GetCosmosHeight()) {
+				if _, ok := signatures[valInfo.val.GetOperator().String()]; !ok {
+					if !valInfo.val.IsJailed() {
+						k.StakingKeeper.Slash(ctx, valInfo.cons, ctx.BlockHeight(), valInfo.val.ConsensusPower(), params.SlashFractionBatch)
+						k.StakingKeeper.Jail(ctx, valInfo.cons)
+					}
 				}
 			}
 		}
-		// then we set the latest slashed batch block
-		k.SetLastSlashedBatchBlockHeight(ctx, batch.Height)
 
+		if sstx, ok := otx.(*types.SignerSetTx); ok {
+			for _, valInfo := range unbondingValInfos {
+				// Only slash validators who joined after valset is created and they are unbonding and UNBOND_SLASHING_WINDOW didn't pass
+				if valInfo.exist && valInfo.sigs.StartHeight < int64(sstx.Nonce) && valInfo.val.IsUnbonding() && sstx.Height < uint64(valInfo.val.UnbondingHeight)+params.UnbondSlashingSignerSetTxsWindow {
+					// Check if validator has confirmed valset or not
+					if _, found := signatures[valInfo.val.GetOperator().String()]; !found {
+						if !valInfo.val.IsJailed() {
+							// TODO: do we want to slash jailed validators
+							k.StakingKeeper.Slash(ctx, valInfo.cons, ctx.BlockHeight(), valInfo.val.ConsensusPower(), params.SlashFractionSignerSetTx)
+							k.StakingKeeper.Jail(ctx, valInfo.cons)
+						}
+					}
+				}
+			}
+		}
+
+		// then we set the latest slashed outgoing tx block
+		k.SetLastSlashedOutgoingTxBlockHeight(ctx, otx.GetCosmosHeight())
 	}
 }

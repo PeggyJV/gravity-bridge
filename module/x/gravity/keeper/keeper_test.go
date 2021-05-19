@@ -73,7 +73,7 @@ func TestCurrentValsetNormalization(t *testing.T) {
 				}
 			}
 			input.GravityKeeper.StakingKeeper = NewStakingKeeperWeightedMock(operators...)
-			r := input.GravityKeeper.NewSignerSetTx(ctx)
+			r := input.GravityKeeper.CreateSignerSetTx(ctx)
 			assert.Equal(t, spec.expPowers, types.EthereumSigners(r.Signers).GetPowers())
 		})
 	}
@@ -250,8 +250,7 @@ func TestLastSlashedValsetNonce(t *testing.T) {
 	i := 1
 	for ; i < 10; i++ {
 		ctx = ctx.WithBlockHeight(int64(i))
-		vs := k.NewSignerSetTx(ctx)
-		k.SetOutgoingTx(ctx, vs)
+		_ = k.CreateSignerSetTx(ctx)
 	}
 
 	latestValsetNonce := k.GetLatestSignerSetTxNonce(ctx)

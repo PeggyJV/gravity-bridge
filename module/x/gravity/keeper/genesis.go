@@ -120,7 +120,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 	})
 
 	// export signer set txs and sigs
-	k.IterateOutgoingTxs(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		ota, _ := types.PackOutgoingTx(otx)
 		outgoingTxs = append(outgoingTxs, ota)
 		sstx, _ := otx.(*types.SignerSetTx)
@@ -133,7 +133,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 	})
 
 	// export batch txs and sigs
-	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		ota, _ := types.PackOutgoingTx(otx)
 		outgoingTxs = append(outgoingTxs, ota)
 		btx, _ := otx.(*types.BatchTx)
@@ -146,7 +146,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 	})
 
 	// export contract call txs and sigs
-	k.IterateOutgoingTxs(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		ota, _ := types.PackOutgoingTx(otx)
 		outgoingTxs = append(outgoingTxs, ota)
 		btx, _ := otx.(*types.ContractCallTx)

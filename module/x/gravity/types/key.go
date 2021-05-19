@@ -39,15 +39,9 @@ const (
 	LastEventNonceByValidatorKey
 	LastObservedEventNonceKey
 	LatestSignerSetTxNonceKey
-	LastSlashedBatchBlockKey
+	LastSlashedOutgoingTxBlockKey
 	LastSlashedSignerSetTxNonceKey
 	LastOutgoingBatchNonceKey
-
-	// SecondIndexSendToEthereumFeeKey indexes fee amounts by token contract address
-	SecondIndexSendToEthereumFeeKey
-
-	// BatchTxBlockKey indexes outgoing tx batches under a block height and token address
-	BatchTxBlockKey
 
 	// LastSendToEthereumIDKey indexes the lastTxPoolID
 	LastSendToEthereumIDKey
@@ -61,34 +55,34 @@ const (
 	// ERC20ToDenomKey prefixes the index of Cosmos originated assets ERC20s to denoms
 	ERC20ToDenomKey
 
-	// LastUnBondingBlockHeight indexes the last validator unbonding block height
-	LastUnBondingBlockHeight
+	// LastUnBondingBlockHeightKey indexes the last validator unbonding block height
+	LastUnBondingBlockHeightKey
 
-	LastObservedValsetKey
+	LastObservedSignerSetKey
 )
 
 ////////////////////
 // Key Delegation //
 ////////////////////
 
-// GetOrchestratorValidatorAddressKey returns the following key format
+// MakeOrchestratorValidatorAddressKey returns the following key format
 // prefix
 // [0xe8][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
-func GetOrchestratorValidatorAddressKey(orc sdk.AccAddress) []byte {
+func MakeOrchestratorValidatorAddressKey(orc sdk.AccAddress) []byte {
 	return append([]byte{OrchestratorValidatorAddressKey}, orc.Bytes()...)
 }
 
-// GetValidatorEthereumAddressKey returns the following key format
+// MakeValidatorEthereumAddressKey returns the following key format
 // prefix              cosmos-validator
 // [0x0][cosmosvaloper1ahx7f8wyertuus9r20284ej0asrs085case3kn]
-func GetValidatorEthereumAddressKey(validator sdk.ValAddress) []byte {
+func MakeValidatorEthereumAddressKey(validator sdk.ValAddress) []byte {
 	return append([]byte{ValidatorEthereumAddressKey}, validator.Bytes()...)
 }
 
-// GetEthereumOrchestratorAddressKey returns the following key format
+// MakeEthereumOrchestratorAddressKey returns the following key format
 // prefix              cosmos-validator
 // [0x0][cosmosvaloper1ahx7f8wyertuus9r20284ej0asrs085case3kn]
-func GetEthereumOrchestratorAddressKey(eth common.Address) []byte {
+func MakeEthereumOrchestratorAddressKey(eth common.Address) []byte {
 	return append([]byte{EthereumOrchestratorAddressKey}, eth.Bytes()...)
 }
 
@@ -96,10 +90,10 @@ func GetEthereumOrchestratorAddressKey(eth common.Address) []byte {
 // Etheruem Signatures //
 /////////////////////////
 
-// GetEthereumSignatureKey returns the following key format
+// MakeEthereumSignatureKey returns the following key format
 // prefix   nonce                    validator-address
 // [0x0][0 0 0 0 0 0 0 1][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
-func GetEthereumSignatureKey(storeIndex []byte, validator sdk.ValAddress) []byte {
+func MakeEthereumSignatureKey(storeIndex []byte, validator sdk.ValAddress) []byte {
 	return bytes.Join([][]byte{{EthereumSignatureKey}, storeIndex, validator.Bytes()}, []byte{})
 }
 
@@ -107,10 +101,10 @@ func GetEthereumSignatureKey(storeIndex []byte, validator sdk.ValAddress) []byte
 // Etheruem Event Vote Records //
 /////////////////////////////////
 
-// GetEthereumEventVoteRecordKey returns the following key format
+// MakeEthereumEventVoteRecordKey returns the following key format
 // prefix     nonce                             claim-details-hash
 // [0x5][0 0 0 0 0 0 0 1][fd1af8cec6c67fcf156f1b61fdf91ebc04d05484d007436e75342fc05bbff35a]
-func GetEthereumEventVoteRecordKey(eventNonce uint64, claimHash []byte) []byte {
+func MakeEthereumEventVoteRecordKey(eventNonce uint64, claimHash []byte) []byte {
 	return bytes.Join([][]byte{{EthereumEventVoteRecordKey}, sdk.Uint64ToBigEndian(eventNonce), claimHash}, []byte{})
 }
 
@@ -118,8 +112,8 @@ func GetEthereumEventVoteRecordKey(eventNonce uint64, claimHash []byte) []byte {
 // Outgoing Txs //
 //////////////////
 
-// GetOutgoingTxKey returns the store index passed with a prefix
-func GetOutgoingTxKey(storeIndex []byte) []byte {
+// MakeOutgoingTxKey returns the store index passed with a prefix
+func MakeOutgoingTxKey(storeIndex []byte) []byte {
 	return append([]byte{OutgoingTxKey}, storeIndex...)
 }
 
@@ -127,26 +121,38 @@ func GetOutgoingTxKey(storeIndex []byte) []byte {
 // Send To Etheruem //
 //////////////////////
 
-// GetSendToEthereumKey returns the following key format
+// MakeSendToEthereumKey returns the following key format
 // prefix            eth-contract-address            fee_amount        id
 // [0x9][0xc783df8a850f42e7F7e57013759C285caa701eB6][1000000000][0 0 0 0 0 0 0 1]
-func GetSendToEthereumKey(id uint64, fee ERC20Token) []byte {
+func MakeSendToEthereumKey(id uint64, fee ERC20Token) []byte {
 	amount := make([]byte, 32)
 	return bytes.Join([][]byte{{SendToEthereumKey}, common.HexToAddress(fee.Contract).Bytes(), fee.Amount.BigInt().FillBytes(amount), sdk.Uint64ToBigEndian(id)}, []byte{})
 }
 
-// GetLastEventNonceByValidatorKey indexes lateset event nonce by validator
-// GetLastEventNonceByValidatorKey returns the following key format
+// MakeLastEventNonceByValidatorKey indexes lateset event nonce by validator
+// MakeLastEventNonceByValidatorKey returns the following key format
 // prefix              cosmos-validator
 // [0x0][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
-func GetLastEventNonceByValidatorKey(validator sdk.ValAddress) []byte {
+func MakeLastEventNonceByValidatorKey(validator sdk.ValAddress) []byte {
 	return append([]byte{LastEventNonceByValidatorKey}, validator.Bytes()...)
 }
 
-func GetDenomToERC20Key(denom string) []byte {
+func MakeDenomToERC20Key(denom string) []byte {
 	return append([]byte{DenomToERC20Key}, []byte(denom)...)
 }
 
-func GetERC20ToDenomKey(erc20 string) []byte {
+func MakeERC20ToDenomKey(erc20 string) []byte {
 	return append([]byte{ERC20ToDenomKey}, []byte(erc20)...)
+}
+
+func MakeSignerSetTxKey(nonce uint64) []byte {
+	return append([]byte{SignerSetTxPrefixByte}, sdk.Uint64ToBigEndian(nonce)...)
+}
+
+func MakeBatchTxKey(addr common.Address, nonce uint64) []byte {
+	return bytes.Join([][]byte{{BatchTxPrefixByte}, addr.Bytes(), sdk.Uint64ToBigEndian(nonce)}, []byte{})
+}
+
+func MakeContractCallTxKey(invalscope []byte, invalnonce uint64) []byte {
+	return bytes.Join([][]byte{{ContractCallTxPrefixByte}, invalscope, sdk.Uint64ToBigEndian(invalnonce)}, []byte{})
 }

@@ -74,6 +74,7 @@ func (k Keeper) CancelSendToEthereum(ctx sdk.Context, id uint64, s string) error
 		}
 	}
 	if send == nil {
+		// NOTE: this case will also be hit if the transaction is in a batch
 		return sdkerrors.Wrap(types.ErrInvalid, "id not found in send to ethereum pool")
 	}
 
@@ -102,11 +103,11 @@ func (k Keeper) CancelSendToEthereum(ctx sdk.Context, id uint64, s string) error
 }
 
 func (k Keeper) SetUnbatchedSendToEthereum(ctx sdk.Context, ste *types.SendToEthereum) {
-	ctx.KVStore(k.storeKey).Set(types.GetSendToEthereumKey(ste.Id, ste.Erc20Fee), k.cdc.MustMarshalBinaryBare(ste))
+	ctx.KVStore(k.storeKey).Set(types.MakeSendToEthereumKey(ste.Id, ste.Erc20Fee), k.cdc.MustMarshalBinaryBare(ste))
 }
 
 func (k Keeper) DeleteUnbatchedSendToEthereum(ctx sdk.Context, id uint64, fee types.ERC20Token) {
-	ctx.KVStore(k.storeKey).Delete(types.GetSendToEthereumKey(id, fee))
+	ctx.KVStore(k.storeKey).Delete(types.MakeSendToEthereumKey(id, fee))
 }
 
 func (k Keeper) IterateUnbatchedSendToEthereumsByContract(ctx sdk.Context, contract common.Address, cb func(*types.SendToEthereum) bool) {
