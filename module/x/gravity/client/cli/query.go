@@ -35,7 +35,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdDenomToERC20(),
 		CmdPendingSendToEthereums(),
 		CmdDelegateKeysByValidator(),
-		// CmdDelegateKeysByEthereumSigner(),
+		CmdDelegateKeysByEthereumSigner(),
 		// CmdDelegateKeysByOrchestrator(),
 	)
 
@@ -666,6 +666,40 @@ func CmdDelegateKeysByValidator() *cobra.Command {
 			}
 
 			res, err := queryClient.DelegateKeysByValidator(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdDelegateKeysByEthereumSigner() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delegate-keys-by-ethereum-signer [ethereum-signer]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				ethereumSigner string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.DelegateKeysByEthereumSignerRequest{
+				EthereumSigner: ethereumSigner,
+			}
+
+			res, err := queryClient.DelegateKeysByEthereumSigner(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
