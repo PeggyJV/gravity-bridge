@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -148,18 +149,27 @@ func (k msgServer) SendToEthereum(c context.Context, msg *types.MsgSendToEthereu
 	if err != nil {
 		return nil, err
 	}
-	txID, err := k.AddToOutgoingPool(ctx, sender, msg.EthereumRecipient, msg.Amount, msg.BridgeFee)
+
+	txID, err := k.CreateSendToEthereum(ctx, sender, msg.EthereumRecipient, msg.Amount, msg.BridgeFee)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
+	ctx.EventManager().EmitEvents([]sdk.Event{
+		sdk.NewEvent(
+			types.EventTypeBridgeWithdrawalReceived,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+			sdk.NewAttribute(types.AttributeKeyContract, k.GetBridgeContractAddress(ctx)),
+			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.GetBridgeChainID(ctx)))),
+			sdk.NewAttribute(types.AttributeKeyOutgoingTXID, strconv.Itoa(int(txID))),
+			sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(txID)),
+		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, msg.Type()),
 			sdk.NewAttribute(types.AttributeKeyOutgoingTXID, fmt.Sprint(txID)),
 		),
-	)
+	})
 
 	return &types.MsgSendToEthereumResponse{}, nil
 }
@@ -176,10 +186,7 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 		return nil, err
 	}
 
-	batchID, err := k.BuildBatchTx(ctx, tokenContract, BatchTxSize)
-	if err != nil {
-		return nil, err
-	}
+	batchID := k.BuildBatchTx(ctx, tokenContract, BatchTxSize)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -195,22 +202,25 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 
 func (k msgServer) CancelSendToEthereum(c context.Context, msg *types.MsgCancelSendToEthereum) (*types.MsgCancelSendToEthereumResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return nil, err
-	}
-	err = k.RemoveFromOutgoingPoolAndRefund(ctx, msg.Id, sender)
+
+	err := k.Keeper.CancelSendToEthereum(ctx, msg.Id, msg.Sender)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
+	ctx.EventManager().EmitEvents([]sdk.Event{
+		sdk.NewEvent(
+			types.EventTypeBridgeWithdrawCanceled,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+			sdk.NewAttribute(types.AttributeKeyContract, k.GetBridgeContractAddress(ctx)),
+			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.GetBridgeChainID(ctx)))),
+		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, msg.Type()),
 			sdk.NewAttribute(types.AttributeKeyOutgoingTXID, fmt.Sprint(msg.Id)),
 		),
-	)
+	})
 
 	return &types.MsgCancelSendToEthereumResponse{}, nil
 }

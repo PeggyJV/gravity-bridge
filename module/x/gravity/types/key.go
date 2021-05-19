@@ -128,18 +128,11 @@ func GetOutgoingTxKey(storeIndex []byte) []byte {
 //////////////////////
 
 // GetSendToEthereumKey returns the following key format
-// prefix     id
-// [0x6][0 0 0 0 0 0 0 1]
-func GetSendToEthereumKey(id uint64) []byte {
-	return append([]byte{SendToEthereumKey}, sdk.Uint64ToBigEndian(id)...)
-}
-
-// GetFeeSecondIndexKey returns the following key format
-// prefix            eth-contract-address            fee_amount
-// [0x9][0xc783df8a850f42e7F7e57013759C285caa701eB6][1000000000]
-func GetFeeSecondIndexKey(fee sdk.Coin) []byte {
+// prefix            eth-contract-address            fee_amount        id
+// [0x9][0xc783df8a850f42e7F7e57013759C285caa701eB6][1000000000][0 0 0 0 0 0 0 1]
+func GetSendToEthereumKey(id uint64, fee ERC20Token) []byte {
 	amount := make([]byte, 32)
-	return bytes.Join([][]byte{{SecondIndexSendToEthereumFeeKey}, common.HexToAddress(NewERC20TokenFromCoin(fee).Contract).Bytes(), fee.Amount.BigInt().FillBytes(amount)}, []byte{})
+	return bytes.Join([][]byte{{SendToEthereumKey}, common.HexToAddress(fee.Contract).Bytes(), fee.Amount.BigInt().FillBytes(amount), sdk.Uint64ToBigEndian(id)}, []byte{})
 }
 
 // GetLastEventNonceByValidatorKey indexes lateset event nonce by validator

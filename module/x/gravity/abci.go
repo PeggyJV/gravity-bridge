@@ -17,7 +17,28 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	cleanupTimedOutBatchTxs(ctx, k)
 	cleanupTimedOutContractCallTxs(ctx, k)
 	createSignerSetTxs(ctx, k)
+	createBatchTxs(ctx, k)
 	pruneSignerSetTxs(ctx, k)
+}
+
+func createBatchTxs(ctx sdk.Context, k keeper.Keeper) {
+	// TODO: this needs some more work, is super naieve
+	if ctx.BlockHeight()%10 == 0 {
+		var cm map[string]bool
+		k.IterateUnbatchedSendToEthereums(ctx, func(ste *types.SendToEthereum) bool {
+			cm[ste.Erc20Token.Contract] = true
+			return false
+		})
+
+		var contracts []string
+		for k := range cm {
+			contracts = append(contracts, k)
+		}
+
+		for _, c := range contracts {
+			k.BuildBatchTx(ctx, common.HexToAddress(c), 100)
+		}
+	}
 }
 
 func createSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {

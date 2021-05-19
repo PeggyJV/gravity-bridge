@@ -215,10 +215,10 @@ type TestInput struct {
 }
 
 func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, tokenContract common.Address, sender sdk.AccAddress, receiver common.Address, ids ...uint64) {
-	for i, v := range ids {
+	for i, id := range ids {
 		amount := types.NewERC20Token(uint64(i+100), tokenContract.Hex()).GravityCoin()
-		fee := types.NewERC20Token(v, tokenContract.Hex()).GravityCoin()
-		_, err := input.GravityKeeper.AddToOutgoingPool(ctx, sender, receiver.Hex(), amount, fee)
+		fee := types.NewERC20Token(id, tokenContract.Hex()).GravityCoin()
+		_, err := input.GravityKeeper.CreateSendToEthereum(ctx, sender, receiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}
 }

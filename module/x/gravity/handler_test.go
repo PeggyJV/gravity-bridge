@@ -33,9 +33,9 @@ func TestHandleMsgSendToEthereum(t *testing.T) {
 	ctx := input.Context
 	h := NewHandler(input.GravityKeeper)
 	input.BankKeeper.MintCoins(ctx, types.ModuleName, startingCoins)
-	input.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, userCosmosAddr, startingCoins)
+	input.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, userCosmosAddr, startingCoins) // 150
 	balance1 := input.BankKeeper.GetAllBalances(ctx, userCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, startingCoinAmount)}, balance1)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, startingCoinAmount)}, balance1) // 150
 
 	// send some coins
 	msg := &types.MsgSendToEthereum{
@@ -44,7 +44,7 @@ func TestHandleMsgSendToEthereum(t *testing.T) {
 		Amount:            sendingCoin,
 		BridgeFee:         feeCoin}
 	ctx = ctx.WithBlockTime(blockTime).WithBlockHeight(blockHeight)
-	_, err := h(ctx, msg)
+	_, err := h(ctx, msg) // send 55
 	require.NoError(t, err)
 	balance2 := input.BankKeeper.GetAllBalances(ctx, userCosmosAddr)
 	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, startingCoinAmount.Sub(sendAmount).Sub(feeAmount))}, balance2)
@@ -56,7 +56,7 @@ func TestHandleMsgSendToEthereum(t *testing.T) {
 		Amount:            sendingCoin,
 		BridgeFee:         feeCoin}
 	ctx = ctx.WithBlockTime(blockTime).WithBlockHeight(blockHeight)
-	_, err1 := h(ctx, msg1)
+	_, err1 := h(ctx, msg1) // send 55
 	require.NoError(t, err1)
 	balance3 := input.BankKeeper.GetAllBalances(ctx, userCosmosAddr)
 	finalAmount3 := startingCoinAmount.Sub(sendAmount).Sub(sendAmount).Sub(feeAmount).Sub(feeAmount)
@@ -69,7 +69,7 @@ func TestHandleMsgSendToEthereum(t *testing.T) {
 		Amount:            sendingCoin,
 		BridgeFee:         feeCoin}
 	ctx = ctx.WithBlockTime(blockTime).WithBlockHeight(blockHeight)
-	_, err2 := h(ctx, msg2)
+	_, err2 := h(ctx, msg2) // send 55
 	require.Error(t, err2)
 	balance4 := input.BankKeeper.GetAllBalances(ctx, userCosmosAddr)
 	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, finalAmount3)}, balance4)
