@@ -122,8 +122,8 @@ service Query {
   }
 
   // delegate keys
-  rpc DelegateKeysByValidator(DelegateKeysByValidatorAddress)
-      returns (DelegateKeysByValidatorAddressResponse) {
+  rpc DelegateKeysByValidator(DelegateKeysByValidatorRequest)
+      returns (DelegateKeysByValidatorResponse) {
     option (google.api.http).get =
         "/gravity/v1/delegate_keys/validator/{validator}";
   }
@@ -132,8 +132,8 @@ service Query {
     option (google.api.http).get =
         "/gravity/v1/delegate_keys/ethereum/{ethereum_signer}";
   }
-  rpc DelegateKeysByOrchestrator(DelegateKeysByOrchestratorAddress)
-      returns (DelegateKeysByOrchestratorAddressResponse) {
+  rpc DelegateKeysByOrchestrator(DelegateKeysByOrchestratorRequest)
+      returns (DelegateKeysByOrchestratorResponse) {
     option (google.api.http).get =
         "/gravity/v1/delegate_keys/orchestrator/{orchestrator}";
   }
@@ -284,8 +284,8 @@ message DenomToERC20Response {
   bool cosmos_originated = 2;
 }
 
-message DelegateKeysByValidatorAddress { string validator_address = 1; }
-message DelegateKeysByValidatorAddressResponse {
+message DelegateKeysByValidatorRequest { string validator_address = 1; }
+message DelegateKeysByValidatorResponse {
   string eth_address = 1;
   string orchestrator_address = 2;
 }
@@ -296,8 +296,8 @@ message DelegateKeysByEthereumSignerResponse {
   string orchestrator_address = 2;
 }
 
-message DelegateKeysByOrchestratorAddress { string orchestrator_address = 1; }
-message DelegateKeysByOrchestratorAddressResponse {
+message DelegateKeysByOrchestratorRequest { string orchestrator_address = 1; }
+message DelegateKeysByOrchestratorResponse {
   string validator_address = 1;
   string ethereum_signer = 2;
 }

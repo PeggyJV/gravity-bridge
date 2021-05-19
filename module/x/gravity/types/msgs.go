@@ -202,9 +202,10 @@ func (msg MsgSendToEthereum) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgRequestBatchTx returns a new msgRequestBatch
-func NewMsgRequestBatchTx(orchestrator sdk.AccAddress) *MsgRequestBatchTx {
+func NewMsgRequestBatchTx(denom string, signer sdk.AccAddress) *MsgRequestBatchTx {
 	return &MsgRequestBatchTx{
-		Signer: orchestrator.String(),
+		Denom:  denom,
+		Signer: signer.String(),
 	}
 }
 

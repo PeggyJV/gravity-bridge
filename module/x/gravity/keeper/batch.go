@@ -82,7 +82,7 @@ func (k Keeper) getBatchTimeoutHeight(ctx sdk.Context) uint64 {
 func (k Keeper) BatchTxExecuted(ctx sdk.Context, tokenContract common.Address, nonce uint64) {
 	otx := k.GetOutgoingTx(ctx, types.MakeBatchTxKey(tokenContract, nonce))
 	batchTx, _ := otx.(*types.BatchTx)
-	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		// If the iterated batches nonce is lower than the one that was just executed, cancel it
 		btx, _ := otx.(*types.BatchTx)
 		if (btx.Nonce < batchTx.Nonce) && (batchTx.TokenContract == tokenContract.Hex()) {
@@ -138,7 +138,7 @@ func (k Keeper) CancelBatchTx(ctx sdk.Context, tokenContract common.Address, non
 func (k Keeper) GetLastOutgoingBatchByTokenType(ctx sdk.Context, token common.Address) *types.BatchTx {
 	var lastBatch *types.BatchTx = nil
 	lastNonce := uint64(0)
-	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		btx, _ := otx.(*types.BatchTx)
 		if common.HexToAddress(btx.TokenContract) == token && btx.Nonce > lastNonce {
 			lastBatch = btx
@@ -149,14 +149,14 @@ func (k Keeper) GetLastOutgoingBatchByTokenType(ctx sdk.Context, token common.Ad
 	return lastBatch
 }
 
-// SetLastSlashedBatchBlockHeight sets the latest slashed Batch block height
-func (k Keeper) SetLastSlashedBatchBlockHeight(ctx sdk.Context, blockHeight uint64) {
-	ctx.KVStore(k.storeKey).Set([]byte{types.LastSlashedBatchBlockKey}, types.UInt64Bytes(blockHeight))
+// SetLastSlashedOutgoingTxBlockHeight sets the latest slashed Batch block height
+func (k Keeper) SetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context, blockHeight uint64) {
+	ctx.KVStore(k.storeKey).Set([]byte{types.LastSlashedOutgoingTxBlockKey}, types.UInt64Bytes(blockHeight))
 }
 
-// GetLastSlashedBatchBlockHeight returns the latest slashed Batch block
-func (k Keeper) GetLastSlashedBatchBlockHeight(ctx sdk.Context) uint64 {
-	if bz := ctx.KVStore(k.storeKey).Get([]byte{types.LastSlashedBatchBlockKey}); bz == nil {
+// GetLastSlashedOutgoingTxBlockHeight returns the latest slashed Batch block
+func (k Keeper) GetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context) uint64 {
+	if bz := ctx.KVStore(k.storeKey).Get([]byte{types.LastSlashedOutgoingTxBlockKey}); bz == nil {
 		return 0
 	} else {
 		return types.UInt64FromBytes(bz)
@@ -165,9 +165,9 @@ func (k Keeper) GetLastSlashedBatchBlockHeight(ctx sdk.Context) uint64 {
 
 // GetUnSlashedBatches returns all the unslashed batches in state
 func (k Keeper) GetUnSlashedBatches(ctx sdk.Context, maxHeight uint64) (out []*types.BatchTx) {
-	lastSlashedBatchBlockHeight := k.GetLastSlashedBatchBlockHeight(ctx)
+	lastSlashedBatchBlockHeight := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
 
-	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(_ []byte, outgoing types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, outgoing types.OutgoingTx) bool {
 		batchTx := outgoing.(*types.BatchTx)
 		if (batchTx.Height < maxHeight) && (batchTx.Height > lastSlashedBatchBlockHeight) {
 			out = append(out, batchTx)
@@ -176,6 +176,17 @@ func (k Keeper) GetUnSlashedBatches(ctx sdk.Context, maxHeight uint64) (out []*t
 		return false
 	})
 
+	return
+}
+
+func (k Keeper) GetUnSlashedOutgoingTxs(ctx sdk.Context, maxHeight uint64) (out []types.OutgoingTx) {
+	lastSlashed := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
+	k.IterateOutgoingTxs(ctx, func(key []byte, otx types.OutgoingTx) bool {
+		if (otx.GetCosmosHeight() < maxHeight) && (otx.GetCosmosHeight() > lastSlashed) {
+			out = append(out, otx)
+		}
+		return false
+	})
 	return
 }
 

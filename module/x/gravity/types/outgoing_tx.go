@@ -1,11 +1,9 @@
 package types
 
 import (
-	"bytes"
 	"math/big"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -30,18 +28,6 @@ const (
 // GetStoreIndex //
 ///////////////////
 
-func MakeSignerSetTxKey(nonce uint64) []byte {
-	return append([]byte{SignerSetTxPrefixByte}, sdk.Uint64ToBigEndian(nonce)...)
-}
-
-func MakeBatchTxKey(addr common.Address, nonce uint64) []byte {
-	return bytes.Join([][]byte{{BatchTxPrefixByte}, addr.Bytes(), sdk.Uint64ToBigEndian(nonce)}, []byte{})
-}
-
-func MakeContractCallTxKey(invalscope []byte, invalnonce uint64) []byte {
-	return bytes.Join([][]byte{{ContractCallTxPrefixByte}, invalscope, sdk.Uint64ToBigEndian(invalnonce)}, []byte{})
-}
-
 // TODO: do we need a prefix byte for the different types?
 func (sstx *SignerSetTx) GetStoreIndex() []byte {
 	return MakeSignerSetTxKey(sstx.Nonce)
@@ -53,6 +39,22 @@ func (btx *BatchTx) GetStoreIndex() []byte {
 
 func (cctx *ContractCallTx) GetStoreIndex() []byte {
 	return MakeContractCallTxKey(cctx.InvalidationScope.Bytes(), cctx.InvalidationNonce)
+}
+
+///////////////////
+// GetCheckpoint //
+///////////////////
+
+func (sstx *SignerSetTx) GetCosmosHeight() uint64 {
+	return sstx.Height
+}
+
+func (btx *BatchTx) GetCosmosHeight() uint64 {
+	return btx.Height
+}
+
+func (cctx *ContractCallTx) GetCosmosHeight() uint64 {
+	return cctx.Height
 }
 
 ///////////////////

@@ -52,7 +52,6 @@ func TestBatches(t *testing.T) {
 		Nonce: 1,
 		Transactions: []*types.SendToEthereum{
 			types.NewSendToEthereumTx(2, myTokenContractAddr, mySender, myReceiver, 101, 3),
-			// TODO(levi+jack) review with jehan types.NewSendToEthereumTx(1, myTokenContractAddr, mySender, myReceiver, 100, 2),
 			types.NewSendToEthereumTx(3, myTokenContractAddr, mySender, myReceiver, 102, 2),
 		},
 		TokenContract: myTokenContractAddr.Hex(),
@@ -68,7 +67,6 @@ func TestBatches(t *testing.T) {
 		return false
 	})
 	expUnbatchedTx := []*types.SendToEthereum{
-		// TODO(levi+jack) review with jehan types.NewSendToEthereumTx(3, myTokenContractAddr, mySender, myReceiver, 102, 2),
 		types.NewSendToEthereumTx(1, myTokenContractAddr, mySender, myReceiver, 100, 2),
 		types.NewSendToEthereumTx(4, myTokenContractAddr, mySender, myReceiver, 103, 1),
 	}

@@ -483,7 +483,9 @@ func NewStakingKeeperMock(operators ...sdk.ValAddress) *StakingKeeperMock {
 	}
 	const defaultTestPower = 100
 	for _, a := range operators {
+
 		r.BondedValidators = append(r.BondedValidators, stakingtypes.Validator{
+			ConsensusPubkey: codectypes.UnsafePackAny(ed25519.GenPrivKey().PubKey()),
 			OperatorAddress: a.String(),
 			Status:          stakingtypes.Bonded,
 		})
@@ -604,7 +606,7 @@ func (s *StakingKeeperMock) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAd
 }
 
 func (s *StakingKeeperMock) GetParams(ctx sdk.Context) stakingtypes.Params {
-	panic("unexpected call")
+	return stakingtypes.DefaultParams()
 }
 
 func (s *StakingKeeperMock) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool) {
@@ -612,7 +614,9 @@ func (s *StakingKeeperMock) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (
 }
 
 func (s *StakingKeeperMock) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time, endHeight int64) sdk.Iterator {
-	panic("unexpected call")
+	store := ctx.KVStore(sdk.NewKVStoreKey("staking"))
+	return store.Iterator(stakingtypes.ValidatorQueueKey, sdk.InclusiveEndBytes(stakingtypes.GetValidatorQueueKey(endTime, endHeight)))
+
 }
 
 // Slash staisfies the interface
