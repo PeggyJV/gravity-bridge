@@ -609,3 +609,37 @@ func CmdDenomToERC20() *cobra.Command {
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
+
+func CmdPendingSendToEthereums() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pending-send-to-ethereums (sender-address)",
+		Args:  cobra.MaximumNArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				senderAddress string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.PendingSendToEthereumsRequest{
+				SenderAddress: senderAddress,
+			}
+
+			res, err := queryClient.PendingSendToEthereums(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
