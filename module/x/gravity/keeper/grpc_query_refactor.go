@@ -238,6 +238,16 @@ func (k Keeper) PendingContractCallTxEthereumSignatures(c context.Context, req *
 }
 
 func (k Keeper) LastSubmittedEthereumEvent(c context.Context, req *types.LastSubmittedEthereumEventRequest) (*types.LastSubmittedEthereumEventResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	res := &types.LastSubmittedEthereumEventResponse{}
+
+	valAddr, err := sdk.ValAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	res.EventNonce = k.GetLastEventNonceByValidator(ctx, valAddr)
+
 	return &types.LastSubmittedEthereumEventResponse{}, nil
 }
 
