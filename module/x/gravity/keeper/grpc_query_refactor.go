@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
@@ -22,12 +23,12 @@ func (k Keeper) SignerSetTx(c context.Context, req *types.SignerSetTxRequest) (*
 	storeIndex := sdk.Uint64ToBigEndian(req.Nonce)
 	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.GetOutgoingTxKey(storeIndex))
 	if otx == nil {
-		// handle not found case
+		return nil, sdkerrors.Wrapf(types.ErrInvalid, "no signer set found for %d", req.Nonce)
 	}
 
 	ss, ok := otx.(*types.SignerSetTx)
 	if !ok {
-		// panic("this shouldn't happen")
+		return nil, sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %d", req.Nonce)
 	}
 
 	// TODO: special case nonce = 0 to find latest
@@ -39,19 +40,19 @@ func (k Keeper) SignerSetTx(c context.Context, req *types.SignerSetTxRequest) (*
 
 func (k Keeper) BatchTx(c context.Context, req *types.BatchTxRequest) (*types.BatchTxResponse, error) {
 	if !common.IsHexAddress(req.ContractAddress) {
-		// return err
+		return nil, sdkerrors.Wrapf(types.ErrInvalid, "invalid hex address %s", req.ContractAddress)
 	}
 
 	// TODO: audit once we finalize storage
 	storeIndex := append(sdk.Uint64ToBigEndian(req.Nonce), common.Hex2Bytes(req.ContractAddress)...)
 	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.GetOutgoingTxKey(storeIndex))
 	if otx == nil {
-		// handle not found case
+		return nil, sdkerrors.Wrapf(types.ErrInvalid, "no batch tx found for %d %s", req.Nonce, req.ContractAddress)
 	}
 
 	batch, ok := otx.(*types.BatchTx)
 	if !ok {
-		// panic()
+		return nil, sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %d %s", req.Nonce, req.ContractAddress)
 	}
 
 	// TODO: handle special case nonce = 0 to find latest by contract address
@@ -63,12 +64,12 @@ func (k Keeper) ContractCallTx(c context.Context, req *types.ContractCallTxReque
 	storeIndex := append(sdk.Uint64ToBigEndian(req.InvalidationNonce), req.InvalidationScope...)
 	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.GetOutgoingTxKey(storeIndex))
 	if otx == nil {
-		// handle not found case
+		return nil, sdkerrors.Wrapf(types.ErrInvalid, "no contract call found for %d %s", req.InvalidationNonce, req.InvalidationScope)
 	}
 
 	cctx, ok := otx.(*types.ContractCallTx)
 	if !ok {
-		// panic()
+		return nil, sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %d %s", req.InvalidationNonce, req.InvalidationScope)
 	}
 
 	// TODO: figure out how to call latest
@@ -81,7 +82,7 @@ func (k Keeper) SignerSetTxs(c context.Context, req *types.SignerSetTxsRequest) 
 	k.IterateOutgoingTxs(sdk.UnwrapSDKContext(c), types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		signer, ok := otx.(*types.SignerSetTx)
 		if !ok {
-			// todo: handle error case
+			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %s", otx))
 		}
 		signers = append(signers, signer)
 
@@ -95,7 +96,7 @@ func (k Keeper) BatchTxs(c context.Context, req *types.BatchTxsRequest) (*types.
 	k.IterateOutgoingTxs(sdk.UnwrapSDKContext(c), types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		batch, ok := otx.(*types.BatchTx)
 		if !ok {
-			// todo: handle error case
+			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
 		}
 		batches = append(batches, batch)
 		return false
@@ -108,7 +109,7 @@ func (k Keeper) ContractCallTxs(c context.Context, req *types.ContractCallTxsReq
 	k.IterateOutgoingTxs(sdk.UnwrapSDKContext(c), types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		call, ok := otx.(*types.ContractCallTx)
 		if !ok {
-			// todo: handle error case
+			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %s", otx))
 		}
 		calls = append(calls, call)
 		return false
@@ -185,7 +186,7 @@ func (k Keeper) PendingSignerSetTxEthereumSignatures(c context.Context, req *typ
 		if len(sig) == 0 { // it's pending
 			signerSet, ok := otx.(*types.SignerSetTx)
 			if !ok {
-				// todo: handle error case
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %s", otx))
 			}
 			signerSets = append(signerSets, signerSet)
 		}
@@ -206,7 +207,7 @@ func (k Keeper) PendingBatchTxEthereumSignatures(c context.Context, req *types.P
 		if len(sig) == 0 { // it's pending
 			batch, ok := otx.(*types.BatchTx)
 			if !ok {
-				// todo: handle error case
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
 			}
 			batches = append(batches, batch)
 		}
@@ -227,7 +228,7 @@ func (k Keeper) PendingContractCallTxEthereumSignatures(c context.Context, req *
 		if len(sig) == 0 { // it's pending
 			call, ok := otx.(*types.ContractCallTx)
 			if !ok {
-				// todo: handle error case
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %s", otx))
 			}
 			calls = append(calls, call)
 		}
@@ -278,8 +279,36 @@ func (k Keeper) DenomToERC20(c context.Context, req *types.DenomToERC20Request) 
 	return res, nil
 }
 
-func (k Keeper) PendingSendToEthereums(c context.Context, req *types.PendingSendToEthereumsRequest) (*types.PendingSendToEthereumsResponse, error) {
-	return &types.PendingSendToEthereumsResponse{}, nil
+func (k Keeper) BatchedSendToEthereums(c context.Context, req *types.BatchedSendToEthereumsRequest) (*types.BatchedSendToEthereumsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	res := &types.BatchedSendToEthereumsResponse{}
+
+	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(_ []byte, outgoing types.OutgoingTx) bool {
+		batchTx := outgoing.(*types.BatchTx)
+		for _, ste := range batchTx.Transactions {
+			if ste.Sender == req.SenderAddress {
+				res.SendToEthereums = append(res.SendToEthereums, ste)
+			}
+		}
+
+		return false
+	})
+
+	return res, nil
+}
+
+func (k Keeper) UnbatchedSendToEthereums(c context.Context, req *types.UnbatchedSendToEthereumsRequest) (*types.UnbatchedSendToEthereumsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	res := &types.UnbatchedSendToEthereumsResponse{}
+
+	k.IterateUnbatchedSendToEthereums(ctx, func(ste *types.SendToEthereum) bool {
+		if ste.Sender == req.SenderAddress {
+			res.SendToEthereums = append(res.SendToEthereums, ste)
+		}
+		return false
+	})
+
+	return res, nil
 }
 
 func (k Keeper) DelegateKeysByValidator(c context.Context, req *types.DelegateKeysByValidatorAddress) (*types.DelegateKeysByValidatorAddressResponse, error) {

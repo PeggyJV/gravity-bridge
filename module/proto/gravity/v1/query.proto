@@ -110,10 +110,15 @@ service Query {
     option (google.api.http).get =
         "/gravity/v1/cosmos_originated/denom_to_erc20";
   }
-  // Query for pending tranfertxs
-  rpc PendingSendToEthereums(PendingSendToEthereumsRequest)
-      returns (PendingSendToEthereumsResponse) {
-    option (google.api.http).get = "/gravity/v1/query_pending_send_to_eth";
+  // Query for batch send to ethereums
+  rpc BatchedSendToEthereums(BatchedSendToEthereumsRequest)
+      returns (BatchedSendToEthereumsResponse) {
+    option (google.api.http).get = "/gravity/v1/query_batched_send_to_eth";
+  }
+  // Query for unbatched send to ethereums
+  rpc UnbatchedSendToEthereums(UnbatchedSendToEthereumsRequest)
+      returns (UnbatchedSendToEthereumsResponse) {
+    option (google.api.http).get = "/gravity/v1/query_unbatched_send_to_eth";
   }
 
   // delegate keys
@@ -299,8 +304,12 @@ message DelegateKeysByOrchestratorAddressResponse {
 
 // NOTE: if there is no sender address, return all
 // TODO: pagination
-message PendingSendToEthereumsRequest { string sender_address = 1; }
-message PendingSendToEthereumsResponse {
-  repeated SendToEthereum batched_send_to_ethereum_txs = 1;
-  repeated SendToEthereum unbatched_send_to_ethereum_txs = 2;
+message BatchedSendToEthereumsRequest { string sender_address = 1; }
+message BatchedSendToEthereumsResponse {
+  repeated SendToEthereum send_to_ethereums = 1;
+}
+
+message UnbatchedSendToEthereumsRequest { string sender_address = 1; }
+message UnbatchedSendToEthereumsResponse {
+  repeated SendToEthereum send_to_ethereums = 1;
 }
