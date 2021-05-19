@@ -23,7 +23,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdSignerSetTxs(),
 		CmdBatchTxs(),
 		CmdContractCallTxs(),
-		// CmdSignerSetTxEthereumSignatures(),
+		CmdSignerSetTxEthereumSignatures(),
 		// CmdBatchTxEthereumSignatures(),
 		// CmdContractCallTxEthereumSignatures(),
 		// CmdPendingSignerSetTxEthereumSignatures(),
@@ -254,6 +254,42 @@ func CmdContractCallTxs() *cobra.Command {
 			req := types.ContractCallTxsRequest{}
 
 			res, err := queryClient.ContractCallTxs(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdSignerSetTxEthereumSignatures() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "signer-set-tx-ethereum-signatures [nonce] [validator-or-orchestrator-address]",
+		Args:  cobra.ExactArgs(2),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				nonce   uint64 // TODO(levi) init and validate from args[0]
+				address string // TODO(levi) init and validate from args[1]
+			)
+
+			req := types.SignerSetTxEthereumSignaturesRequest{
+				Nonce:   nonce,
+				Address: address,
+			}
+
+			res, err := queryClient.SignerSetTxEthereumSignatures(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
