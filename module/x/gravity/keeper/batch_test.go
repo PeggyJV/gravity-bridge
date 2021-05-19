@@ -41,8 +41,7 @@ func TestBatches(t *testing.T) {
 	ctx = ctx.WithBlockTime(now)
 
 	// tx batch size is 2, so that some of them stay behind
-	firstBatch, err := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
-	require.NoError(t, err)
+	firstBatch := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
 
 	// then batch is persisted
 	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, firstBatch.GetStoreIndex())
@@ -61,7 +60,7 @@ func TestBatches(t *testing.T) {
 
 	// and verify remaining available Tx in the pool
 	var gotUnbatchedTx []*types.SendToEthereum
-	input.GravityKeeper.IterateOutgoingPoolByFee(ctx, myTokenContractAddr, func(_ uint64, tx *types.SendToEthereum) bool {
+	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
 		gotUnbatchedTx = append(gotUnbatchedTx, tx)
 		return false
 	})
@@ -80,8 +79,7 @@ func TestBatches(t *testing.T) {
 	// create the more profitable batch
 	ctx = ctx.WithBlockTime(now)
 	// tx batch size is 2, so that some of them stay behind
-	secondBatch, err := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
-	require.NoError(t, err)
+	secondBatch := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
 
 	// check that the more profitable batch has the right txs in it
 	expSecondBatch := &types.BatchTx{
@@ -100,8 +98,7 @@ func TestBatches(t *testing.T) {
 	// =================================
 
 	// Execute the batch
-	err = input.GravityKeeper.BatchTxExecuted(ctx, common.HexToAddress(secondBatch.TokenContract), secondBatch.Nonce)
-	require.NoError(t, err)
+	input.GravityKeeper.BatchTxExecuted(ctx, common.HexToAddress(secondBatch.TokenContract), secondBatch.Nonce)
 
 	// check batch has been deleted
 	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, secondBatch.GetStoreIndex())
@@ -109,7 +106,7 @@ func TestBatches(t *testing.T) {
 
 	// check that txs from first batch have been freed
 	gotUnbatchedTx = nil
-	input.GravityKeeper.IterateOutgoingPoolByFee(ctx, myTokenContractAddr, func(_ uint64, tx *types.SendToEthereum) bool {
+	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
 		gotUnbatchedTx = append(gotUnbatchedTx, tx)
 		return false
 	})
@@ -153,7 +150,7 @@ func TestBatchesFullCoins(t *testing.T) {
 		vAsSDKInt := sdk.NewIntFromUint64(v)
 		amount := types.NewSDKIntERC20Token(oneEth.Mul(vAsSDKInt), myTokenContractAddr).GravityCoin()
 		fee := types.NewSDKIntERC20Token(oneEth.Mul(vAsSDKInt), myTokenContractAddr).GravityCoin()
-		_, err := input.GravityKeeper.AddToOutgoingPool(ctx, mySender, myReceiver.Hex(), amount, fee)
+		_, err := input.GravityKeeper.CreateSendToEthereum(ctx, mySender, myReceiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}
 
@@ -161,8 +158,7 @@ func TestBatchesFullCoins(t *testing.T) {
 	ctx = ctx.WithBlockTime(now)
 
 	// tx batch size is 2, so that some of them stay behind
-	firstBatch, err := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
-	require.NoError(t, err)
+	firstBatch := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
 
 	// then batch is persisted
 	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, firstBatch.GetStoreIndex())
@@ -172,45 +168,45 @@ func TestBatchesFullCoins(t *testing.T) {
 		Nonce: 1,
 		Transactions: []*types.SendToEthereum{
 			{
-				Id:          2,
-				Erc20Fee:    types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(300)), myTokenContractAddr),
-				Sender:      mySender.String(),
+				Id:                2,
+				Erc20Fee:          types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(300)), myTokenContractAddr),
+				Sender:            mySender.String(),
 				EthereumRecipient: myReceiver.Hex(),
-				Erc20Token:  types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(300)), myTokenContractAddr),
+				Erc20Token:        types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(300)), myTokenContractAddr),
 			},
 			{
-				Id:          3,
-				Erc20Fee:    types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(25)), myTokenContractAddr),
-				Sender:      mySender.String(),
+				Id:                3,
+				Erc20Fee:          types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(25)), myTokenContractAddr),
+				Sender:            mySender.String(),
 				EthereumRecipient: myReceiver.Hex(),
-				Erc20Token:  types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(25)), myTokenContractAddr),
+				Erc20Token:        types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(25)), myTokenContractAddr),
 			},
 		},
 		TokenContract: myTokenContractAddr.Hex(),
-		Height:         1234567,
+		Height:        1234567,
 	}
 	assert.Equal(t, expFirstBatch, gotFirstBatch)
 
 	// and verify remaining available Tx in the pool
 	var gotUnbatchedTx []*types.SendToEthereum
-	input.GravityKeeper.IterateOutgoingPoolByFee(ctx, myTokenContractAddr, func(_ uint64, tx *types.SendToEthereum) bool {
+	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
 		gotUnbatchedTx = append(gotUnbatchedTx, tx)
 		return false
 	})
 	expUnbatchedTx := []*types.SendToEthereum{
 		{
-			Id:          1,
-			Erc20Fee:    types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(20)), myTokenContractAddr),
-			Sender:      mySender.String(),
+			Id:                1,
+			Erc20Fee:          types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(20)), myTokenContractAddr),
+			Sender:            mySender.String(),
 			EthereumRecipient: myReceiver.Hex(),
-			Erc20Token:  types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(20)), myTokenContractAddr),
+			Erc20Token:        types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(20)), myTokenContractAddr),
 		},
 		{
-			Id:          4,
-			Erc20Fee:    types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(10)), myTokenContractAddr),
-			Sender:      mySender.String(),
+			Id:                4,
+			Erc20Fee:          types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(10)), myTokenContractAddr),
+			Sender:            mySender.String(),
 			EthereumRecipient: myReceiver.Hex(),
-			Erc20Token:  types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(10)), myTokenContractAddr),
+			Erc20Token:        types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(10)), myTokenContractAddr),
 		},
 	}
 	assert.Equal(t, expUnbatchedTx, gotUnbatchedTx)
@@ -223,37 +219,36 @@ func TestBatchesFullCoins(t *testing.T) {
 		vAsSDKInt := sdk.NewIntFromUint64(v)
 		amount := types.NewSDKIntERC20Token(oneEth.Mul(vAsSDKInt), myTokenContractAddr).GravityCoin()
 		fee := types.NewSDKIntERC20Token(oneEth.Mul(vAsSDKInt), myTokenContractAddr).GravityCoin()
-		_, err = input.GravityKeeper.AddToOutgoingPool(ctx, mySender, myReceiver.Hex(), amount, fee)
+		_, err := input.GravityKeeper.CreateSendToEthereum(ctx, mySender, myReceiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}
 
 	// create the more profitable batch
 	ctx = ctx.WithBlockTime(now)
 	// tx batch size is 2, so that some of them stay behind
-	secondBatch, err := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
-	require.NoError(t, err)
+	secondBatch := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
 
 	// check that the more profitable batch has the right txs in it
 	expSecondBatch := &types.BatchTx{
 		Nonce: 2,
 		Transactions: []*types.SendToEthereum{
 			{
-				Id:          1,
-				Erc20Fee:    types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(20)), myTokenContractAddr),
-				Sender:      mySender.String(),
+				Id:                1,
+				Erc20Fee:          types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(20)), myTokenContractAddr),
+				Sender:            mySender.String(),
 				EthereumRecipient: myReceiver.Hex(),
-				Erc20Token:  types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(20)), myTokenContractAddr),
+				Erc20Token:        types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(20)), myTokenContractAddr),
 			},
 			{
-				Id:          4,
-				Erc20Fee:    types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(10)), myTokenContractAddr),
-				Sender:      mySender.String(),
+				Id:                4,
+				Erc20Fee:          types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(10)), myTokenContractAddr),
+				Sender:            mySender.String(),
 				EthereumRecipient: myReceiver.Hex(),
-				Erc20Token:  types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(10)), myTokenContractAddr),
+				Erc20Token:        types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(10)), myTokenContractAddr),
 			},
 		},
 		TokenContract: myTokenContractAddr.Hex(),
-		Height:         1234567,
+		Height:        1234567,
 	}
 
 	assert.Equal(t, expSecondBatch, secondBatch)
@@ -262,8 +257,7 @@ func TestBatchesFullCoins(t *testing.T) {
 	// =================================
 
 	// Execute the batch
-	err = input.GravityKeeper.BatchTxExecuted(ctx, common.HexToAddress(secondBatch.TokenContract), secondBatch.Nonce)
-	require.NoError(t, err)
+	input.GravityKeeper.BatchTxExecuted(ctx, common.HexToAddress(secondBatch.TokenContract), secondBatch.Nonce)
 
 	// check batch has been deleted
 	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, secondBatch.GetStoreIndex())
@@ -271,38 +265,38 @@ func TestBatchesFullCoins(t *testing.T) {
 
 	// check that txs from first batch have been freed
 	gotUnbatchedTx = nil
-	input.GravityKeeper.IterateOutgoingPoolByFee(ctx, myTokenContractAddr, func(_ uint64, tx *types.SendToEthereum) bool {
+	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
 		gotUnbatchedTx = append(gotUnbatchedTx, tx)
 		return false
 	})
 	expUnbatchedTx = []*types.SendToEthereum{
 		{
-			Id:          2,
-			Erc20Fee:    types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(300)), myTokenContractAddr),
-			Sender:      mySender.String(),
+			Id:                2,
+			Erc20Fee:          types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(300)), myTokenContractAddr),
+			Sender:            mySender.String(),
 			EthereumRecipient: myReceiver.Hex(),
-			Erc20Token:  types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(300)), myTokenContractAddr),
+			Erc20Token:        types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(300)), myTokenContractAddr),
 		},
 		{
-			Id:          3,
-			Erc20Fee:    types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(25)), myTokenContractAddr),
-			Sender:      mySender.String(),
+			Id:                3,
+			Erc20Fee:          types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(25)), myTokenContractAddr),
+			Sender:            mySender.String(),
 			EthereumRecipient: myReceiver.Hex(),
-			Erc20Token:  types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(25)), myTokenContractAddr),
+			Erc20Token:        types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(25)), myTokenContractAddr),
 		},
 		{
-			Id:          6,
-			Erc20Fee:    types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(5)), myTokenContractAddr),
-			Sender:      mySender.String(),
+			Id:                6,
+			Erc20Fee:          types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(5)), myTokenContractAddr),
+			Sender:            mySender.String(),
 			EthereumRecipient: myReceiver.Hex(),
-			Erc20Token:  types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(5)), myTokenContractAddr),
+			Erc20Token:        types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(5)), myTokenContractAddr),
 		},
 		{
-			Id:          5,
-			Erc20Fee:    types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(4)), myTokenContractAddr),
-			Sender:      mySender.String(),
+			Id:                5,
+			Erc20Fee:          types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(4)), myTokenContractAddr),
+			Sender:            mySender.String(),
 			EthereumRecipient: myReceiver.Hex(),
-			Erc20Token:  types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(4)), myTokenContractAddr),
+			Erc20Token:        types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(4)), myTokenContractAddr),
 		},
 	}
 	assert.Equal(t, expUnbatchedTx, gotUnbatchedTx)
@@ -335,7 +329,7 @@ func TestPoolTxRefund(t *testing.T) {
 	for i, v := range []uint64{2, 3, 2, 1} {
 		amount := types.NewERC20Token(uint64(i+100), myTokenContractAddr).GravityCoin()
 		fee := types.NewERC20Token(v, myTokenContractAddr).GravityCoin()
-		_, err := input.GravityKeeper.AddToOutgoingPool(ctx, mySender, myReceiver, amount, fee)
+		_, err := input.GravityKeeper.CreateSendToEthereum(ctx, mySender, myReceiver, amount, fee)
 		require.NoError(t, err)
 	}
 
@@ -343,16 +337,23 @@ func TestPoolTxRefund(t *testing.T) {
 	ctx = ctx.WithBlockTime(now)
 
 	// tx batch size is 2, so that some of them stay behind
-	_, err := input.GravityKeeper.BuildBatchTx(ctx, common.HexToAddress(myTokenContractAddr), 2)
-	require.NoError(t, err)
+	input.GravityKeeper.BuildBatchTx(ctx, common.HexToAddress(myTokenContractAddr), 2)
 
 	// try to refund a tx that's in a batch
-	err1 := input.GravityKeeper.RemoveFromOutgoingPoolAndRefund(ctx, 1, mySender)
-	require.Error(t, err1)
+	err := input.GravityKeeper.CancelSendToEthereum(ctx, &types.SendToEthereum{
+		Id: 1, Sender: mySender.String(), EthereumRecipient: myReceiver,
+		Erc20Token: types.NewERC20Token(uint64(101), myTokenContractAddr),
+		Erc20Fee:   types.NewERC20Token(uint64(2), myTokenContractAddr),
+	})
+	require.Error(t, err)
 
 	// try to refund a tx that's in the pool
-	err2 := input.GravityKeeper.RemoveFromOutgoingPoolAndRefund(ctx, 4, mySender)
-	require.NoError(t, err2)
+	err = input.GravityKeeper.CancelSendToEthereum(ctx, &types.SendToEthereum{
+		Id: 4, Sender: mySender.String(), EthereumRecipient: myReceiver,
+		Erc20Token: types.NewERC20Token(uint64(104), myTokenContractAddr),
+		Erc20Fee:   types.NewERC20Token(uint64(1), myTokenContractAddr),
+	})
+	require.NoError(t, err)
 
 	// make sure refund was issued
 	balances := input.BankKeeper.GetAllBalances(ctx, mySender)

@@ -264,14 +264,12 @@ func TestBatchTxTimeout(t *testing.T) {
 	ctx = ctx.WithBlockTime(now).WithBlockHeight(250)
 
 	// check that we can make a batch without first setting an ethereum block height
-	b1, err1 := gravity.BuildBatchTx(ctx, myTokenContractAddr, 2)
-	require.NoError(t, err1)
+	b1 := gravity.BuildBatchTx(ctx, myTokenContractAddr, 2)
 	require.Equal(t, b1.Timeout, uint64(0))
 
 	gravity.SetLastObservedEthereumBlockHeight(ctx, 500)
 
-	b2, err2 := gravity.BuildBatchTx(ctx, myTokenContractAddr, 2)
-	require.NoError(t, err2)
+	b2 := gravity.BuildBatchTx(ctx, myTokenContractAddr, 2)
 	// this is exactly block 500 plus twelve hours
 	require.Equal(t, b2.Timeout, uint64(504))
 
@@ -284,8 +282,7 @@ func TestBatchTxTimeout(t *testing.T) {
 	// when, way into the future
 	ctx = ctx.WithBlockTime(now).WithBlockHeight(9)
 
-	b3, err2 := gravity.BuildBatchTx(ctx, myTokenContractAddr, 2)
-	require.NoError(t, err2)
+	b3 := gravity.BuildBatchTx(ctx, myTokenContractAddr, 2)
 
 	EndBlocker(ctx, gravity)
 
