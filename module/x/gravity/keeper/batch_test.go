@@ -47,6 +47,7 @@ func TestBatches(t *testing.T) {
 	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, firstBatch.GetStoreIndex())
 	require.NotNil(t, gotFirstBatch)
 
+	gfb := gotFirstBatch.(*types.BatchTx)
 	expFirstBatch := &types.BatchTx{
 		Nonce: 1,
 		Transactions: []*types.SendToEthereum{
@@ -56,7 +57,8 @@ func TestBatches(t *testing.T) {
 		TokenContract: myTokenContractAddr.Hex(),
 		Height:        1234567,
 	}
-	assert.Equal(t, expFirstBatch, gotFirstBatch)
+
+	assert.Equal(t, expFirstBatch.Transactions, gfb.Transactions)
 
 	// and verify remaining available Tx in the pool
 	var gotUnbatchedTx []*types.SendToEthereum

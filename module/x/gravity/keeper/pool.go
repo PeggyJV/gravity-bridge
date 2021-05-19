@@ -30,7 +30,7 @@ func (k Keeper) CreateSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, cou
 	}
 
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, totalInVouchers); err != nil {
-		panic(err)
+		return 0, err
 	}
 
 	// If it is no a cosmos-originated asset we burn
