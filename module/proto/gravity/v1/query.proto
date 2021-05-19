@@ -117,8 +117,8 @@ service Query {
   }
 
   // delegate keys
-  rpc DelegateKeysByValidator(DelegateKeysByValidatorAddress)
-      returns (DelegateKeysByValidatorAddressResponse) {
+  rpc DelegateKeysByValidator(DelegateKeysByValidatorRequest)
+      returns (DelegateKeysByValidatorResponse) {
     option (google.api.http).get =
         "/gravity/v1/delegate_keys/validator/{validator}";
   }
@@ -279,8 +279,8 @@ message DenomToERC20Response {
   bool cosmos_originated = 2;
 }
 
-message DelegateKeysByValidatorAddress { string validator_address = 1; }
-message DelegateKeysByValidatorAddressResponse {
+message DelegateKeysByValidatorRequest { string validator_address = 1; }
+message DelegateKeysByValidatorResponse {
   string eth_address = 1;
   string orchestrator_address = 2;
 }

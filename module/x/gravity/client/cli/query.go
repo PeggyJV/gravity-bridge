@@ -33,8 +33,8 @@ func GetQueryCmd() *cobra.Command {
 		CmdBatchTxFees(),
 		CmdERC20ToDenom(),
 		CmdDenomToERC20(),
-		// CmdPendingSendToEthereums(),
-		// CmdDelegateKeysByValidator(),
+		CmdPendingSendToEthereums(),
+		CmdDelegateKeysByValidator(),
 		// CmdDelegateKeysByEthereumSigner(),
 		// CmdDelegateKeysByOrchestrator(),
 	)
@@ -632,6 +632,40 @@ func CmdPendingSendToEthereums() *cobra.Command {
 			}
 
 			res, err := queryClient.PendingSendToEthereums(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdDelegateKeysByValidator() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delegate-keys-by-validator [validator-address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				validatorAddress string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.DelegateKeysByValidatorRequest{
+				ValidatorAddress: validatorAddress,
+			}
+
+			res, err := queryClient.DelegateKeysByValidator(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}

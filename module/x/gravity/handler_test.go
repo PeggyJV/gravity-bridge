@@ -317,7 +317,7 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	_, err = k.DelegateKeysByEthereumSigner(wctx, &types.DelegateKeysByEthereumSignerRequest{EthereumSigner: ethAddress})
 	require.NoError(t, err)
 
-	_, err = k.DelegateKeysByValidator(wctx, &types.DelegateKeysByValidatorAddress{ValidatorAddress: valAddress.String()})
+	_, err = k.DelegateKeysByValidator(wctx, &types.DelegateKeysByValidatorRequest{ValidatorAddress: valAddress.String()})
 	require.NoError(t, err)
 
 	// delegate new orch and eth addrs for same validator
@@ -336,6 +336,6 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	_, err = k.DelegateKeysByEthereumSigner(wctx, &types.DelegateKeysByEthereumSignerRequest{EthereumSigner: ethAddress2})
 	require.NoError(t, err)
 
-	_, err = k.DelegateKeysByValidator(wctx, &types.DelegateKeysByValidatorAddress{ValidatorAddress: valAddress.String()})
+	_, err = k.DelegateKeysByValidator(wctx, &types.DelegateKeysByValidatorRequest{ValidatorAddress: valAddress.String()})
 	require.NoError(t, err)
 }
