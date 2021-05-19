@@ -312,7 +312,7 @@ func (k Keeper) DelegateKeysByEthereumSigner(c context.Context, req *types.Deleg
 	return res, nil
 }
 
-func (k Keeper) DelegateKeysByOrchestrator(c context.Context, req *types.DelegateKeysByOrchestratorAddress) (*types.DelegateKeysByOrchestratorAddressResponse, error) {
+func (k Keeper) DelegateKeysByOrchestrator(c context.Context, req *types.DelegateKeysByOrchestratorRequest) (*types.DelegateKeysByOrchestratorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	orchAddr, err := sdk.AccAddressFromBech32(req.OrchestratorAddress)
 	if err != nil {
@@ -320,7 +320,7 @@ func (k Keeper) DelegateKeysByOrchestrator(c context.Context, req *types.Delegat
 	}
 	valAddr := k.GetOrchestratorValidatorAddress(ctx, orchAddr)
 	ethAddr := k.GetValidatorEthereumAddress(ctx, valAddr)
-	res := &types.DelegateKeysByOrchestratorAddressResponse{
+	res := &types.DelegateKeysByOrchestratorResponse{
 		ValidatorAddress: valAddr.String(),
 		EthereumSigner:   ethAddr.Hex(),
 	}

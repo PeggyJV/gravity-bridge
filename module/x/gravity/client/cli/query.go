@@ -36,7 +36,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdPendingSendToEthereums(),
 		CmdDelegateKeysByValidator(),
 		CmdDelegateKeysByEthereumSigner(),
-		// CmdDelegateKeysByOrchestrator(),
+		CmdDelegateKeysByOrchestrator(),
 	)
 
 	return gravityQueryCmd
@@ -700,6 +700,40 @@ func CmdDelegateKeysByEthereumSigner() *cobra.Command {
 			}
 
 			res, err := queryClient.DelegateKeysByEthereumSigner(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdDelegateKeysByOrchestrator() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delegate-keys-by-orchestrator [orchestrator-address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				orcAddr string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.DelegateKeysByOrchestratorRequest{
+				OrchestratorAddress: orcAddr,
+			}
+
+			res, err := queryClient.DelegateKeysByOrchestrator(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
