@@ -17,7 +17,7 @@ func GetQueryCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	gravityQueryCmd.AddCommand([]*cobra.Command{
+	gravityQueryCmd.AddCommand(
 		CmdParams(),
 		// CmdSignerSetTx(),
 		// CmdBatchTx(),
@@ -39,7 +39,7 @@ func GetQueryCmd() *cobra.Command {
 		// CmdDelegateKeysByValidator(),
 		// CmdDelegateKeysByEthereumSigner(),
 		// CmdDelegateKeysByOrchestrator(),
-	}...)
+	)
 
 	return gravityQueryCmd
 }
