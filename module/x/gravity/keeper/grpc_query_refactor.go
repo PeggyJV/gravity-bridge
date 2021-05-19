@@ -2,9 +2,11 @@ package keeper
 
 import (
 	"context"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -19,11 +21,28 @@ func (k Keeper) Params(c context.Context, req *types.ParamsRequest) (*types.Para
 }
 
 func (k Keeper) SignerSetTx(c context.Context, req *types.SignerSetTxRequest) (*types.SignerSetTxResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
 	// TODO: audit once we finalize storage
-	storeIndex := sdk.Uint64ToBigEndian(req.Nonce)
-	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.GetOutgoingTxKey(storeIndex))
-	if otx == nil {
-		return nil, sdkerrors.Wrapf(types.ErrInvalid, "no signer set found for %d", req.Nonce)
+	var otx types.OutgoingTx
+
+	if req.Nonce == 0 {
+		store := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.OutgoingTxKey}, types.SignerSetTxPrefixByte))
+		iter := store.ReverseIterator(nil, nil)
+		defer iter.Close()
+
+		var any cdctypes.Any
+		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &any)
+
+		if err := k.cdc.UnpackAny(&any, &otx); err != nil {
+			return nil, err
+		}
+	} else {
+		storeIndex := sdk.Uint64ToBigEndian(req.Nonce)
+		otx = k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.GetOutgoingTxKey(storeIndex))
+		if otx == nil {
+			return nil, sdkerrors.Wrapf(types.ErrInvalid, "no signer set found for %d", req.Nonce)
+		}
 	}
 
 	ss, ok := otx.(*types.SignerSetTx)
@@ -31,7 +50,6 @@ func (k Keeper) SignerSetTx(c context.Context, req *types.SignerSetTxRequest) (*
 		return nil, sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %d", req.Nonce)
 	}
 
-	// TODO: special case nonce = 0 to find latest
 	// TODO: ensure that latest signer set tx nonce index is set properly
 	// TODO: ensure nonce sequence starts at one
 
@@ -42,22 +60,45 @@ func (k Keeper) BatchTx(c context.Context, req *types.BatchTxRequest) (*types.Ba
 	if !common.IsHexAddress(req.ContractAddress) {
 		return nil, sdkerrors.Wrapf(types.ErrInvalid, "invalid hex address %s", req.ContractAddress)
 	}
-
-	// TODO: audit once we finalize storage
-	storeIndex := append(sdk.Uint64ToBigEndian(req.Nonce), common.Hex2Bytes(req.ContractAddress)...)
-	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.GetOutgoingTxKey(storeIndex))
-	if otx == nil {
-		return nil, sdkerrors.Wrapf(types.ErrInvalid, "no batch tx found for %d %s", req.Nonce, req.ContractAddress)
-	}
-
-	batch, ok := otx.(*types.BatchTx)
-	if !ok {
-		return nil, sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %d %s", req.Nonce, req.ContractAddress)
-	}
+	ctx := sdk.UnwrapSDKContext(c)
+	res := &types.BatchTxResponse{}
 
 	// TODO: handle special case nonce = 0 to find latest by contract address
+	if req.Nonce == 0 {
+		store := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.OutgoingTxKey}, types.BatchTxPrefixByte))
+		iter := store.ReverseIterator(nil, nil)
+		defer iter.Close()
+		for ; iter.Valid(); iter.Next() {
+			var any cdctypes.Any
+			k.cdc.MustUnmarshalBinaryBare(iter.Value(), &any)
+			var otx types.OutgoingTx
+			if err := k.cdc.UnpackAny(&any, &otx); err != nil {
+				panic(err)
+			}
+			batch, ok := otx.(*types.BatchTx)
+			if !ok {
+				return nil, sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %d %s", req.Nonce, req.ContractAddress)
+			}
+			if batch.TokenContract == req.ContractAddress {
+				res.Batch = batch
+				break
+			}
+		}
+	} else {
+		// TODO: audit once we finalize storage
+		storeIndex := append(sdk.Uint64ToBigEndian(req.Nonce), common.Hex2Bytes(req.ContractAddress)...)
+		otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.GetOutgoingTxKey(storeIndex))
+		if otx == nil {
+			return nil, sdkerrors.Wrapf(types.ErrInvalid, "no batch tx found for %d %s", req.Nonce, req.ContractAddress)
+		}
+		batch, ok := otx.(*types.BatchTx)
+		if !ok {
+			return nil, sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %d %s", req.Nonce, req.ContractAddress)
+		}
+		res.Batch = batch
+	}
 
-	return &types.BatchTxResponse{Batch: batch}, nil
+	return res, nil
 }
 
 func (k Keeper) ContractCallTx(c context.Context, req *types.ContractCallTxRequest) (*types.ContractCallTxResponse, error) {
