@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"context"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
@@ -17,29 +15,29 @@ func GetQueryCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	gravityQueryCmd.AddCommand([]*cobra.Command{
+	gravityQueryCmd.AddCommand(
 		CmdParams(),
-		// CmdSignerSetTx(),
-		// CmdBatchTx(),
-		// CmdContractCallTx(),
-		// CmdSignerSetTxs(),
-		// CmdBatchTxs(),
-		// CmdContractCallTxs(),
-		// CmdSignerSetTxEthereumSignatures(),
-		// CmdBatchTxEthereumSignatures(),
-		// CmdContractCallTxEthereumSignatures(),
-		// CmdPendingSignerSetTxEthereumSignatures(),
-		// CmdPendingBatchTxEthereumSignatures(),
-		// CmdPendingContractCallTxEthereumSignatures(),
-		// CmdLastSubmittedEthereumEvent(),
-		// CmdBatchTxFees(),
-		// CmdERC20ToDenom(),
-		// CmdDenomToERC20(),
-		// CmdPendingSendToEthereums(),
-		// CmdDelegateKeysByValidator(),
-		// CmdDelegateKeysByEthereumSigner(),
-		// CmdDelegateKeysByOrchestrator(),
-	}...)
+		CmdSignerSetTx(),
+		CmdBatchTx(),
+		CmdContractCallTx(),
+		CmdSignerSetTxs(),
+		CmdBatchTxs(),
+		CmdContractCallTxs(),
+		CmdSignerSetTxEthereumSignatures(),
+		CmdBatchTxEthereumSignatures(),
+		CmdContractCallTxEthereumSignatures(),
+		CmdPendingSignerSetTxEthereumSignatures(),
+		CmdPendingBatchTxEthereumSignatures(),
+		CmdPendingContractCallTxEthereumSignatures(),
+		CmdLastSubmittedEthereumEvent(),
+		CmdBatchTxFees(),
+		CmdERC20ToDenom(),
+		CmdDenomToERC20(),
+		CmdPendingSendToEthereums(),
+		CmdDelegateKeysByValidator(),
+		CmdDelegateKeysByEthereumSigner(),
+		CmdDelegateKeysByOrchestrator(),
+	)
 
 	return gravityQueryCmd
 }
@@ -54,13 +52,696 @@ func CmdParams() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			res, err := types.NewQueryClient(clientCtx).Params(context.Background(), &types.ParamsRequest{})
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := types.ParamsRequest{}
+
+			res, err := queryClient.Params(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
+
 			return clientCtx.PrintProto(res)
 		},
 	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdSignerSetTx() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "signer-set-tx [nonce]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				nonce uint64 // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.SignerSetTxRequest{
+				Nonce: nonce,
+			}
+
+			res, err := queryClient.SignerSetTx(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdBatchTx() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "batch-tx [contract-address] [nonce]",
+		Args:  cobra.ExactArgs(2),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				contractAddress string // TODO(levi) init and validate from args[0]
+				nonce           uint64 // TODO(levi) init and validate from args[1]
+			)
+
+			req := types.BatchTxRequest{
+				ContractAddress: contractAddress,
+				Nonce:           nonce,
+			}
+
+			res, err := queryClient.BatchTx(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdContractCallTx() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "contract-call-tx [invalidation-scope] [invalidation-nonce]",
+		Args:  cobra.ExactArgs(2),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				invalidationScope []byte // TODO(levi) init and validate from args[0]
+				invalidationNonce uint64 // TODO(levi) init and validate from args[1]
+			)
+
+			req := types.ContractCallTxRequest{
+				InvalidationScope: invalidationScope,
+				InvalidationNonce: invalidationNonce,
+			}
+
+			res, err := queryClient.ContractCallTx(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdSignerSetTxs() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "signer-set-tx [nonce]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				nonce uint64 // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.SignerSetTxRequest{
+				Nonce: nonce,
+			}
+
+			res, err := queryClient.SignerSetTx(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdBatchTxs() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "batch-txs",
+		Args:  cobra.NoArgs,
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := types.BatchTxsRequest{}
+
+			res, err := queryClient.BatchTxs(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdContractCallTxs() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "contract-call-txs",
+		Args:  cobra.NoArgs,
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := types.ContractCallTxsRequest{}
+
+			res, err := queryClient.ContractCallTxs(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdSignerSetTxEthereumSignatures() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "signer-set-tx-ethereum-signatures [nonce] [validator-or-orchestrator-address]",
+		Args:  cobra.ExactArgs(2),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				nonce   uint64 // TODO(levi) init and validate from args[0]
+				address string // TODO(levi) init and validate from args[1]
+			)
+
+			req := types.SignerSetTxEthereumSignaturesRequest{
+				Nonce:   nonce,
+				Address: address,
+			}
+
+			res, err := queryClient.SignerSetTxEthereumSignatures(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdBatchTxEthereumSignatures() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "batch-tx-ethereum-signatures [nonce] [contract-address] [validator-or-orchestrator-address]",
+		Args:  cobra.MinimumNArgs(2),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				nonce           uint64 // TODO(levi) init and validate from args[0]
+				contractAddress string // TODO(levi) init and validate from args[1]
+				address         string // TODO(levi) init and validate from args[2]
+			)
+
+			req := types.BatchTxEthereumSignaturesRequest{
+				Nonce:           nonce,
+				ContractAddress: contractAddress,
+				Address:         address,
+			}
+
+			res, err := queryClient.BatchTxEthereumSignatures(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdContractCallTxEthereumSignatures() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "contract-call-tx-ethereum-signatures [invalidation-scope] [invalidation-nonce] [validator-or-orchestrator-address]",
+		Args:  cobra.MinimumNArgs(2),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				invalidationScope []byte // TODO(levi) init and validate from args[0]
+				invalidationNonce uint64 // TODO(levi) init and validate from args[1]
+				address           string // TODO(levi) init and validate from args[2]
+			)
+
+			req := types.ContractCallTxEthereumSignaturesRequest{
+				InvalidationNonce: invalidationNonce,
+				InvalidationScope: invalidationScope,
+				Address:           address,
+			}
+
+			res, err := queryClient.ContractCallTxEthereumSignatures(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdPendingSignerSetTxEthereumSignatures() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pending-signer-set-tx-ethereum-signatures [validator-or-orchestrator-address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				address string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.PendingSignerSetTxEthereumSignaturesRequest{
+				Address: address,
+			}
+
+			res, err := queryClient.PendingSignerSetTxEthereumSignatures(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdPendingBatchTxEthereumSignatures() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pending-batch-tx-ethereum-signatures [address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				address string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.PendingBatchTxEthereumSignaturesRequest{
+				Address: address,
+			}
+
+			res, err := queryClient.PendingBatchTxEthereumSignatures(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdPendingContractCallTxEthereumSignatures() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pending-contract-call-tx-ethereum-signatures [address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				address string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.PendingContractCallTxEthereumSignaturesRequest{
+				Address: address,
+			}
+
+			res, err := queryClient.PendingContractCallTxEthereumSignatures(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdLastSubmittedEthereumEvent() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "last-submitted-ethereum-event [address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				address string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.LastSubmittedEthereumEventRequest{
+				Address: address,
+			}
+
+			res, err := queryClient.LastSubmittedEthereumEvent(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdBatchTxFees() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "batch-tx-fees",
+		Args:  cobra.NoArgs,
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := types.BatchTxFeesRequest{}
+
+			res, err := queryClient.BatchTxFees(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdERC20ToDenom() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "erc20-to-denom [erc20]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				erc20 string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.ERC20ToDenomRequest{
+				Erc20: erc20,
+			}
+
+			res, err := queryClient.ERC20ToDenom(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdDenomToERC20() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "denom-to-erc20 [denom]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				denom string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.DenomToERC20Request{
+				Denom: denom,
+			}
+
+			res, err := queryClient.DenomToERC20(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdPendingSendToEthereums() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pending-send-to-ethereums (sender-address)",
+		Args:  cobra.MaximumNArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				senderAddress string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.PendingSendToEthereumsRequest{
+				SenderAddress: senderAddress,
+			}
+
+			res, err := queryClient.PendingSendToEthereums(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdDelegateKeysByValidator() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delegate-keys-by-validator [validator-address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				validatorAddress string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.DelegateKeysByValidatorRequest{
+				ValidatorAddress: validatorAddress,
+			}
+
+			res, err := queryClient.DelegateKeysByValidator(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdDelegateKeysByEthereumSigner() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delegate-keys-by-ethereum-signer [ethereum-signer]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				ethereumSigner string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.DelegateKeysByEthereumSignerRequest{
+				EthereumSigner: ethereumSigner,
+			}
+
+			res, err := queryClient.DelegateKeysByEthereumSigner(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdDelegateKeysByOrchestrator() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delegate-keys-by-orchestrator [orchestrator-address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				orcAddr string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.DelegateKeysByOrchestratorRequest{
+				OrchestratorAddress: orcAddr,
+			}
+
+			res, err := queryClient.DelegateKeysByOrchestrator(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }

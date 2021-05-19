@@ -22,17 +22,18 @@ func GetTxCmd(storeKey string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	gravityTxCmd.AddCommand([]*cobra.Command{
+	gravityTxCmd.AddCommand(
 		CmdSendToEthereum(),
-		// CmdCancelSendToEthereum(),
-		// CmdRequestBatchTx(),
-		// CmdSubmitEthereumSignature(),
-		// CmdSubmitEthereumEvent(),
-		// CmdSetDelegateKeys(),
-	}...)
+		CmdCancelSendToEthereum(),
+		CmdRequestBatchTx(),
+		CmdSubmitEthereumSignature(),
+		CmdSubmitEthereumEvent(),
+		CmdSetDelegateKeys(),
+	)
 
 	return gravityTxCmd
 }
+
 func CmdSendToEthereum() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "send-to-etheruem [ethereum-reciever] [send-coins] [fee-coins]",
@@ -69,13 +70,147 @@ func CmdSendToEthereum() *cobra.Command {
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
 
+func CmdCancelSendToEthereum() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cancel-send-to-etheruem [id]", // TODO(levi) this argument name is vague (but matches what we call it everywhere)
+		Args:  cobra.ExactArgs(2),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+			if from == nil {
+				return fmt.Errorf("must pass from flag")
+			}
+
+			var ( // args
+				id uint64 // TODO(levi) init from args[0]
+			)
+
+			msg := types.NewMsgCancelSendToEthereum(id, from)
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdRequestBatchTx() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "request-batch-tx [denom] [signer]",
+		Args:  cobra.ExactArgs(2),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			var (
+				denom  string         // TODO(levi) init and validate from args[0]
+				signer sdk.AccAddress // TODO(levi) init and validate from args[1]
+			)
+
+			msg := types.NewMsgRequestBatchTx(denom, signer)
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdSubmitEthereumSignature() *cobra.Command { // TODO(levi) confirm this cmd makes any sense -- I think these have to come from the connected Ethereum chain exclusively (to accomplish anything)
+	cmd := &cobra.Command{
+		Use:   "submit-ethereum-signature", // TODO(levi) define args
+		Args:  cobra.ExactArgs(0),          // TODO(levi) provide arg count requirements
+		Short: "",                          // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			_ = clientCtx // TODO(levi) deleteme
+
+			// var ( // args
+			// 	signature types.EthereumSignature
+			// 	signer    string
+			// )
+			//
+			// msg := types.MsgSubmitEthereumSignature
+
+			return nil
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdSubmitEthereumEvent() *cobra.Command { // TODO(levi) confirm this cmd makes any sense (similar to above)
+	cmd := &cobra.Command{
+		Use:   "submit-ethereum-event", // TODO(levi) define args
+		Args:  cobra.ExactArgs(0),      // TODO(levi) provide arg count requirements
+		Short: "",                      // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			_ = clientCtx // TODO(levi) deleteme
+
+			return nil
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdSetDelegateKeys() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set-delegate-keys [validator-address] [orchestrator-address] [ethereum-address]",
+		Args:  cobra.ExactArgs(3),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			var ( // args
+				valAddr sdk.ValAddress // TODO(levi) init and validate from args[0]
+				orcAddr sdk.AccAddress // TODO(levi) init and validate from args[1]
+				ethAddr string         // TODO(levi) init and validate from args[2]
+			)
+
+			msg := types.NewMsgDelegateKeys(valAddr, orcAddr, ethAddr)
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
