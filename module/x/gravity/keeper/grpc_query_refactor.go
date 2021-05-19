@@ -124,11 +124,11 @@ func (k Keeper) SignerSetTxEthereumSignatures(c context.Context, req *types.Sign
 		if err != nil {
 			return nil, err
 		}
-		return &types.SignerSetTxEthereumSignaturesResponse{Signature: [][]byte{k.GetEthereumSignature(ctx, key, val)}}, nil
+		return &types.SignerSetTxEthereumSignaturesResponse{Signature: [][]byte{k.getEthereumSignature(ctx, key, val)}}, nil
 	}
 
 	var out [][]byte
-	k.IterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
+	k.iterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
 		out = append(out, sig)
 		return false
 	})
@@ -143,11 +143,11 @@ func (k Keeper) BatchTxEthereumSignatures(c context.Context, req *types.BatchTxE
 		if err != nil {
 			return nil, err
 		}
-		return &types.BatchTxEthereumSignaturesResponse{Signature: [][]byte{k.GetEthereumSignature(ctx, key, val)}}, nil
+		return &types.BatchTxEthereumSignaturesResponse{Signature: [][]byte{k.getEthereumSignature(ctx, key, val)}}, nil
 	}
 
 	var out [][]byte
-	k.IterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
+	k.iterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
 		out = append(out, sig)
 		return false
 	})
@@ -162,11 +162,11 @@ func (k Keeper) ContractCallTxEthereumSignatures(c context.Context, req *types.C
 		if err != nil {
 			return nil, err
 		}
-		return &types.ContractCallTxEthereumSignaturesResponse{Signature: [][]byte{k.GetEthereumSignature(ctx, key, val)}}, nil
+		return &types.ContractCallTxEthereumSignaturesResponse{Signature: [][]byte{k.getEthereumSignature(ctx, key, val)}}, nil
 	}
 
 	var out [][]byte
-	k.IterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
+	k.iterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
 		out = append(out, sig)
 		return false
 	})
@@ -181,7 +181,7 @@ func (k Keeper) PendingSignerSetTxEthereumSignatures(c context.Context, req *typ
 	}
 	var signerSets []*types.SignerSetTx
 	k.IterateOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.GetEthereumSignature(ctx, otx.GetStoreIndex(), val)
+		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 { // it's pending
 			signerSet, ok := otx.(*types.SignerSetTx)
 			if !ok {
@@ -202,7 +202,7 @@ func (k Keeper) PendingBatchTxEthereumSignatures(c context.Context, req *types.P
 	}
 	var batches []*types.BatchTx
 	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.GetEthereumSignature(ctx, otx.GetStoreIndex(), val)
+		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 { // it's pending
 			batch, ok := otx.(*types.BatchTx)
 			if !ok {
@@ -223,7 +223,7 @@ func (k Keeper) PendingContractCallTxEthereumSignatures(c context.Context, req *
 	}
 	var calls []*types.ContractCallTx
 	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.GetEthereumSignature(ctx, otx.GetStoreIndex(), val)
+		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 { // it's pending
 			call, ok := otx.(*types.ContractCallTx)
 			if !ok {

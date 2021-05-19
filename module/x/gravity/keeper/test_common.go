@@ -218,7 +218,7 @@ func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, toke
 	for i, id := range ids {
 		amount := types.NewERC20Token(uint64(i+100), tokenContract.Hex()).GravityCoin()
 		fee := types.NewERC20Token(id, tokenContract.Hex()).GravityCoin()
-		_, err := input.GravityKeeper.CreateSendToEthereum(ctx, sender, receiver.Hex(), amount, fee)
+		_, err := input.GravityKeeper.createSendToEthereum(ctx, sender, receiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}
 }
@@ -263,9 +263,9 @@ func SetupFiveValChain(t *testing.T) (TestInput, sdk.Context) {
 
 	// Register eth addresses for each validator
 	for i, addr := range ValAddrs {
-		input.GravityKeeper.SetValidatorEthereumAddress(input.Context, addr, EthAddrs[i])
+		input.GravityKeeper.setValidatorEthereumAddress(input.Context, addr, EthAddrs[i])
 		input.GravityKeeper.SetOrchestratorValidatorAddress(input.Context, addr, AccAddrs[i])
-		input.GravityKeeper.SetEthereumOrchestratorAddress(input.Context, EthAddrs[i], AccAddrs[i])
+		input.GravityKeeper.setEthereumOrchestratorAddress(input.Context, EthAddrs[i], AccAddrs[i])
 	}
 
 	// Return the test input
@@ -419,7 +419,7 @@ func CreateTestEnv(t *testing.T) TestInput {
 		),
 	)
 
-	k.SetParams(ctx, TestingGravityParams)
+	k.setParams(ctx, TestingGravityParams)
 
 	return TestInput{
 		GravityKeeper:  k,

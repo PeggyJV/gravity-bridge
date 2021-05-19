@@ -13,12 +13,12 @@ import (
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
 )
 
-// CreateSendToEthereum
+// createSendToEthereum
 // - checks a counterpart denominator exists for the given voucher type
 // - burns the voucher for transfer amount and fees
 // - persists an OutgoingTx
 // - adds the TX to the `available` TX pool via a second index
-func (k Keeper) CreateSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, counterpartReceiver string, amount sdk.Coin, fee sdk.Coin) (uint64, error) {
+func (k Keeper) createSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, counterpartReceiver string, amount sdk.Coin, fee sdk.Coin) (uint64, error) {
 	totalAmount := amount.Add(fee)
 	totalInVouchers := sdk.Coins{totalAmount}
 
@@ -42,14 +42,14 @@ func (k Keeper) CreateSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, cou
 	}
 
 	// get next tx id from keeper
-	nextID := k.IncrementLastSendToEthereumIDKey(ctx)
+	nextID := k.incrementLastSendToEthereumIDKey(ctx)
 
 	// construct outgoing tx, as part of this process we represent
 	// the token as an ERC20 token since it is preparing to go to ETH
 	// rather than the denom that is the input to this function.
 
 	// set the outgoing tx in the pool index
-	k.SetUnbatchedSendToEthereum(ctx, &types.SendToEthereum{
+	k.setUnbatchedSendToEthereum(ctx, &types.SendToEthereum{
 		Id:                nextID,
 		Sender:            sender.String(),
 		EthereumRecipient: counterpartReceiver,
@@ -60,15 +60,15 @@ func (k Keeper) CreateSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, cou
 	return nextID, nil
 }
 
-// CancelSendToEthereum
+// cancelSendToEthereum
 // - checks that the provided tx actually exists
 // - deletes the unbatched tx from the pool
 // - issues the tokens back to the sender
-func (k Keeper) CancelSendToEthereum(ctx sdk.Context, id uint64, s string) error {
+func (k Keeper) cancelSendToEthereum(ctx sdk.Context, id uint64, s string) error {
 	sender, _ := sdk.AccAddressFromBech32(s)
 
 	var send *types.SendToEthereum
-	for _, ste := range k.GetUnbatchedSendToEthereums(ctx) {
+	for _, ste := range k.getUnbatchedSendToEthereums(ctx) {
 		if ste.Id == id {
 			send = ste
 		}
@@ -98,19 +98,19 @@ func (k Keeper) CancelSendToEthereum(ctx sdk.Context, id uint64, s string) error
 		return sdkerrors.Wrap(err, "sending coins from module account")
 	}
 
-	k.DeleteUnbatchedSendToEthereum(ctx, send.Id, send.Erc20Fee)
+	k.deleteUnbatchedSendToEthereum(ctx, send.Id, send.Erc20Fee)
 	return nil
 }
 
-func (k Keeper) SetUnbatchedSendToEthereum(ctx sdk.Context, ste *types.SendToEthereum) {
+func (k Keeper) setUnbatchedSendToEthereum(ctx sdk.Context, ste *types.SendToEthereum) {
 	ctx.KVStore(k.storeKey).Set(types.MakeSendToEthereumKey(ste.Id, ste.Erc20Fee), k.cdc.MustMarshalBinaryBare(ste))
 }
 
-func (k Keeper) DeleteUnbatchedSendToEthereum(ctx sdk.Context, id uint64, fee types.ERC20Token) {
+func (k Keeper) deleteUnbatchedSendToEthereum(ctx sdk.Context, id uint64, fee types.ERC20Token) {
 	ctx.KVStore(k.storeKey).Delete(types.MakeSendToEthereumKey(id, fee))
 }
 
-func (k Keeper) IterateUnbatchedSendToEthereumsByContract(ctx sdk.Context, contract common.Address, cb func(*types.SendToEthereum) bool) {
+func (k Keeper) iterateUnbatchedSendToEthereumsByContract(ctx sdk.Context, contract common.Address, cb func(*types.SendToEthereum) bool) {
 	iter := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.SendToEthereumKey}, contract.Bytes()...)).ReverseIterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
@@ -134,7 +134,7 @@ func (k Keeper) IterateUnbatchedSendToEthereums(ctx sdk.Context, cb func(*types.
 	}
 }
 
-func (k Keeper) GetUnbatchedSendToEthereums(ctx sdk.Context) []*types.SendToEthereum {
+func (k Keeper) getUnbatchedSendToEthereums(ctx sdk.Context) []*types.SendToEthereum {
 	var out []*types.SendToEthereum
 	k.IterateUnbatchedSendToEthereums(ctx, func(ste *types.SendToEthereum) bool {
 		out = append(out, ste)
@@ -143,7 +143,7 @@ func (k Keeper) GetUnbatchedSendToEthereums(ctx sdk.Context) []*types.SendToEthe
 	return out
 }
 
-func (k Keeper) IncrementLastSendToEthereumIDKey(ctx sdk.Context) uint64 {
+func (k Keeper) incrementLastSendToEthereumIDKey(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get([]byte{types.LastSendToEthereumIDKey})
 	var id uint64 = 0

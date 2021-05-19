@@ -10,8 +10,7 @@ import (
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
 )
 
-// TODO-JT: carefully look at atomicity of this function
-func (k Keeper) RecordEventVote(
+func (k Keeper) recordEventVote(
 	ctx sdk.Context,
 	event types.EthereumEvent,
 	val sdk.ValAddress,
@@ -20,7 +19,7 @@ func (k Keeper) RecordEventVote(
 	// We check the event nonce in processEthereumEvent as well,
 	// but checking it here gives individual eth signers a chance to retry,
 	// and prevents validators from submitting two claims with the same nonce
-	lastEventNonce := k.GetLastEventNonceByValidator(ctx, val)
+	lastEventNonce := k.getLastEventNonceByValidator(ctx, val)
 	if event.GetNonce() != lastEventNonce+1 {
 		return nil, types.ErrNonContiguousEventNonce
 	}
@@ -43,7 +42,7 @@ func (k Keeper) RecordEventVote(
 	// Add the validator's vote to this EthereumEventVoteRecord
 	eventVoteRecord.Votes = append(eventVoteRecord.Votes, val.String())
 
-	k.SetEthereumEventVoteRecord(ctx, event.GetNonce(), event.Hash(), eventVoteRecord)
+	k.setEthereumEventVoteRecord(ctx, event.GetNonce(), event.Hash(), eventVoteRecord)
 	k.setLastEventNonceByValidator(ctx, val, event.GetNonce())
 
 	return eventVoteRecord, nil
@@ -84,15 +83,15 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.Ether
 				k.SetLastObservedEthereumBlockHeight(ctx, event.GetEthereumHeight())
 
 				eventVoteRecord.Accepted = true
-				k.SetEthereumEventVoteRecord(ctx, event.GetNonce(), event.Hash(), eventVoteRecord)
+				k.setEthereumEventVoteRecord(ctx, event.GetNonce(), event.Hash(), eventVoteRecord)
 
 				k.processEthereumEvent(ctx, event)
 				ctx.EventManager().EmitEvent(sdk.NewEvent(
 					types.EventTypeObservation,
 					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 					sdk.NewAttribute(types.AttributeKeyEthereumEventType, fmt.Sprintf("%T", event)),
-					sdk.NewAttribute(types.AttributeKeyContract, k.GetBridgeContractAddress(ctx)),
-					sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.GetBridgeChainID(ctx)))),
+					sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
+					sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
 					sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID,
 						string(types.MakeEthereumEventVoteRecordKey(event.GetNonce(), event.Hash()))),
 					sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(event.GetNonce())),
@@ -126,8 +125,8 @@ func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent)
 	}
 }
 
-// SetEthereumEventVoteRecord sets the attestation in the store
-func (k Keeper) SetEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte, eventVoteRecord *types.EthereumEventVoteRecord) {
+// setEthereumEventVoteRecord sets the attestation in the store
+func (k Keeper) setEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte, eventVoteRecord *types.EthereumEventVoteRecord) {
 	ctx.KVStore(k.storeKey).Set(types.MakeEthereumEventVoteRecordKey(eventNonce, claimHash), k.cdc.MustMarshalBinaryBare(eventVoteRecord))
 }
 
@@ -142,15 +141,15 @@ func (k Keeper) GetEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, c
 	}
 }
 
-// DeleteEthereumEventVoteRecord deletes an attestation given an event nonce and claim
-func (k Keeper) DeleteEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte, att *types.EthereumEventVoteRecord) {
+// deleteEthereumEventVoteRecord deletes an attestation given an event nonce and claim
+func (k Keeper) deleteEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte, att *types.EthereumEventVoteRecord) {
 	ctx.KVStore(k.storeKey).Delete(types.MakeEthereumEventVoteRecordKey(eventNonce, claimHash))
 }
 
 // GetEthereumEventVoteRecordMapping returns a mapping of eventnonce -> attestations at that nonce
 func (k Keeper) GetEthereumEventVoteRecordMapping(ctx sdk.Context) (out map[uint64][]*types.EthereumEventVoteRecord) {
 	out = make(map[uint64][]*types.EthereumEventVoteRecord)
-	k.IterateEthereumEventVoteRecords(ctx, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
+	k.iterateEthereumEventVoteRecords(ctx, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
 		event, err := types.UnpackEvent(eventVoteRecord.Event)
 		if err != nil {
 			panic(err)
@@ -165,8 +164,8 @@ func (k Keeper) GetEthereumEventVoteRecordMapping(ctx sdk.Context) (out map[uint
 	return
 }
 
-// IterateEthereumEventVoteRecords iterates through all attestations
-func (k Keeper) IterateEthereumEventVoteRecords(ctx sdk.Context, cb func([]byte, *types.EthereumEventVoteRecord) bool) {
+// iterateEthereumEventVoteRecords iterates through all attestations
+func (k Keeper) iterateEthereumEventVoteRecords(ctx sdk.Context, cb func([]byte, *types.EthereumEventVoteRecord) bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.EthereumEventVoteRecordKey})
 	iter := store.Iterator(nil, nil)
 	defer iter.Close()
@@ -224,8 +223,8 @@ func (k Keeper) setLastObservedEventNonce(ctx sdk.Context, nonce uint64) {
 	store.Set([]byte{types.LastObservedEventNonceKey}, types.UInt64Bytes(nonce))
 }
 
-// GetLastEventNonceByValidator returns the latest event nonce for a given validator
-func (k Keeper) GetLastEventNonceByValidator(ctx sdk.Context, validator sdk.ValAddress) uint64 {
+// getLastEventNonceByValidator returns the latest event nonce for a given validator
+func (k Keeper) getLastEventNonceByValidator(ctx sdk.Context, validator sdk.ValAddress) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	bytes := store.Get(types.MakeLastEventNonceByValidatorKey(validator))
 

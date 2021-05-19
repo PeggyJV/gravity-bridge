@@ -100,7 +100,7 @@ func TestBatches(t *testing.T) {
 	// =================================
 
 	// Execute the batch
-	input.GravityKeeper.BatchTxExecuted(ctx, common.HexToAddress(secondBatch.TokenContract), secondBatch.Nonce)
+	input.GravityKeeper.batchTxExecuted(ctx, common.HexToAddress(secondBatch.TokenContract), secondBatch.Nonce)
 
 	// check batch has been deleted
 	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, secondBatch.GetStoreIndex())
@@ -152,7 +152,7 @@ func TestBatchesFullCoins(t *testing.T) {
 		vAsSDKInt := sdk.NewIntFromUint64(v)
 		amount := types.NewSDKIntERC20Token(oneEth.Mul(vAsSDKInt), myTokenContractAddr).GravityCoin()
 		fee := types.NewSDKIntERC20Token(oneEth.Mul(vAsSDKInt), myTokenContractAddr).GravityCoin()
-		_, err := input.GravityKeeper.CreateSendToEthereum(ctx, mySender, myReceiver.Hex(), amount, fee)
+		_, err := input.GravityKeeper.createSendToEthereum(ctx, mySender, myReceiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}
 
@@ -221,7 +221,7 @@ func TestBatchesFullCoins(t *testing.T) {
 		vAsSDKInt := sdk.NewIntFromUint64(v)
 		amount := types.NewSDKIntERC20Token(oneEth.Mul(vAsSDKInt), myTokenContractAddr).GravityCoin()
 		fee := types.NewSDKIntERC20Token(oneEth.Mul(vAsSDKInt), myTokenContractAddr).GravityCoin()
-		_, err := input.GravityKeeper.CreateSendToEthereum(ctx, mySender, myReceiver.Hex(), amount, fee)
+		_, err := input.GravityKeeper.createSendToEthereum(ctx, mySender, myReceiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}
 
@@ -259,7 +259,7 @@ func TestBatchesFullCoins(t *testing.T) {
 	// =================================
 
 	// Execute the batch
-	input.GravityKeeper.BatchTxExecuted(ctx, common.HexToAddress(secondBatch.TokenContract), secondBatch.Nonce)
+	input.GravityKeeper.batchTxExecuted(ctx, common.HexToAddress(secondBatch.TokenContract), secondBatch.Nonce)
 
 	// check batch has been deleted
 	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, secondBatch.GetStoreIndex())
@@ -343,11 +343,11 @@ func TestPoolTxRefund(t *testing.T) {
 	input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
 
 	// try to refund a tx that's in a batch
-	err := input.GravityKeeper.CancelSendToEthereum(ctx, 2, mySender.String())
+	err := input.GravityKeeper.cancelSendToEthereum(ctx, 2, mySender.String())
 	require.Error(t, err)
 
 	// try to refund a tx that's in the pool
-	err = input.GravityKeeper.CancelSendToEthereum(ctx, 4, mySender.String())
+	err = input.GravityKeeper.cancelSendToEthereum(ctx, 4, mySender.String())
 	require.NoError(t, err)
 
 	// make sure refund was issued

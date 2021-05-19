@@ -12,39 +12,6 @@ import (
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
 )
 
-func TestPrefixRange(t *testing.T) {
-	cases := map[string]struct {
-		src      []byte
-		expStart []byte
-		expEnd   []byte
-		expPanic bool
-	}{
-		"normal":              {src: []byte{1, 3, 4}, expStart: []byte{1, 3, 4}, expEnd: []byte{1, 3, 5}},
-		"normal short":        {src: []byte{79}, expStart: []byte{79}, expEnd: []byte{80}},
-		"empty case":          {src: []byte{}},
-		"roll-over example 1": {src: []byte{17, 28, 255}, expStart: []byte{17, 28, 255}, expEnd: []byte{17, 29, 0}},
-		"roll-over example 2": {src: []byte{15, 42, 255, 255},
-			expStart: []byte{15, 42, 255, 255}, expEnd: []byte{15, 43, 0, 0}},
-		"pathological roll-over": {src: []byte{255, 255, 255, 255}, expStart: []byte{255, 255, 255, 255}},
-		"nil prohibited":         {expPanic: true},
-	}
-
-	for testName, tc := range cases {
-		tc := tc
-		t.Run(testName, func(t *testing.T) {
-			if tc.expPanic {
-				require.Panics(t, func() {
-					prefixRange(tc.src)
-				})
-				return
-			}
-			start, end := prefixRange(tc.src)
-			assert.Equal(t, tc.expStart, start)
-			assert.Equal(t, tc.expEnd, end)
-		})
-	}
-}
-
 func TestCurrentValsetNormalization(t *testing.T) {
 	specs := map[string]struct {
 		srcPowers []uint64
@@ -106,11 +73,11 @@ func TestAttestationIterator(t *testing.T) {
 		EthereumSender: EthAddrs[0].String(),
 		CosmosReceiver: AccAddrs[0].String(),
 	}
-	input.GravityKeeper.SetEthereumEventVoteRecord(ctx, dep1.EventNonce, dep1.Hash(), att1)
-	input.GravityKeeper.SetEthereumEventVoteRecord(ctx, dep2.EventNonce, dep2.Hash(), att2)
+	input.GravityKeeper.setEthereumEventVoteRecord(ctx, dep1.EventNonce, dep1.Hash(), att1)
+	input.GravityKeeper.setEthereumEventVoteRecord(ctx, dep2.EventNonce, dep2.Hash(), att2)
 
 	atts := []*types.EthereumEventVoteRecord{}
-	input.GravityKeeper.IterateEthereumEventVoteRecords(ctx, func(_ []byte, att *types.EthereumEventVoteRecord) bool {
+	input.GravityKeeper.iterateEthereumEventVoteRecords(ctx, func(_ []byte, att *types.EthereumEventVoteRecord) bool {
 		atts = append(atts, att)
 		return false
 	})
@@ -150,10 +117,10 @@ func TestDelegateKeys(t *testing.T) {
 		require.NoError(t, err2)
 
 		k.SetOrchestratorValidatorAddress(ctx, val, orch)
-		k.SetValidatorEthereumAddress(ctx, val, ethAddrs[i])
-		k.SetEthereumOrchestratorAddress(ctx, ethAddrs[i], orch)
+		k.setValidatorEthereumAddress(ctx, val, ethAddrs[i])
+		k.setEthereumOrchestratorAddress(ctx, ethAddrs[i], orch)
 	}
-	addresses := k.GetDelegateKeys(ctx)
+	addresses := k.getDelegateKeys(ctx)
 	for i := range addresses {
 		res := addresses[i]
 		assert.Equal(t, valAddrs[i], res.ValidatorAddress)
@@ -206,8 +173,8 @@ func TestStoreEventVoteRecord(t *testing.T) {
 		},
 	}
 
-	gk.SetEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash(), evr)
-	gk.SetEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash(), evr2)
+	gk.setEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash(), evr)
+	gk.setEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash(), evr2)
 
 	stored := gk.GetEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash())
 	require.NotNil(t, stored)
