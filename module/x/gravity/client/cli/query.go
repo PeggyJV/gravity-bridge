@@ -28,7 +28,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdContractCallTxEthereumSignatures(),
 		CmdPendingSignerSetTxEthereumSignatures(),
 		CmdPendingBatchTxEthereumSignatures(),
-		// CmdPendingContractCallTxEthereumSignatures(),
+		CmdPendingContractCallTxEthereumSignatures(),
 		// CmdLastSubmittedEthereumEvent(),
 		// CmdBatchTxFees(),
 		// CmdERC20ToDenom(),
@@ -434,6 +434,40 @@ func CmdPendingBatchTxEthereumSignatures() *cobra.Command {
 			}
 
 			res, err := queryClient.PendingBatchTxEthereumSignatures(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdPendingContractCallTxEthereumSignatures() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pending-contract-call-tx-ethereum-signatures [address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			var ( // args
+				address string // TODO(levi) init and validate from args[0]
+			)
+
+			req := types.PendingContractCallTxEthereumSignaturesRequest{
+				Address: address,
+			}
+
+			res, err := queryClient.PendingContractCallTxEthereumSignatures(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
