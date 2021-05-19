@@ -30,7 +30,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdPendingBatchTxEthereumSignatures(),
 		CmdPendingContractCallTxEthereumSignatures(),
 		CmdLastSubmittedEthereumEvent(),
-		// CmdBatchTxFees(),
+		CmdBatchTxFees(),
 		// CmdERC20ToDenom(),
 		// CmdDenomToERC20(),
 		// CmdPendingSendToEthereums(),
@@ -502,6 +502,34 @@ func CmdLastSubmittedEthereumEvent() *cobra.Command {
 			}
 
 			res, err := queryClient.LastSubmittedEthereumEvent(cmd.Context(), &req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdBatchTxFees() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "batch-tx-fees",
+		Args:  cobra.NoArgs,
+		Short: "", // TODO(levi) provide short description
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := types.BatchTxFeesRequest{}
+
+			res, err := queryClient.BatchTxFees(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
