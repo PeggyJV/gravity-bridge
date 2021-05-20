@@ -48,7 +48,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	"github.com/ethereum/go-ethereum/common"
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -214,7 +213,7 @@ type TestInput struct {
 	LegacyAmino    *codec.LegacyAmino
 }
 
-func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, tokenContract common.Address, sender sdk.AccAddress, receiver common.Address, ids ...uint64) {
+func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, tokenContract gethcommon.Address, sender sdk.AccAddress, receiver gethcommon.Address, ids ...uint64) {
 	for i, id := range ids {
 		amount := types.NewERC20Token(uint64(i+100), tokenContract.Hex()).GravityCoin()
 		fee := types.NewERC20Token(id, tokenContract.Hex()).GravityCoin()

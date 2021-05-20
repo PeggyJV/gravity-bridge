@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -153,7 +152,7 @@ func (ccee *ContractCallExecutedEvent) Validate() error {
 	if ccee.EventNonce == 0 {
 		return fmt.Errorf("nonce cannot be 0")
 	}
-	if len(ccee.InvalidationId) == 0 {
+	if len(ccee.InvalidationId) != 32 {
 		return fmt.Errorf("invalidation id cannot be empty")
 	}
 	if ccee.InvalidationNonce == 0 {
@@ -175,15 +174,6 @@ func (e20de *ERC20DeployedEvent) Validate() error {
 	if err := sdk.ValidateDenom(e20de.CosmosDenom); err != nil {
 		return err
 	}
-	if strings.TrimSpace(e20de.Erc20Name) == "" {
-		return fmt.Errorf("token name cannot be blank")
-	}
-	if strings.TrimSpace(e20de.Erc20Symbol) == "" {
-		return fmt.Errorf("token symbol cannot be blank")
-	}
-	if e20de.Erc20Decimals <= 0 {
-		return fmt.Errorf("decimal precision must be positive")
-	}
 	if e20de.EthereumHeight == 0 {
 		return fmt.Errorf("ethereum height cannot be 0")
 	}
@@ -194,7 +184,7 @@ func (sse *SignerSetTxExecutedEvent) Validate() error {
 	if sse.EventNonce == 0 {
 		return fmt.Errorf("nonce cannot be 0")
 	}
-	if sse.GetSignerSetTxNonce() == 0 {
+	if sse.SignerSetTxNonce == 0 {
 		return fmt.Errorf("nonce cannot be 0")
 	}
 	if sse.EthereumHeight == 0 {
@@ -202,6 +192,12 @@ func (sse *SignerSetTxExecutedEvent) Validate() error {
 	}
 	if sse.Members == nil {
 		return fmt.Errorf("members cannot be nil")
+	}
+
+	for i, member := range sse.Members {
+		if err := member.ValidateBasic(); err != nil {
+			return fmt.Errorf("ethereum signer %d error: %w", i, err)
+		}
 	}
 	return nil
 }

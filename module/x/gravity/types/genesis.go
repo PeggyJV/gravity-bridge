@@ -3,13 +3,13 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"time"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // DefaultParamspace defines the default auth module parameter subspace
@@ -115,6 +115,7 @@ func DefaultGenesisState() *GenesisState {
 func DefaultParams() *Params {
 	return &Params{
 		GravityId:                                 "defaultgravityid",
+		BridgeEthereumAddress:                     "0x0000000000000000000000000000000000000000",
 		SignedSignerSetTxsWindow:                  10000,
 		SignedBatchesWindow:                       10000,
 		EthereumSignaturesWindow:                  10000,
@@ -282,11 +283,8 @@ func validateBridgeContractAddress(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	if err := ValidateEthereumAddress(v); err != nil {
-		// TODO: ensure that empty addresses are valid in params
-		if !strings.Contains(err.Error(), "empty") {
-			return err
-		}
+	if !common.IsHexAddress(v) {
+		return fmt.Errorf("not an ethereum address: %s", v)
 	}
 	return nil
 }

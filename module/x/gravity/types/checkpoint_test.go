@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
+
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,7 +15,7 @@ func TestBatchTxCheckpoint(t *testing.T) {
 	senderAddr, err := sdk.AccAddressFromHex("527FBEE652609AB150F0AEE9D61A2F76CFC4A73E")
 	require.NoError(t, err)
 	var (
-		erc20Addr = common.HexToAddress("0x835973768750b3ED2D5c3EF5AdcD5eDb44d12aD4")
+		erc20Addr = gethcommon.HexToAddress("0x835973768750b3ED2D5c3EF5AdcD5eDb44d12aD4")
 	)
 
 	src := BatchTx{
@@ -50,7 +50,7 @@ func TestContractCallTxCheckpoint(t *testing.T) {
 	invalidationId, err := hex.DecodeString("0x696e76616c69646174696f6e4964000000000000000000000000000000000000"[2:])
 	require.NoError(t, err)
 
-	token := []ERC20Token{NewSDKIntERC20Token(sdk.NewIntFromUint64(1), common.HexToAddress("0xC26eFfa98B8A2632141562Ae7E34953Cfe5B4888"))}
+	token := []ERC20Token{NewSDKIntERC20Token(sdk.NewIntFromUint64(1), gethcommon.HexToAddress("0xC26eFfa98B8A2632141562Ae7E34953Cfe5B4888"))}
 	call := ContractCallTx{
 		Tokens:            token,
 		Fees:              token,

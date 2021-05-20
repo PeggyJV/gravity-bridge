@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strconv"
 
@@ -188,7 +189,7 @@ func (k Keeper) GetLastObservedEventNonce(ctx sdk.Context) uint64 {
 	if len(bytes) == 0 {
 		return 0
 	}
-	return types.UInt64FromBytes(bytes)
+	return binary.BigEndian.Uint64(bytes)
 }
 
 // GetLastObservedEthereumBlockHeight height gets the block height to of the last observed attestation from
@@ -221,7 +222,7 @@ func (k Keeper) SetLastObservedEthereumBlockHeight(ctx sdk.Context, ethereumHeig
 // setLastObservedEventNonce sets the latest observed event nonce
 func (k Keeper) setLastObservedEventNonce(ctx sdk.Context, nonce uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set([]byte{types.LastObservedEventNonceKey}, types.UInt64Bytes(nonce))
+	store.Set([]byte{types.LastObservedEventNonceKey}, sdk.Uint64ToBigEndian(nonce))
 }
 
 // getLastEventNonceByValidator returns the latest event nonce for a given validator
@@ -267,11 +268,11 @@ func (k Keeper) getLastEventNonceByValidator(ctx sdk.Context, validator sdk.ValA
 		}
 		return 0
 	}
-	return types.UInt64FromBytes(bytes)
+	return binary.BigEndian.Uint64(bytes)
 }
 
 // setLastEventNonceByValidator sets the latest event nonce for a give validator
 func (k Keeper) setLastEventNonceByValidator(ctx sdk.Context, validator sdk.ValAddress, nonce uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.MakeLastEventNonceByValidatorKey(validator), types.UInt64Bytes(nonce))
+	store.Set(types.MakeLastEventNonceByValidatorKey(validator), sdk.Uint64ToBigEndian(nonce))
 }

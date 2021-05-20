@@ -151,7 +151,7 @@ func (k Keeper) getLastOutgoingBatchByTokenType(ctx sdk.Context, token common.Ad
 
 // SetLastSlashedOutgoingTxBlockHeight sets the latest slashed Batch block height
 func (k Keeper) SetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context, blockHeight uint64) {
-	ctx.KVStore(k.storeKey).Set([]byte{types.LastSlashedOutgoingTxBlockKey}, types.UInt64Bytes(blockHeight))
+	ctx.KVStore(k.storeKey).Set([]byte{types.LastSlashedOutgoingTxBlockKey}, sdk.Uint64ToBigEndian(blockHeight))
 }
 
 // GetLastSlashedOutgoingTxBlockHeight returns the latest slashed Batch block
@@ -159,7 +159,7 @@ func (k Keeper) GetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context) uint64 {
 	if bz := ctx.KVStore(k.storeKey).Get([]byte{types.LastSlashedOutgoingTxBlockKey}); bz == nil {
 		return 0
 	} else {
-		return types.UInt64FromBytes(bz)
+		return binary.BigEndian.Uint64(bz)
 	}
 }
 

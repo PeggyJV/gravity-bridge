@@ -67,7 +67,7 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace para
 func (k Keeper) incrementLatestSignerSetTxNonce(ctx sdk.Context) uint64 {
 	current := k.GetLatestSignerSetTxNonce(ctx)
 	new := current + 1
-	ctx.KVStore(k.storeKey).Set([]byte{types.LatestSignerSetTxNonceKey}, types.UInt64Bytes(new))
+	ctx.KVStore(k.storeKey).Set([]byte{types.LatestSignerSetTxNonceKey}, sdk.Uint64ToBigEndian(new))
 	return new
 }
 
@@ -93,7 +93,7 @@ func (k Keeper) GetLatestSignerSetTx(ctx sdk.Context) (out *types.SignerSetTx) {
 
 // setLastUnBondingBlockHeight sets the last unbonding block height
 func (k Keeper) setLastUnBondingBlockHeight(ctx sdk.Context, unbondingBlockHeight uint64) {
-	ctx.KVStore(k.storeKey).Set([]byte{types.LastUnBondingBlockHeightKey}, types.UInt64Bytes(unbondingBlockHeight))
+	ctx.KVStore(k.storeKey).Set([]byte{types.LastUnBondingBlockHeightKey}, sdk.Uint64ToBigEndian(unbondingBlockHeight))
 }
 
 // GetLastUnBondingBlockHeight returns the last unbonding block height
@@ -101,7 +101,7 @@ func (k Keeper) GetLastUnBondingBlockHeight(ctx sdk.Context) uint64 {
 	if bz := ctx.KVStore(k.storeKey).Get([]byte{types.LastUnBondingBlockHeightKey}); len(bz) == 0 {
 		return 0
 	} else {
-		return types.UInt64FromBytes(bz)
+		return binary.BigEndian.Uint64(bz)
 	}
 }
 
