@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"math"
 	"sort"
 	"strconv"
@@ -377,8 +378,30 @@ func (k Keeper) DeleteOutgoingTx(ctx sdk.Context, storeIndex []byte) {
 	ctx.KVStore(k.storeKey).Delete(types.MakeOutgoingTxKey(storeIndex))
 }
 
+func (k Keeper) PaginateOutgoingTxsByType(ctx sdk.Context, pageReq *query.PageRequest, prefixByte byte, cb func(key []byte, outgoing types.OutgoingTx) bool) (*query.PageResponse, error) {
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeOutgoingTxKey([]byte{prefixByte}))
+
+	return query.FilteredPaginate(prefixStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		if !accumulate {
+			return false, nil
+		}
+
+		var any cdctypes.Any
+		k.cdc.MustUnmarshalBinaryBare(value, &any)
+		var otx types.OutgoingTx
+		if err := k.cdc.UnpackAny(&any, &otx); err != nil {
+			panic(err)
+		}
+		if accumulate {
+			return cb(key, otx), nil
+		}
+
+		return false, nil
+	})
+}
+
 // IterateOutgoingTxsByType iterates over a specific type of outgoing transaction denoted by the chosen prefix byte
-func (k Keeper) IterateOutgoingTxsByType(ctx sdk.Context, prefixByte byte, cb func(key []byte, outgoing types.OutgoingTx) bool) {
+func (k Keeper) IterateOutgoingTxsByType(ctx sdk.Context, prefixByte byte, cb func(key []byte, outgoing types.OutgoingTx) (stop bool)) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeOutgoingTxKey([]byte{prefixByte}))
 	iter := prefixStore.ReverseIterator(nil, nil)
 	defer iter.Close()

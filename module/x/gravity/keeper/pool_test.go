@@ -33,7 +33,7 @@ func TestAddToOutgoingPool(t *testing.T) {
 
 	// then
 	var got []*types.SendToEthereum
-	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
+	input.GravityKeeper.iterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
 		got = append(got, tx)
 		return false
 	})

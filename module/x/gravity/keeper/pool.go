@@ -122,7 +122,7 @@ func (k Keeper) iterateUnbatchedSendToEthereumsByContract(ctx sdk.Context, contr
 	}
 }
 
-func (k Keeper) IterateUnbatchedSendToEthereums(ctx sdk.Context, cb func(*types.SendToEthereum) bool) {
+func (k Keeper) iterateUnbatchedSendToEthereums(ctx sdk.Context, cb func(*types.SendToEthereum) bool) {
 	iter := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEthereumKey}).ReverseIterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
@@ -136,7 +136,7 @@ func (k Keeper) IterateUnbatchedSendToEthereums(ctx sdk.Context, cb func(*types.
 
 func (k Keeper) getUnbatchedSendToEthereums(ctx sdk.Context) []*types.SendToEthereum {
 	var out []*types.SendToEthereum
-	k.IterateUnbatchedSendToEthereums(ctx, func(ste *types.SendToEthereum) bool {
+	k.iterateUnbatchedSendToEthereums(ctx, func(ste *types.SendToEthereum) bool {
 		out = append(out, ste)
 		return false
 	})
