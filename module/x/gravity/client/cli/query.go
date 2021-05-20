@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 )
 
@@ -109,7 +110,7 @@ func CmdSignerSetTx() *cobra.Command {
 func CmdBatchTx() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "batch-tx [contract-address] [nonce]",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.RangeArgs(1, 2),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
@@ -118,9 +119,20 @@ func CmdBatchTx() *cobra.Command {
 			}
 
 			var ( // args
-				contractAddress string // TODO(levi) init and validate from args[0]
-				nonce           uint64 // TODO(levi) init and validate from args[1]
+				contractAddress string
+				nonce           uint64
 			)
+
+			contractAddress, err = parseContractAddress(args[0])
+			if err != nil {
+				return nil
+			}
+
+			if len(args) == 2 {
+				if nonce, err = parseNonce(args[1]); err != nil {
+					return err
+				}
+			}
 
 			req := types.BatchTxRequest{
 				ContractAddress: contractAddress,
@@ -724,4 +736,11 @@ func parseNonce(s string) (uint64, error) {
 		return 0, fmt.Errorf("nonce %s not a valid uint, please input a valid nonce", s)
 	}
 	return nonce, nil
+}
+
+func parseContractAddress(s string) (string, error) {
+	if !common.IsHexAddress(s) {
+		return "", fmt.Errorf("%s not a valid contract address, please input a valid contract address", s)
+	}
+	return s, nil
 }
