@@ -1,8 +1,9 @@
 package gravity
 
 import (
-	"github.com/ethereum/go-ethereum/common"
 	"testing"
+
+	"github.com/ethereum/go-ethereum/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"

@@ -32,7 +32,8 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 		}
 		return a.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins)
 	case *types.BatchExecutedEvent:
-		return a.keeper.BatchTxExecuted(ctx, common.HexToAddress(event.TokenContract), event.GetNonce())
+		a.keeper.BatchTxExecuted(ctx, common.HexToAddress(event.TokenContract), event.GetNonce())
+		return
 	case *types.ERC20DeployedEvent:
 		// Check if it already exists
 		if existingERC20, exists := a.keeper.GetCosmosOriginatedERC20(ctx, event.CosmosDenom); exists {

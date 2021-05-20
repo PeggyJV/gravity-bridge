@@ -77,6 +77,7 @@ message ContractCallTx {
   uint64 timeout = 5;
   repeated ERC20Token tokens = 6 [ (gogoproto.nullable) = false ];
   repeated ERC20Token fees = 7 [ (gogoproto.nullable) = false ];
+  uint64 height = 8;
 }
 
 message ERC20Token {

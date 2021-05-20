@@ -37,4 +37,5 @@ type OutgoingTx interface {
 	// transactions before calculating the checkpoint
 	GetCheckpoint([]byte) []byte
 	GetStoreIndex() []byte
+	GetCosmosHeight() uint64
 }

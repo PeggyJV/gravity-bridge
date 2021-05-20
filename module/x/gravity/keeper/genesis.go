@@ -15,7 +15,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 
 	// reset pool transactions in state
 	for _, tx := range data.UnbatchedSendToEthereumTxs {
-		k.SetPoolEntry(ctx, tx)
+		k.SetUnbatchedSendToEthereum(ctx, tx)
 	}
 
 	// reset ethereum event vote records in state
@@ -104,7 +104,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		delegates                = k.GetDelegateKeys(ctx)
 		lastobserved             = k.GetLastObservedEventNonce(ctx)
 		erc20ToDenoms            []*types.ERC20ToDenom
-		unbatchedTransfers       = k.GetPoolTransactions(ctx)
+		unbatchedTransfers       = k.GetUnbatchedSendToEthereums(ctx)
 	)
 
 	// export ethereumEventVoteRecords from state
@@ -120,7 +120,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 	})
 
 	// export signer set txs and sigs
-	k.IterateOutgoingTxs(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		ota, _ := types.PackOutgoingTx(otx)
 		outgoingTxs = append(outgoingTxs, ota)
 		sstx, _ := otx.(*types.SignerSetTx)
@@ -133,7 +133,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 	})
 
 	// export batch txs and sigs
-	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		ota, _ := types.PackOutgoingTx(otx)
 		outgoingTxs = append(outgoingTxs, ota)
 		btx, _ := otx.(*types.BatchTx)
@@ -146,7 +146,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 	})
 
 	// export contract call txs and sigs
-	k.IterateOutgoingTxs(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		ota, _ := types.PackOutgoingTx(otx)
 		outgoingTxs = append(outgoingTxs, ota)
 		btx, _ := otx.(*types.ContractCallTx)

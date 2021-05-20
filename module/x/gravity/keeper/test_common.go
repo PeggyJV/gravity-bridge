@@ -215,10 +215,10 @@ type TestInput struct {
 }
 
 func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, tokenContract common.Address, sender sdk.AccAddress, receiver common.Address, ids ...uint64) {
-	for i, v := range ids {
+	for i, id := range ids {
 		amount := types.NewERC20Token(uint64(i+100), tokenContract.Hex()).GravityCoin()
-		fee := types.NewERC20Token(v, tokenContract.Hex()).GravityCoin()
-		_, err := input.GravityKeeper.AddToOutgoingPool(ctx, sender, receiver.Hex(), amount, fee)
+		fee := types.NewERC20Token(id, tokenContract.Hex()).GravityCoin()
+		_, err := input.GravityKeeper.CreateSendToEthereum(ctx, sender, receiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}
 }
@@ -483,7 +483,9 @@ func NewStakingKeeperMock(operators ...sdk.ValAddress) *StakingKeeperMock {
 	}
 	const defaultTestPower = 100
 	for _, a := range operators {
+
 		r.BondedValidators = append(r.BondedValidators, stakingtypes.Validator{
+			ConsensusPubkey: codectypes.UnsafePackAny(ed25519.GenPrivKey().PubKey()),
 			OperatorAddress: a.String(),
 			Status:          stakingtypes.Bonded,
 		})
@@ -604,7 +606,7 @@ func (s *StakingKeeperMock) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAd
 }
 
 func (s *StakingKeeperMock) GetParams(ctx sdk.Context) stakingtypes.Params {
-	panic("unexpected call")
+	return stakingtypes.DefaultParams()
 }
 
 func (s *StakingKeeperMock) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool) {
@@ -612,7 +614,9 @@ func (s *StakingKeeperMock) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (
 }
 
 func (s *StakingKeeperMock) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time, endHeight int64) sdk.Iterator {
-	panic("unexpected call")
+	store := ctx.KVStore(sdk.NewKVStoreKey("staking"))
+	return store.Iterator(stakingtypes.ValidatorQueueKey, sdk.InclusiveEndBytes(stakingtypes.GetValidatorQueueKey(endTime, endHeight)))
+
 }
 
 // Slash staisfies the interface
