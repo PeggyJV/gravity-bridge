@@ -27,44 +27,20 @@ func (m *EthereumEventVoteRecord) UnpackInterfaces(unpacker types.AnyUnpacker) e
 	return unpacker.UnpackAny(m.Event, &event)
 }
 
-//////////////
-// GetNonce //
-//////////////
-
-func (stce *SendToCosmosEvent) GetNonce() uint64 {
-	return stce.EventNonce
-}
-
-func (bee *BatchExecutedEvent) GetNonce() uint64 {
-	return bee.EventNonce
-}
-
-func (ccee *ContractCallExecutedEvent) GetNonce() uint64 {
-	return ccee.EventNonce
-}
-
-func (e20de *ERC20DeployedEvent) GetNonce() uint64 {
-	return e20de.EventNonce
-}
-
-func (sse *SignerSetTxExecutedEvent) GetNonce() uint64 {
-	return sse.EventNonce
-}
-
 //////////
 // Hash //
 //////////
 
-// TODO: rewrite all hashes to match this one
 func (stce *SendToCosmosEvent) Hash() tmbytes.HexBytes {
 	rcv, _ := sdk.AccAddressFromBech32(stce.CosmosReceiver)
 	path := bytes.Join(
 		[][]byte{
 			sdk.Uint64ToBigEndian(stce.EventNonce),
+			common.HexToAddress(stce.TokenContract).Bytes(),
 			stce.Amount.BigInt().Bytes(),
-			common.Hex2Bytes(stce.TokenContract),
 			common.Hex2Bytes(stce.EthereumSender),
 			rcv.Bytes(),
+			sdk.Uint64ToBigEndian(stce.EthereumHeight),
 		},
 		[]byte{},
 	)
@@ -73,7 +49,14 @@ func (stce *SendToCosmosEvent) Hash() tmbytes.HexBytes {
 }
 
 func (bee *BatchExecutedEvent) Hash() tmbytes.HexBytes {
-	path := append(common.HexToAddress(bee.TokenContract).Bytes(), sdk.Uint64ToBigEndian(bee.EventNonce)...)
+	path := bytes.Join(
+		[][]byte{
+			common.HexToAddress(bee.TokenContract).Bytes(),
+			sdk.Uint64ToBigEndian(bee.EventNonce),
+			sdk.Uint64ToBigEndian(bee.EthereumHeight),
+		},
+		[]byte{},
+	)
 	hash := sha256.Sum256([]byte(path))
 	return hash[:]
 }
@@ -81,9 +64,10 @@ func (bee *BatchExecutedEvent) Hash() tmbytes.HexBytes {
 func (ccee *ContractCallExecutedEvent) Hash() tmbytes.HexBytes {
 	path := bytes.Join(
 		[][]byte{
+			sdk.Uint64ToBigEndian(ccee.EventNonce),
 			ccee.InvalidationId,
 			sdk.Uint64ToBigEndian(ccee.InvalidationNonce),
-			sdk.Uint64ToBigEndian(ccee.EventNonce),
+			sdk.Uint64ToBigEndian(ccee.EthereumHeight),
 		},
 		[]byte{},
 	)
@@ -94,12 +78,13 @@ func (ccee *ContractCallExecutedEvent) Hash() tmbytes.HexBytes {
 func (e20de *ERC20DeployedEvent) Hash() tmbytes.HexBytes {
 	path := bytes.Join(
 		[][]byte{
+			sdk.Uint64ToBigEndian(e20de.EventNonce),
 			[]byte(e20de.CosmosDenom),
 			common.HexToAddress(e20de.TokenContract).Bytes(),
 			[]byte(e20de.Erc20Name),
 			[]byte(e20de.Erc20Symbol),
 			sdk.Uint64ToBigEndian(e20de.Erc20Decimals),
-			sdk.Uint64ToBigEndian(e20de.EventNonce),
+			sdk.Uint64ToBigEndian(e20de.EthereumHeight),
 		},
 		[]byte{},
 	)
@@ -110,8 +95,9 @@ func (e20de *ERC20DeployedEvent) Hash() tmbytes.HexBytes {
 func (sse *SignerSetTxExecutedEvent) Hash() tmbytes.HexBytes {
 	path := bytes.Join(
 		[][]byte{
-			sdk.Uint64ToBigEndian(sse.SignerSetTxNonce),
 			sdk.Uint64ToBigEndian(sse.EventNonce),
+			sdk.Uint64ToBigEndian(sse.SignerSetTxNonce),
+			sdk.Uint64ToBigEndian(sse.EthereumHeight),
 			EthereumSigners(sse.Members).Hash(),
 		},
 		[]byte{},
@@ -131,7 +117,7 @@ func (stce *SendToCosmosEvent) Validate() error {
 	if !common.IsHexAddress(stce.TokenContract) {
 		return sdkerrors.Wrap(ErrInvalid, "ethereum contract address")
 	}
-	if !stce.Amount.IsPositive() {
+	if !stce.Amount.IsNegative() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "amount must be positive")
 	}
 	if !common.IsHexAddress(stce.EthereumSender) {

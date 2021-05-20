@@ -21,12 +21,12 @@ func (k Keeper) recordEventVote(
 	// but checking it here gives individual eth signers a chance to retry,
 	// and prevents validators from submitting two claims with the same nonce
 	lastEventNonce := k.getLastEventNonceByValidator(ctx, val)
-	if event.GetNonce() != lastEventNonce+1 {
+	if event.GetEventNonce() != lastEventNonce+1 {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "non contiguous event nonce")
 	}
 
 	// Tries to get an EthereumEventVoteRecord with the same eventNonce and event as the event that was submitted.
-	eventVoteRecord := k.GetEthereumEventVoteRecord(ctx, event.GetNonce(), event.Hash())
+	eventVoteRecord := k.GetEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash())
 
 	// If it does not exist, create a new one.
 	if eventVoteRecord == nil {
@@ -43,8 +43,8 @@ func (k Keeper) recordEventVote(
 	// Add the validator's vote to this EthereumEventVoteRecord
 	eventVoteRecord.Votes = append(eventVoteRecord.Votes, val.String())
 
-	k.setEthereumEventVoteRecord(ctx, event.GetNonce(), event.Hash(), eventVoteRecord)
-	k.setLastEventNonceByValidator(ctx, val, event.GetNonce())
+	k.setEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash(), eventVoteRecord)
+	k.setLastEventNonceByValidator(ctx, val, event.GetEventNonce())
 
 	return eventVoteRecord, nil
 }
@@ -77,14 +77,14 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.Ether
 				lastEventNonce := k.GetLastObservedEventNonce(ctx)
 				// this check is performed at the next level up so this should never panic
 				// outside of programmer error.
-				if event.GetNonce() != lastEventNonce+1 {
+				if event.GetEventNonce() != lastEventNonce+1 {
 					panic("attempting to apply events to state out of order")
 				}
-				k.setLastObservedEventNonce(ctx, event.GetNonce())
+				k.setLastObservedEventNonce(ctx, event.GetEventNonce())
 				k.SetLastObservedEthereumBlockHeight(ctx, event.GetEthereumHeight())
 
 				eventVoteRecord.Accepted = true
-				k.setEthereumEventVoteRecord(ctx, event.GetNonce(), event.Hash(), eventVoteRecord)
+				k.setEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash(), eventVoteRecord)
 
 				k.processEthereumEvent(ctx, event)
 				ctx.EventManager().EmitEvent(sdk.NewEvent(
@@ -94,8 +94,8 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.Ether
 					sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
 					sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
 					sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID,
-						string(types.MakeEthereumEventVoteRecordKey(event.GetNonce(), event.Hash()))),
-					sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(event.GetNonce())),
+						string(types.MakeEthereumEventVoteRecordKey(event.GetEventNonce(), event.Hash()))),
+					sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(event.GetEventNonce())),
 				))
 
 				break
@@ -118,8 +118,8 @@ func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent)
 		k.logger(ctx).Error("ethereum event vote record failed",
 			"cause", err.Error(),
 			"event type", fmt.Sprintf("%T", event),
-			"id", types.MakeEthereumEventVoteRecordKey(event.GetNonce(), event.Hash()),
-			"nonce", fmt.Sprint(event.GetNonce()),
+			"id", types.MakeEthereumEventVoteRecordKey(event.GetEventNonce(), event.Hash()),
+			"nonce", fmt.Sprint(event.GetEventNonce()),
 		)
 	} else {
 		commit() // persist transient storage
@@ -155,10 +155,10 @@ func (k Keeper) GetEthereumEventVoteRecordMapping(ctx sdk.Context) (out map[uint
 		if err != nil {
 			panic(err)
 		}
-		if val, ok := out[event.GetNonce()]; !ok {
-			out[event.GetNonce()] = []*types.EthereumEventVoteRecord{eventVoteRecord}
+		if val, ok := out[event.GetEventNonce()]; !ok {
+			out[event.GetEventNonce()] = []*types.EthereumEventVoteRecord{eventVoteRecord}
 		} else {
-			out[event.GetNonce()] = append(val, eventVoteRecord)
+			out[event.GetEventNonce()] = append(val, eventVoteRecord)
 		}
 		return false
 	})

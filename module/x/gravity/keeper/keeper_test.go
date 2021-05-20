@@ -188,10 +188,10 @@ func TestStoreEventVoteRecord(t *testing.T) {
 	storedEvent1, err := types.UnpackEvent(stored1.Event)
 	require.NoError(t, err)
 
-	require.EqualValues(t, storedEvent.GetNonce(), 1)
+	require.EqualValues(t, storedEvent.GetEventNonce(), 1)
 	require.EqualValues(t, storedEvent.Hash(), stce.Hash())
 
-	require.EqualValues(t, storedEvent1.GetNonce(), 2)
+	require.EqualValues(t, storedEvent1.GetEventNonce(), 2)
 	require.EqualValues(t, storedEvent1.Hash(), cctxe.Hash())
 
 	mapping := gk.GetEthereumEventVoteRecordMapping(ctx)
@@ -202,8 +202,8 @@ func TestStoreEventVoteRecord(t *testing.T) {
 	require.NoError(t, err)
 	eve2, err := types.UnpackEvent(mapping[2][0].Event)
 	require.NoError(t, err)
-	require.EqualValues(t, 1, eve1.GetNonce())
-	require.EqualValues(t, 2, eve2.GetNonce())
+	require.EqualValues(t, 1, eve1.GetEventNonce())
+	require.EqualValues(t, 2, eve2.GetEventNonce())
 	require.EqualValues(t, stce.Hash(), eve1.Hash())
 	require.EqualValues(t, cctxe.Hash(), eve2.Hash())
 }
