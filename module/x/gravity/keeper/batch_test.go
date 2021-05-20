@@ -62,7 +62,7 @@ func TestBatches(t *testing.T) {
 
 	// and verify remaining available Tx in the pool
 	var gotUnbatchedTx []*types.SendToEthereum
-	input.GravityKeeper.iterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
+	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
 		gotUnbatchedTx = append(gotUnbatchedTx, tx)
 		return false
 	})
@@ -108,7 +108,7 @@ func TestBatches(t *testing.T) {
 
 	// check that txs from first batch have been freed
 	gotUnbatchedTx = nil
-	input.GravityKeeper.iterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
+	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
 		gotUnbatchedTx = append(gotUnbatchedTx, tx)
 		return false
 	})
@@ -185,13 +185,13 @@ func TestBatchesFullCoins(t *testing.T) {
 			},
 		},
 		TokenContract: myTokenContractAddr.Hex(),
-		Height:         1234567,
+		Height:        1234567,
 	}
 	assert.Equal(t, expFirstBatch, gotFirstBatch)
 
 	// and verify remaining available Tx in the pool
 	var gotUnbatchedTx []*types.SendToEthereum
-	input.GravityKeeper.iterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
+	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
 		gotUnbatchedTx = append(gotUnbatchedTx, tx)
 		return false
 	})
@@ -250,7 +250,7 @@ func TestBatchesFullCoins(t *testing.T) {
 			},
 		},
 		TokenContract: myTokenContractAddr.Hex(),
-		Height:         1234567,
+		Height:        1234567,
 	}
 
 	assert.Equal(t, expSecondBatch, secondBatch)
@@ -267,7 +267,7 @@ func TestBatchesFullCoins(t *testing.T) {
 
 	// check that txs from first batch have been freed
 	gotUnbatchedTx = nil
-	input.GravityKeeper.iterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
+	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
 		gotUnbatchedTx = append(gotUnbatchedTx, tx)
 		return false
 	})

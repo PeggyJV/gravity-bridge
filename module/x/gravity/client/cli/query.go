@@ -37,7 +37,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdBatchTxFees(),
 		CmdERC20ToDenom(),
 		CmdDenomToERC20(),
-		CmdPendingSendToEthereums(),
+		CmdUnbatchedSendToEthereums(),
 		CmdDelegateKeysByValidator(),
 		CmdDelegateKeysByEthereumSigner(),
 		CmdDelegateKeysByOrchestrator(),
@@ -189,7 +189,7 @@ func CmdContractCallTx() *cobra.Command {
 func CmdSignerSetTxs() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "signer-set-txs (count)",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.NoArgs,
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
@@ -197,16 +197,15 @@ func CmdSignerSetTxs() *cobra.Command {
 				return err
 			}
 
-			var count int64
-
-			if len(args) > 0 {
-				if count, err = parseCount(args[0]); err != nil {
-					return err
-				}
-			}
+			// // var count int64
+			// if len(args) > 0 {
+			// 	if count, err = parseCount(args[0]); err != nil {
+			// 		return err
+			// 	}
+			// }
 
 			req := types.SignerSetTxsRequest{
-				Count: count,
+				// Count: count,
 			}
 
 			res, err := queryClient.SignerSetTxs(cmd.Context(), &req)
@@ -607,9 +606,9 @@ func CmdDenomToERC20() *cobra.Command {
 	return cmd
 }
 
-func CmdPendingSendToEthereums() *cobra.Command {
+func CmdUnbatchedSendToEthereums() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pending-send-to-ethereums [sender-address]",
+		Use:   "unbatched-send-to-ethereums [sender-address]",
 		Args:  cobra.MaximumNArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -622,11 +621,11 @@ func CmdPendingSendToEthereums() *cobra.Command {
 				senderAddress string // TODO(levi) init and validate from args[0]
 			)
 
-			req := types.PendingSendToEthereumsRequest{
+			req := types.UnbatchedSendToEthereumsRequest{
 				SenderAddress: senderAddress, // TODO(levi) is this an ethereum address??
 			}
 
-			res, err := queryClient.PendingSendToEthereums(cmd.Context(), &req)
+			res, err := queryClient.UnbatchedSendToEthereums(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
