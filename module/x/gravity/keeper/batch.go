@@ -109,6 +109,22 @@ func (k Keeper) getBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr commo
 	return feeAmount
 }
 
+// GetBatchFeesByTokenType gets the fees the next batch of a given token type would
+// have if created. This info is both presented to relayers for the purpose of determining
+// when to request batches and also used by the batch creation process to decide not to create
+// a new batch
+func (k Keeper) GetBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr common.Address, maxElements int) sdk.Int {
+	feeAmount := sdk.ZeroInt()
+	i := 0
+	k.IterateOutgoingPoolByFee(ctx, tokenContractAddr, func(txID uint64, tx *types.SendToEthereum) bool {
+		feeAmount = feeAmount.Add(tx.Erc20Fee.Amount)
+		i++
+		return i == maxElements
+	})
+
+	return feeAmount
+}
+
 // CancelBatchTx releases all TX in the batch and deletes the batch
 func (k Keeper) CancelBatchTx(ctx sdk.Context, tokenContract common.Address, nonce uint64) {
 	otx := k.GetOutgoingTx(ctx, types.MakeBatchTxKey(tokenContract, nonce))

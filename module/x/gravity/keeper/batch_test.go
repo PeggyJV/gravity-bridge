@@ -185,7 +185,7 @@ func TestBatchesFullCoins(t *testing.T) {
 			},
 		},
 		TokenContract: myTokenContractAddr.Hex(),
-		Height:        1234567,
+		Height:         1234567,
 	}
 	assert.Equal(t, expFirstBatch, gotFirstBatch)
 
@@ -250,7 +250,7 @@ func TestBatchesFullCoins(t *testing.T) {
 			},
 		},
 		TokenContract: myTokenContractAddr.Hex(),
-		Height:        1234567,
+		Height:         1234567,
 	}
 
 	assert.Equal(t, expSecondBatch, secondBatch)

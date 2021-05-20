@@ -53,34 +53,34 @@ fn start_with_args() {
 }
 
 /// Use configured value
-#[test]
-fn start_with_config_no_args() {
-    let mut config = GorcConfig::default();
-    config.hello.recipient = "configured recipient".to_owned();
-    let expected_line = format!("Hello, {}!", &config.hello.recipient);
+// #[test]
+// fn start_with_config_no_args() {
+//     let mut config = GorcConfig::default();
+//     config.hello.recipient = "configured recipient".to_owned();
+//     let expected_line = format!("Hello, {}!", &config.hello.recipient);
 
-    let mut runner = RUNNER.clone();
-    let mut cmd = runner.config(&config).arg("start").capture_stdout().run();
-    cmd.stdout().expect_line(&expected_line);
-    cmd.wait().unwrap().expect_success();
-}
+//     let mut runner = RUNNER.clone();
+//     let mut cmd = runner.config(&config).arg("start").capture_stdout().run();
+//     cmd.stdout().expect_line(&expected_line);
+//     cmd.wait().unwrap().expect_success();
+// }
 
-/// Override configured value with command-line argument
-#[test]
-fn start_with_config_and_args() {
-    let mut config = GorcConfig::default();
-    config.hello.recipient = "configured recipient".to_owned();
+// /// Override configured value with command-line argument
+// #[test]
+// fn start_with_config_and_args() {
+//     let mut config = GorcConfig::default();
+//     config.hello.recipient = "configured recipient".to_owned();
 
-    let mut runner = RUNNER.clone();
-    let mut cmd = runner
-        .config(&config)
-        .args(&["start", "acceptance", "test"])
-        .capture_stdout()
-        .run();
+//     let mut runner = RUNNER.clone();
+//     let mut cmd = runner
+//         .config(&config)
+//         .args(&["start", "acceptance", "test"])
+//         .capture_stdout()
+//         .run();
 
-    cmd.stdout().expect_line("Hello, acceptance test!");
-    cmd.wait().unwrap().expect_success();
-}
+//     cmd.stdout().expect_line("Hello, acceptance test!");
+//     cmd.wait().unwrap().expect_success();
+// }
 
 /// Example of a test which matches a regular expression
 #[test]
