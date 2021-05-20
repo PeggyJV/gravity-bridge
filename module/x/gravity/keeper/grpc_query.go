@@ -184,10 +184,10 @@ func (k Keeper) SignerSetTxEthereumSignatures(c context.Context, req *types.Sign
 		if err != nil {
 			return nil, err
 		}
-		return &types.SignerSetTxEthereumSignaturesResponse{Signature: [][]byte{k.getEthereumSignature(ctx, key, val)}}, nil
+		return &types.SignerSetTxEthereumSignaturesResponse{Signature: []hexutil.Bytes{k.getEthereumSignature(ctx, key, val)}}, nil
 	}
 
-	var out [][]byte
+	var out []hexutil.Bytes
 	k.iterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
 		out = append(out, sig)
 		return false

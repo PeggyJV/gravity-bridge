@@ -179,7 +179,9 @@ message SignerSetTxEthereumSignaturesResponse {
   // repeated SignerSetTxSignature confirm = 1;
   // TODO(levi) confirm orchestrator just needs the sigs from all the
   // validators:
-  repeated bytes signature = 1;
+  repeated bytes signature = 1
+      [ (gogoproto.casttype) =
+            "github.com/ethereum/go-ethereum/common/hexutil.Bytes" ];
 }
 
 //  rpc SignerSetTxs
