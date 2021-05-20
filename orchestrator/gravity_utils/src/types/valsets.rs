@@ -337,6 +337,15 @@ impl From<gravity_proto::gravity::SignerSetTxResponse> for Valset {
     }
 }
 
+impl From<gravity_proto::gravity::SignerSetTx> for Valset {
+    fn from(input: gravity_proto::gravity::SignerSetTx) -> Self {
+        Valset {
+            nonce: input.clone().nonce,
+            members: input.signers.iter().map(|i| i.into()).collect(),
+        }
+    }
+}
+
 impl From<&gravity_proto::gravity::SignerSetTxResponse> for Valset {
     fn from(input: &gravity_proto::gravity::SignerSetTxResponse) -> Self {
         Valset {

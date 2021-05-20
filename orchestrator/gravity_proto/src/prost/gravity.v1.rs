@@ -624,11 +624,8 @@ pub struct SignerSetTxEthereumSignaturesRequest {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SignerSetTxEthereumSignaturesResponse {
-    /// repeated SignerSetTxSignature confirm = 1;
-    /// TODO(levi) confirm orchestrator just needs the sigs from all the
-    /// validators:
-    #[prost(bytes = "vec", repeated, tag = "1")]
-    pub signature: ::prost::alloc::vec::Vec<::prost::alloc::vec::Vec<u8>>,
+    #[prost(message, repeated, tag = "1")]
+    pub signatures: ::prost::alloc::vec::Vec<SignerSetTxSignature>,
 }
 ///  rpc SignerSetTxs
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -736,11 +733,8 @@ pub struct ContractCallTxEthereumSignaturesRequest {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ContractCallTxEthereumSignaturesResponse {
-    /// Note these are returned with the signature empty
-    /// TODO(levi) review rust to ensure we can have bytes repeated ContractCallTx
-    /// logic_call_confirms = 1;
-    #[prost(bytes = "vec", repeated, tag = "1")]
-    pub signature: ::prost::alloc::vec::Vec<::prost::alloc::vec::Vec<u8>>,
+    #[prost(message, repeated, tag = "1")]
+    pub signatures: ::prost::alloc::vec::Vec<ContractCallTxSignature>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct BatchTxEthereumSignaturesRequest {
@@ -755,10 +749,8 @@ pub struct BatchTxEthereumSignaturesRequest {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct BatchTxEthereumSignaturesResponse {
-    /// TODO(levi) review rust to ensure we can have bytes repeated
-    /// BatchTxSignature confirms = 1;
-    #[prost(bytes = "vec", repeated, tag = "1")]
-    pub signature: ::prost::alloc::vec::Vec<::prost::alloc::vec::Vec<u8>>,
+    #[prost(message, repeated, tag = "1")]
+    pub signatures: ::prost::alloc::vec::Vec<BatchTxSignature>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct LastSubmittedEthereumEventRequest {
