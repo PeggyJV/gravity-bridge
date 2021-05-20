@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -43,13 +45,13 @@ func (k Keeper) SignerSetTx(c context.Context, req *types.SignerSetTxRequest) (*
 		storeIndex := sdk.Uint64ToBigEndian(req.Nonce)
 		otx = k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.MakeOutgoingTxKey(storeIndex))
 		if otx == nil {
-			return nil, sdkerrors.Wrapf(types.ErrInvalid, "no signer set found for %d", req.Nonce)
+			return nil, status.Errorf(codes.InvalidArgument, "no signer set found for %d", req.Nonce)
 		}
 	}
 
 	ss, ok := otx.(*types.SignerSetTx)
 	if !ok {
-		return nil, sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %d", req.Nonce)
+		return nil, status.Errorf(codes.InvalidArgument, "couldn't cast to signer set for %d", req.Nonce)
 	}
 
 	// TODO: ensure that latest signer set tx nonce index is set properly
@@ -59,7 +61,7 @@ func (k Keeper) SignerSetTx(c context.Context, req *types.SignerSetTxRequest) (*
 
 func (k Keeper) BatchTx(c context.Context, req *types.BatchTxRequest) (*types.BatchTxResponse, error) {
 	if !common.IsHexAddress(req.ContractAddress) {
-		return nil, sdkerrors.Wrapf(types.ErrInvalid, "invalid hex address %s", req.ContractAddress)
+		return nil, status.Errorf(codes.InvalidArgument, "invalid hex address %s", req.ContractAddress)
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	res := &types.BatchTxResponse{}
@@ -80,7 +82,7 @@ func (k Keeper) BatchTx(c context.Context, req *types.BatchTxRequest) (*types.Ba
 			}
 			batch, ok := otx.(*types.BatchTx)
 			if !ok {
-				return nil, sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %d %s", req.Nonce, req.ContractAddress)
+				return nil, status.Errorf(codes.InvalidArgument, "couldn't cast to batch tx for %d %s", req.Nonce, req.ContractAddress)
 			}
 			if batch.TokenContract == req.ContractAddress {
 				res.Batch = batch
@@ -92,11 +94,11 @@ func (k Keeper) BatchTx(c context.Context, req *types.BatchTxRequest) (*types.Ba
 		storeIndex := append(sdk.Uint64ToBigEndian(req.Nonce), common.Hex2Bytes(req.ContractAddress)...)
 		otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.MakeOutgoingTxKey(storeIndex))
 		if otx == nil {
-			return nil, sdkerrors.Wrapf(types.ErrInvalid, "no batch tx found for %d %s", req.Nonce, req.ContractAddress)
+			return nil, status.Errorf(codes.InvalidArgument, "no batch tx found for %d %s", req.Nonce, req.ContractAddress)
 		}
 		batch, ok := otx.(*types.BatchTx)
 		if !ok {
-			return nil, sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %d %s", req.Nonce, req.ContractAddress)
+			return nil, status.Errorf(codes.InvalidArgument, "couldn't cast to batch tx for %d %s", req.Nonce, req.ContractAddress)
 		}
 		res.Batch = batch
 	}
@@ -108,12 +110,12 @@ func (k Keeper) ContractCallTx(c context.Context, req *types.ContractCallTxReque
 	storeIndex := append(sdk.Uint64ToBigEndian(req.InvalidationNonce), req.InvalidationScope...)
 	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), types.MakeOutgoingTxKey(storeIndex))
 	if otx == nil {
-		return nil, sdkerrors.Wrapf(types.ErrInvalid, "no contract call found for %d %s", req.InvalidationNonce, req.InvalidationScope)
+		return nil, status.Errorf(codes.InvalidArgument, "no contract call found for %d %s", req.InvalidationNonce, req.InvalidationScope)
 	}
 
 	cctx, ok := otx.(*types.ContractCallTx)
 	if !ok {
-		return nil, sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %d %s", req.InvalidationNonce, req.InvalidationScope)
+		return nil, status.Errorf(codes.InvalidArgument, "couldn't cast to contract call for %d %s", req.InvalidationNonce, req.InvalidationScope)
 	}
 
 	// TODO: figure out how to call latest
