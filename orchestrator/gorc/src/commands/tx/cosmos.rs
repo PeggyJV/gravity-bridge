@@ -4,6 +4,7 @@ use abscissa_core::{Command, Options, Runnable};
 use regex::Regex;
 use deep_space::address::Address as CosmosAddress;
 use deep_space::{coin::Coin, private_key::PrivateKey as CosmosPrivateKey};
+use clarity::Uint256;
 
 #[derive(Command, Debug, Options)]
 pub enum Cosmos{
@@ -76,14 +77,14 @@ impl Runnable for SendToEth {
         let is_cosmos_originated = !denom.starts_with("gravity");
 
         let amount = if is_cosmos_originated {
-            fraction_to_exponent(args.flag_amount.unwrap(), 6)
+            fraction_to_exponent(amount.parse().unwrap(), 6)
         } else {
-            fraction_to_exponent(args.flag_amount.unwrap(), 18)
+            fraction_to_exponent(amount.parse().unwrap(), 18)
         };
 
         let cosmos_key = get_cosmos_key(&from_cosmos_key);
 
-        let cosmos_address = cosmos_key.to_address(&args.flag_cosmos_prefix).unwrap();
+        let cosmos_address = cosmos_key.to_address("//TODO add to config file").unwrap();
 
         println!("Sending from Cosmos address {}", cosmos_address);
 
