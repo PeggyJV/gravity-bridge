@@ -138,7 +138,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		outgoingTxs = append(outgoingTxs, ota)
 		btx, _ := otx.(*types.BatchTx)
 		k.iterateEthereumSignatures(ctx, btx.GetStoreIndex(), func(val sdk.ValAddress, sig hexutil.Bytes) bool {
-			siga, _ := types.PackSignature(&types.BatchTxSignature{btx.TokenContract, btx.Nonce, k.GetValidatorEthereumAddress(ctx, val).Hex(), sig})
+			siga, _ := types.PackSignature(&types.BatchTxSignature{btx.TokenContract, btx.BatchNonce, k.GetValidatorEthereumAddress(ctx, val).Hex(), sig})
 			ethereumSignatures = append(ethereumSignatures, siga)
 			return false
 		})

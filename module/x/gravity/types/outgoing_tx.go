@@ -34,7 +34,7 @@ func (sstx *SignerSetTx) GetStoreIndex() []byte {
 }
 
 func (btx *BatchTx) GetStoreIndex() []byte {
-	return MakeBatchTxKey(common.HexToAddress(btx.TokenContract), btx.Nonce)
+	return MakeBatchTxKey(common.HexToAddress(btx.TokenContract), btx.BatchNonce)
 }
 
 func (cctx *ContractCallTx) GetStoreIndex() []byte {
@@ -151,7 +151,7 @@ func (b BatchTx) GetCheckpoint(gravityID []byte) []byte {
 		txAmounts,
 		txDestinations,
 		txFees,
-		big.NewInt(int64(b.Nonce)),
+		big.NewInt(int64(b.BatchNonce)),
 		gethcommon.HexToAddress(b.TokenContract),
 		big.NewInt(int64(b.Timeout)),
 	)

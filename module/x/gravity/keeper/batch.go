@@ -37,7 +37,7 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, contractAddress common.Address, ma
 	})
 
 	batch := &types.BatchTx{
-		Nonce:         k.incrementLastOutgoingBatchNonce(ctx),
+		BatchNonce:    k.incrementLastOutgoingBatchNonce(ctx),
 		Timeout:       k.getBatchTimeoutHeight(ctx),
 		Transactions:  selectedStes,
 		TokenContract: contractAddress.Hex(),
@@ -50,8 +50,8 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, contractAddress common.Address, ma
 		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
 		sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
-		sdk.NewAttribute(types.AttributeKeyOutgoingBatchID, fmt.Sprint(batch.Nonce)),
-		sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(batch.Nonce)),
+		sdk.NewAttribute(types.AttributeKeyOutgoingBatchID, fmt.Sprint(batch.BatchNonce)),
+		sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(batch.BatchNonce)),
 	))
 
 	return batch
@@ -85,8 +85,8 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		// If the iterated batches nonce is lower than the one that was just executed, cancel it
 		btx, _ := otx.(*types.BatchTx)
-		if (btx.Nonce < batchTx.Nonce) && (batchTx.TokenContract == tokenContract.Hex()) {
-			k.CancelBatchTx(ctx, tokenContract, btx.Nonce)
+		if (btx.BatchNonce < batchTx.BatchNonce) && (batchTx.TokenContract == tokenContract.Hex()) {
+			k.CancelBatchTx(ctx, tokenContract, btx.BatchNonce)
 		}
 		return false
 	})
@@ -140,9 +140,9 @@ func (k Keeper) getLastOutgoingBatchByTokenType(ctx sdk.Context, token common.Ad
 	lastNonce := uint64(0)
 	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		btx, _ := otx.(*types.BatchTx)
-		if common.HexToAddress(btx.TokenContract) == token && btx.Nonce > lastNonce {
+		if common.HexToAddress(btx.TokenContract) == token && btx.BatchNonce > lastNonce {
 			lastBatch = btx
-			lastNonce = btx.Nonce
+			lastNonce = btx.BatchNonce
 		}
 		return false
 	})

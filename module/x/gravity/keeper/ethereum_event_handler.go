@@ -32,7 +32,7 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 		}
 		return a.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins)
 	case *types.BatchExecutedEvent:
-		a.keeper.batchTxExecuted(ctx, common.HexToAddress(event.TokenContract), event.GetEventNonce())
+		a.keeper.batchTxExecuted(ctx, common.HexToAddress(event.TokenContract), event.BatchNonce)
 		return
 	case *types.ERC20DeployedEvent:
 		// Check if it already exists

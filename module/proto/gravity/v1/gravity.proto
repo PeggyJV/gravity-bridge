@@ -48,7 +48,7 @@ message SignerSetTx {
 // Batch txs are are identified by a unique hash and the token contract that is
 // shared by all the SendToEthereum
 message BatchTx {
-  uint64 nonce = 1;
+  uint64 batch_nonce = 1;
   uint64 timeout = 2;
   repeated SendToEthereum transactions = 3;
   string token_contract = 4;

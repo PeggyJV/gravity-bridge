@@ -147,6 +147,7 @@ message BatchExecutedEvent {
   string token_contract = 1;
   uint64 event_nonce = 2;
   uint64 ethereum_height = 3;
+  uint64 batch_nonce = 4;
 }
 
 // ContractCallExecutedEvent describes a contract call that has been

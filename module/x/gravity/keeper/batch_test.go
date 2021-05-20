@@ -49,7 +49,7 @@ func TestBatches(t *testing.T) {
 
 	gfb := gotFirstBatch.(*types.BatchTx)
 	expFirstBatch := &types.BatchTx{
-		Nonce: 1,
+		BatchNonce: 1,
 		Transactions: []*types.SendToEthereum{
 			types.NewSendToEthereumTx(2, myTokenContractAddr, mySender, myReceiver, 101, 3),
 			types.NewSendToEthereumTx(3, myTokenContractAddr, mySender, myReceiver, 102, 2),
@@ -85,7 +85,7 @@ func TestBatches(t *testing.T) {
 
 	// check that the more profitable batch has the right txs in it
 	expSecondBatch := &types.BatchTx{
-		Nonce: 2,
+		BatchNonce: 2,
 		Transactions: []*types.SendToEthereum{
 			types.NewSendToEthereumTx(6, myTokenContractAddr, mySender, myReceiver, 101, 5),
 			types.NewSendToEthereumTx(5, myTokenContractAddr, mySender, myReceiver, 100, 4),
@@ -100,7 +100,7 @@ func TestBatches(t *testing.T) {
 	// =================================
 
 	// Execute the batch
-	input.GravityKeeper.batchTxExecuted(ctx, common.HexToAddress(secondBatch.TokenContract), secondBatch.Nonce)
+	input.GravityKeeper.batchTxExecuted(ctx, common.HexToAddress(secondBatch.TokenContract), secondBatch.BatchNonce)
 
 	// check batch has been deleted
 	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, secondBatch.GetStoreIndex())
@@ -167,7 +167,7 @@ func TestBatchesFullCoins(t *testing.T) {
 	require.NotNil(t, gotFirstBatch)
 
 	expFirstBatch := &types.BatchTx{
-		Nonce: 1,
+		BatchNonce: 1,
 		Transactions: []*types.SendToEthereum{
 			{
 				Id:                2,
@@ -232,7 +232,7 @@ func TestBatchesFullCoins(t *testing.T) {
 
 	// check that the more profitable batch has the right txs in it
 	expSecondBatch := &types.BatchTx{
-		Nonce: 2,
+		BatchNonce: 2,
 		Transactions: []*types.SendToEthereum{
 			{
 				Id:                1,
@@ -259,7 +259,7 @@ func TestBatchesFullCoins(t *testing.T) {
 	// =================================
 
 	// Execute the batch
-	input.GravityKeeper.batchTxExecuted(ctx, common.HexToAddress(secondBatch.TokenContract), secondBatch.Nonce)
+	input.GravityKeeper.batchTxExecuted(ctx, common.HexToAddress(secondBatch.TokenContract), secondBatch.BatchNonce)
 
 	// check batch has been deleted
 	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, secondBatch.GetStoreIndex())
