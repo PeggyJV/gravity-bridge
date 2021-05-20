@@ -188,8 +188,8 @@ func CmdContractCallTx() *cobra.Command {
 
 func CmdSignerSetTxs() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "signer-set-txs [count]",
-		Args:  cobra.ExactArgs(1),
+		Use:   "signer-set-txs (count)",
+		Args:  cobra.MaximumNArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
@@ -197,9 +197,13 @@ func CmdSignerSetTxs() *cobra.Command {
 				return err
 			}
 
-			var ( // args
-				count int64 // TODO(levi) init and validate from args[0]
-			)
+			var count int64
+
+			if len(args) > 0 {
+				if count, err = parseCount(args[0]); err != nil {
+					return err
+				}
+			}
 
 			req := types.SignerSetTxsRequest{
 				Count: count,
@@ -306,7 +310,7 @@ func CmdSignerSetTxEthereumSignatures() *cobra.Command {
 
 func CmdBatchTxEthereumSignatures() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "batch-tx-ethereum-signatures [nonce] [contract-address] [validator-or-orchestrator-address]",
+		Use:   "batch-tx-ethereum-signatures [nonce] [contract-address] (validator-or-orchestrator-address)",
 		Args:  cobra.MinimumNArgs(2),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -316,10 +320,19 @@ func CmdBatchTxEthereumSignatures() *cobra.Command {
 			}
 
 			var ( // args
-				nonce           uint64 // TODO(levi) init and validate from args[0]
-				contractAddress string // TODO(levi) init and validate from args[1]
+				nonce           uint64
+				contractAddress string
 				address         string // TODO(levi) init and validate from args[2]
 			)
+
+			if nonce, err = parseNonce(args[0]); err != nil {
+				return err
+			}
+
+			contractAddress, err = parseContractAddress(args[1])
+			if err != nil {
+				return nil
+			}
 
 			req := types.BatchTxEthereumSignaturesRequest{
 				Nonce:           nonce,
@@ -342,7 +355,7 @@ func CmdBatchTxEthereumSignatures() *cobra.Command {
 
 func CmdContractCallTxEthereumSignatures() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "contract-call-tx-ethereum-signatures [invalidation-scope] [invalidation-nonce] [validator-or-orchestrator-address]",
+		Use:   "contract-call-tx-ethereum-signatures [invalidation-scope] [invalidation-nonce] (validator-or-orchestrator-address)",
 		Args:  cobra.MinimumNArgs(2),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -488,7 +501,7 @@ func CmdLastSubmittedEthereumEvent() *cobra.Command {
 			)
 
 			req := types.LastSubmittedEthereumEventRequest{
-				Address: address,
+				Address: address, // TODO(levi) what kind of address is this??
 			}
 
 			res, err := queryClient.LastSubmittedEthereumEvent(cmd.Context(), &req)
@@ -546,7 +559,7 @@ func CmdERC20ToDenom() *cobra.Command {
 			)
 
 			req := types.ERC20ToDenomRequest{
-				Erc20: erc20,
+				Erc20: erc20, // TODO(levi) is this an ethereum address??
 			}
 
 			res, err := queryClient.ERC20ToDenom(cmd.Context(), &req)
@@ -578,7 +591,7 @@ func CmdDenomToERC20() *cobra.Command {
 			)
 
 			req := types.DenomToERC20Request{
-				Denom: denom,
+				Denom: denom, // TODO(levi) do we validate denoms?? if so, how?
 			}
 
 			res, err := queryClient.DenomToERC20(cmd.Context(), &req)
@@ -610,7 +623,7 @@ func CmdPendingSendToEthereums() *cobra.Command {
 			)
 
 			req := types.PendingSendToEthereumsRequest{
-				SenderAddress: senderAddress,
+				SenderAddress: senderAddress, // TODO(levi) is this an ethereum address??
 			}
 
 			res, err := queryClient.PendingSendToEthereums(cmd.Context(), &req)
@@ -730,17 +743,25 @@ func newContextAndQueryClient(cmd *cobra.Command) (client.Context, types.QueryCl
 	return clientCtx, types.NewQueryClient(clientCtx), nil
 }
 
+func parseContractAddress(s string) (string, error) {
+	if !common.IsHexAddress(s) {
+		return "", fmt.Errorf("%s not a valid contract address, please input a valid contract address", s)
+	}
+	return s, nil
+}
+
+func parseCount(s string) (int64, error) {
+	count, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("count %s not a valid int, please input a valid count", s)
+	}
+	return count, nil
+}
+
 func parseNonce(s string) (uint64, error) {
 	nonce, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("nonce %s not a valid uint, please input a valid nonce", s)
 	}
 	return nonce, nil
-}
-
-func parseContractAddress(s string) (string, error) {
-	if !common.IsHexAddress(s) {
-		return "", fmt.Errorf("%s not a valid contract address, please input a valid contract address", s)
-	}
-	return s, nil
 }
