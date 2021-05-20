@@ -26,6 +26,8 @@ func (k Keeper) SignerSetTx(c context.Context, req *types.SignerSetTxRequest) (*
 	// TODO: audit once we finalize storage
 	var otx types.OutgoingTx
 
+	// given a 0 nonce, we will retrieve the latest by retrieving the last value off of
+	// the reverse iterator for signer sets. As nonces only increase, this should result in the latest signer set.
 	if req.Nonce == 0 {
 		store := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.OutgoingTxKey}, types.SignerSetTxPrefixByte))
 		iter := store.ReverseIterator(nil, nil)
@@ -51,7 +53,6 @@ func (k Keeper) SignerSetTx(c context.Context, req *types.SignerSetTxRequest) (*
 	}
 
 	// TODO: ensure that latest signer set tx nonce index is set properly
-	// TODO: ensure nonce sequence starts at one
 
 	return &types.SignerSetTxResponse{SignerSet: ss}, nil
 }
@@ -64,6 +65,9 @@ func (k Keeper) BatchTx(c context.Context, req *types.BatchTxRequest) (*types.Ba
 	res := &types.BatchTxResponse{}
 
 	if req.Nonce == 0 {
+		// given a 0 nonce, we will retrieve the latest by iterating through batch txs in reverse,
+		// as nonces should be increasing over time. We must iterator through potentially multiple
+		// batch txs because we must compare the contract address
 		store := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.OutgoingTxKey}, types.BatchTxPrefixByte))
 		iter := store.ReverseIterator(nil, nil)
 		defer iter.Close()
