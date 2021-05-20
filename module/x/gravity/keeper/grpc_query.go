@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -125,57 +126,69 @@ func (k Keeper) ContractCallTx(c context.Context, req *types.ContractCallTxReque
 
 func (k Keeper) SignerSetTxs(c context.Context, req *types.SignerSetTxsRequest) (*types.SignerSetTxsResponse, error) {
 	var signers []*types.SignerSetTx
-	k.IterateOutgoingTxsByType(sdk.UnwrapSDKContext(c), types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	pageRes, err := k.PaginateOutgoingTxsByType(sdk.UnwrapSDKContext(c), req.Pagination, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) (hit bool) {
 		signer, ok := otx.(*types.SignerSetTx)
 		if !ok {
 			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %s", otx))
 		}
 		signers = append(signers, signer)
 
-		return len(signers) < int(req.Count)
+		return true
 	})
-	return &types.SignerSetTxsResponse{SignerSets: signers}, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.SignerSetTxsResponse{SignerSets: signers, Pagination: pageRes}, nil
 }
 
 func (k Keeper) BatchTxs(c context.Context, req *types.BatchTxsRequest) (*types.BatchTxsResponse, error) {
 	var batches []*types.BatchTx
-	k.IterateOutgoingTxsByType(sdk.UnwrapSDKContext(c), types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	pageRes, err := k.PaginateOutgoingTxsByType(sdk.UnwrapSDKContext(c), req.Pagination, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) (hit bool) {
 		batch, ok := otx.(*types.BatchTx)
 		if !ok {
 			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
 		}
 		batches = append(batches, batch)
-		return false
+		return true
 	})
-	return &types.BatchTxsResponse{Batches: batches}, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.BatchTxsResponse{Batches: batches, Pagination: pageRes}, nil
 }
 
 func (k Keeper) ContractCallTxs(c context.Context, req *types.ContractCallTxsRequest) (*types.ContractCallTxsResponse, error) {
 	var calls []*types.ContractCallTx
-	k.IterateOutgoingTxsByType(sdk.UnwrapSDKContext(c), types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	pageRes, err := k.PaginateOutgoingTxsByType(sdk.UnwrapSDKContext(c), req.Pagination, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) (hit bool) {
 		call, ok := otx.(*types.ContractCallTx)
 		if !ok {
 			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %s", otx))
 		}
 		calls = append(calls, call)
-		return false
+		return true
 	})
-	return &types.ContractCallTxsResponse{Calls: calls}, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.ContractCallTxsResponse{Calls: calls, Pagination: pageRes}, nil
 }
 
 func (k Keeper) SignerSetTxEthereumSignatures(c context.Context, req *types.SignerSetTxEthereumSignaturesRequest) (*types.SignerSetTxEthereumSignaturesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	key := types.MakeSignerSetTxKey(req.Nonce)
-	if req.Address == "" {
+	if req.Address != "" {
 		val, err := k.getSignerValidator(ctx, req.Address)
 		if err != nil {
 			return nil, err
 		}
-		return &types.SignerSetTxEthereumSignaturesResponse{Signature: [][]byte{k.GetEthereumSignature(ctx, key, val)}}, nil
+		return &types.SignerSetTxEthereumSignaturesResponse{Signature: [][]byte{k.getEthereumSignature(ctx, key, val)}}, nil
 	}
 
 	var out [][]byte
-	k.IterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
+	k.iterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
 		out = append(out, sig)
 		return false
 	})
@@ -185,16 +198,16 @@ func (k Keeper) SignerSetTxEthereumSignatures(c context.Context, req *types.Sign
 func (k Keeper) BatchTxEthereumSignatures(c context.Context, req *types.BatchTxEthereumSignaturesRequest) (*types.BatchTxEthereumSignaturesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	key := types.MakeBatchTxKey(common.HexToAddress(req.ContractAddress), req.Nonce)
-	if req.Address == "" {
+	if req.Address != "" {
 		val, err := k.getSignerValidator(ctx, req.Address)
 		if err != nil {
 			return nil, err
 		}
-		return &types.BatchTxEthereumSignaturesResponse{Signature: [][]byte{k.GetEthereumSignature(ctx, key, val)}}, nil
+		return &types.BatchTxEthereumSignaturesResponse{Signature: [][]byte{k.getEthereumSignature(ctx, key, val)}}, nil
 	}
 
 	var out [][]byte
-	k.IterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
+	k.iterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
 		out = append(out, sig)
 		return false
 	})
@@ -204,16 +217,16 @@ func (k Keeper) BatchTxEthereumSignatures(c context.Context, req *types.BatchTxE
 func (k Keeper) ContractCallTxEthereumSignatures(c context.Context, req *types.ContractCallTxEthereumSignaturesRequest) (*types.ContractCallTxEthereumSignaturesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	key := types.MakeContractCallTxKey(req.InvalidationScope, req.InvalidationNonce)
-	if req.Address == "" {
+	if req.Address != "" {
 		val, err := k.getSignerValidator(ctx, req.Address)
 		if err != nil {
 			return nil, err
 		}
-		return &types.ContractCallTxEthereumSignaturesResponse{Signature: [][]byte{k.GetEthereumSignature(ctx, key, val)}}, nil
+		return &types.ContractCallTxEthereumSignaturesResponse{Signature: [][]byte{k.getEthereumSignature(ctx, key, val)}}, nil
 	}
 
 	var out [][]byte
-	k.IterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
+	k.iterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
 		out = append(out, sig)
 		return false
 	})
@@ -228,7 +241,7 @@ func (k Keeper) PendingSignerSetTxEthereumSignatures(c context.Context, req *typ
 	}
 	var signerSets []*types.SignerSetTx
 	k.IterateOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.GetEthereumSignature(ctx, otx.GetStoreIndex(), val)
+		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 { // it's pending
 			signerSet, ok := otx.(*types.SignerSetTx)
 			if !ok {
@@ -249,7 +262,7 @@ func (k Keeper) PendingBatchTxEthereumSignatures(c context.Context, req *types.P
 	}
 	var batches []*types.BatchTx
 	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.GetEthereumSignature(ctx, otx.GetStoreIndex(), val)
+		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 { // it's pending
 			batch, ok := otx.(*types.BatchTx)
 			if !ok {
@@ -270,7 +283,7 @@ func (k Keeper) PendingContractCallTxEthereumSignatures(c context.Context, req *
 	}
 	var calls []*types.ContractCallTx
 	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.GetEthereumSignature(ctx, otx.GetStoreIndex(), val)
+		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 { // it's pending
 			call, ok := otx.(*types.ContractCallTx)
 			if !ok {
@@ -292,7 +305,7 @@ func (k Keeper) LastSubmittedEthereumEvent(c context.Context, req *types.LastSub
 		return nil, err
 	}
 
-	res.EventNonce = k.GetLastEventNonceByValidator(ctx, valAddr)
+	res.EventNonce = k.getLastEventNonceByValidator(ctx, valAddr)
 
 	return &types.LastSubmittedEthereumEventResponse{}, nil
 }
@@ -339,7 +352,7 @@ func (k Keeper) BatchedSendToEthereums(c context.Context, req *types.BatchedSend
 	ctx := sdk.UnwrapSDKContext(c)
 	res := &types.BatchedSendToEthereumsResponse{}
 
-	k.IterateOutgoingTxs(ctx, types.BatchTxPrefixByte, func(_ []byte, outgoing types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, outgoing types.OutgoingTx) bool {
 		batchTx := outgoing.(*types.BatchTx)
 		for _, ste := range batchTx.Transactions {
 			if ste.Sender == req.SenderAddress {
@@ -357,12 +370,20 @@ func (k Keeper) UnbatchedSendToEthereums(c context.Context, req *types.Unbatched
 	ctx := sdk.UnwrapSDKContext(c)
 	res := &types.UnbatchedSendToEthereumsResponse{}
 
-	k.IterateUnbatchedSendToEthereums(ctx, func(ste *types.SendToEthereum) bool {
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEthereumKey})
+	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var ste types.SendToEthereum
+		k.cdc.MustUnmarshalBinaryBare(value, &ste)
 		if ste.Sender == req.SenderAddress {
-			res.SendToEthereums = append(res.SendToEthereums, ste)
+			res.SendToEthereums = append(res.SendToEthereums, &ste)
+			return true, nil
 		}
-		return false
+		return false, nil
 	})
+	if err != nil {
+		return nil, err
+	}
+	res.Pagination = pageRes
 
 	return res, nil
 }

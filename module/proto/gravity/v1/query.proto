@@ -1,7 +1,7 @@
 syntax = "proto3";
 package gravity.v1;
 
-// import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -184,25 +184,30 @@ message SignerSetTxEthereumSignaturesResponse {
 
 //  rpc SignerSetTxs
 message SignerSetTxsRequest {
-  int64 count = 1;
-  // TODO(levi) propose we drop count or replace it with:
-  // cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
-message SignerSetTxsResponse { repeated SignerSetTx signer_sets = 1; }
+message SignerSetTxsResponse {
+  repeated SignerSetTx signer_sets = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
 
 //  rpc BatchTxs
 message BatchTxsRequest {
-  // TODO(levi) propose consistency: add count or
-  // cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
-message BatchTxsResponse { repeated BatchTx batches = 1; }
+message BatchTxsResponse {
+  repeated BatchTx batches = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
 
 //  rpc ContractCallTxs
 message ContractCallTxsRequest {
-  // TODO(levi) propose consistency: add count or
-  // cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
-message ContractCallTxsResponse { repeated ContractCallTx calls = 1; }
+message ContractCallTxsResponse {
+  repeated ContractCallTx calls = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
 
 // NOTE(levi) pending queries: this is my address; what do I need to sign??
 // why orchestrator key? hot, signing thing all the time so validator key can be
@@ -220,7 +225,7 @@ message PendingSignerSetTxEthereumSignaturesResponse {
 
 message PendingBatchTxEthereumSignaturesRequest {
   // NOTE: this is an sdk.AccAddress and can represent either the
-  // orchestartor address or the cooresponding validator address
+  // orchestrator address or the cooresponding validator address
   string address = 1;
 }
 message PendingBatchTxEthereumSignaturesResponse {
@@ -303,13 +308,21 @@ message DelegateKeysByOrchestratorResponse {
 }
 
 // NOTE: if there is no sender address, return all
-// TODO: pagination
-message BatchedSendToEthereumsRequest { string sender_address = 1; }
+message BatchedSendToEthereumsRequest {
+  string sender_address = 1;
+  // todo: figure out how to paginate given n Batches with m Send To Ethereums
+//  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
 message BatchedSendToEthereumsResponse {
   repeated SendToEthereum send_to_ethereums = 1;
+//  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message UnbatchedSendToEthereumsRequest { string sender_address = 1; }
+message UnbatchedSendToEthereumsRequest {
+  string sender_address = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
 message UnbatchedSendToEthereumsResponse {
   repeated SendToEthereum send_to_ethereums = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
