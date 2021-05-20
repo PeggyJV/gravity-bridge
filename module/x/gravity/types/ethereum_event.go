@@ -117,7 +117,7 @@ func (stce *SendToCosmosEvent) Validate() error {
 	if !common.IsHexAddress(stce.TokenContract) {
 		return sdkerrors.Wrap(ErrInvalid, "ethereum contract address")
 	}
-	if !stce.Amount.IsNegative() {
+	if stce.Amount.IsNegative() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "amount must be positive")
 	}
 	if !common.IsHexAddress(stce.EthereumSender) {
