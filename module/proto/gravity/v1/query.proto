@@ -311,11 +311,11 @@ message DelegateKeysByOrchestratorResponse {
 message BatchedSendToEthereumsRequest {
   string sender_address = 1;
   // todo: figure out how to paginate given n Batches with m Send To Ethereums
-//  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  //  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 message BatchedSendToEthereumsResponse {
   repeated SendToEthereum send_to_ethereums = 1;
-//  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  //  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message UnbatchedSendToEthereumsRequest {
