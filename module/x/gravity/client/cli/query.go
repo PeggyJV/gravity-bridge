@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
@@ -48,12 +51,10 @@ func CmdParams() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "Query votes on a proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			req := types.ParamsRequest{}
 
@@ -73,19 +74,21 @@ func CmdParams() *cobra.Command {
 func CmdSignerSetTx() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "signer-set-tx [nonce]",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
+			var nonce uint64
 
-			var ( // args
-				nonce uint64 // TODO(levi) init and validate from args[0]
-			)
+			if len(args) > 0 {
+				if nonce, err = parseNonce(args[0]); err != nil {
+					return err
+				}
+			}
 
 			req := types.SignerSetTxRequest{
 				Nonce: nonce,
@@ -95,7 +98,6 @@ func CmdSignerSetTx() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			return clientCtx.PrintProto(res)
 		},
 	}
@@ -110,12 +112,10 @@ func CmdBatchTx() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				contractAddress string // TODO(levi) init and validate from args[0]
@@ -146,12 +146,10 @@ func CmdContractCallTx() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				invalidationScope []byte // TODO(levi) init and validate from args[0]
@@ -178,26 +176,24 @@ func CmdContractCallTx() *cobra.Command {
 
 func CmdSignerSetTxs() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "signer-set-tx [nonce]",
+		Use:   "signer-set-txs [count]",
 		Args:  cobra.ExactArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
-
 			var ( // args
-				nonce uint64 // TODO(levi) init and validate from args[0]
+				count int64 // TODO(levi) init and validate from args[0]
 			)
 
-			req := types.SignerSetTxRequest{
-				Nonce: nonce,
+			req := types.SignerSetTxsRequest{
+				Count: count,
 			}
 
-			res, err := queryClient.SignerSetTx(cmd.Context(), &req)
+			res, err := queryClient.SignerSetTxs(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
@@ -216,12 +212,10 @@ func CmdBatchTxs() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			req := types.BatchTxsRequest{}
 
@@ -244,12 +238,10 @@ func CmdContractCallTxs() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			req := types.ContractCallTxsRequest{}
 
@@ -272,12 +264,10 @@ func CmdSignerSetTxEthereumSignatures() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				nonce   uint64 // TODO(levi) init and validate from args[0]
@@ -308,12 +298,10 @@ func CmdBatchTxEthereumSignatures() *cobra.Command {
 		Args:  cobra.MinimumNArgs(2),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				nonce           uint64 // TODO(levi) init and validate from args[0]
@@ -346,12 +334,10 @@ func CmdContractCallTxEthereumSignatures() *cobra.Command {
 		Args:  cobra.MinimumNArgs(2),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				invalidationScope []byte // TODO(levi) init and validate from args[0]
@@ -384,12 +370,10 @@ func CmdPendingSignerSetTxEthereumSignatures() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				address string // TODO(levi) init and validate from args[0]
@@ -418,12 +402,10 @@ func CmdPendingBatchTxEthereumSignatures() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				address string // TODO(levi) init and validate from args[0]
@@ -452,12 +434,10 @@ func CmdPendingContractCallTxEthereumSignatures() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				address string // TODO(levi) init and validate from args[0]
@@ -486,12 +466,10 @@ func CmdLastSubmittedEthereumEvent() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				address string // TODO(levi) init and validate from args[0]
@@ -520,12 +498,10 @@ func CmdBatchTxFees() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			req := types.BatchTxFeesRequest{}
 
@@ -548,12 +524,10 @@ func CmdERC20ToDenom() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				erc20 string // TODO(levi) init and validate from args[0]
@@ -582,12 +556,10 @@ func CmdDenomToERC20() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				denom string // TODO(levi) init and validate from args[0]
@@ -612,16 +584,14 @@ func CmdDenomToERC20() *cobra.Command {
 
 func CmdPendingSendToEthereums() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pending-send-to-ethereums (sender-address)",
+		Use:   "pending-send-to-ethereums [sender-address]",
 		Args:  cobra.MaximumNArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				senderAddress string // TODO(levi) init and validate from args[0]
@@ -650,12 +620,10 @@ func CmdDelegateKeysByValidator() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				validatorAddress string // TODO(levi) init and validate from args[0]
@@ -684,12 +652,10 @@ func CmdDelegateKeysByEthereumSigner() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				ethereumSigner string // TODO(levi) init and validate from args[0]
@@ -718,12 +684,10 @@ func CmdDelegateKeysByOrchestrator() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
-
-			queryClient := types.NewQueryClient(clientCtx)
 
 			var ( // args
 				orcAddr string // TODO(levi) init and validate from args[0]
@@ -744,4 +708,20 @@ func CmdDelegateKeysByOrchestrator() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
+}
+
+func newContextAndQueryClient(cmd *cobra.Command) (client.Context, types.QueryClient, error) {
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return clientCtx, nil, err
+	}
+	return clientCtx, types.NewQueryClient(clientCtx), nil
+}
+
+func parseNonce(s string) (uint64, error) {
+	nonce, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("nonce %s not a valid uint, please input a valid nonce", s)
+	}
+	return nonce, nil
 }
