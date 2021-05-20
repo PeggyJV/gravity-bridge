@@ -26,8 +26,6 @@ func GetTxCmd(storeKey string) *cobra.Command {
 		CmdSendToEthereum(),
 		CmdCancelSendToEthereum(),
 		CmdRequestBatchTx(),
-		CmdSubmitEthereumSignature(),
-		CmdSubmitEthereumEvent(),
 		CmdSetDelegateKeys(),
 	)
 
@@ -131,53 +129,6 @@ func CmdRequestBatchTx() *cobra.Command {
 				return err
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
-}
-
-func CmdSubmitEthereumSignature() *cobra.Command { // TODO(levi) confirm this cmd makes any sense -- I think these have to come from the connected Ethereum chain exclusively (to accomplish anything)
-	cmd := &cobra.Command{
-		Use:   "submit-ethereum-signature", // TODO(levi) define args
-		Args:  cobra.ExactArgs(0),          // TODO(levi) provide arg count requirements
-		Short: "",                          // TODO(levi) provide short description
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			_ = clientCtx // TODO(levi) deleteme
-
-			// var ( // args
-			// 	signature types.EthereumSignature
-			// 	signer    string
-			// )
-			//
-			// msg := types.MsgSubmitEthereumSignature
-
-			return nil
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
-}
-
-func CmdSubmitEthereumEvent() *cobra.Command { // TODO(levi) confirm this cmd makes any sense (similar to above)
-	cmd := &cobra.Command{
-		Use:   "submit-ethereum-event", // TODO(levi) define args
-		Args:  cobra.ExactArgs(0),      // TODO(levi) provide arg count requirements
-		Short: "",                      // TODO(levi) provide short description
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			_ = clientCtx // TODO(levi) deleteme
-
-			return nil
 		},
 	}
 

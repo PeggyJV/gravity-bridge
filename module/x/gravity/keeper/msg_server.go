@@ -41,8 +41,8 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 
 	// set the three indexes
 	k.SetOrchestratorValidatorAddress(ctx, val, orch)
-	k.SetValidatorEthereumAddress(ctx, val, eth)
-	k.SetEthereumOrchestratorAddress(ctx, eth, orch)
+	k.setValidatorEthereumAddress(ctx, val, eth)
+	k.setEthereumOrchestratorAddress(ctx, eth, orch)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -77,12 +77,12 @@ func (k msgServer) SubmitEthereumSignature(c context.Context, msg *types.MsgSubm
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "couldn't find outgoing tx")
 	}
 
-	gravityID := k.GetGravityID(ctx)
+	gravityID := k.getGravityID(ctx)
 	checkpoint := otx.GetCheckpoint([]byte(gravityID))
 
 	ethAddress := k.GetValidatorEthereumAddress(ctx, val)
 	if ethAddress != signature.GetSigner() {
-		return nil, sdkerrors.Wrap(types.ErrEmpty, "eth address")
+		return nil, sdkerrors.Wrap(types.ErrInvalid, "eth address does not match signer eth address")
 	}
 
 	if err = types.ValidateEthereumSignature(checkpoint, signature.GetSignature(), ethAddress); err != nil {
@@ -90,8 +90,8 @@ func (k msgServer) SubmitEthereumSignature(c context.Context, msg *types.MsgSubm
 	}
 
 	// TODO: should validators be able to overwrite their signatures?
-	if k.GetEthereumSignature(ctx, signature.GetStoreIndex(), val) != nil {
-		return nil, sdkerrors.Wrap(types.ErrDuplicate, "signature duplicate")
+	if k.getEthereumSignature(ctx, signature.GetStoreIndex(), val) != nil {
+		return nil, sdkerrors.Wrap(types.ErrInvalid, "signature duplicate")
 	}
 
 	key := k.SetEthereumSignature(ctx, signature, val)
@@ -124,7 +124,7 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 	}
 
 	// Add the claim to the store
-	_, err = k.RecordEventVote(ctx, event, val)
+	_, err = k.recordEventVote(ctx, event, val)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "create event vote record")
 	}
@@ -135,7 +135,7 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, fmt.Sprintf("%T", event)),
 			// TODO: maybe return something better here? is this the right string representation?
-			sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID, string(types.MakeEthereumEventVoteRecordKey(event.GetNonce(), event.Hash()))),
+			sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID, string(types.MakeEthereumEventVoteRecordKey(event.GetEventNonce(), event.Hash()))),
 		),
 	)
 
@@ -150,7 +150,7 @@ func (k msgServer) SendToEthereum(c context.Context, msg *types.MsgSendToEthereu
 		return nil, err
 	}
 
-	txID, err := k.CreateSendToEthereum(ctx, sender, msg.EthereumRecipient, msg.Amount, msg.BridgeFee)
+	txID, err := k.createSendToEthereum(ctx, sender, msg.EthereumRecipient, msg.Amount, msg.BridgeFee)
 	if err != nil {
 		return nil, err
 	}
@@ -159,8 +159,8 @@ func (k msgServer) SendToEthereum(c context.Context, msg *types.MsgSendToEthereu
 		sdk.NewEvent(
 			types.EventTypeBridgeWithdrawalReceived,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyContract, k.GetBridgeContractAddress(ctx)),
-			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.GetBridgeChainID(ctx)))),
+			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
+			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
 			sdk.NewAttribute(types.AttributeKeyOutgoingTXID, strconv.Itoa(int(txID))),
 			sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(txID)),
 		),
@@ -193,7 +193,7 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, msg.Type()),
 			sdk.NewAttribute(types.AttributeKeyContract, tokenContract.Hex()),
-			sdk.NewAttribute(types.AttributeKeyBatchNonce, fmt.Sprint(batchID.Nonce)),
+			sdk.NewAttribute(types.AttributeKeyBatchNonce, fmt.Sprint(batchID.BatchNonce)),
 		),
 	)
 
@@ -203,7 +203,7 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 func (k msgServer) CancelSendToEthereum(c context.Context, msg *types.MsgCancelSendToEthereum) (*types.MsgCancelSendToEthereumResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	err := k.Keeper.CancelSendToEthereum(ctx, msg.Id, msg.Sender)
+	err := k.Keeper.cancelSendToEthereum(ctx, msg.Id, msg.Sender)
 	if err != nil {
 		return nil, err
 	}
@@ -212,8 +212,8 @@ func (k msgServer) CancelSendToEthereum(c context.Context, msg *types.MsgCancelS
 		sdk.NewEvent(
 			types.EventTypeBridgeWithdrawCanceled,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyContract, k.GetBridgeContractAddress(ctx)),
-			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.GetBridgeChainID(ctx)))),
+			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
+			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -240,9 +240,9 @@ func (k Keeper) getSignerValidator(ctx sdk.Context, signerString string) (sdk.Va
 	}
 
 	if validatorI == nil {
-		return nil, sdkerrors.Wrap(types.ErrUnknown, "not orchestrator or validator")
+		return nil, sdkerrors.Wrap(types.ErrInvalid, "not orchestrator or validator")
 	} else if !validatorI.IsBonded() {
-		return nil, sdkerrors.Wrap(types.ErrUnbonded, fmt.Sprintf("validator: %s", validatorI.GetOperator()))
+		return nil, sdkerrors.Wrap(types.ErrInvalid, fmt.Sprintf("validator is not bonded: %s", validatorI.GetOperator()))
 	}
 
 	return validatorI.GetOperator(), nil

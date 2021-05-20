@@ -6,7 +6,6 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -34,7 +33,7 @@ func (sstx *SignerSetTx) GetStoreIndex() []byte {
 }
 
 func (btx *BatchTx) GetStoreIndex() []byte {
-	return MakeBatchTxKey(common.HexToAddress(btx.TokenContract), btx.Nonce)
+	return MakeBatchTxKey(gethcommon.HexToAddress(btx.TokenContract), btx.BatchNonce)
 }
 
 func (cctx *ContractCallTx) GetStoreIndex() []byte {
@@ -63,10 +62,6 @@ func (cctx *ContractCallTx) GetCosmosHeight() uint64 {
 
 // GetCheckpoint returns the checkpoint
 func (u SignerSetTx) GetCheckpoint(gravityID []byte) []byte {
-	// TODO replace hardcoded "foo" here with a getter to retrieve the correct gravityID from the store
-	// this will work for now because 'foo' is the test gravityID we are using
-	// var gravityIDString = "foo"
-
 	// error case here should not occur outside of testing since the above is a constant
 	contractAbi, err := abi.JSON(strings.NewReader(SignerSetTxCheckpointABIJSON))
 	if err != nil {
@@ -151,7 +146,7 @@ func (b BatchTx) GetCheckpoint(gravityID []byte) []byte {
 		txAmounts,
 		txDestinations,
 		txFees,
-		big.NewInt(int64(b.Nonce)),
+		big.NewInt(int64(b.BatchNonce)),
 		gethcommon.HexToAddress(b.TokenContract),
 		big.NewInt(int64(b.Timeout)),
 	)

@@ -32,11 +32,11 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 		}
 		return a.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins)
 	case *types.BatchExecutedEvent:
-		a.keeper.BatchTxExecuted(ctx, common.HexToAddress(event.TokenContract), event.GetNonce())
+		a.keeper.batchTxExecuted(ctx, common.HexToAddress(event.TokenContract), event.BatchNonce)
 		return
 	case *types.ERC20DeployedEvent:
 		// Check if it already exists
-		if existingERC20, exists := a.keeper.GetCosmosOriginatedERC20(ctx, event.CosmosDenom); exists {
+		if existingERC20, exists := a.keeper.getCosmosOriginatedERC20(ctx, event.CosmosDenom); exists {
 			return sdkerrors.Wrap(
 				types.ErrInvalid,
 				fmt.Sprintf("ERC20 %s already exists for denom %s", existingERC20.Hex(), event.CosmosDenom))
@@ -46,7 +46,7 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 		// TODO: document that peggy chains require denom metadata set
 		metadata := a.keeper.bankKeeper.GetDenomMetaData(ctx, event.CosmosDenom)
 		if metadata.Base == "" {
-			return sdkerrors.Wrap(types.ErrUnknown, fmt.Sprintf("denom not found %s", event.CosmosDenom))
+			return sdkerrors.Wrap(types.ErrInvalid, fmt.Sprintf("denom not found %s", event.CosmosDenom))
 		}
 
 		// Check if attributes of ERC20 match Cosmos denom
@@ -98,7 +98,7 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 		// TODO here we should check the contents of the validator set against
 		// the store, if they differ we should take some action to indicate to the
 		// user that bridge highjacking has occurred
-		a.keeper.SetLastObservedSignerSetTx(ctx, types.SignerSetTx{
+		a.keeper.setLastObservedSignerSetTx(ctx, types.SignerSetTx{
 			Nonce:   event.SignerSetTxNonce,
 			Signers: event.Members,
 		})
