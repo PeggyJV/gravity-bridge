@@ -53,6 +53,7 @@ func (bee *BatchExecutedEvent) Hash() tmbytes.HexBytes {
 		[][]byte{
 			common.HexToAddress(bee.TokenContract).Bytes(),
 			sdk.Uint64ToBigEndian(bee.EventNonce),
+			sdk.Uint64ToBigEndian(bee.BatchNonce),
 			sdk.Uint64ToBigEndian(bee.EthereumHeight),
 		},
 		[]byte{},
@@ -141,6 +142,9 @@ func (bee *BatchExecutedEvent) Validate() error {
 	}
 	if bee.EthereumHeight == 0 {
 		return fmt.Errorf("ethereum height cannot be 0")
+	}
+	if bee.BatchNonce == 0 {
+		return fmt.Errorf("batch nonce cannot be 0")
 	}
 	return nil
 }
