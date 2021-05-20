@@ -3,30 +3,13 @@ package types
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/binary"
 	"math"
 	"sort"
-	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
 )
-
-// UInt64FromBytes create uint from binary big endian representation
-func UInt64FromBytes(s []byte) uint64 {
-	return binary.BigEndian.Uint64(s)
-}
-
-// UInt64Bytes uses the SDK byte marshaling to encode a uint64
-func UInt64Bytes(n uint64) []byte {
-	return sdk.Uint64ToBigEndian(n)
-}
-
-// UInt64FromString to parse out a uint64 for a nonce
-func UInt64FromString(s string) (uint64, error) {
-	return strconv.ParseUint(s, 10, 64)
-}
 
 //////////////////////////////////////
 //      Ethereum Signer(S)         //
@@ -35,13 +18,10 @@ func UInt64FromString(s string) (uint64, error) {
 // ValidateBasic performs stateless checks on validity
 func (b *EthereumSigner) ValidateBasic() error {
 	if b.Power == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "power")
+		return sdkerrors.Wrap(ErrInvalid, "msg does not include power")
 	}
-	if err := ValidateEthereumAddress(b.EthereumAddress); err != nil {
-		return sdkerrors.Wrap(err, "ethereum address")
-	}
-	if b.EthereumAddress == "" {
-		return sdkerrors.Wrap(ErrEmpty, "address")
+	if !common.IsHexAddress(b.EthereumAddress) {
+		return sdkerrors.Wrap(ErrInvalid, "ethereum address")
 	}
 	return nil
 }
@@ -54,7 +34,7 @@ func (b EthereumSigners) Sort() {
 	sort.Slice(b, func(i, j int) bool {
 		if b[i].Power == b[j].Power {
 			// Secondary sort on eth address in case powers are equal
-			return EthAddrLessThan(b[i].EthereumAddress, b[j].EthereumAddress)
+			return EthereumAddrLessThan(b[i].EthereumAddress, b[j].EthereumAddress)
 		}
 		return b[i].Power > b[j].Power
 	})
@@ -65,7 +45,7 @@ func (b EthereumSigners) Hash() []byte {
 	b.Sort()
 	var out bytes.Buffer
 	for _, s := range b {
-		out.Write(append(common.HexToAddress(s.EthereumAddress).Bytes(), UInt64Bytes(s.Power)...))
+		out.Write(append(common.HexToAddress(s.EthereumAddress).Bytes(), sdk.Uint64ToBigEndian(s.Power)...))
 	}
 	hash := sha256.Sum256(out.Bytes())
 	return hash[:]
@@ -119,15 +99,6 @@ func (b EthereumSigners) TotalPower() (out uint64) {
 	return
 }
 
-// HasDuplicates returns true if there are duplicates in the set
-func (b EthereumSigners) HasDuplicates() bool {
-	m := make(map[string]struct{}, len(b))
-	for i := range b {
-		m[b[i].EthereumAddress] = struct{}{}
-	}
-	return len(m) != len(b)
-}
-
 // GetPowers returns only the power values for all members
 func (b EthereumSigners) GetPowers() []uint64 {
 	r := make([]uint64, len(b))
@@ -135,24 +106,6 @@ func (b EthereumSigners) GetPowers() []uint64 {
 		r[i] = b[i].Power
 	}
 	return r
-}
-
-// ValidateBasic performs stateless checks
-func (b EthereumSigners) ValidateBasic() error {
-	// TODO: check if the set is sorted here?
-	if len(b) == 0 {
-		return ErrEmpty
-	}
-	for i := range b {
-		if err := b[i].ValidateBasic(); err != nil {
-			return sdkerrors.Wrapf(err, "member %d", i)
-		}
-	}
-	if b.HasDuplicates() {
-		return sdkerrors.Wrap(ErrDuplicate, "addresses")
-	}
-
-	return nil
 }
 
 // NewSignerSetTx returns a new valset
@@ -163,35 +116,6 @@ func NewSignerSetTx(nonce, height uint64, members EthereumSigners) *SignerSetTx 
 		mem = append(mem, val)
 	}
 	return &SignerSetTx{Nonce: nonce, Height: height, Signers: mem}
-}
-
-// WithoutEmptyMembers returns a new Valset without member that have 0 power or an empty Ethereum address.
-func (v *SignerSetTx) WithoutEmptyMembers() *SignerSetTx {
-	if v == nil {
-		return nil
-	}
-	r := SignerSetTx{Nonce: v.Nonce, Signers: make([]*EthereumSigner, 0, len(v.Signers))}
-	for i := range v.Signers {
-		if err := v.Signers[i].ValidateBasic(); err == nil {
-			r.Signers = append(r.Signers, v.Signers[i])
-		}
-	}
-	return &r
-}
-
-// SignerSetTxs is a collection of valset
-type SignerSetTxs []*SignerSetTx
-
-func (v SignerSetTxs) Len() int {
-	return len(v)
-}
-
-func (v SignerSetTxs) Less(i, j int) bool {
-	return v[i].Nonce > v[j].Nonce
-}
-
-func (v SignerSetTxs) Swap(i, j int) {
-	v[i], v[j] = v[j], v[i]
 }
 
 // GetFees returns the total fees contained within a given batch

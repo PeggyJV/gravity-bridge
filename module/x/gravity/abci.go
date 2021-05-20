@@ -57,14 +57,14 @@ func createSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 	//      This will make sure the unbonding validator has to provide an ethereum signature to a new signer set tx
 	//	    that excludes him before he completely Unbonds.  Otherwise he will be slashed
 	// 3. If power change between validators of Current signer set and latest signer set request is > 5%
-	latesetSignerSetTx := k.GetLatestSignerSetTx(ctx)
+	latestSignerSetTx := k.GetLatestSignerSetTx(ctx)
 	lastUnbondingHeight := k.GetLastUnBondingBlockHeight(ctx)
-	if latesetSignerSetTx == nil {
+	if latestSignerSetTx == nil {
 		k.CreateSignerSetTx(ctx)
 		return
 	}
-	powerDiff := types.EthereumSigners(k.CurrentSignerSet(ctx)).PowerDiff(latesetSignerSetTx.Signers)
-	if (latesetSignerSetTx == nil) || (lastUnbondingHeight == uint64(ctx.BlockHeight())) || (powerDiff > 0.05) {
+	powerDiff := types.EthereumSigners(k.CurrentSignerSet(ctx)).PowerDiff(latestSignerSetTx.Signers)
+	if (lastUnbondingHeight == uint64(ctx.BlockHeight())) || (powerDiff > 0.05) {
 		k.CreateSignerSetTx(ctx)
 	}
 
@@ -150,7 +150,7 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 		btx, _ := otx.(*types.BatchTx)
 
 		if btx.Timeout < ethereumHeight {
-			k.CancelBatchTx(ctx, common.HexToAddress(btx.TokenContract), btx.Nonce)
+			k.CancelBatchTx(ctx, common.HexToAddress(btx.TokenContract), btx.BatchNonce)
 		}
 
 		return false

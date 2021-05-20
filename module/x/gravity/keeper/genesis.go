@@ -11,11 +11,11 @@ import (
 
 // InitGenesis starts a chain from a genesis state
 func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
-	k.SetParams(ctx, *data.Params)
+	k.setParams(ctx, *data.Params)
 
 	// reset pool transactions in state
 	for _, tx := range data.UnbatchedSendToEthereumTxs {
-		k.SetUnbatchedSendToEthereum(ctx, tx)
+		k.setUnbatchedSendToEthereum(ctx, tx)
 	}
 
 	// reset ethereum event vote records in state
@@ -27,7 +27,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 		if err := event.Validate(); err != nil {
 			panic("invalid event in genesis")
 		}
-		k.SetEthereumEventVoteRecord(ctx, event.GetNonce(), event.Hash(), evr)
+		k.setEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash(), evr)
 	}
 
 	// reset last observed event nonce
@@ -41,9 +41,9 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 			if err != nil {
 				panic(err)
 			}
-			last := k.GetLastEventNonceByValidator(ctx, val)
-			if event.GetNonce() > last {
-				k.setLastEventNonceByValidator(ctx, val, event.GetNonce())
+			last := k.getLastEventNonceByValidator(ctx, val)
+			if event.GetEventNonce() > last {
+				k.setLastEventNonceByValidator(ctx, val, event.GetEventNonce())
 			}
 		}
 	}
@@ -61,8 +61,8 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 		// set the orchestrator address
 		k.SetOrchestratorValidatorAddress(ctx, val, orch)
 		// set the ethereum address
-		k.SetValidatorEthereumAddress(ctx, val, common.HexToAddress(keys.EthereumAddress))
-		k.SetEthereumOrchestratorAddress(ctx, eth, orch)
+		k.setValidatorEthereumAddress(ctx, val, common.HexToAddress(keys.EthereumAddress))
+		k.setEthereumOrchestratorAddress(ctx, eth, orch)
 	}
 
 	// populate state with cosmos originated denom-erc20 mapping
@@ -101,10 +101,10 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		ethereumSignatures       []*cdctypes.Any
 		attmap                   = k.GetEthereumEventVoteRecordMapping(ctx)
 		ethereumEventVoteRecords []*types.EthereumEventVoteRecord
-		delegates                = k.GetDelegateKeys(ctx)
+		delegates                = k.getDelegateKeys(ctx)
 		lastobserved             = k.GetLastObservedEventNonce(ctx)
 		erc20ToDenoms            []*types.ERC20ToDenom
-		unbatchedTransfers       = k.GetUnbatchedSendToEthereums(ctx)
+		unbatchedTransfers       = k.getUnbatchedSendToEthereums(ctx)
 	)
 
 	// export ethereumEventVoteRecords from state
@@ -114,7 +114,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 	}
 
 	// export erc20 to denom relations
-	k.IterateERC20ToDenom(ctx, func(key []byte, erc20ToDenom *types.ERC20ToDenom) bool {
+	k.iterateERC20ToDenom(ctx, func(key []byte, erc20ToDenom *types.ERC20ToDenom) bool {
 		erc20ToDenoms = append(erc20ToDenoms, erc20ToDenom)
 		return false
 	})
@@ -124,7 +124,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		ota, _ := types.PackOutgoingTx(otx)
 		outgoingTxs = append(outgoingTxs, ota)
 		sstx, _ := otx.(*types.SignerSetTx)
-		k.IterateEthereumSignatures(ctx, sstx.GetStoreIndex(), func(val sdk.ValAddress, sig hexutil.Bytes) bool {
+		k.iterateEthereumSignatures(ctx, sstx.GetStoreIndex(), func(val sdk.ValAddress, sig hexutil.Bytes) bool {
 			siga, _ := types.PackSignature(&types.SignerSetTxSignature{sstx.Nonce, k.GetValidatorEthereumAddress(ctx, val).Hex(), sig})
 			ethereumSignatures = append(ethereumSignatures, siga)
 			return false
@@ -137,8 +137,8 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		ota, _ := types.PackOutgoingTx(otx)
 		outgoingTxs = append(outgoingTxs, ota)
 		btx, _ := otx.(*types.BatchTx)
-		k.IterateEthereumSignatures(ctx, btx.GetStoreIndex(), func(val sdk.ValAddress, sig hexutil.Bytes) bool {
-			siga, _ := types.PackSignature(&types.BatchTxSignature{btx.TokenContract, btx.Nonce, k.GetValidatorEthereumAddress(ctx, val).Hex(), sig})
+		k.iterateEthereumSignatures(ctx, btx.GetStoreIndex(), func(val sdk.ValAddress, sig hexutil.Bytes) bool {
+			siga, _ := types.PackSignature(&types.BatchTxSignature{btx.TokenContract, btx.BatchNonce, k.GetValidatorEthereumAddress(ctx, val).Hex(), sig})
 			ethereumSignatures = append(ethereumSignatures, siga)
 			return false
 		})
@@ -150,7 +150,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		ota, _ := types.PackOutgoingTx(otx)
 		outgoingTxs = append(outgoingTxs, ota)
 		btx, _ := otx.(*types.ContractCallTx)
-		k.IterateEthereumSignatures(ctx, btx.GetStoreIndex(), func(val sdk.ValAddress, sig hexutil.Bytes) bool {
+		k.iterateEthereumSignatures(ctx, btx.GetStoreIndex(), func(val sdk.ValAddress, sig hexutil.Bytes) bool {
 			siga, _ := types.PackSignature(&types.ContractCallTxSignature{btx.InvalidationScope, btx.InvalidationNonce, k.GetValidatorEthereumAddress(ctx, val).Hex(), sig})
 			ethereumSignatures = append(ethereumSignatures, siga)
 			return false

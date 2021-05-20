@@ -6,6 +6,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 var (
@@ -44,8 +45,8 @@ func (msg *MsgDelegateKeys) ValidateBasic() (err error) {
 	if _, err = sdk.AccAddressFromBech32(msg.OrchestratorAddress); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.OrchestratorAddress)
 	}
-	if err := ValidateEthereumAddress(msg.EthereumAddress); err != nil {
-		return sdkerrors.Wrap(err, "ethereum address")
+	if !common.IsHexAddress(msg.EthereumAddress) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "ethereum address")
 	}
 	return nil
 }
@@ -168,6 +169,7 @@ func (msg MsgSendToEthereum) ValidateBasic() error {
 	}
 
 	// fee and send must be of the same denom
+	// this check is VERY IMPORTANT
 	if msg.Amount.Denom != msg.BridgeFee.Denom {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins,
 			fmt.Sprintf("fee and amount must be the same type %s != %s", msg.Amount.Denom, msg.BridgeFee.Denom))
@@ -179,10 +181,10 @@ func (msg MsgSendToEthereum) ValidateBasic() error {
 	if !msg.BridgeFee.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "fee")
 	}
-	if err := ValidateEthereumAddress(msg.EthereumRecipient); err != nil {
-		return sdkerrors.Wrap(err, "ethereum address")
+	if !common.IsHexAddress(msg.EthereumRecipient) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "ethereum address")
 	}
-	// TODO validate fee is sufficient, fixed fee to start
+
 	return nil
 }
 
@@ -217,6 +219,9 @@ func (msg MsgRequestBatchTx) Type() string { return "request_batch" }
 
 // ValidateBasic performs stateless checks
 func (msg MsgRequestBatchTx) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return sdkerrors.Wrap(err, "denom is invalid")
+	}
 	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Signer)
 	}
@@ -254,6 +259,9 @@ func (msg MsgCancelSendToEthereum) Type() string { return "cancel_send_to_ethere
 
 // ValidateBasic performs stateless checks
 func (msg MsgCancelSendToEthereum) ValidateBasic() error {
+	if msg.Id == 0 {
+		return sdkerrors.Wrap(ErrInvalid, "Id cannot be 0")
+	}
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Sender)
 	}

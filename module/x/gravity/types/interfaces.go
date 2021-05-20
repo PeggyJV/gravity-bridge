@@ -23,7 +23,7 @@ type EthereumSignature interface {
 type EthereumEvent interface {
 	proto.Message
 
-	GetNonce() uint64
+	GetEventNonce() uint64
 	GetEthereumHeight() uint64
 	Hash() tmbytes.HexBytes
 	Validate() error
