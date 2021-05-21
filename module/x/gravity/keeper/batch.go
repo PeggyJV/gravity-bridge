@@ -116,7 +116,7 @@ func (k Keeper) getBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr commo
 func (k Keeper) GetBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr common.Address, maxElements int) sdk.Int {
 	feeAmount := sdk.ZeroInt()
 	i := 0
-	k.IterateOutgoingPoolByFee(ctx, tokenContractAddr, func(txID uint64, tx *types.SendToEthereum) bool {
+	k.iterateUnbatchedSendToEthereumsByContract(ctx, tokenContractAddr, func(tx *types.SendToEthereum) bool {
 		feeAmount = feeAmount.Add(tx.Erc20Fee.Amount)
 		i++
 		return i == maxElements

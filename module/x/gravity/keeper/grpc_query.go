@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -184,15 +185,23 @@ func (k Keeper) SignerSetTxEthereumSignatures(c context.Context, req *types.Sign
 		if err != nil {
 			return nil, err
 		}
-		return &types.SignerSetTxEthereumSignaturesResponse{Signature: []hexutil.Bytes{k.getEthereumSignature(ctx, key, val)}}, nil
+		return &types.SignerSetTxEthereumSignaturesResponse{Signatures: []*types.SignerSetTxSignature{{
+			Nonce:          req.Nonce,
+			Signature:      k.getEthereumSignature(ctx, key, val),
+			EthereumSigner: k.GetValidatorEthereumAddress(ctx, val).Hex(),
+		}}}, nil
 	}
 
-	var out []hexutil.Bytes
-	k.iterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
-		out = append(out, sig)
+	var out []*types.SignerSetTxSignature
+	k.iterateEthereumSignatures(ctx, key, func(val sdk.ValAddress, sig hexutil.Bytes) bool {
+		out = append(out, &types.SignerSetTxSignature{
+			Nonce:          req.Nonce,
+			Signature:      sig,
+			EthereumSigner: k.GetValidatorEthereumAddress(ctx, val).Hex(),
+		})
 		return false
 	})
-	return &types.SignerSetTxEthereumSignaturesResponse{Signature: out}, nil
+	return &types.SignerSetTxEthereumSignaturesResponse{Signatures: out}, nil
 }
 
 func (k Keeper) BatchTxEthereumSignatures(c context.Context, req *types.BatchTxEthereumSignaturesRequest) (*types.BatchTxEthereumSignaturesResponse, error) {
@@ -203,15 +212,25 @@ func (k Keeper) BatchTxEthereumSignatures(c context.Context, req *types.BatchTxE
 		if err != nil {
 			return nil, err
 		}
-		return &types.BatchTxEthereumSignaturesResponse{Signature: [][]byte{k.getEthereumSignature(ctx, key, val)}}, nil
+		return &types.BatchTxEthereumSignaturesResponse{Signatures: []*types.BatchTxSignature{{
+			Signature:      k.getEthereumSignature(ctx, key, val),
+			EthereumSigner: k.GetValidatorEthereumAddress(ctx, val).Hex(),
+			Nonce:          req.Nonce,
+			TokenContract:  req.ContractAddress,
+		}}}, nil
 	}
 
-	var out [][]byte
-	k.iterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
-		out = append(out, sig)
+	var out []*types.BatchTxSignature
+	k.iterateEthereumSignatures(ctx, key, func(val sdk.ValAddress, sig hexutil.Bytes) bool {
+		out = append(out, &types.BatchTxSignature{
+			Signature:      sig,
+			EthereumSigner: k.GetValidatorEthereumAddress(ctx, val).Hex(),
+			Nonce:          req.Nonce,
+			TokenContract:  req.ContractAddress,
+		})
 		return false
 	})
-	return &types.BatchTxEthereumSignaturesResponse{Signature: out}, nil
+	return &types.BatchTxEthereumSignaturesResponse{Signatures: out}, nil
 }
 
 func (k Keeper) ContractCallTxEthereumSignatures(c context.Context, req *types.ContractCallTxEthereumSignaturesRequest) (*types.ContractCallTxEthereumSignaturesResponse, error) {
@@ -222,15 +241,25 @@ func (k Keeper) ContractCallTxEthereumSignatures(c context.Context, req *types.C
 		if err != nil {
 			return nil, err
 		}
-		return &types.ContractCallTxEthereumSignaturesResponse{Signature: [][]byte{k.getEthereumSignature(ctx, key, val)}}, nil
+		return &types.ContractCallTxEthereumSignaturesResponse{Signatures: []*types.ContractCallTxSignature{{
+			Signature:         k.getEthereumSignature(ctx, key, val),
+			EthereumSigner:    k.GetValidatorEthereumAddress(ctx, val).Hex(),
+			InvalidationScope: req.InvalidationScope,
+			InvalidationNonce: req.InvalidationNonce,
+		}}}, nil
 	}
 
-	var out [][]byte
-	k.iterateEthereumSignatures(ctx, key, func(_ sdk.ValAddress, sig hexutil.Bytes) bool {
-		out = append(out, sig)
+	var out []*types.ContractCallTxSignature
+	k.iterateEthereumSignatures(ctx, key, func(val sdk.ValAddress, sig hexutil.Bytes) bool {
+		out = append(out, &types.ContractCallTxSignature{
+			Signature:         sig,
+			EthereumSigner:    k.GetValidatorEthereumAddress(ctx, val).Hex(),
+			InvalidationScope: req.InvalidationScope,
+			InvalidationNonce: req.InvalidationNonce,
+		})
 		return false
 	})
-	return &types.ContractCallTxEthereumSignaturesResponse{Signature: out}, nil
+	return &types.ContractCallTxEthereumSignaturesResponse{Signatures: out}, nil
 }
 
 func (k Keeper) PendingSignerSetTxEthereumSignatures(c context.Context, req *types.PendingSignerSetTxEthereumSignaturesRequest) (*types.PendingSignerSetTxEthereumSignaturesResponse, error) {

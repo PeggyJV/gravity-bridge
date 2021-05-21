@@ -37,7 +37,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdBatchTxFees(),
 		CmdERC20ToDenom(),
 		CmdDenomToERC20(),
-		CmdPendingSendToEthereums(),
+		CmdUnbatchedSendToEthereums(),
 		CmdDelegateKeysByValidator(),
 		CmdDelegateKeysByEthereumSigner(),
 		CmdDelegateKeysByOrchestrator(),
@@ -76,7 +76,7 @@ func CmdSignerSetTx() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "signer-set-tx [nonce]",
 		Args:  cobra.MaximumNArgs(1),
-		Short: "", // TODO(levi) provide short description
+		Short: "query an individual signer set transaction by nonce",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
@@ -110,8 +110,8 @@ func CmdSignerSetTx() *cobra.Command {
 func CmdBatchTx() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "batch-tx [contract-address] [nonce]",
-		Args:  cobra.RangeArgs(1, 2),
-		Short: "", // TODO(levi) provide short description
+		Args:  cobra.ExactArgs(2),
+		Short: "query an individual batch transaction by contract address and nonce",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
@@ -128,10 +128,8 @@ func CmdBatchTx() *cobra.Command {
 				return nil
 			}
 
-			if len(args) == 2 {
-				if nonce, err = parseNonce(args[1]); err != nil {
-					return err
-				}
+			if nonce, err = parseNonce(args[1]); err != nil {
+				return err
 			}
 
 			req := types.BatchTxRequest{
@@ -156,7 +154,7 @@ func CmdContractCallTx() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "contract-call-tx [invalidation-scope] [invalidation-nonce]",
 		Args:  cobra.ExactArgs(2),
-		Short: "", // TODO(levi) provide short description
+		Short: "query an individual contract call transaction by scope and nonce",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
@@ -188,8 +186,8 @@ func CmdContractCallTx() *cobra.Command {
 
 func CmdSignerSetTxs() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "signer-set-txs (count)",
-		Args:  cobra.MaximumNArgs(1),
+		Use:   "signer-set-txs",
+		Args:  cobra.NoArgs,
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
@@ -197,17 +195,7 @@ func CmdSignerSetTxs() *cobra.Command {
 				return err
 			}
 
-			var count int64
-
-			if len(args) > 0 {
-				if count, err = parseCount(args[0]); err != nil {
-					return err
-				}
-			}
-
-			req := types.SignerSetTxsRequest{
-				Count: count,
-			}
+			req := types.SignerSetTxsRequest{}
 
 			res, err := queryClient.SignerSetTxs(cmd.Context(), &req)
 			if err != nil {
@@ -607,9 +595,9 @@ func CmdDenomToERC20() *cobra.Command {
 	return cmd
 }
 
-func CmdPendingSendToEthereums() *cobra.Command {
+func CmdUnbatchedSendToEthereums() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pending-send-to-ethereums [sender-address]",
+		Use:   "unbatched-send-to-ethereums [sender-address]",
 		Args:  cobra.MaximumNArgs(1),
 		Short: "", // TODO(levi) provide short description
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -622,11 +610,11 @@ func CmdPendingSendToEthereums() *cobra.Command {
 				senderAddress string // TODO(levi) init and validate from args[0]
 			)
 
-			req := types.PendingSendToEthereumsRequest{
+			req := types.UnbatchedSendToEthereumsRequest{
 				SenderAddress: senderAddress, // TODO(levi) is this an ethereum address??
 			}
 
-			res, err := queryClient.PendingSendToEthereums(cmd.Context(), &req)
+			res, err := queryClient.UnbatchedSendToEthereums(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
