@@ -113,7 +113,12 @@ pub async fn send_valset_confirms(
             our_eth_address,
             bytes_to_hex_str(&eth_signature.to_bytes())
         );
-        let confirm = todo!();
+        let confirm = proto::SignerSetTxSignature {
+            ethereum_signer: our_eth_address.to_string(),
+            nonce: valset.nonce,
+            signature: eth_signature.to_bytes().to_vec(),
+        };
+
         let msg = Msg::new("/gravity.v1.MsgValsetConfirm", confirm);
         messages.push(msg);
     }
