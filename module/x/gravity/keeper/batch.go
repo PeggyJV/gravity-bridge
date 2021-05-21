@@ -121,7 +121,6 @@ func (k Keeper) GetBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr commo
 		i++
 		return i == maxElements
 	})
-
 	return feeAmount
 }
 
