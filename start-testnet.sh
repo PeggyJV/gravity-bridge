@@ -1,5 +1,5 @@
 #!/bin/bash
-# USAGE: ./two-node-net skip
+set -eu
 
 # Constants
 CURRENT_WORKING_DIR=$(pwd)
@@ -22,8 +22,9 @@ home_dir="$CHAINDIR/$CHAINID"
 #fi
 
 # stop processes
+export DOCKER_SCAN_SUGGEST=false
 docker-compose down
-rm -r $CHAINDIR
+rm -rf $CHAINDIR
 
 n0name="gravity0"
 n1name="gravity1"
@@ -64,15 +65,6 @@ n3appCfg="$n3cfgDir/app.toml"
 kbt="--keyring-backend test"
 cid="--chain-id $CHAINID"
 
-# Ensure user understands what will be deleted
-if [[ -d $SIGNER_DATA ]] && [[ ! "$1" == "skip" ]]; then
-  read -p "$0 will delete \$(pwd)/data folder. Do you wish to continue? (y/n): " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-      exit 1
-  fi
-fi
-
 echo "Creating 4x $gravity validators with chain-id=$CHAINID..."
 echo "Initializing genesis files"
 
@@ -89,6 +81,7 @@ $gravity $home2 keys add val $kbt --output json | jq . >> $n2dir/validator_key.j
 $gravity $home3 $cid init n3 &>/dev/null
 $gravity $home3 keys add val $kbt --output json | jq . >> $n3dir/validator_key.json
 
+find $home_dir -name validator_key.json | xargs cat | jq -r '.mnemonic' > $CHAINDIR/validator-phrases
 
 echo "Adding validator addresses to genesis files"
 $gravity $home0 add-genesis-account $($gravity $home0 keys show val -a $kbt) $coins &>/dev/null
@@ -105,6 +98,8 @@ $gravity $home0 keys add --dry-run=true --output=json orch | jq . >> $n0dir/orch
 $gravity $home1 keys add --dry-run=true --output=json orch | jq . >> $n1dir/orchestrator_key.json
 $gravity $home2 keys add --dry-run=true --output=json orch | jq . >> $n2dir/orchestrator_key.json
 $gravity $home3 keys add --dry-run=true --output=json orch | jq . >> $n3dir/orchestrator_key.json
+
+find $home_dir -name orchestrator_key.json | xargs cat | jq -r '.mnemonic' > $CHAINDIR/orchestrator-phrases
 
 echo "Adding orchestrator keys to genesis"
 n0orchKey="$(jq .address $n0dir/orchestrator_key.json)"
@@ -130,6 +125,8 @@ $gravity $home0 eth_keys add --output=json --dry-run=true | jq . >> $n0dir/eth_k
 $gravity $home1 eth_keys add --output=json --dry-run=true | jq . >> $n1dir/eth_key.json
 $gravity $home2 eth_keys add --output=json --dry-run=true | jq . >> $n2dir/eth_key.json
 $gravity $home3 eth_keys add --output=json --dry-run=true | jq . >> $n3dir/eth_key.json
+
+find testdata -name eth_key.json | xargs cat | jq -r '.private_key' > $CHAINDIR/validator-eth-keys
 
 echo "Copying ethereum genesis file"
 cp tests/assets/ETHGenesis.json $home_dir
@@ -227,7 +224,13 @@ sleep 10
 echo "Applying contracts"
 docker-compose build contract_deployer
 contractAddress=$(docker-compose up contract_deployer | grep "Gravity deployed at Address" | grep -Eow '0x[0-9a-fA-F]{40}')
+if [[ ! $contractAddress ]]; then
+  echo "contract failed to deploy."
+  exit 1
+fi
 echo "Contract address: $contractAddress"
+
+docker-compose logs --no-color --no-log-prefix contract_deployer > $CHAINDIR/contracts
 
 echo "Gathering keys for orchestrators"
 echo VALIDATOR=$n0name >> $n0dir/orchestrator.env
@@ -287,3 +290,7 @@ docker-compose --env-file $n3dir/orchestrator.env up --no-start orchestrator3
 docker-compose --env-file $n3dir/orchestrator.env start orchestrator3
 
 echo "Run tests"
+docker-compose build test_runner
+docker-compose run test_runner
+
+echo "Done."
