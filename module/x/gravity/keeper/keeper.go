@@ -138,7 +138,6 @@ func (k Keeper) GetEthereumSignatures(ctx sdk.Context, storeIndex []byte) map[st
 }
 
 // iterateEthereumSignatures iterates through all valset confirms by nonce in ASC order
-// MARK finish-batches: this is where the key is iterated in the old (presumed working) code
 func (k Keeper) iterateEthereumSignatures(ctx sdk.Context, storeIndex []byte, cb func(sdk.ValAddress, hexutil.Bytes) bool) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.EthereumSignatureKey}, storeIndex...))
 	iter := prefixStore.Iterator(nil, nil)
@@ -371,7 +370,10 @@ func (k Keeper) SetOutgoingTx(ctx sdk.Context, outgoing types.OutgoingTx) {
 	if err != nil {
 		panic(err)
 	}
-	ctx.KVStore(k.storeKey).Set(types.MakeOutgoingTxKey(outgoing.GetStoreIndex()), k.cdc.MustMarshalBinaryBare(any))
+	ctx.KVStore(k.storeKey).Set(
+		types.MakeOutgoingTxKey(outgoing.GetStoreIndex()),
+		k.cdc.MustMarshalBinaryBare(any),
+	)
 }
 
 // DeleteOutgoingTx deletes a given outgoingtx
