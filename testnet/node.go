@@ -67,7 +67,6 @@ func (n *Node) ConfigDir() string {
 // MkDir creates the directory for the testnode
 func (n *Node) MkDir() {
 	p := path.Join(n.ConfigDir(), "config")
-	fmt.Println(p)
 	if err := os.MkdirAll(p, 0755); err != nil {
 		panic(err)
 	}
