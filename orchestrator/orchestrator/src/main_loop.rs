@@ -45,7 +45,7 @@ pub async fn orchestrator_main_loop(
     gravity_contract_address: EthAddress,
     pay_fees_in: String,
 ) {
-    println!("entering orchestrator_mainloop; eth_key {}; ", ethereum_key);
+    println!(":==: entering orchestrator_mainloop; eth_key {}; ", ethereum_key);
 
     let fee = Coin {
         denom: pay_fees_in.clone(),
@@ -183,7 +183,7 @@ pub async fn eth_signer_main_loop(
     gravity_contract_address: EthAddress,
     fee: Coin,
 ) {
-    println!("entering eth_signer_main_loop; eth_key {};", ethereum_key);
+    println!(":==: entering eth_signer_main_loop; eth_key {};", ethereum_key);
 
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let our_ethereum_address = ethereum_key.to_public_key().unwrap();
@@ -239,6 +239,10 @@ pub async fn eth_signer_main_loop(
         // sign the last unsigned valsets
         match get_oldest_unsigned_valsets(&mut grpc_client, our_cosmos_address).await {
             Ok(valsets) => {
+                println!(
+                    ":==: IN get_oldest_unsigned_valsets valsets: {:#?}",
+                    valsets,
+                );
                 if valsets.is_empty() {
                     trace!("No validator sets to sign, node is caught up!")
                 } else {

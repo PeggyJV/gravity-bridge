@@ -54,12 +54,13 @@ pub async fn get_oldest_unsigned_valsets(
     client: &mut GravityQueryClient<Channel>,
     address: Address,
 ) -> Result<Vec<Valset>, GravityError> {
-    let request = client
-        .pending_signer_set_tx_ethereum_signatures(PendingSignerSetTxEthereumSignaturesRequest {
+    let response = client
+        .unsigned_signer_set_txs(UnsignedSignerSetTxsRequest {
             address: address.to_string(),
         })
         .await?;
-    let valsets = request.into_inner().signer_sets;
+    println!("%%%%% got unsigned signer sets response: {:#?}", response);
+    let valsets = response.into_inner().signer_sets;
     // convert from proto valset type to rust valset type
     let valsets = valsets.iter().map(|v| v.clone().into()).collect();
     Ok(valsets)
@@ -108,7 +109,7 @@ pub async fn get_oldest_unsigned_transaction_batch(
     address: Address,
 ) -> Result<Option<TransactionBatch>, GravityError> {
     let request = client
-        .pending_batch_tx_ethereum_signatures(PendingBatchTxEthereumSignaturesRequest {
+        .unsigned_batch_txs(UnsignedBatchTxsRequest {
             address: address.to_string(),
         })
         .await?;
@@ -210,11 +211,9 @@ pub async fn get_oldest_unsigned_logic_call(
     address: Address,
 ) -> Result<Vec<LogicCall>, GravityError> {
     let request = client
-        .pending_contract_call_tx_ethereum_signatures(
-            PendingContractCallTxEthereumSignaturesRequest {
-                address: address.to_string(),
-            },
-        )
+        .unsigned_contract_call_txs(UnsignedContractCallTxsRequest {
+            address: address.to_string(),
+        })
         .await?;
     let calls = request.into_inner().calls;
     let mut out = Vec::new();
