@@ -3,6 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"os"
 	"path"
 	"path/filepath"
@@ -145,4 +149,80 @@ func (n *Node) createKey(name string) (err error) {
 	n.KeyInfo = info
 
 	return nil
+}
+
+func (n *Node) addGenesisAccount(coinsStr string) (err error) {
+	encodingConfig := app.MakeEncodingConfig()
+	cdc := encodingConfig.Marshaler
+
+	serverCtx := server.NewDefaultContext()
+	config := serverCtx.Config
+	config.SetRoot(n.ConfigDir())
+	config.Moniker = n.Moniker
+
+	coins, err := sdk.ParseCoinsNormalized(coinsStr)
+	if err != nil {
+		return fmt.Errorf("failed to parse coins: %w", err)
+	}
+
+	accAddr := n.KeyInfo.GetAddress()
+	balances := banktypes.Balance{Address: accAddr.String(), Coins: coins.Sort()}
+	genAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
+
+	genFile := config.GenesisFile()
+	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
+	}
+
+	authGenState := authtypes.GetGenesisStateFromAppState(cdc, appState)
+
+
+	accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
+	if err != nil {
+		return fmt.Errorf("failed to get accounts from any: %w", err)
+	}
+
+	if accs.Contains(accAddr) {
+		return fmt.Errorf("cannot add account at existing address %s", accAddr)
+	}
+
+	// Add the new account to the set of genesis accounts and sanitize the
+	// accounts afterwards.
+	accs = append(accs, genAccount)
+	accs = authtypes.SanitizeGenesisAccounts(accs)
+
+
+	genAccs, err := authtypes.PackAccounts(accs)
+	if err != nil {
+		return fmt.Errorf("failed to convert accounts into any's: %w", err)
+	}
+	authGenState.Accounts = genAccs
+
+	authGenStateBz, err := cdc.MarshalJSON(&authGenState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal auth genesis state: %w", err)
+	}
+
+	appState[authtypes.ModuleName] = authGenStateBz
+
+
+	bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
+	bankGenState.Balances = append(bankGenState.Balances, balances)
+	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
+
+	bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal bank genesis state: %w", err)
+	}
+
+	appState[banktypes.ModuleName] = bankGenStateBz
+
+	appStateJSON, err := json.Marshal(appState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal application genesis state: %w", err)
+	}
+
+	genDoc.AppState = appStateJSON
+	return genutil.ExportGenesisFile(genDoc, genFile)
 }
