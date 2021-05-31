@@ -3,15 +3,16 @@ package main
 import "fmt"
 
 type Chain struct {
-	DataDir string
-	ID string
-	Nodes []*Node
+	DataDir    string
+	ID         string
+	Validators []*Validator
+	Orchestrators []*Orchestrator
 }
 
-func (c *Chain) CreateAndInitializeNodes(count uint8) (err error){
+func (c *Chain) CreateAndInitializeValidators(count uint8) (err error){
 	for i := uint8(0); i < count; i++ {
 		// create node
-		node := c.createNode(i)
+		node := c.createValidator(i)
 
 		// generate genesis files
 		err = node.init()
@@ -19,7 +20,7 @@ func (c *Chain) CreateAndInitializeNodes(count uint8) (err error){
 			return
 		}
 
-		c.Nodes = append(c.Nodes, &node)
+		c.Validators = append(c.Validators, &node)
 
 		// create keys
 		if err := node.createKey("val"); err != nil {
@@ -27,12 +28,30 @@ func (c *Chain) CreateAndInitializeNodes(count uint8) (err error){
 		}
 	}
 
-	for _, n := range c.Nodes {
-		if err = n.addGenesisAccount("100000000000stake,100000000000footoken"); err != nil {
-			return
-		}
-	}
+	//for _, n := range c.Validators {
+	//	if err = addGenesisAccount(n.ConfigDir(), n.Moniker, n.KeyInfo.GetAddress(), "100000000000stake,100000000000footoken"); err != nil {
+	//		return
+	//	}
+	//}
 
+	return
+}
+
+func (c *Chain) CreateAndInitializeOrchestrators(count uint8) (err error){
+	for i := uint8(0); i < count; i++ {
+		// create orchestrator
+		orchestrator := c.createOrchestrator(i)
+
+		// create keys
+		mnemonic, info, err := createMemoryKey();
+		if err != nil {
+			return err
+		}
+		orchestrator.KeyInfo = *info
+		orchestrator.Mnemonic = mnemonic
+
+		c.Orchestrators = append(c.Orchestrators, &orchestrator)
+	}
 	return
 }
 
@@ -40,11 +59,20 @@ func (c *Chain) CreateAndInitializeNodes(count uint8) (err error){
 //	return
 //}
 
-func (c *Chain) createNode(index uint8) (node Node) {
-	node = Node{
+func (c *Chain) createValidator(index uint8) (validator Validator) {
+	validator = Validator{
 		Chain:   c,
 		Index:   index,
 		Moniker: "gravity",
+	}
+
+	return
+}
+
+func (c *Chain) createOrchestrator(index uint8) (orchestrator Orchestrator) {
+	orchestrator = Orchestrator{
+		Chain:   c,
+		Index:   index,
 	}
 
 	return
