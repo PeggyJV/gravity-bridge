@@ -88,9 +88,7 @@ message ContractCallTxSignature {
             "github.com/tendermint/tendermint/libs/bytes.HexBytes" ];
   uint64 invalidation_nonce = 2;
   string ethereum_signer = 3;
-  bytes signature = 4
-      [ (gogoproto.casttype) =
-            "github.com/ethereum/go-ethereum/common/hexutil.Bytes" ];
+  string signature = 4;
 }
 
 // BatchTxSignature is a signature on behalf of a validator for a BatchTx.
@@ -98,9 +96,7 @@ message BatchTxSignature {
   string token_contract = 1;
   uint64 batch_nonce = 2;
   string ethereum_signer = 3;
-  bytes signature = 4
-      [ (gogoproto.casttype) =
-            "github.com/ethereum/go-ethereum/common/hexutil.Bytes" ];
+  string signature = 4;
 }
 
 // SignerSetTxSignature is a signature on behalf of a validator for a
@@ -108,9 +104,7 @@ message BatchTxSignature {
 message SignerSetTxSignature {
   uint64 signer_set_nonce = 1;
   string ethereum_signer = 2;
-  bytes signature = 3
-      [ (gogoproto.casttype) =
-            "github.com/ethereum/go-ethereum/common/hexutil.Bytes" ];
+  string signature = 3;
 }
 
 message MsgSubmitEthereumSignatureResponse {}

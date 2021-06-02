@@ -113,16 +113,17 @@ func (msg *MsgSubmitEthereumSignature) Type() string { return "submit_ethereum_s
 
 // ValidateBasic performs stateless checks
 func (msg *MsgSubmitEthereumSignature) ValidateBasic() (err error) {
+	fmt.Printf("&&&&&&&& MsgSubmitEthereumSignature VALIDATE BASIC, MSG: %s", msg)
 	if _, err = sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Signer)
 	}
 
-	event, err := UnpackSignature(msg.Signature)
+	sig, err := UnpackSignature(msg.Signature)
 	if err != nil {
 		return err
 	}
 
-	return event.Validate()
+	return sig.Validate()
 }
 
 // GetSignBytes encodes the message for signing

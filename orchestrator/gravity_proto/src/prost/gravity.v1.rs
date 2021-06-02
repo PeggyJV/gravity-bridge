@@ -170,8 +170,8 @@ pub struct ContractCallTxSignature {
     pub invalidation_nonce: u64,
     #[prost(string, tag = "3")]
     pub ethereum_signer: ::prost::alloc::string::String,
-    #[prost(bytes = "vec", tag = "4")]
-    pub signature: ::prost::alloc::vec::Vec<u8>,
+    #[prost(string, tag = "4")]
+    pub signature: ::prost::alloc::string::String,
 }
 /// BatchTxSignature is a signature on behalf of a validator for a BatchTx.
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -182,8 +182,8 @@ pub struct BatchTxSignature {
     pub batch_nonce: u64,
     #[prost(string, tag = "3")]
     pub ethereum_signer: ::prost::alloc::string::String,
-    #[prost(bytes = "vec", tag = "4")]
-    pub signature: ::prost::alloc::vec::Vec<u8>,
+    #[prost(string, tag = "4")]
+    pub signature: ::prost::alloc::string::String,
 }
 /// SignerSetTxSignature is a signature on behalf of a validator for a
 /// SignerSetTx
@@ -193,8 +193,8 @@ pub struct SignerSetTxSignature {
     pub signer_set_nonce: u64,
     #[prost(string, tag = "2")]
     pub ethereum_signer: ::prost::alloc::string::String,
-    #[prost(bytes = "vec", tag = "3")]
-    pub signature: ::prost::alloc::vec::Vec<u8>,
+    #[prost(string, tag = "3")]
+    pub signature: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgSubmitEthereumSignatureResponse {}

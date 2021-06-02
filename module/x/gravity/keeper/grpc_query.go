@@ -13,7 +13,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -159,7 +158,7 @@ func (k Keeper) SignerSetTxEthereumSignatures(c context.Context, req *types.Sign
 	key := types.MakeSignerSetTxKey(req.SignerSetNonce)
 
 	var out []*types.SignerSetTxSignature
-	k.iterateEthereumSignatures(ctx, key, func(val sdk.ValAddress, sig hexutil.Bytes) bool {
+	k.iterateEthereumSignatures(ctx, key, func(val sdk.ValAddress, sig string) bool {
 		out = append(out, &types.SignerSetTxSignature{
 			SignerSetNonce: req.SignerSetNonce,
 			EthereumSigner: k.GetValidatorEthereumAddress(ctx, val).Hex(),
@@ -175,7 +174,7 @@ func (k Keeper) BatchTxEthereumSignatures(c context.Context, req *types.BatchTxE
 	key := types.MakeBatchTxKey(common.HexToAddress(req.TokenContract), req.BatchNonce)
 
 	var out []*types.BatchTxSignature
-	k.iterateEthereumSignatures(ctx, key, func(val sdk.ValAddress, sig hexutil.Bytes) bool {
+	k.iterateEthereumSignatures(ctx, key, func(val sdk.ValAddress, sig string) bool {
 		out = append(out, &types.BatchTxSignature{
 			TokenContract:  req.TokenContract,
 			BatchNonce:     req.BatchNonce,
@@ -192,7 +191,7 @@ func (k Keeper) ContractCallTxEthereumSignatures(c context.Context, req *types.C
 	key := types.MakeContractCallTxKey(req.InvalidationScope, req.InvalidationNonce)
 
 	var out []*types.ContractCallTxSignature
-	k.iterateEthereumSignatures(ctx, key, func(val sdk.ValAddress, sig hexutil.Bytes) bool {
+	k.iterateEthereumSignatures(ctx, key, func(val sdk.ValAddress, sig string) bool {
 		out = append(out, &types.ContractCallTxSignature{
 			InvalidationScope: req.InvalidationScope,
 			InvalidationNonce: req.InvalidationNonce,

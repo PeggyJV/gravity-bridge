@@ -61,7 +61,7 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 // SubmitEthereumSignature handles MsgSubmitEthereumSignature
 func (k msgServer) SubmitEthereumSignature(c context.Context, msg *types.MsgSubmitEthereumSignature) (*types.MsgSubmitEthereumSignatureResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-
+	fmt.Printf("&&&&&& IN SubmitEthereumSignature, msg: %s", msg)
 	signature, err := types.UnpackSignature(msg.Signature)
 	if err != nil {
 		return nil, err
@@ -85,7 +85,7 @@ func (k msgServer) SubmitEthereumSignature(c context.Context, msg *types.MsgSubm
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "eth address does not match signer eth address")
 	}
 
-	if err = types.ValidateEthereumSignature(checkpoint, signature.GetSignature(), ethAddress); err != nil {
+	if err = types.ValidateEthereumSignature(checkpoint, []byte(signature.GetSignature()), ethAddress); err != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, fmt.Sprintf("signature verification failed expected sig by %s with gravity-id %s with checkpoint %s found %s", ethAddress, gravityID, hex.EncodeToString(checkpoint), msg.Signature))
 	}
 

@@ -119,7 +119,7 @@ func (k Keeper) getEthereumSignature(ctx sdk.Context, storeIndex []byte, validat
 // SetEthereumSignature sets a valset confirmation
 func (k Keeper) SetEthereumSignature(ctx sdk.Context, sig types.EthereumSignature, val sdk.ValAddress) []byte {
 	key := types.MakeEthereumSignatureKey(sig.GetStoreIndex(), val)
-	ctx.KVStore(k.storeKey).Set(key, sig.GetSignature())
+	ctx.KVStore(k.storeKey).Set(key, []byte(sig.GetSignature()))
 	return key
 }
 
@@ -128,9 +128,9 @@ func (k Keeper) deleteEthereumSignature(ctx sdk.Context, storeIndex []byte, vali
 }
 
 // GetEthereumSignatures returns all etherum signatures for a given outgoing tx by store index
-func (k Keeper) GetEthereumSignatures(ctx sdk.Context, storeIndex []byte) map[string]hexutil.Bytes {
-	var signatures = make(map[string]hexutil.Bytes)
-	k.iterateEthereumSignatures(ctx, storeIndex, func(val sdk.ValAddress, h hexutil.Bytes) bool {
+func (k Keeper) GetEthereumSignatures(ctx sdk.Context, storeIndex []byte) map[string]string {
+	var signatures = make(map[string]string)
+	k.iterateEthereumSignatures(ctx, storeIndex, func(val sdk.ValAddress, h string) bool {
 		signatures[val.String()] = h
 		return false
 	})
@@ -138,14 +138,14 @@ func (k Keeper) GetEthereumSignatures(ctx sdk.Context, storeIndex []byte) map[st
 }
 
 // iterateEthereumSignatures iterates through all valset confirms by nonce in ASC order
-func (k Keeper) iterateEthereumSignatures(ctx sdk.Context, storeIndex []byte, cb func(sdk.ValAddress, hexutil.Bytes) bool) {
+func (k Keeper) iterateEthereumSignatures(ctx sdk.Context, storeIndex []byte, cb func(sdk.ValAddress, string) bool) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.EthereumSignatureKey}, storeIndex...))
 	iter := prefixStore.Iterator(nil, nil)
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
 		// cb returns true to stop early
-		if cb(iter.Key(), iter.Value()) {
+		if cb(iter.Key(), string(iter.Value())) {
 			break
 		}
 	}

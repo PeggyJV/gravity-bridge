@@ -7,7 +7,7 @@ use std::fmt::Debug;
 use std::{
     cmp::Ordering,
     collections::{HashMap, HashSet},
-    fmt,
+    fmt, str,
 };
 
 /// The total power in the Gravity bridge is normalized to u32 max every
@@ -64,7 +64,7 @@ impl ValsetConfirmResponse {
         Ok(ValsetConfirmResponse {
             eth_signer: input.ethereum_signer.parse()?,
             nonce: input.signer_set_nonce,
-            eth_signature: EthSignature::from_bytes(&input.signature)?,
+            eth_signature: input.signature.parse()?,
         })
     }
 }
@@ -123,6 +123,10 @@ impl Valset {
     /// this will be sorted, in others it will be improperly sorted but must be maintained so that the signatures
     /// are accepted on the Ethereum chain, which requires the submitted addresses to match whatever the previously
     /// submitted ordering was and the signatures must be in parallel arrays to reduce shuffling.
+    /// When this function runs, `self` (a Valset) is the Valset that is currently active on the Ethereum contract.
+    /// It has been parsed from the Ethereum event.
+    /// `signatures` are the signatures that have currently been submitted to the Gravity Module for a given event that
+    /// we are currently trying to submit.
     fn get_signature_status<T: Confirm + Clone + Debug>(
         &self,
         signed_message: &[u8],

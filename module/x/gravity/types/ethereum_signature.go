@@ -50,13 +50,14 @@ func (cctx *ContractCallTxSignature) GetStoreIndex() []byte {
 //////////////
 
 func (u *SignerSetTxSignature) Validate() error {
+	fmt.Printf("&&&&&& IN SignerSetTxSignature Validate()")
 	if u.SignerSetNonce == 0 {
 		return fmt.Errorf("nonce must be set")
 	}
 	if !common.IsHexAddress(u.EthereumSigner) {
 		return sdkerrors.Wrap(ErrInvalid, "ethereum signer must be address")
 	}
-	if u.Signature == nil {
+	if u.Signature == "" {
 		return fmt.Errorf("signature must be set")
 	}
 	return nil
@@ -72,7 +73,7 @@ func (u *ContractCallTxSignature) Validate() error {
 	if !common.IsHexAddress(u.EthereumSigner) {
 		return sdkerrors.Wrap(ErrInvalid, "ethereum signer must be address")
 	}
-	if u.Signature == nil {
+	if u.Signature == "" {
 		return fmt.Errorf("signature must be set")
 	}
 	return nil
@@ -88,7 +89,7 @@ func (u *BatchTxSignature) Validate() error {
 	if !common.IsHexAddress(u.EthereumSigner) {
 		return sdkerrors.Wrap(ErrInvalid, "ethereum signer must be address")
 	}
-	if u.Signature == nil {
+	if u.Signature == "" {
 		return fmt.Errorf("signature must be set")
 	}
 	return nil

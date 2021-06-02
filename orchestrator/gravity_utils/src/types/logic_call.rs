@@ -59,7 +59,7 @@ impl LogicCallConfirmResponse {
             invalidation_id: input.invalidation_scope,
             invalidation_nonce: input.invalidation_nonce,
             ethereum_signer: input.ethereum_signer.parse()?,
-            eth_signature: EthSignature::from_bytes(&input.signature)?,
+            eth_signature: input.signature.parse()?,
         })
     }
 }

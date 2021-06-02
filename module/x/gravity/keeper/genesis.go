@@ -4,7 +4,6 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
 )
@@ -124,7 +123,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		ota, _ := types.PackOutgoingTx(otx)
 		outgoingTxs = append(outgoingTxs, ota)
 		sstx, _ := otx.(*types.SignerSetTx)
-		k.iterateEthereumSignatures(ctx, sstx.GetStoreIndex(), func(val sdk.ValAddress, sig hexutil.Bytes) bool {
+		k.iterateEthereumSignatures(ctx, sstx.GetStoreIndex(), func(val sdk.ValAddress, sig string) bool {
 			siga, _ := types.PackSignature(&types.SignerSetTxSignature{sstx.Nonce, k.GetValidatorEthereumAddress(ctx, val).Hex(), sig})
 			ethereumSignatures = append(ethereumSignatures, siga)
 			return false
@@ -137,8 +136,9 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		ota, _ := types.PackOutgoingTx(otx)
 		outgoingTxs = append(outgoingTxs, ota)
 		btx, _ := otx.(*types.BatchTx)
-		k.iterateEthereumSignatures(ctx, btx.GetStoreIndex(), func(val sdk.ValAddress, sig hexutil.Bytes) bool {
-			siga, _ := types.PackSignature(&types.BatchTxSignature{btx.TokenContract, btx.BatchNonce, k.GetValidatorEthereumAddress(ctx, val).Hex(), sig})
+		k.iterateEthereumSignatures(ctx, btx.GetStoreIndex(), func(val sdk.ValAddress, sig string) bool {
+			btxsig := &types.BatchTxSignature{btx.TokenContract, btx.BatchNonce, k.GetValidatorEthereumAddress(ctx, val).Hex(), sig}
+			siga, _ := types.PackSignature(btxsig)
 			ethereumSignatures = append(ethereumSignatures, siga)
 			return false
 		})
@@ -150,7 +150,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		ota, _ := types.PackOutgoingTx(otx)
 		outgoingTxs = append(outgoingTxs, ota)
 		btx, _ := otx.(*types.ContractCallTx)
-		k.iterateEthereumSignatures(ctx, btx.GetStoreIndex(), func(val sdk.ValAddress, sig hexutil.Bytes) bool {
+		k.iterateEthereumSignatures(ctx, btx.GetStoreIndex(), func(val sdk.ValAddress, sig string) bool {
 			siga, _ := types.PackSignature(&types.ContractCallTxSignature{btx.InvalidationScope, btx.InvalidationNonce, k.GetValidatorEthereumAddress(ctx, val).Hex(), sig})
 			ethereumSignatures = append(ethereumSignatures, siga)
 			return false

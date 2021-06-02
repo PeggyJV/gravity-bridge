@@ -83,7 +83,7 @@ func TestSignerSetTxSlashing_SignerSetTxCreated_After_ValidatorBonded(t *testing
 		if i == 0 {
 			continue
 		}
-		pk.SetEthereumSignature(ctx, &types.SignerSetTxSignature{signerSet.Nonce, keeper.AccAddrs[i].String(), []byte("dummysig")}, val)
+		pk.SetEthereumSignature(ctx, &types.SignerSetTxSignature{signerSet.Nonce, keeper.AccAddrs[i].String(), "dummysig"}, val)
 	}
 
 	EndBlocker(ctx, pk)
@@ -142,7 +142,7 @@ func TestSignerSetTxSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testi
 			// don't sign with first validator
 			continue
 		}
-		gravity.SetEthereumSignature(ctx, &types.SignerSetTxSignature{vs.Nonce, keeper.EthAddrs[i].Hex(), []byte("dummySig")}, val)
+		gravity.SetEthereumSignature(ctx, &types.SignerSetTxSignature{vs.Nonce, keeper.EthAddrs[i].Hex(), "dummySig"}, val)
 	}
 	staking.EndBlocker(input.Context, input.StakingKeeper)
 
@@ -194,7 +194,7 @@ func TestBatchSlashing(t *testing.T) {
 			BatchNonce:     batch.BatchNonce,
 			TokenContract:  keeper.TokenContractAddrs[0],
 			EthereumSigner: keeper.EthAddrs[i].String(),
-			Signature:      []byte("dummysig"),
+			Signature:      "dummysig",
 		}, val)
 	}
 

@@ -120,7 +120,7 @@ pub async fn send_valset_confirms(
         let confirm = proto::SignerSetTxSignature {
             ethereum_signer: our_eth_address.to_string(),
             signer_set_nonce: valset.nonce,
-            signature: eth_signature.to_bytes().to_vec(),
+            signature: eth_signature.to_string(),
         };
         let size = Message::encoded_len(&confirm);
         let mut buf = BytesMut::with_capacity(size);
@@ -188,9 +188,7 @@ pub async fn send_batch_confirm(
             token_contract: batch.token_contract.to_string(),
             batch_nonce: batch.nonce,
             ethereum_signer: our_eth_address.to_string(),
-            signature: bytes_to_hex_str(&eth_signature.to_bytes())
-                .as_bytes()
-                .to_vec(),
+            signature: eth_signature.to_string(),
         };
         let msg = Msg::new("/gravity.v1.MsgConfirmBatch", confirm);
         messages.push(msg);
@@ -246,9 +244,7 @@ pub async fn send_logic_call_confirm(
         );
         let confirm = proto::ContractCallTxSignature {
             ethereum_signer: our_eth_address.to_string(),
-            signature: bytes_to_hex_str(&eth_signature.to_bytes())
-                .as_bytes()
-                .to_vec(),
+            signature: eth_signature.to_string(),
             invalidation_scope: bytes_to_hex_str(&call.invalidation_id).as_bytes().to_vec(),
             invalidation_nonce: call.invalidation_nonce,
         };
