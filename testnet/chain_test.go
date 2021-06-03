@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -65,4 +66,15 @@ func TestBasicChain(t *testing.T) {
 
 	err = ioutil.WriteFile(filepath.Join(chain.ConfigDir(), "ethGenesis.json"), ethGenesisMarshal, 0644)
 	require.NoError(t, err, "error writing ethereum genesis file")
+
+	// generate gentxs
+	amount, _ := sdk.NewIntFromString("100000000000")
+	coin := sdk.Coin{Denom: "stake", Amount: amount}
+	for _, v := range chain.Validators {
+		cvm, err := v.buildCreateValidatorMsg(coin)
+		require.NoError(t, err, "error building create validator msg")
+		tx, err := v.signMsg(cvm)
+		require.NoError(t, err, "error signing create validator msg")
+		print(tx)
+	}
 }

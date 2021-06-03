@@ -2,28 +2,38 @@ package main
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
+	types3 "github.com/cosmos/cosmos-sdk/crypto/types"
 	"os"
 	"path"
 	"path/filepath"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	crypto2 "github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	tx2 "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/cosmos/gravity-bridge/module/app"
+	types2 "github.com/cosmos/gravity-bridge/module/x/gravity/types"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/types"
-
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 type Validator struct {
@@ -34,6 +44,7 @@ type Validator struct {
 	// Key management
 	Mnemonic string
 	KeyInfo  keyring.Info
+	PrivateKey types3.PrivKey
 
 	EthereumKey EthereumKey
 }
@@ -66,24 +77,6 @@ func createMnemonic() (string, error) {
 	return mnemonic, nil
 }
 
-type printInfo struct {
-	Moniker    string          `json:"moniker" yaml:"moniker"`
-	ChainID    string          `json:"chain_id" yaml:"chain_id"`
-	NodeID     string          `json:"node_id" yaml:"node_id"`
-	GenTxsDir  string          `json:"gentxs_dir" yaml:"gentxs_dir"`
-	AppMessage json.RawMessage `json:"app_message" yaml:"app_message"`
-}
-
-func newPrintInfo(moniker, chainID, nodeID, genTxsDir string, appMessage json.RawMessage) printInfo {
-	return printInfo{
-		Moniker:    moniker,
-		ChainID:    chainID,
-		NodeID:     nodeID,
-		GenTxsDir:  genTxsDir,
-		AppMessage: appMessage,
-	}
-}
-
 func (v *Validator) ConfigDir() string {
 	return fmt.Sprintf("%s/%s%d", v.Chain.ConfigDir(), v.Moniker, v.Index)
 }
@@ -96,20 +89,20 @@ func (v *Validator) MkDir() {
 	}
 }
 
-func getGenDoc(path string) (doc *types.GenesisDoc, err error) {
+func getGenDoc(path string) (doc *tmtypes.GenesisDoc, err error) {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 	config.SetRoot(path)
 
 	genFile := config.GenesisFile()
-	doc = &types.GenesisDoc{}
+	doc = &tmtypes.GenesisDoc{}
 	if _, err = os.Stat(genFile); err != nil {
 		if !os.IsNotExist(err) {
 			return
 		}
 		err = nil
 	} else {
-		doc, err = types.GenesisDocFromFile(genFile)
+		doc, err = tmtypes.GenesisDocFromFile(genFile)
 		if err != nil {
 			err = errors.Wrap(err, "Failed to read genesis doc from file")
 			return
@@ -205,6 +198,16 @@ func (v *Validator) createKey(name string) (err error) {
 	}
 	v.KeyInfo = info
 
+	privKeyArmor, err := kb.ExportPrivKeyArmor(name, "testpassphrase")
+	if err != nil {
+		return err
+	}
+	privKey, _, err := crypto2.UnarmorDecryptPrivKey(privKeyArmor, "testpassphrase")
+	if err != nil {
+		return err
+	}
+	v.PrivateKey = privKey
+
 	return nil
 }
 
@@ -247,7 +250,6 @@ func addGenesisAccount(path string, moniker string, accAddr sdk.AccAddress, coin
 	accs = append(accs, genAccount)
 	accs = authtypes.SanitizeGenesisAccounts(accs)
 
-
 	genAccs, err := authtypes.PackAccounts(accs)
 	if err != nil {
 		return fmt.Errorf("failed to convert accounts into any's: %w", err)
@@ -260,7 +262,6 @@ func addGenesisAccount(path string, moniker string, accAddr sdk.AccAddress, coin
 	}
 
 	appState[authtypes.ModuleName] = authGenStateBz
-
 
 	bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
 	bankGenState.Balances = append(bankGenState.Balances, balances)
@@ -302,4 +303,108 @@ func (v *Validator) generateEthereumKey() (err error) {
 		Address:    crypto.PubkeyToAddress(*publicKeyECDSA).Hex(),
 	}
 	return
+}
+
+// BuildCreateValidatorMsg makes a new MsgCreateValidator.
+func (v *Validator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
+	description := types.NewDescription(
+		v.Moniker,
+		"",
+		"",
+		"",
+		"",
+	)
+
+	commissionRates := types.CommissionRates{
+		Rate:          sdk.MustNewDecFromStr("0.1"),
+		MaxRate:       sdk.MustNewDecFromStr("0.2"),
+		MaxChangeRate: sdk.MustNewDecFromStr("0.01"),
+	}
+
+	// get the initial validator min self delegation
+	minSelfDelegation, _ := sdk.NewIntFromString("1")
+
+	msg, err := types.NewMsgCreateValidator(
+		sdk.ValAddress(v.KeyInfo.GetAddress()), v.KeyInfo.GetPubKey(), amount, description, commissionRates, minSelfDelegation,
+	)
+	return msg, err
+}
+
+func (v *Validator) nodeID() string {
+	return hex.EncodeToString(v.KeyInfo.GetPubKey().Address())
+}
+
+func (v *Validator) signMsg(msg sdk.Msg) (signing.Tx, error) {
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &types.MsgCreateValidator{}, &types2.MsgDelegateKeys{})
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+
+	signModes := []signing2.SignMode{signing2.SignMode_SIGN_MODE_DIRECT}
+	txConfig := tx2.NewTxConfig(marshaler, signModes)
+	txBuilder := txConfig.NewTxBuilder()
+
+	if err := txBuilder.SetMsgs(msg); err != nil {
+		return nil, err
+	}
+
+	txBuilder.SetMemo(fmt.Sprintf("%s@%s%d:26656", v.nodeID(), v.Moniker, v.Index))
+	fees := sdk.Coins{sdk.Coin{}}
+	txBuilder.SetFeeAmount(fees)
+	txBuilder.SetGasLimit(200000)
+	txBuilder.SetTimeoutHeight(0)
+
+	signerData := authsigning.SignerData{
+		ChainID:       v.Chain.ID,
+		AccountNumber: 0,
+		Sequence:      0,
+	}
+
+	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on
+	// TxBuilder under the hood, and SignerInfos is needed to generated the
+	// sign bytes. This is the reason for setting SetSignatures here, with a
+	// nil signature.
+	//
+	// Note: this line is not needed for SIGN_MODE_LEGACY_AMINO, but putting it
+	// also doesn't affect its generated sign bytes, so for code's simplicity
+	// sake, we put it here.
+	sigData := signing2.SingleSignatureData{
+		SignMode:  signing2.SignMode_SIGN_MODE_DIRECT,
+		Signature: nil,
+	}
+	sig := signing2.SignatureV2{
+		PubKey:   v.KeyInfo.GetPubKey(),
+		Data:     &sigData,
+		Sequence: 0,
+	}
+
+	if err := txBuilder.SetSignatures(sig); err != nil {
+		return nil, err
+	}
+
+	bytesToSign, err := txConfig.SignModeHandler().GetSignBytes(signing2.SignMode_SIGN_MODE_DIRECT, signerData, txBuilder.GetTx())
+	if err != nil {
+		return nil, err
+	}
+
+	// Sign those bytes
+	sigBytes, err := v.PrivateKey.Sign(bytesToSign)
+	if err != nil {
+		return nil, err
+	}
+
+	// Construct the SignatureV2 struct
+	sigData = signing2.SingleSignatureData{
+		SignMode:  signing2.SignMode_SIGN_MODE_DIRECT,
+		Signature: sigBytes,
+	}
+	sig = signing2.SignatureV2{
+		PubKey:   v.KeyInfo.GetPubKey(),
+		Data:     &sigData,
+		Sequence: 0,
+	}
+	if err := txBuilder.SetSignatures(sig); err != nil {
+		return nil, err
+	}
+
+	return txBuilder.GetTx(), nil
 }
