@@ -127,7 +127,7 @@ services:
 
   test_runner:
     build:
-      context: ./orchestrator
+      context: .
       dockerfile: testnet.Dockerfile
     depends_on:
       - gravity0
