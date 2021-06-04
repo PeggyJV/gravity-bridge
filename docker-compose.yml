@@ -37,7 +37,6 @@ services:
       dockerfile: ./Dockerfile
     depends_on:
       - ethereum
-      - gravity0
     environment:
       - COSMOS_KEY
       - COSMOS_PHRASE
@@ -55,7 +54,6 @@ services:
       - ./testdata/testchain/gravity1:/root/home
     depends_on:
       - ethereum
-      - gravity0
 
   orchestrator1:
     build:
@@ -63,7 +61,6 @@ services:
       dockerfile: ./Dockerfile
     depends_on:
       - ethereum
-      - gravity1
     environment:
       - COSMOS_KEY
       - COSMOS_PHRASE
@@ -81,7 +78,6 @@ services:
       - ./testdata/testchain/gravity2:/root/home
     depends_on:
       - ethereum
-      - gravity0
 
   orchestrator2:
     build:
@@ -89,7 +85,6 @@ services:
       dockerfile: ./Dockerfile
     depends_on:
       - ethereum
-      - gravity2
     environment:
       - COSMOS_KEY
       - COSMOS_PHRASE
@@ -107,7 +102,6 @@ services:
       - ./testdata/testchain/gravity3:/root/home
     depends_on:
       - ethereum
-      - gravity0
 
   orchestrator3:
     build:
@@ -115,7 +109,6 @@ services:
       dockerfile: ./Dockerfile
     depends_on:
       - ethereum
-      - gravity3
     environment:
       - COSMOS_KEY
       - COSMOS_PHRASE
@@ -130,7 +123,6 @@ services:
       context: ./orchestrator
       dockerfile: testnet.Dockerfile
     depends_on:
-      - gravity0
       - ethereum
     volumes:
       - ./testdata:/testdata
