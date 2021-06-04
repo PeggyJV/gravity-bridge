@@ -98,17 +98,18 @@ func (k Keeper) cancelSendToEthereum(ctx sdk.Context, id uint64, s string) error
 		return sdkerrors.Wrap(err, "sending coins from module account")
 	}
 
-	k.deleteUnbatchedSendToEthereum(ctx, send.Id, send.Erc20Fee)
+	// k.deleteUnbatchedSendToEthereum(ctx, send.Id, send.Erc20Fee)
+	k.SendToEthereumStore.Delete(ctx, send.Erc20Fee, send.Id)
 	return nil
 }
 
-func (k Keeper) setUnbatchedSendToEthereum(ctx sdk.Context, ste *types.SendToEthereum) {
-	ctx.KVStore(k.storeKey).Set(types.MakeSendToEthereumKey(ste.Id, ste.Erc20Fee), k.cdc.MustMarshalBinaryBare(ste))
-}
+// func (k Keeper) setUnbatchedSendToEthereum(ctx sdk.Context, ste *types.SendToEthereum) {
+// 	ctx.KVStore(k.storeKey).Set(types.MakeSendToEthereumKey(ste.Id, ste.Erc20Fee), k.cdc.MustMarshalBinaryBare(ste))
+// }
 
-func (k Keeper) deleteUnbatchedSendToEthereum(ctx sdk.Context, id uint64, fee types.ERC20Token) {
-	ctx.KVStore(k.storeKey).Delete(types.MakeSendToEthereumKey(id, fee))
-}
+// func (k Keeper) deleteUnbatchedSendToEthereum(ctx sdk.Context, id uint64, fee types.ERC20Token) {
+// 	ctx.KVStore(k.storeKey).Delete(types.MakeSendToEthereumKey(id, fee))
+// }
 
 func (k Keeper) iterateUnbatchedSendToEthereumsByContract(ctx sdk.Context, contract common.Address, cb func(*types.SendToEthereum) bool) {
 	iter := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.SendToEthereumKey}, contract.Bytes()...)).ReverseIterator(nil, nil)

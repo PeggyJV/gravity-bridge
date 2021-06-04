@@ -30,11 +30,36 @@ type Keeper struct {
 		Handle(sdk.Context, types.EthereumEvent) error
 	}
 
-	storeKey       sdk.StoreKey
-	paramSpace     paramtypes.Subspace
-	cdc            codec.BinaryMarshaler
-	bankKeeper     types.BankKeeper
-	SlashingKeeper types.SlashingKeeper
+	storeKey            sdk.StoreKey
+	paramSpace          paramtypes.Subspace
+	cdc                 codec.BinaryMarshaler
+	bankKeeper          types.BankKeeper
+	SlashingKeeper      types.SlashingKeeper
+	SendToEthereumStore SendToEthereumStore
+}
+
+type SendToEthereumStore struct {
+	gravityStoreKey sdk.StoreKey
+	cdc             codec.BinaryMarshaler
+}
+
+func (s SendToEthereumStore) getStore(ctx sdk.Context, tokenContract string) prefix.Store {
+	return prefix.NewStore(ctx.KVStore(s.gravityStoreKey), append([]byte{types.SendToEthereumKey}, []byte(tokenContract)...))
+}
+
+func (s SendToEthereumStore) makeFeeIdIndex(fee types.ERC20Token, id uint64) []byte {
+	amount := make([]byte, 32)
+	return append(fee.Amount.BigInt().FillBytes(amount), sdk.Uint64ToBigEndian(id)...)
+}
+
+func (s SendToEthereumStore) Set(ctx sdk.Context, ste *types.SendToEthereum) {
+	index := s.makeFeeIdIndex(ste.Erc20Fee, ste.Id)
+	s.getStore(ctx, ste.Erc20Fee.Contract).Set(index, s.cdc.MustMarshalBinaryBare(ste))
+}
+
+func (s SendToEthereumStore) Delete(ctx sdk.Context, fee types.ERC20Token, id uint64) {
+	index := s.makeFeeIdIndex(fee, id)
+	s.getStore(ctx, fee.Contract).Delete(index)
 }
 
 // NewKeeper returns a new instance of the gravity keeper
@@ -45,12 +70,13 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace para
 	}
 
 	k := Keeper{
-		cdc:            cdc,
-		paramSpace:     paramSpace,
-		storeKey:       storeKey,
-		StakingKeeper:  stakingKeeper,
-		bankKeeper:     bankKeeper,
-		SlashingKeeper: slashingKeeper,
+		cdc:                 cdc,
+		paramSpace:          paramSpace,
+		storeKey:            storeKey,
+		StakingKeeper:       stakingKeeper,
+		bankKeeper:          bankKeeper,
+		SlashingKeeper:      slashingKeeper,
+		SendToEthereumStore: SendToEthereumStore{gravityStoreKey: storeKey},
 	}
 	k.EthereumEventProcessor = EthereumEventProcessor{
 		keeper:     k,

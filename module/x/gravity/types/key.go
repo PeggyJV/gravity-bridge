@@ -35,6 +35,9 @@ const (
 	OutgoingTxKey
 	SendToEthereumKey
 
+	//// Single value keys
+	// STORE REFACTOR: figure out which of these are directly related to a table and add their functionality into that table.
+	// For the ones that are genuinely standalone values, store them in a separate SingleValueStore which is more like a true KV store
 	// Latest nonce indexes
 	LastEventNonceByValidatorKey
 	LastObservedEventNonceKey
@@ -42,28 +45,29 @@ const (
 	LastSlashedOutgoingTxBlockKey
 	LastSlashedSignerSetTxNonceKey
 	LastOutgoingBatchNonceKey
-
-	// LastSendToEthereumIDKey indexes the lastTxPoolID
-	LastSendToEthereumIDKey
-
+	// LastUnBondingBlockHeightKey indexes the last validator unbonding block height
+	LastUnBondingBlockHeightKey
+	LastObservedSignerSetKey
 	// LastEthereumBlockHeightKey indexes the latest Ethereum block height
 	LastEthereumBlockHeightKey
+	///// End single value keys
+
+	// LastSendToEthereumIDKey indexes the lastTxPoolID
+	// This should be integrated into the SendToEthereumStore and completely private
+	LastSendToEthereumIDKey
 
 	// DenomToERC20Key prefixes the index of Cosmos originated asset denoms to ERC20s
 	DenomToERC20Key
 
 	// ERC20ToDenomKey prefixes the index of Cosmos originated assets ERC20s to denoms
 	ERC20ToDenomKey
-
-	// LastUnBondingBlockHeightKey indexes the last validator unbonding block height
-	LastUnBondingBlockHeightKey
-
-	LastObservedSignerSetKey
 )
 
 ////////////////////
 // Key Delegation //
 ////////////////////
+// STORE REFACTOR: nice and easy (hopefully). We want to unify these into one table which will require
+// modification of any calling code.
 
 // MakeOrchestratorValidatorAddressKey returns the following key format
 // prefix
@@ -104,6 +108,7 @@ func MakeEthereumSignatureKey(storeIndex []byte, validator sdk.ValAddress) []byt
 // MakeEthereumEventVoteRecordKey returns the following key format
 // prefix     nonce                             claim-details-hash
 // [0x5][0 0 0 0 0 0 0 1][fd1af8cec6c67fcf156f1b61fdf91ebc04d05484d007436e75342fc05bbff35a]
+// STORE REFACTOR: nice and easy (hopefully)
 func MakeEthereumEventVoteRecordKey(eventNonce uint64, claimHash []byte) []byte {
 	return bytes.Join([][]byte{{EthereumEventVoteRecordKey}, sdk.Uint64ToBigEndian(eventNonce), claimHash}, []byte{})
 }
@@ -122,12 +127,12 @@ func MakeOutgoingTxKey(storeIndex []byte) []byte {
 //////////////////////
 
 // MakeSendToEthereumKey returns the following key format
-// prefix            eth-contract-address            fee_amount        id
-// [0x9][0xc783df8a850f42e7F7e57013759C285caa701eB6][1000000000][0 0 0 0 0 0 0 1]
-func MakeSendToEthereumKey(id uint64, fee ERC20Token) []byte {
-	amount := make([]byte, 32)
-	return bytes.Join([][]byte{{SendToEthereumKey}, common.HexToAddress(fee.Contract).Bytes(), fee.Amount.BigInt().FillBytes(amount), sdk.Uint64ToBigEndian(id)}, []byte{})
-}
+//  fee_amount        id
+// [1000000000][0 0 0 0 0 0 0 1]
+// func MakeSendToEthereumKey(id uint64, fee ERC20Token) []byte {
+// 	amount := make([]byte, 32)
+// 	return append(fee.Amount.BigInt().FillBytes(amount), sdk.Uint64ToBigEndian(id)...)
+// }
 
 // MakeLastEventNonceByValidatorKey indexes lateset event nonce by validator
 // MakeLastEventNonceByValidatorKey returns the following key format
@@ -137,6 +142,9 @@ func MakeLastEventNonceByValidatorKey(validator sdk.ValAddress) []byte {
 	return append([]byte{LastEventNonceByValidatorKey}, validator.Bytes()...)
 }
 
+// STORE REFACTOR: Change from two byte indexes to a table with
+// two indexes to rows that have two fields
+///////
 func MakeDenomToERC20Key(denom string) []byte {
 	return append([]byte{DenomToERC20Key}, []byte(denom)...)
 }
@@ -144,6 +152,8 @@ func MakeDenomToERC20Key(denom string) []byte {
 func MakeERC20ToDenomKey(erc20 string) []byte {
 	return append([]byte{ERC20ToDenomKey}, []byte(erc20)...)
 }
+
+//////
 
 func MakeSignerSetTxKey(nonce uint64) []byte {
 	return append([]byte{SignerSetTxPrefixByte}, sdk.Uint64ToBigEndian(nonce)...)
