@@ -83,9 +83,9 @@ gork
       balance [key-name]
       gravity-keys [key-name]
   deploy
-    cosmos-erc20 [denom] [erc20_name] [erc20_symbol] [erc20_decimals]
+    cosmos-erc20 [denom] [erc20_name] [erc20_symbol] [erc20_decimals] [ethereum_key]
   start
-    orchestrator [contract-address] [fee-denom]
+    orchestrator 
     relayer
   tests
     runner
