@@ -4,9 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -49,7 +46,15 @@ func (k Keeper) createSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, cou
 	// rather than the denom that is the input to this function.
 
 	// set the outgoing tx in the pool index
-	k.setUnbatchedSendToEthereum(ctx, &types.SendToEthereum{
+	// k.setUnbatchedSendToEthereum(ctx, &types.SendToEthereum{
+	// 	Id:                nextID,
+	// 	Sender:            sender.String(),
+	// 	EthereumRecipient: counterpartReceiver,
+	// 	Erc20Token:        types.NewSDKIntERC20Token(amount.Amount, tokenContract),
+	// 	Erc20Fee:          types.NewSDKIntERC20Token(fee.Amount, tokenContract),
+	// })
+
+	k.SendToEthereumStore.Set(ctx, &types.SendToEthereum{
 		Id:                nextID,
 		Sender:            sender.String(),
 		EthereumRecipient: counterpartReceiver,
@@ -64,15 +69,18 @@ func (k Keeper) createSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, cou
 // - checks that the provided tx actually exists
 // - deletes the unbatched tx from the pool
 // - issues the tokens back to the sender
-func (k Keeper) cancelSendToEthereum(ctx sdk.Context, id uint64, s string) error {
-	sender, _ := sdk.AccAddressFromBech32(s)
+func (k Keeper) cancelSendToEthereum(ctx sdk.Context, id uint64, account string) error {
+	sender, _ := sdk.AccAddressFromBech32(account)
 
-	var send *types.SendToEthereum
-	for _, ste := range k.getUnbatchedSendToEthereums(ctx) {
-		if ste.Id == id {
-			send = ste
-		}
-	}
+	// var send *types.SendToEthereum
+	// for _, ste := range k.getUnbatchedSendToEthereums(ctx) {
+	// 	if ste.Id == id {
+	// 		send = ste
+	// 	}
+	// }
+
+	send := k.SendToEthereumStore.Get(ctx, id)
+
 	if send == nil {
 		// NOTE: this case will also be hit if the transaction is in a batch
 		return sdkerrors.Wrap(types.ErrInvalid, "id not found in send to ethereum pool")
@@ -99,7 +107,7 @@ func (k Keeper) cancelSendToEthereum(ctx sdk.Context, id uint64, s string) error
 	}
 
 	// k.deleteUnbatchedSendToEthereum(ctx, send.Id, send.Erc20Fee)
-	k.SendToEthereumStore.Delete(ctx, send.Erc20Fee, send.Id)
+	k.SendToEthereumStore.Delete(ctx, id)
 	return nil
 }
 
@@ -111,38 +119,38 @@ func (k Keeper) cancelSendToEthereum(ctx sdk.Context, id uint64, s string) error
 // 	ctx.KVStore(k.storeKey).Delete(types.MakeSendToEthereumKey(id, fee))
 // }
 
-func (k Keeper) iterateUnbatchedSendToEthereumsByContract(ctx sdk.Context, contract common.Address, cb func(*types.SendToEthereum) bool) {
-	iter := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.SendToEthereumKey}, contract.Bytes()...)).ReverseIterator(nil, nil)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		var ste types.SendToEthereum
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &ste)
-		if cb(&ste) {
-			break
-		}
-	}
-}
+// func (k Keeper) iterateUnbatchedSendToEthereumsByContract(ctx sdk.Context, contract common.Address, cb func(*types.SendToEthereum) bool) {
+// 	iter := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.SendToEthereumKey}, contract.Bytes()...)).ReverseIterator(nil, nil)
+// 	defer iter.Close()
+// 	for ; iter.Valid(); iter.Next() {
+// 		var ste types.SendToEthereum
+// 		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &ste)
+// 		if cb(&ste) {
+// 			break
+// 		}
+// 	}
+// }
 
-func (k Keeper) IterateUnbatchedSendToEthereums(ctx sdk.Context, cb func(*types.SendToEthereum) bool) {
-	iter := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEthereumKey}).ReverseIterator(nil, nil)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		var ste types.SendToEthereum
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &ste)
-		if cb(&ste) {
-			break
-		}
-	}
-}
+// func (k Keeper) IterateUnbatchedSendToEthereums(ctx sdk.Context, cb func(*types.SendToEthereum) bool) {
+// 	iter := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEthereumKey}).ReverseIterator(nil, nil)
+// 	defer iter.Close()
+// 	for ; iter.Valid(); iter.Next() {
+// 		var ste types.SendToEthereum
+// 		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &ste)
+// 		if cb(&ste) {
+// 			break
+// 		}
+// 	}
+// }
 
-func (k Keeper) getUnbatchedSendToEthereums(ctx sdk.Context) []*types.SendToEthereum {
-	var out []*types.SendToEthereum
-	k.IterateUnbatchedSendToEthereums(ctx, func(ste *types.SendToEthereum) bool {
-		out = append(out, ste)
-		return false
-	})
-	return out
-}
+// func (k Keeper) getUnbatchedSendToEthereums(ctx sdk.Context) []*types.SendToEthereum {
+// 	var out []*types.SendToEthereum
+// 	k.IterateUnbatchedSendToEthereums(ctx, func(ste *types.SendToEthereum) bool {
+// 		out = append(out, ste)
+// 		return false
+// 	})
+// 	return out
+// }
 
 func (k Keeper) incrementLastSendToEthereumIDKey(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)

@@ -30,9 +30,9 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, contractAddress common.Address, ma
 	}
 
 	var selectedStes []*types.SendToEthereum
-	k.iterateUnbatchedSendToEthereumsByContract(ctx, contractAddress, func(ste *types.SendToEthereum) bool {
+	k.SendToEthereumStore.IterateOrderedByFeeAndId(ctx, contractAddress, func(ste *types.SendToEthereum) bool {
 		selectedStes = append(selectedStes, ste)
-		k.deleteUnbatchedSendToEthereum(ctx, ste.Id, ste.Erc20Fee)
+		k.SendToEthereumStore.Delete(ctx, ste.Id)
 		return len(selectedStes) == maxElements
 	})
 
@@ -100,27 +100,12 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 func (k Keeper) getBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr common.Address, maxElements int) sdk.Int {
 	feeAmount := sdk.ZeroInt()
 	i := 0
-	k.iterateUnbatchedSendToEthereumsByContract(ctx, tokenContractAddr, func(tx *types.SendToEthereum) bool {
+	k.SendToEthereumStore.IterateOrderedByFeeAndId(ctx, tokenContractAddr, func(tx *types.SendToEthereum) bool {
 		feeAmount = feeAmount.Add(tx.Erc20Fee.Amount)
 		i++
 		return i == maxElements
 	})
 
-	return feeAmount
-}
-
-// GetBatchFeesByTokenType gets the fees the next batch of a given token type would
-// have if created. This info is both presented to relayers for the purpose of determining
-// when to request batches and also used by the batch creation process to decide not to create
-// a new batch
-func (k Keeper) GetBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr common.Address, maxElements int) sdk.Int {
-	feeAmount := sdk.ZeroInt()
-	i := 0
-	k.iterateUnbatchedSendToEthereumsByContract(ctx, tokenContractAddr, func(tx *types.SendToEthereum) bool {
-		feeAmount = feeAmount.Add(tx.Erc20Fee.Amount)
-		i++
-		return i == maxElements
-	})
 	return feeAmount
 }
 
@@ -131,7 +116,7 @@ func (k Keeper) CancelBatchTx(ctx sdk.Context, tokenContract common.Address, non
 
 	// free transactions from batch and reindex them
 	for _, tx := range batch.Transactions {
-		k.setUnbatchedSendToEthereum(ctx, tx)
+		k.SendToEthereumStore.Set(ctx, tx)
 	}
 
 	// Delete batch since it is finished

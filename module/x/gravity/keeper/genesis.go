@@ -14,7 +14,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 
 	// reset pool transactions in state
 	for _, tx := range data.UnbatchedSendToEthereumTxs {
-		k.setUnbatchedSendToEthereum(ctx, tx)
+		k.SendToEthereumStore.Set(ctx, tx)
 	}
 
 	// reset ethereum event vote records in state
@@ -103,7 +103,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		delegates                = k.getDelegateKeys(ctx)
 		lastobserved             = k.GetLastObservedEventNonce(ctx)
 		erc20ToDenoms            []*types.ERC20ToDenom
-		unbatchedTransfers       = k.getUnbatchedSendToEthereums(ctx)
+		unbatchedTransfers       = k.SendToEthereumStore.GetAll(ctx)
 	)
 
 	// export ethereumEventVoteRecords from state

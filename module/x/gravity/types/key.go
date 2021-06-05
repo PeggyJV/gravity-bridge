@@ -34,6 +34,7 @@ const (
 	EthereumEventVoteRecordKey
 	OutgoingTxKey
 	SendToEthereumKey
+	SendToEthereumFeeIdIndexKey
 
 	//// Single value keys
 	// STORE REFACTOR: figure out which of these are directly related to a table and add their functionality into that table.

@@ -61,11 +61,7 @@ func TestBatches(t *testing.T) {
 	assert.Equal(t, expFirstBatch.Transactions, gfb.Transactions)
 
 	// and verify remaining available Tx in the pool
-	var gotUnbatchedTx []*types.SendToEthereum
-	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
-		gotUnbatchedTx = append(gotUnbatchedTx, tx)
-		return false
-	})
+	gotUnbatchedTx := input.GravityKeeper.SendToEthereumStore.GetAll(ctx)
 	expUnbatchedTx := []*types.SendToEthereum{
 		types.NewSendToEthereumTx(1, myTokenContractAddr, mySender, myReceiver, 100, 2),
 		types.NewSendToEthereumTx(4, myTokenContractAddr, mySender, myReceiver, 103, 1),
@@ -107,11 +103,7 @@ func TestBatches(t *testing.T) {
 	require.Nil(t, gotSecondBatch)
 
 	// check that txs from first batch have been freed
-	gotUnbatchedTx = nil
-	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
-		gotUnbatchedTx = append(gotUnbatchedTx, tx)
-		return false
-	})
+	gotUnbatchedTx = input.GravityKeeper.SendToEthereumStore.GetAll(ctx)
 	expUnbatchedTx = []*types.SendToEthereum{
 		types.NewSendToEthereumTx(2, myTokenContractAddr, mySender, myReceiver, 101, 3),
 		types.NewSendToEthereumTx(3, myTokenContractAddr, mySender, myReceiver, 102, 2),
@@ -190,11 +182,7 @@ func TestBatchesFullCoins(t *testing.T) {
 	assert.Equal(t, expFirstBatch, gotFirstBatch)
 
 	// and verify remaining available Tx in the pool
-	var gotUnbatchedTx []*types.SendToEthereum
-	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
-		gotUnbatchedTx = append(gotUnbatchedTx, tx)
-		return false
-	})
+	var gotUnbatchedTx = input.GravityKeeper.SendToEthereumStore.GetAll(ctx)
 	expUnbatchedTx := []*types.SendToEthereum{
 		{
 			Id:                1,
@@ -266,11 +254,7 @@ func TestBatchesFullCoins(t *testing.T) {
 	require.Nil(t, gotSecondBatch)
 
 	// check that txs from first batch have been freed
-	gotUnbatchedTx = nil
-	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
-		gotUnbatchedTx = append(gotUnbatchedTx, tx)
-		return false
-	})
+	gotUnbatchedTx = input.GravityKeeper.SendToEthereumStore.GetAll(ctx)
 	expUnbatchedTx = []*types.SendToEthereum{
 		{
 			Id:                2,

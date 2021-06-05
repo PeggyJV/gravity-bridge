@@ -32,11 +32,7 @@ func TestAddToOutgoingPool(t *testing.T) {
 	input.AddSendToEthTxsToPool(t, ctx, myTokenContractAddr, mySender, myReceiver, 2, 3, 2, 1)
 
 	// then
-	var got []*types.SendToEthereum
-	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
-		got = append(got, tx)
-		return false
-	})
+	var got = input.GravityKeeper.SendToEthereumStore.GetAll(ctx)
 
 	exp := []*types.SendToEthereum{
 		types.NewSendToEthereumTx(2, myTokenContractAddr, mySender, myReceiver, 101, 3),
