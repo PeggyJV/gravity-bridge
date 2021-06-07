@@ -22,35 +22,35 @@ func (s SendToEthereumStore) getFeeIdIndexStore(ctx sdk.Context, tokenContract s
 	return prefix.NewStore(ctx.KVStore(s.gravityStoreKey), append([]byte{types.SendToEthereumFeeIdIndexKey}, []byte(tokenContract)...))
 }
 
-func (s SendToEthereumStore) makeFeeIdIndex(fee types.ERC20Token, id uint64) []byte {
+func (s SendToEthereumStore) makeFeeIdIndexKey(fee types.ERC20Token, id uint64) []byte {
 	amount := make([]byte, 32)
 	return append(fee.Amount.BigInt().FillBytes(amount), sdk.Uint64ToBigEndian(id)...)
 }
 
 func (s SendToEthereumStore) Set(ctx sdk.Context, ste *types.SendToEthereum) {
-	index := s.makeFeeIdIndex(ste.Erc20Fee, ste.Id)
+	index := s.makeFeeIdIndexKey(ste.Erc20Fee, ste.Id)
 	s.getFeeIdIndexStore(ctx, ste.Erc20Fee.Contract).Set(index, sdk.Uint64ToBigEndian(ste.Id))
 	s.getStore(ctx).Set(sdk.Uint64ToBigEndian(ste.Id), s.cdc.MustMarshalBinaryBare(ste))
 }
 
 func (s SendToEthereumStore) Get(ctx sdk.Context, id uint64) *types.SendToEthereum {
-	bz := s.getStore(ctx).Get(sdk.Uint64ToBigEndian(id))
-	var ste types.SendToEthereum
-	s.cdc.MustUnmarshalBinaryBare(bz, &ste)
-	return &ste
+	if bz := s.getStore(ctx).Get(sdk.Uint64ToBigEndian(id)); bz != nil {
+		var ste types.SendToEthereum
+		s.cdc.MustUnmarshalBinaryBare(bz, &ste)
+		return &ste
+	}
+	return nil
 }
 
 func (s SendToEthereumStore) Delete(ctx sdk.Context, id uint64) {
-	row := s.Get(ctx, id)
-	if row != nil {
-		index := s.makeFeeIdIndex(row.Erc20Fee, id)
-		s.getFeeIdIndexStore(ctx, row.Erc20Fee.Contract).Delete(index)
+	if row := s.Get(ctx, id); row != nil {
+		s.getFeeIdIndexStore(ctx, row.Erc20Fee.Contract).Delete(s.makeFeeIdIndexKey(row.Erc20Fee, id))
 		s.getStore(ctx).Delete(sdk.Uint64ToBigEndian(id))
 	}
 }
 
 func (s SendToEthereumStore) IterateAll(ctx sdk.Context, cb func(*types.SendToEthereum) bool) {
-	iter := s.getStore(ctx).ReverseIterator(nil, nil)
+	iter := s.getStore(ctx).Iterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var ste types.SendToEthereum
@@ -83,12 +83,9 @@ func (s SendToEthereumStore) IterateOrderedByFeeAndId(ctx sdk.Context, contract 
 	}
 }
 
-func (s SendToEthereumStore) PaginateBySender(ctx sdk.Context, senderAddress string, pagination *query.PageRequest) ([]*types.SendToEthereum, *query.PageResponse, error) {
-	store := s.getStore(ctx)
-
+func (s SendToEthereumStore) PaginateBySender(ctx sdk.Context, senderAddress string, pageReq *query.PageRequest) ([]*types.SendToEthereum, *query.PageResponse, error) {
 	var sendToEthereums []*types.SendToEthereum
-
-	pageRes, err := query.FilteredPaginate(store, pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(s.getStore(ctx), pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var ste types.SendToEthereum
 		s.cdc.MustUnmarshalBinaryBare(value, &ste)
 		if ste.Sender == senderAddress {
@@ -97,24 +94,5 @@ func (s SendToEthereumStore) PaginateBySender(ctx sdk.Context, senderAddress str
 		}
 		return false, nil
 	})
-
 	return sendToEthereums, pageRes, err
 }
-
-/*
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEthereumKey})
-	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var ste types.SendToEthereum
-		k.cdc.MustUnmarshalBinaryBare(value, &ste)
-		if ste.Sender == req.SenderAddress {
-			res.SendToEthereums = append(res.SendToEthereums, &ste)
-			return true, nil
-		}
-		return false, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	res.Pagination = pageRes
-
-*/
