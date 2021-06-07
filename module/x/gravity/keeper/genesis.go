@@ -26,7 +26,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 		if err := event.Validate(); err != nil {
 			panic("invalid event in genesis")
 		}
-		k.setEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash(), evr)
+		k.EthereumVoteRecordStore.Set(ctx, event.Hash(), evr)
 	}
 
 	// reset last observed event nonce
@@ -98,7 +98,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		p                        = k.GetParams(ctx)
 		outgoingTxs              []*cdctypes.Any
 		ethereumTxConfirmations  []*cdctypes.Any
-		attmap                   = k.GetEthereumEventVoteRecordMapping(ctx)
+		attmap                   = k.EthereumVoteRecordStore.GetEventNonceMapping(ctx)
 		ethereumEventVoteRecords []*types.EthereumEventVoteRecord
 		delegates                = k.getDelegateKeys(ctx)
 		lastobserved             = k.GetLastObservedEventNonce(ctx)

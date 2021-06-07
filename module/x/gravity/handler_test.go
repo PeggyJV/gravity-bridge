@@ -119,7 +119,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// and attestation persisted
-	a := gk.GetEthereumEventVoteRecord(ctx, myNonce, sendToCosmosEvent.Hash())
+	a := gk.EthereumVoteRecordStore.Get(ctx, sendToCosmosEvent.Hash())
 	require.NotNil(t, a)
 	// and vouchers added to the account
 
@@ -249,7 +249,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	EndBlocker(ctx, input.GravityKeeper)
 	require.NoError(t, err)
 	// and attestation persisted
-	a1 := input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim1.Hash())
+	a1 := input.GravityKeeper.EthereumVoteRecordStore.Get(ctx, ethClaim1.Hash())
 	require.NotNil(t, a1)
 	// and vouchers not yet added to the account
 	balance1 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
@@ -262,7 +262,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// and attestation persisted
-	a2 := input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim2.Hash())
+	a2 := input.GravityKeeper.EthereumVoteRecordStore.Get(ctx, ethClaim2.Hash())
 	require.NotNil(t, a2)
 	// and vouchers now added to the account
 	balance2 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
@@ -275,7 +275,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// and attestation persisted
-	a3 := input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim3.Hash())
+	a3 := input.GravityKeeper.EthereumVoteRecordStore.Get(ctx, ethClaim3.Hash())
 	require.NotNil(t, a3)
 	// and no additional added to the account
 	balance3 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)

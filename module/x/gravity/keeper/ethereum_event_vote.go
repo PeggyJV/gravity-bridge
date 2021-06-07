@@ -30,7 +30,7 @@ func (k Keeper) recordEventVote(
 	}
 
 	// Tries to get an EthereumEventVoteRecord with the same eventNonce and event as the event that was submitted.
-	eventVoteRecord := k.GetEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash())
+	eventVoteRecord := k.EthereumVoteRecordStore.Get(ctx, event.Hash())
 
 	// If it does not exist, create a new one.
 	if eventVoteRecord == nil {
@@ -47,7 +47,7 @@ func (k Keeper) recordEventVote(
 	// Add the validator's vote to this EthereumEventVoteRecord
 	eventVoteRecord.Votes = append(eventVoteRecord.Votes, val.String())
 
-	k.setEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash(), eventVoteRecord)
+	k.EthereumVoteRecordStore.Set(ctx, event.Hash(), eventVoteRecord)
 	k.setLastEventNonceByValidator(ctx, val, event.GetEventNonce())
 
 	return eventVoteRecord, nil
@@ -88,7 +88,8 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.Ether
 				k.SetLastObservedEthereumBlockHeight(ctx, event.GetEthereumHeight())
 
 				eventVoteRecord.Accepted = true
-				k.setEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash(), eventVoteRecord)
+
+				k.EthereumVoteRecordStore.Set(ctx, event.Hash(), eventVoteRecord)
 
 				k.processEthereumEvent(ctx, event)
 				ctx.EventManager().EmitEvent(sdk.NewEvent(
@@ -125,34 +126,6 @@ func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent)
 	} else {
 		commit() // persist transient storage
 	}
-}
-
-// setEthereumEventVoteRecord sets the attestation in the store
-func (k Keeper) setEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, eventHash []byte, eventVoteRecord *types.EthereumEventVoteRecord) {
-	k.EthereumVoteRecordStore.Set(ctx, eventNonce, eventHash, eventVoteRecord)
-}
-
-// GetEthereumEventVoteRecord return a vote record given a nonce
-func (k Keeper) GetEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, eventHash []byte) *types.EthereumEventVoteRecord {
-	return k.EthereumVoteRecordStore.Get(ctx, eventNonce, eventHash)
-}
-
-// GetEthereumEventVoteRecordMapping returns a mapping of eventnonce -> attestations at that nonce
-func (k Keeper) GetEthereumEventVoteRecordMapping(ctx sdk.Context) (out map[uint64][]*types.EthereumEventVoteRecord) {
-	out = make(map[uint64][]*types.EthereumEventVoteRecord)
-	k.EthereumVoteRecordStore.IterateAll(ctx, func(_ []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
-		event, err := types.UnpackEvent(eventVoteRecord.Event)
-		if err != nil {
-			panic(err)
-		}
-		if val, ok := out[event.GetEventNonce()]; !ok {
-			out[event.GetEventNonce()] = []*types.EthereumEventVoteRecord{eventVoteRecord}
-		} else {
-			out[event.GetEventNonce()] = append(val, eventVoteRecord)
-		}
-		return false
-	})
-	return
 }
 
 // GetLastObservedEventNonce returns the latest observed event nonce
@@ -220,7 +193,7 @@ func (k Keeper) getLastEventNonceByValidator(ctx sdk.Context, validator sdk.ValA
 		// params.SignedClaimsWindow we may have no attestations in our nonce. At which point
 		// the last observed which is a persistent and never cleaned counter will suffice.
 		lowestObserved := k.GetLastObservedEventNonce(ctx)
-		attmap := k.GetEthereumEventVoteRecordMapping(ctx)
+		attmap := k.EthereumVoteRecordStore.GetEventNonceMapping(ctx)
 		// no new claims in params.SignedClaimsWindow, we can return the current value
 		// because the validator can't be slashed for an event that has already passed.
 		// so they only have to worry about the *next* event to occur

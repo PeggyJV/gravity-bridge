@@ -16,13 +16,8 @@ func (s EthereumVoteRecordStore) getStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(s.gravityStoreKey), []byte{types.EthereumEventVoteRecordKey})
 }
 
-func (s EthereumVoteRecordStore) makeKey(eventNonce uint64, eventHash []byte) []byte {
-	return append(sdk.Uint64ToBigEndian(eventNonce), eventHash...)
-}
-
-func (s EthereumVoteRecordStore) Get(ctx sdk.Context, eventNonce uint64, eventHash []byte) *types.EthereumEventVoteRecord {
-	k := s.makeKey(eventNonce, eventHash)
-	if bz := s.getStore(ctx).Get(k); bz != nil {
+func (s EthereumVoteRecordStore) Get(ctx sdk.Context, eventHash []byte) *types.EthereumEventVoteRecord {
+	if bz := s.getStore(ctx).Get(eventHash); bz != nil {
 		var r types.EthereumEventVoteRecord
 		s.cdc.MustUnmarshalBinaryBare(bz, &r)
 		return &r
@@ -30,10 +25,9 @@ func (s EthereumVoteRecordStore) Get(ctx sdk.Context, eventNonce uint64, eventHa
 	return nil
 }
 
-func (s EthereumVoteRecordStore) Set(ctx sdk.Context, eventNonce uint64, eventHash []byte, eventVoteRecord *types.EthereumEventVoteRecord) {
-	k := s.makeKey(eventNonce, eventHash)
+func (s EthereumVoteRecordStore) Set(ctx sdk.Context, eventHash []byte, eventVoteRecord *types.EthereumEventVoteRecord) {
 	v := s.cdc.MustMarshalBinaryBare(eventVoteRecord)
-	s.getStore(ctx).Set(k, v)
+	s.getStore(ctx).Set(eventHash, v)
 }
 
 func (s EthereumVoteRecordStore) IterateAll(ctx sdk.Context, cb func([]byte, *types.EthereumEventVoteRecord) bool) {
@@ -47,4 +41,22 @@ func (s EthereumVoteRecordStore) IterateAll(ctx sdk.Context, cb func([]byte, *ty
 			return
 		}
 	}
+}
+
+// GetEthereumEventVoteRecordMapping returns a mapping of eventnonce -> attestations at that nonce
+func (s EthereumVoteRecordStore) GetEventNonceMapping(ctx sdk.Context) (out map[uint64][]*types.EthereumEventVoteRecord) {
+	out = make(map[uint64][]*types.EthereumEventVoteRecord)
+	s.IterateAll(ctx, func(_ []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
+		event, err := types.UnpackEvent(eventVoteRecord.Event)
+		if err != nil {
+			panic(err)
+		}
+		if val, ok := out[event.GetEventNonce()]; !ok {
+			out[event.GetEventNonce()] = []*types.EthereumEventVoteRecord{eventVoteRecord}
+		} else {
+			out[event.GetEventNonce()] = append(val, eventVoteRecord)
+		}
+		return false
+	})
+	return
 }
