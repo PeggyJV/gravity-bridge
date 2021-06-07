@@ -4,7 +4,6 @@ import (
 	"context"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -337,26 +336,15 @@ func (k Keeper) BatchedSendToEthereums(c context.Context, req *types.BatchedSend
 	return res, nil
 }
 
+// TODO(levi) this should be removed; it doesn't have a clear use case
 func (k Keeper) UnbatchedSendToEthereums(c context.Context, req *types.UnbatchedSendToEthereumsRequest) (*types.UnbatchedSendToEthereumsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	res := &types.UnbatchedSendToEthereumsResponse{}
-
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEthereumKey})
-	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var ste types.SendToEthereum
-		k.cdc.MustUnmarshalBinaryBare(value, &ste)
-		if ste.Sender == req.SenderAddress {
-			res.SendToEthereums = append(res.SendToEthereums, &ste)
-			return true, nil
-		}
-		return false, nil
-	})
-	if err != nil {
-		return nil, err
+	sendToEthereums, pageRes, err := k.SendToEthereumStore.PaginateBySender(ctx, req.SenderAddress, req.Pagination)
+	res := &types.UnbatchedSendToEthereumsResponse{
+		SendToEthereums: sendToEthereums,
+		Pagination:      pageRes,
 	}
-	res.Pagination = pageRes
-
-	return res, nil
+	return res, err
 }
 
 func (k Keeper) DelegateKeysByValidator(c context.Context, req *types.DelegateKeysByValidatorRequest) (*types.DelegateKeysByValidatorResponse, error) {

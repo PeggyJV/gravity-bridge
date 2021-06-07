@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -90,3 +91,39 @@ func (s SendToEthereumStore) IterateOrderedByFeeAndId(ctx sdk.Context, contract 
 		}
 	}
 }
+
+func (s SendToEthereumStore) PaginateBySender(ctx sdk.Context, senderAddress string, pagination *query.PageRequest) ([]*types.SendToEthereum, *query.PageResponse, error) {
+	store := s.getStore(ctx)
+
+	var sendToEthereums []*types.SendToEthereum
+
+	pageRes, err := query.FilteredPaginate(store, pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var ste types.SendToEthereum
+		s.cdc.MustUnmarshalBinaryBare(value, &ste)
+		if ste.Sender == senderAddress {
+			sendToEthereums = append(sendToEthereums, &ste)
+			return true, nil
+		}
+		return false, nil
+	})
+
+	return sendToEthereums, pageRes, err
+}
+
+/*
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEthereumKey})
+	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var ste types.SendToEthereum
+		k.cdc.MustUnmarshalBinaryBare(value, &ste)
+		if ste.Sender == req.SenderAddress {
+			res.SendToEthereums = append(res.SendToEthereums, &ste)
+			return true, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	res.Pagination = pageRes
+
+*/

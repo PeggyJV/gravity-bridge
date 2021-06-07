@@ -422,7 +422,7 @@ func (k Keeper) IterateOutgoingTxsByType(ctx sdk.Context, prefixByte byte, cb fu
 	}
 }
 
-// iterateOutgoingTxs iterates over a specific type of outgoing transaction denoted by the chosen prefix byte
+// iterateOutgoingTxs iterates over outgoing transactions
 func (k Keeper) iterateOutgoingTxs(ctx sdk.Context, cb func(key []byte, outgoing types.OutgoingTx) bool) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.OutgoingTxKey})
 	iter := prefixStore.ReverseIterator(nil, nil)
