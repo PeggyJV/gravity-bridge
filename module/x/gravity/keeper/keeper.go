@@ -30,12 +30,13 @@ type Keeper struct {
 		Handle(sdk.Context, types.EthereumEvent) error
 	}
 
-	storeKey            sdk.StoreKey
-	paramSpace          paramtypes.Subspace
-	cdc                 codec.BinaryMarshaler
-	bankKeeper          types.BankKeeper
-	SlashingKeeper      types.SlashingKeeper
-	SendToEthereumStore SendToEthereumStore
+	storeKey                sdk.StoreKey
+	paramSpace              paramtypes.Subspace
+	cdc                     codec.BinaryMarshaler
+	bankKeeper              types.BankKeeper
+	SlashingKeeper          types.SlashingKeeper
+	SendToEthereumStore     SendToEthereumStore
+	EthereumVoteRecordStore EthereumVoteRecordStore
 }
 
 // NewKeeper returns a new instance of the gravity keeper
@@ -46,13 +47,14 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace para
 	}
 
 	k := Keeper{
-		cdc:                 cdc,
-		paramSpace:          paramSpace,
-		storeKey:            storeKey,
-		StakingKeeper:       stakingKeeper,
-		bankKeeper:          bankKeeper,
-		SlashingKeeper:      slashingKeeper,
-		SendToEthereumStore: SendToEthereumStore{gravityStoreKey: storeKey, cdc: cdc},
+		cdc:                     cdc,
+		paramSpace:              paramSpace,
+		storeKey:                storeKey,
+		StakingKeeper:           stakingKeeper,
+		bankKeeper:              bankKeeper,
+		SlashingKeeper:          slashingKeeper,
+		SendToEthereumStore:     SendToEthereumStore{gravityStoreKey: storeKey, cdc: cdc},
+		EthereumVoteRecordStore: EthereumVoteRecordStore{gravityStoreKey: storeKey, cdc: cdc},
 	}
 	k.EthereumEventProcessor = EthereumEventProcessor{
 		keeper:     k,

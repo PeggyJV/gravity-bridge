@@ -61,15 +61,6 @@ func (s SendToEthereumStore) IterateAll(ctx sdk.Context, cb func(*types.SendToEt
 	}
 }
 
-// func (k Keeper) getUnbatchedSendToEthereums(ctx sdk.Context) []*types.SendToEthereum {
-// 	var out []*types.SendToEthereum
-// 	k.IterateUnbatchedSendToEthereums(ctx, func(ste *types.SendToEthereum) bool {
-// 		out = append(out, ste)
-// 		return false
-// 	})
-// 	return out
-// }
-
 func (s SendToEthereumStore) GetAll(ctx sdk.Context) []*types.SendToEthereum {
 	var out []*types.SendToEthereum
 	s.IterateAll(ctx, func(ste *types.SendToEthereum) bool {

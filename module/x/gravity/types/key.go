@@ -102,18 +102,6 @@ func MakeEthereumSignatureKey(storeIndex []byte, validator sdk.ValAddress) []byt
 	return bytes.Join([][]byte{{EthereumSignatureKey}, storeIndex, validator.Bytes()}, []byte{})
 }
 
-/////////////////////////////////
-// Etheruem Event Vote Records //
-/////////////////////////////////
-
-// MakeEthereumEventVoteRecordKey returns the following key format
-// prefix     nonce                             claim-details-hash
-// [0x5][0 0 0 0 0 0 0 1][fd1af8cec6c67fcf156f1b61fdf91ebc04d05484d007436e75342fc05bbff35a]
-// STORE REFACTOR: nice and easy (hopefully)
-func MakeEthereumEventVoteRecordKey(eventNonce uint64, claimHash []byte) []byte {
-	return bytes.Join([][]byte{{EthereumEventVoteRecordKey}, sdk.Uint64ToBigEndian(eventNonce), claimHash}, []byte{})
-}
-
 //////////////////
 // Outgoing Txs //
 //////////////////

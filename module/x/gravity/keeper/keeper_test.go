@@ -77,7 +77,7 @@ func TestAttestationIterator(t *testing.T) {
 	input.GravityKeeper.setEthereumEventVoteRecord(ctx, dep2.EventNonce, dep2.Hash(), att2)
 
 	atts := []*types.EthereumEventVoteRecord{}
-	input.GravityKeeper.iterateEthereumEventVoteRecords(ctx, func(_ []byte, att *types.EthereumEventVoteRecord) bool {
+	input.GravityKeeper.EthereumVoteRecordStore.IterateAll(ctx, func(_ []byte, att *types.EthereumEventVoteRecord) bool {
 		atts = append(atts, att)
 		return false
 	})
@@ -224,7 +224,7 @@ func TestLastSlashedValsetNonce(t *testing.T) {
 	assert.Equal(t, uint64(i-1), latestValsetNonce)
 
 	//  lastSlashedValsetNonce should be zero initially.
-  lastSlashedValsetNonce := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
+	lastSlashedValsetNonce := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
 	assert.Equal(t, uint64(0), lastSlashedValsetNonce)
 	unslashedValsets := k.GetUnSlashedOutgoingTxs(ctx, uint64(12))
 	assert.Equal(t, 9, len(unslashedValsets))

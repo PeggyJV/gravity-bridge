@@ -6,7 +6,6 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -98,8 +97,6 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.Ether
 					sdk.NewAttribute(types.AttributeKeyEthereumEventType, fmt.Sprintf("%T", event)),
 					sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
 					sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
-					sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID,
-						string(types.MakeEthereumEventVoteRecordKey(event.GetEventNonce(), event.Hash()))),
 					sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(event.GetEventNonce())),
 				))
 
@@ -123,7 +120,6 @@ func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent)
 		k.logger(ctx).Error("ethereum event vote record failed",
 			"cause", err.Error(),
 			"event type", fmt.Sprintf("%T", event),
-			"id", types.MakeEthereumEventVoteRecordKey(event.GetEventNonce(), event.Hash()),
 			"nonce", fmt.Sprint(event.GetEventNonce()),
 		)
 	} else {
@@ -132,30 +128,19 @@ func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent)
 }
 
 // setEthereumEventVoteRecord sets the attestation in the store
-func (k Keeper) setEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte, eventVoteRecord *types.EthereumEventVoteRecord) {
-	ctx.KVStore(k.storeKey).Set(types.MakeEthereumEventVoteRecordKey(eventNonce, claimHash), k.cdc.MustMarshalBinaryBare(eventVoteRecord))
+func (k Keeper) setEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, eventHash []byte, eventVoteRecord *types.EthereumEventVoteRecord) {
+	k.EthereumVoteRecordStore.Set(ctx, eventNonce, eventHash, eventVoteRecord)
 }
 
 // GetEthereumEventVoteRecord return a vote record given a nonce
-func (k Keeper) GetEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte) *types.EthereumEventVoteRecord {
-	if bz := ctx.KVStore(k.storeKey).Get(types.MakeEthereumEventVoteRecordKey(eventNonce, claimHash)); bz == nil {
-		return nil
-	} else {
-		var out types.EthereumEventVoteRecord
-		k.cdc.MustUnmarshalBinaryBare(bz, &out)
-		return &out
-	}
-}
-
-// deleteEthereumEventVoteRecord deletes an attestation given an event nonce and claim
-func (k Keeper) deleteEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte, att *types.EthereumEventVoteRecord) {
-	ctx.KVStore(k.storeKey).Delete(types.MakeEthereumEventVoteRecordKey(eventNonce, claimHash))
+func (k Keeper) GetEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, eventHash []byte) *types.EthereumEventVoteRecord {
+	return k.EthereumVoteRecordStore.Get(ctx, eventNonce, eventHash)
 }
 
 // GetEthereumEventVoteRecordMapping returns a mapping of eventnonce -> attestations at that nonce
 func (k Keeper) GetEthereumEventVoteRecordMapping(ctx sdk.Context) (out map[uint64][]*types.EthereumEventVoteRecord) {
 	out = make(map[uint64][]*types.EthereumEventVoteRecord)
-	k.iterateEthereumEventVoteRecords(ctx, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
+	k.EthereumVoteRecordStore.IterateAll(ctx, func(_ []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
 		event, err := types.UnpackEvent(eventVoteRecord.Event)
 		if err != nil {
 			panic(err)
@@ -168,21 +153,6 @@ func (k Keeper) GetEthereumEventVoteRecordMapping(ctx sdk.Context) (out map[uint
 		return false
 	})
 	return
-}
-
-// iterateEthereumEventVoteRecords iterates through all attestations
-func (k Keeper) iterateEthereumEventVoteRecords(ctx sdk.Context, cb func([]byte, *types.EthereumEventVoteRecord) bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.EthereumEventVoteRecordKey})
-	iter := store.Iterator(nil, nil)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		att := &types.EthereumEventVoteRecord{}
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), att)
-		// cb returns true to stop early
-		if cb(iter.Key(), att) {
-			return
-		}
-	}
 }
 
 // GetLastObservedEventNonce returns the latest observed event nonce
