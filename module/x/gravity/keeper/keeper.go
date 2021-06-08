@@ -443,9 +443,10 @@ func (k Keeper) iterateOutgoingTxs(ctx sdk.Context, cb func(key []byte, outgoing
 }
 
 // GetLastObservedSignerSetTx retrieves the last observed validator set from the store
-func (k Keeper) GetLastObservedSignerSetTx(ctx sdk.Context) (out *types.SignerSetTx) {
-	k.cdc.MustUnmarshalBinaryBare(ctx.KVStore(k.storeKey).Get([]byte{types.LastObservedSignerSetKey}), out)
-	return
+func (k Keeper) GetLastObservedSignerSetTx(ctx sdk.Context) *types.SignerSetTx {
+	var out types.SignerSetTx
+	k.cdc.MustUnmarshalBinaryBare(ctx.KVStore(k.storeKey).Get([]byte{types.LastObservedSignerSetKey}), &out)
+	return &out
 }
 
 // setLastObservedSignerSetTx updates the last observed validator set in the stor e
