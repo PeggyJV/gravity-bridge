@@ -75,12 +75,12 @@ pub async fn relay_valsets(
                     break;
                 } else if let Err(e) = res {
                     last_error = Some(e);
-                    println!(">> last_error {:#?}; nonce: {}", last_error, latest_nonce);
                     // TODO(levi) break or return??
                 }
             }
             // TODO(levi) this isn't handling errors
         }
+        // TODO(levi) this isn't handling errors
 
         latest_nonce -= 1
     }

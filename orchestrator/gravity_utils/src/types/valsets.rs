@@ -8,6 +8,8 @@ use std::{
     cmp::Ordering,
     collections::{HashMap, HashSet},
     fmt,
+    str,
+    // str::FromStr,
 };
 
 /// The total power in the Gravity bridge is normalized to u32 max every
@@ -59,7 +61,7 @@ pub struct ValsetConfirmResponse {
 
 impl ValsetConfirmResponse {
     pub fn from_proto(
-        input: gravity_proto::gravity::SignerSetTxSignature,
+        input: gravity_proto::gravity::SignerSetTxConfirmation,
     ) -> Result<Self, GravityError> {
         Ok(ValsetConfirmResponse {
             eth_signer: input.ethereum_signer.parse()?,
@@ -435,6 +437,19 @@ impl From<&gravity_proto::gravity::EthereumSigner> for ValsetMember {
         ValsetMember {
             power: input.power as u64,
             eth_address,
+        }
+    }
+}
+
+impl From<&ValsetMember> for gravity_proto::gravity::EthereumSigner {
+    fn from(input: &ValsetMember) -> gravity_proto::gravity::EthereumSigner {
+        let ethereum_address = match input.eth_address {
+            Some(e) => e.to_string(),
+            None => String::new(),
+        };
+        gravity_proto::gravity::EthereumSigner {
+            power: input.power,
+            ethereum_address,
         }
     }
 }

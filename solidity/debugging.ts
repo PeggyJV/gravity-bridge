@@ -3,8 +3,7 @@ import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
 import {
   Query,
   QueryClientImpl,
-  SignerSetTxEthereumSignaturesResponse,
-  SignerSetTxsRequest,
+  SignerSetTxConfirmationsResponse,
 } from "./gen/gravity/v1/query";
 import { SignerSetTx } from "./gen/gravity/v1/gravity";
 import Long from "long";
@@ -38,9 +37,9 @@ async function getValset(signerSetNonce: Long): Promise<SignerSetTx> {
   return res.signerSet;
 }
 
-async function getSignerSetTxEthereumSignatures(signerSetNonce: Long): Promise<SignerSetTxEthereumSignaturesResponse> {
+async function getSignerSetTxConfirmations(signerSetNonce: Long): Promise<SignerSetTxConfirmationsResponse> {
   let queryService = await getQueryService();
-  const res = await queryService.SignerSetTxEthereumSignatures({ signerSetNonce });
+  const res = await queryService.SignerSetTxConfirmations({ signerSetNonce });
   if (!res.signatures) {
     console.log("Could not retrieve signatures", res);
     exit(1);
@@ -74,7 +73,7 @@ async function getDelegateKeys() {
 }
 
 (async function () {
-  //   console.log(await getDelegateKeys());
+  // console.log(await getDelegateKeys());
   // console.log(JSON.stringify(await getAllValsets()));
   const res = await getValset(Long.fromInt(1))
   console.log(JSON.stringify(res));
