@@ -73,8 +73,8 @@ func TestAttestationIterator(t *testing.T) {
 		EthereumSender: EthAddrs[0].String(),
 		CosmosReceiver: AccAddrs[0].String(),
 	}
-	input.GravityKeeper.setEthereumEventVoteRecord(ctx, dep1.EventNonce, dep1.Hash(), att1)
-	input.GravityKeeper.setEthereumEventVoteRecord(ctx, dep2.EventNonce, dep2.Hash(), att2)
+	input.GravityKeeper.EthereumVoteRecordStore.Set(ctx, dep1.Hash(), att1)
+	input.GravityKeeper.EthereumVoteRecordStore.Set(ctx, dep2.Hash(), att2)
 
 	atts := []*types.EthereumEventVoteRecord{}
 	input.GravityKeeper.EthereumVoteRecordStore.IterateAll(ctx, func(_ []byte, att *types.EthereumEventVoteRecord) bool {
@@ -173,13 +173,13 @@ func TestStoreEventVoteRecord(t *testing.T) {
 		},
 	}
 
-	gk.setEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash(), evr)
-	gk.setEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash(), evr2)
+	gk.EthereumVoteRecordStore.Set(ctx, stce.Hash(), evr)
+	gk.EthereumVoteRecordStore.Set(ctx, cctxe.Hash(), evr2)
 
-	stored := gk.GetEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash())
+	stored := gk.EthereumVoteRecordStore.Get(ctx, stce.Hash())
 	require.NotNil(t, stored)
 
-	stored1 := gk.GetEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash())
+	stored1 := gk.EthereumVoteRecordStore.Get(ctx, cctxe.Hash())
 	require.NotNil(t, stored1)
 
 	// var storedEvent, storedEvent1 types.EthereumEvent
@@ -194,7 +194,7 @@ func TestStoreEventVoteRecord(t *testing.T) {
 	require.EqualValues(t, storedEvent1.GetEventNonce(), 2)
 	require.EqualValues(t, storedEvent1.Hash(), cctxe.Hash())
 
-	mapping := gk.GetEthereumEventVoteRecordMapping(ctx)
+	mapping := gk.EthereumVoteRecordStore.GetEventNonceMapping(ctx)
 	require.EqualValues(t, 3, len(mapping[1][0].Votes))
 	require.EqualValues(t, 3, len(mapping[2][0].Votes))
 

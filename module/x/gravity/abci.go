@@ -99,7 +99,7 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper) {
 	log.Println(":==: eventVoteRecordTally")
 
-	attmap := k.GetEthereumEventVoteRecordMapping(ctx)
+	attmap := k.EthereumVoteRecordStore.GetEventNonceMapping(ctx)
 	log.Println(":==: eventVoteRecordTally attmap:", attmap)
 
 	// We make a slice with all the event nonces that are in the attestation mapping
