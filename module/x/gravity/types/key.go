@@ -107,9 +107,9 @@ func MakeEthereumSignatureKey(storeIndex []byte, validator sdk.ValAddress) []byt
 //////////////////
 
 // MakeOutgoingTxKey returns the store index passed with a prefix
-func MakeOutgoingTxKey(storeIndex []byte) []byte {
-	return append([]byte{OutgoingTxKey}, storeIndex...)
-}
+// func MakeOutgoingTxKey(storeIndex []byte) []byte {
+// 	return append([]byte{OutgoingTxKey}, storeIndex...)
+// }
 
 //////////////////////
 // Send To Etheruem //

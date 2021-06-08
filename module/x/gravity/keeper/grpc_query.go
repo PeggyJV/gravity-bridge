@@ -3,11 +3,9 @@ package keeper
 import (
 	"context"
 
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
@@ -23,27 +21,10 @@ func (k Keeper) Params(c context.Context, req *types.ParamsRequest) (*types.Para
 }
 
 func (k Keeper) LatestSignerSetTx(c context.Context, req *types.LatestSignerSetTxRequest) (*types.SignerSetTxResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-
-	// TODO: audit once we finalize storage
-	var otx types.OutgoingTx
-
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.OutgoingTxKey}, types.SignerSetTxPrefixByte))
-	iter := store.ReverseIterator(nil, nil)
-	defer iter.Close()
-
-	var any cdctypes.Any
-	k.cdc.MustUnmarshalBinaryBare(iter.Value(), &any)
-
-	if err := k.cdc.UnpackAny(&any, &otx); err != nil {
+	ss, err := k.OutgoingTxStore.LatestSignerSetTx(sdk.UnwrapSDKContext(c))
+	if err != nil {
 		return nil, err
 	}
-
-	ss, ok := otx.(*types.SignerSetTx)
-	if !ok {
-		return nil, status.Errorf(codes.InvalidArgument, "couldn't cast to signer set for latest")
-	}
-
 	return &types.SignerSetTxResponse{SignerSet: ss}, nil
 }
 

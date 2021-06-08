@@ -35,6 +35,7 @@ type Keeper struct {
 	cdc                     codec.BinaryMarshaler
 	bankKeeper              types.BankKeeper
 	SlashingKeeper          types.SlashingKeeper
+	OutgoingTxStore         OutgoingTxStore
 	SendToEthereumStore     SendToEthereumStore
 	EthereumVoteRecordStore EthereumVoteRecordStore
 }
@@ -53,6 +54,7 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace para
 		StakingKeeper:           stakingKeeper,
 		bankKeeper:              bankKeeper,
 		SlashingKeeper:          slashingKeeper,
+		OutgoingTxStore:         OutgoingTxStore{gravityStoreKey: storeKey, cdc: cdc},
 		SendToEthereumStore:     SendToEthereumStore{gravityStoreKey: storeKey, cdc: cdc},
 		EthereumVoteRecordStore: EthereumVoteRecordStore{gravityStoreKey: storeKey, cdc: cdc},
 	}
@@ -360,11 +362,8 @@ func (k Keeper) GetUnbondingvalidators(unbondingVals []byte) stakingtypes.ValAdd
 
 // todo: outgoingTx prefix byte
 // GetOutgoingTx
-func (k Keeper) GetOutgoingTx(ctx sdk.Context, storeIndex []byte) (out types.OutgoingTx) {
-	if err := k.cdc.UnmarshalInterface(ctx.KVStore(k.storeKey).Get(types.MakeOutgoingTxKey(storeIndex)), &out); err != nil {
-		panic(err)
-	}
-	return out
+func (k Keeper) GetOutgoingTx(ctx sdk.Context, storeIndex []byte) types.OutgoingTx {
+	return k.OutgoingTxStore.Get(ctx, storeIndex)
 }
 
 // SetOutgoingTx
