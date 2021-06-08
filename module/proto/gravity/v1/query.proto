@@ -55,22 +55,9 @@ service Query {
   // transactions
 
   // TODO: can/should we group these into one endpoint?
-  rpc SignerSetTxConfirmations(SignerSetTxConfirmationsRequest)
-      returns (SignerSetTxConfirmationsResponse) {
-    // option (google.api.http).get =
-        // "/gravity/v1/signer_sets/ethereum_signatures";
+  rpc EthereumTxConfirmations(EthereumTxConfirmationsRequest)
+      returns (EthereumTxConfirmationsResponse) {
   }
-  rpc BatchTxConfirmations(BatchTxConfirmationsRequest)
-      returns (BatchTxConfirmationsResponse) {
-    // option (google.api.http).get = "/gravity/v1/batch_txs/ethereum_signatures";
-  }
-  rpc ContractCallTxConfirmations(ContractCallTxConfirmationsRequest)
-      returns (ContractCallTxConfirmationsResponse) {
-    // option (google.api.http).get =
-        // "/gravity/v1/logic_calls/ethereum_signatures";
-  }
-
-  // ^^^^^^^^^^^^ seem okay for now ^^^^^^
 
   // pending ethereum signature queries for orchestrators to figure out which
   // signatures they are missing
@@ -166,12 +153,12 @@ message ContractCallTxRequest {
 }
 message ContractCallTxResponse { ContractCallTx logic_call = 1; }
 
-// rpc SignerSetTxConfirmations
-message SignerSetTxConfirmationsRequest {
-  uint64 signer_set_nonce = 1;
+// rpc EthereumTxConfirmations
+message EthereumTxConfirmationsRequest {
+  bytes checkpoint = 1;
 }
-message SignerSetTxConfirmationsResponse {
-  repeated SignerSetTxConfirmation signatures = 1;
+message EthereumTxConfirmationsResponse {
+  repeated EthereumTxConfirmation confirmations = 1;
 }
 
 //  rpc SignerSetTxs
@@ -239,21 +226,21 @@ message BatchTxFeesResponse {
   ];
 }
 
-message ContractCallTxConfirmationsRequest {
-  bytes invalidation_scope = 1;
-  uint64 invalidation_nonce = 2;
-}
-message ContractCallTxConfirmationsResponse {
-  repeated ContractCallTxConfirmation signatures = 1;
-}
+// message ContractCallTxConfirmationsRequest {
+//   bytes invalidation_scope = 1;
+//   uint64 invalidation_nonce = 2;
+// }
+// message ContractCallTxConfirmationsResponse {
+//   repeated EthereumTxConfirmation confirmations = 1;
+// }
 
-message BatchTxConfirmationsRequest {
-  uint64 batch_nonce = 1;
-  string token_contract = 2;
-}
-message BatchTxConfirmationsResponse {
-  repeated BatchTxConfirmation signatures = 1;
-}
+// message BatchTxConfirmationsRequest {
+//   uint64 batch_nonce = 1;
+//   string token_contract = 2;
+// }
+// message BatchTxConfirmationsResponse {
+//   repeated EthereumTxConfirmation confirmations = 1;
+// }
 
 message LastSubmittedEthereumEventRequest { string address = 1; }
 message LastSubmittedEthereumEventResponse { uint64 event_nonce = 1; }

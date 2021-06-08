@@ -1,21 +1,20 @@
 package types
 
 import (
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/gogo/protobuf/proto"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
-// EthereumTxConfirmation represents one validtors signature for a given
-// outgoing ethereum transaction
-type EthereumTxConfirmation interface {
-	proto.Message
+// // EthereumTxConfirmation represents one validtors signature for a given
+// // outgoing ethereum transaction
+// type EthereumTxConfirmation interface {
+// 	proto.Message
 
-	GetSigner() common.Address
-	GetSignature() []byte
-	GetStoreIndex() []byte
-	Validate() error
-}
+// 	GetSigner() common.Address
+// 	GetSignature() []byte
+// 	GetStoreIndex() []byte
+// 	Validate() error
+// }
 
 // EthereumEvent represents a event from the gravity contract
 // on the counterparty ethereum chain

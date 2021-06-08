@@ -80,6 +80,12 @@ message ContractCallTx {
   uint64 height = 8;
 }
 
+message EthereumTxConfirmation {
+  bytes checkpoint = 1;
+  string ethereum_signer = 2;
+  bytes ethereum_signature = 3;
+}
+
 message ERC20Token {
   string contract = 1;
   bytes amount = 2 [

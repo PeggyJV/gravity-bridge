@@ -72,37 +72,7 @@ message MsgRequestBatchTxResponse {}
 // MsgSubmitEthereumTxConfirmation submits an ethereum signature for a given
 // validator
 message MsgSubmitEthereumTxConfirmation {
-  option (gogoproto.goproto_getters) = false;
-
-  // TODO: can we make this take an array?
-  google.protobuf.Any confirmation = 1
-      [ (cosmos_proto.accepts_interface) = "EthereumTxConfirmation" ];
-  string signer = 2;
-}
-
-// ContractCallTxConfirmation is a signature on behalf of a validator for a
-// ContractCallTx.
-message ContractCallTxConfirmation {
-  bytes invalidation_scope = 1;
-  uint64 invalidation_nonce = 2;
-  string ethereum_signer = 3;
-  bytes signature = 4;
-}
-
-// BatchTxConfirmation is a signature on behalf of a validator for a BatchTx.
-message BatchTxConfirmation {
-  string token_contract = 1;
-  uint64 batch_nonce = 2;
-  string ethereum_signer = 3;
-  bytes signature = 4;
-}
-
-// SignerSetTxConfirmation is a signature on behalf of a validator for a
-// SignerSetTx
-message SignerSetTxConfirmation {
-  uint64 signer_set_nonce = 1;
-  string ethereum_signer = 2;
-  bytes signature = 3;
+  EthereumTxConfirmation confirmation = 1;
 }
 
 message MsgSubmitEthereumTxConfirmationResponse {}

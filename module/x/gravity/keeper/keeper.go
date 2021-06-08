@@ -37,6 +37,7 @@ type Keeper struct {
 	SlashingKeeper          types.SlashingKeeper
 	SendToEthereumStore     SendToEthereumStore
 	EthereumVoteRecordStore EthereumVoteRecordStore
+	EthereumSignatureStore  EthereumSignatureStore
 }
 
 // NewKeeper returns a new instance of the gravity keeper
@@ -55,6 +56,7 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, paramSpace para
 		SlashingKeeper:          slashingKeeper,
 		SendToEthereumStore:     SendToEthereumStore{gravityStoreKey: storeKey, cdc: cdc},
 		EthereumVoteRecordStore: EthereumVoteRecordStore{gravityStoreKey: storeKey, cdc: cdc},
+		EthereumSignatureStore:  EthereumSignatureStore{gravityStoreKey: storeKey, cdc: cdc},
 	}
 	k.EthereumEventProcessor = EthereumEventProcessor{
 		keeper:     k,
@@ -110,49 +112,49 @@ func (k Keeper) GetLastUnBondingBlockHeight(ctx sdk.Context) uint64 {
 	}
 }
 
-///////////////////////////////
-//     ETHEREUM SIGNATURES   //
-///////////////////////////////
+// ///////////////////////////////
+// //     ETHEREUM SIGNATURES   //
+// ///////////////////////////////
 
-// getEthereumSignature returns a valset confirmation by a nonce and validator address
-func (k Keeper) getEthereumSignature(ctx sdk.Context, storeIndex []byte, validator sdk.ValAddress) []byte {
-	return ctx.KVStore(k.storeKey).Get(types.MakeEthereumSignatureKey(storeIndex, validator))
-}
+// // getEthereumSignature returns a valset confirmation by a nonce and validator address
+// func (k Keeper) getEthereumSignature(ctx sdk.Context, storeIndex []byte, validator sdk.ValAddress) []byte {
+// 	return ctx.KVStore(k.storeKey).Get(types.MakeEthereumSignatureKey(storeIndex, validator))
+// }
 
-// SetEthereumSignature sets a valset confirmation
-func (k Keeper) SetEthereumSignature(ctx sdk.Context, sig types.EthereumTxConfirmation, val sdk.ValAddress) []byte {
-	key := types.MakeEthereumSignatureKey(sig.GetStoreIndex(), val)
-	ctx.KVStore(k.storeKey).Set(key, sig.GetSignature())
-	return key
-}
+// // SetEthereumSignature sets a valset confirmation
+// func (k Keeper) SetEthereumSignature(ctx sdk.Context, sig types.EthereumTxConfirmation, val sdk.ValAddress) []byte {
+// 	key := types.MakeEthereumSignatureKey(sig.GetStoreIndex(), val)
+// 	ctx.KVStore(k.storeKey).Set(key, sig.GetSignature())
+// 	return key
+// }
 
-func (k Keeper) deleteEthereumSignature(ctx sdk.Context, storeIndex []byte, validator sdk.ValAddress) {
-	ctx.KVStore(k.storeKey).Delete(types.MakeEthereumSignatureKey(storeIndex, validator))
-}
+// func (k Keeper) deleteEthereumSignature(ctx sdk.Context, storeIndex []byte, validator sdk.ValAddress) {
+// 	ctx.KVStore(k.storeKey).Delete(types.MakeEthereumSignatureKey(storeIndex, validator))
+// }
 
-// GetEthereumSignatures returns all etherum signatures for a given outgoing tx by store index
-func (k Keeper) GetEthereumSignatures(ctx sdk.Context, storeIndex []byte) map[string][]byte {
-	var signatures = make(map[string][]byte)
-	k.iterateEthereumSignatures(ctx, storeIndex, func(val sdk.ValAddress, h []byte) bool {
-		signatures[val.String()] = h
-		return false
-	})
-	return signatures
-}
+// // GetEthereumSignatures returns all etherum signatures for a given outgoing tx by store index
+// func (k Keeper) GetEthereumSignatures(ctx sdk.Context, storeIndex []byte) map[string][]byte {
+// 	var signatures = make(map[string][]byte)
+// 	k.iterateEthereumSignatures(ctx, storeIndex, func(val sdk.ValAddress, h []byte) bool {
+// 		signatures[val.String()] = h
+// 		return false
+// 	})
+// 	return signatures
+// }
 
-// iterateEthereumSignatures iterates through all valset confirms by nonce in ASC order
-func (k Keeper) iterateEthereumSignatures(ctx sdk.Context, storeIndex []byte, cb func(sdk.ValAddress, []byte) bool) {
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.EthereumSignatureKey}, storeIndex...))
-	iter := prefixStore.Iterator(nil, nil)
-	defer iter.Close()
+// // iterateEthereumSignatures iterates through all valset confirms by nonce in ASC order
+// func (k Keeper) iterateEthereumSignatures(ctx sdk.Context, storeIndex []byte, cb func(sdk.ValAddress, []byte) bool) {
+// 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.EthereumSignatureKey}, storeIndex...))
+// 	iter := prefixStore.Iterator(nil, nil)
+// 	defer iter.Close()
 
-	for ; iter.Valid(); iter.Next() {
-		// cb returns true to stop early
-		if cb(iter.Key(), iter.Value()) {
-			break
-		}
-	}
-}
+// 	for ; iter.Valid(); iter.Next() {
+// 		// cb returns true to stop early
+// 		if cb(iter.Key(), iter.Value()) {
+// 			break
+// 		}
+// 	}
+// }
 
 /////////////////////////
 //  ORC -> VAL ADDRESS //
