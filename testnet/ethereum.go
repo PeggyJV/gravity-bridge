@@ -1,6 +1,6 @@
 package main
 
-type Config struct {
+type EthereumConfig struct {
 	ChainID uint `json:"chainId"`
 	HomesteadBlock uint `json:"homesteadBlock"`
 	EIP150Block uint `json:"eip150Block"`
@@ -19,8 +19,8 @@ type Allocation struct {
 }
 
 type EthereumGenesis struct {
-	Difficulty string `json:"difficulty"`
-	GasLimit string `json:"gasLimit"`
-	Config Config `json:"config"`
-	Alloc map[string]Allocation `json:"alloc"`
+	Difficulty string                `json:"difficulty"`
+	GasLimit   string                `json:"gasLimit"`
+	Config     EthereumConfig        `json:"config"`
+	Alloc      map[string]Allocation `json:"alloc"`
 }

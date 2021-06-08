@@ -5,23 +5,25 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	types3 "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"os"
 	"path"
 	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	crypto2 "github.com/cosmos/cosmos-sdk/crypto"
+	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
-	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	tx2 "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -29,7 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/cosmos/gravity-bridge/module/app"
-	types2 "github.com/cosmos/gravity-bridge/module/x/gravity/types"
+	gravitytypes "github.com/cosmos/gravity-bridge/module/x/gravity/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	cfg "github.com/tendermint/tendermint/config"
@@ -42,9 +44,9 @@ type Validator struct {
 	Moniker string
 
 	// Key management
-	Mnemonic string
-	KeyInfo  keyring.Info
-	PrivateKey types3.PrivKey
+	Mnemonic   string
+	KeyInfo    keyring.Info
+	PrivateKey cryptotypes.PrivKey
 
 	EthereumKey EthereumKey
 }
@@ -202,7 +204,7 @@ func (v *Validator) createKey(name string) (err error) {
 	if err != nil {
 		return err
 	}
-	privKey, _, err := crypto2.UnarmorDecryptPrivKey(privKeyArmor, "testpassphrase")
+	privKey, _, err := sdkcrypto.UnarmorDecryptPrivKey(privKeyArmor, "testpassphrase")
 	if err != nil {
 		return err
 	}
@@ -211,7 +213,7 @@ func (v *Validator) createKey(name string) (err error) {
 	return nil
 }
 
-func addGenesisAccount(path string, moniker string, accAddr sdk.AccAddress, coinsStr string) (err error) {
+func addGenesisAccount(path string, moniker string, accAddr sdktypes.AccAddress, coinsStr string) (err error) {
 	encodingConfig := app.MakeEncodingConfig()
 	cdc := encodingConfig.Marshaler
 
@@ -220,7 +222,7 @@ func addGenesisAccount(path string, moniker string, accAddr sdk.AccAddress, coin
 	config.SetRoot(path)
 	config.Moniker = moniker
 
-	coins, err := sdk.ParseCoinsNormalized(coinsStr)
+	coins, err := sdktypes.ParseCoinsNormalized(coinsStr)
 	if err != nil {
 		return fmt.Errorf("failed to parse coins: %w", err)
 	}
@@ -306,7 +308,7 @@ func (v *Validator) generateEthereumKey() (err error) {
 }
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
-func (v *Validator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
+func (v *Validator) buildCreateValidatorMsg(amount sdktypes.Coin) (sdktypes.Msg, error) {
 	description := types.NewDescription(
 		v.Moniker,
 		"",
@@ -316,39 +318,95 @@ func (v *Validator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
 	)
 
 	commissionRates := types.CommissionRates{
-		Rate:          sdk.MustNewDecFromStr("0.1"),
-		MaxRate:       sdk.MustNewDecFromStr("0.2"),
-		MaxChangeRate: sdk.MustNewDecFromStr("0.01"),
+		Rate:          sdktypes.MustNewDecFromStr("0.1"),
+		MaxRate:       sdktypes.MustNewDecFromStr("0.2"),
+		MaxChangeRate: sdktypes.MustNewDecFromStr("0.01"),
 	}
 
 	// get the initial validator min self delegation
-	minSelfDelegation, _ := sdk.NewIntFromString("1")
+	minSelfDelegation, _ := sdktypes.NewIntFromString("1")
 
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(v.KeyInfo.GetAddress()), v.KeyInfo.GetPubKey(), amount, description, commissionRates, minSelfDelegation,
+		sdktypes.ValAddress(v.KeyInfo.GetAddress()), v.KeyInfo.GetPubKey(), amount, description, commissionRates, minSelfDelegation,
 	)
 	return msg, err
+}
+
+func (v *Validator) buildDelegateKeysMsg() sdktypes.Msg {
+	return &gravitytypes.MsgDelegateKeys{
+		EthereumAddress:     v.EthereumKey.Address,
+		ValidatorAddress:    v.KeyInfo.GetAddress().String(),
+		OrchestratorAddress: v.Chain.Orchestrators[v.Index].KeyInfo.GetAddress().String(),
+	}
 }
 
 func (v *Validator) nodeID() string {
 	return hex.EncodeToString(v.KeyInfo.GetPubKey().Address())
 }
 
-func (v *Validator) signMsg(msg sdk.Msg) (signing.Tx, error) {
+func decodeTx(txBytes []byte) (*tx.Tx, error) {
+	var raw tx.TxRaw
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &types.MsgCreateValidator{}, &types2.MsgDelegateKeys{})
-	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	interfaceRegistry.RegisterImplementations((*sdktypes.Msg)(nil), &types.MsgCreateValidator{}, &gravitytypes.MsgDelegateKeys{})
+	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{})
+	marshaller := codec.NewProtoCodec(interfaceRegistry)
 
-	signModes := []signing2.SignMode{signing2.SignMode_SIGN_MODE_DIRECT}
-	txConfig := tx2.NewTxConfig(marshaler, signModes)
+	// reject all unknown proto fields in the root TxRaw
+	err := unknownproto.RejectUnknownFieldsStrict(txBytes, &raw, interfaceRegistry)
+	if err != nil {
+		return nil, errors.Wrap(errors.ErrTxDecode, err.Error())
+	}
+
+	err = marshaller.UnmarshalBinaryBare(txBytes, &raw)
+	if err != nil {
+		return nil, err
+	}
+
+	var body tx.TxBody
+
+	err = marshaller.UnmarshalBinaryBare(raw.BodyBytes, &body)
+	if err != nil {
+		return nil, errors.Wrap(errors.ErrTxDecode, err.Error())
+	}
+
+	var authInfo tx.AuthInfo
+
+	// reject all unknown proto fields in AuthInfo
+	err = unknownproto.RejectUnknownFieldsStrict(raw.AuthInfoBytes, &authInfo, interfaceRegistry)
+	if err != nil {
+		return nil, errors.Wrap(errors.ErrTxDecode, err.Error())
+	}
+
+	err = marshaller.UnmarshalBinaryBare(raw.AuthInfoBytes, &authInfo)
+	if err != nil {
+		return nil, errors.Wrap(errors.ErrTxDecode, err.Error())
+	}
+
+	theTx := &tx.Tx{
+		Body:       &body,
+		AuthInfo:   &authInfo,
+		Signatures: raw.Signatures,
+	}
+
+	return theTx, nil
+}
+
+func (v *Validator) signMsg(msgs ...sdktypes.Msg) (*tx.Tx, error) {
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	interfaceRegistry.RegisterImplementations((*sdktypes.Msg)(nil), &types.MsgCreateValidator{}, &gravitytypes.MsgDelegateKeys{})
+	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{})
+	marshaller := codec.NewProtoCodec(interfaceRegistry)
+
+	signModes := []txsigning.SignMode{txsigning.SignMode_SIGN_MODE_DIRECT}
+	txConfig := authtx.NewTxConfig(marshaller, signModes)
 	txBuilder := txConfig.NewTxBuilder()
 
-	if err := txBuilder.SetMsgs(msg); err != nil {
+	if err := txBuilder.SetMsgs(msgs...); err != nil {
 		return nil, err
 	}
 
 	txBuilder.SetMemo(fmt.Sprintf("%s@%s%d:26656", v.nodeID(), v.Moniker, v.Index))
-	fees := sdk.Coins{sdk.Coin{}}
+	fees := sdktypes.Coins{sdktypes.Coin{}}
 	txBuilder.SetFeeAmount(fees)
 	txBuilder.SetGasLimit(200000)
 	txBuilder.SetTimeoutHeight(0)
@@ -367,11 +425,11 @@ func (v *Validator) signMsg(msg sdk.Msg) (signing.Tx, error) {
 	// Note: this line is not needed for SIGN_MODE_LEGACY_AMINO, but putting it
 	// also doesn't affect its generated sign bytes, so for code's simplicity
 	// sake, we put it here.
-	sigData := signing2.SingleSignatureData{
-		SignMode:  signing2.SignMode_SIGN_MODE_DIRECT,
+	sigData := txsigning.SingleSignatureData{
+		SignMode:  txsigning.SignMode_SIGN_MODE_DIRECT,
 		Signature: nil,
 	}
-	sig := signing2.SignatureV2{
+	sig := txsigning.SignatureV2{
 		PubKey:   v.KeyInfo.GetPubKey(),
 		Data:     &sigData,
 		Sequence: 0,
@@ -381,7 +439,7 @@ func (v *Validator) signMsg(msg sdk.Msg) (signing.Tx, error) {
 		return nil, err
 	}
 
-	bytesToSign, err := txConfig.SignModeHandler().GetSignBytes(signing2.SignMode_SIGN_MODE_DIRECT, signerData, txBuilder.GetTx())
+	bytesToSign, err := txConfig.SignModeHandler().GetSignBytes(txsigning.SignMode_SIGN_MODE_DIRECT, signerData, txBuilder.GetTx())
 	if err != nil {
 		return nil, err
 	}
@@ -393,11 +451,11 @@ func (v *Validator) signMsg(msg sdk.Msg) (signing.Tx, error) {
 	}
 
 	// Construct the SignatureV2 struct
-	sigData = signing2.SingleSignatureData{
-		SignMode:  signing2.SignMode_SIGN_MODE_DIRECT,
+	sigData = txsigning.SingleSignatureData{
+		SignMode:  txsigning.SignMode_SIGN_MODE_DIRECT,
 		Signature: sigBytes,
 	}
-	sig = signing2.SignatureV2{
+	sig = txsigning.SignatureV2{
 		PubKey:   v.KeyInfo.GetPubKey(),
 		Data:     &sigData,
 		Sequence: 0,
@@ -406,5 +464,15 @@ func (v *Validator) signMsg(msg sdk.Msg) (signing.Tx, error) {
 		return nil, err
 	}
 
-	return txBuilder.GetTx(), nil
+	signedTx := txBuilder.GetTx()
+
+	txEncoder := authtx.DefaultTxEncoder()
+	bz, err := txEncoder(signedTx)
+	if err != nil {
+		return nil, err
+	}
+
+	stdTx, err := decodeTx(bz)
+
+	return stdTx, err
 }

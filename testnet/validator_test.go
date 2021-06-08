@@ -146,7 +146,7 @@ package main
 //	tmconfig.WriteConfigFile(tn.TMConfigPath(), cfg)
 //}
 //
-//func stdconfigchanges(cfg *tmconfig.Config, peers string) {
+//func stdconfigchanges(cfg *tmconfig.EthereumConfig, peers string) {
 //	// turn down blocktimes to make the chain faster
 //	cfg.Consensus.TimeoutCommit = 1 * time.Second
 //	cfg.Consensus.TimeoutPropose = 1 * time.Second

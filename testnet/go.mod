@@ -3,13 +3,17 @@ module github.com/cosmos/gravity-bridge/testnet
 go 1.16
 
 require (
+	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/cosmos/cosmos-sdk v0.42.5
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gravity-bridge/module v0.0.0-00010101000000-000000000000
 	github.com/ethereum/go-ethereum v1.9.21
+	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/tendermint v0.34.10
+	github.com/testcontainers/testcontainers-go v0.11.0 // indirect
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
 	golang.org/x/text v0.3.4 // indirect
 )
