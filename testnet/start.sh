@@ -293,7 +293,7 @@ docker-compose --env-file $n2dir/orchestrator.env start orchestrator2
 docker-compose --env-file $n3dir/orchestrator.env up --no-start orchestrator3
 docker-compose --env-file $n3dir/orchestrator.env start orchestrator3
 
-sleep 2
+sleep 5
 sudo chown -R $USER testdata/testchain/gravity{0..3}/data
 
 echo "Run tests"

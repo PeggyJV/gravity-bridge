@@ -139,12 +139,12 @@ pub async fn delegate_tokens(delegate_address: &str, amount: &str) {
         delegate_address,
         // amount, this should be about 4% of the total power to start
         amount,
-        "--home=/validator1",
+        "--home=/testdata/testchain/gravity0",
         // this is defined in /tests/container-scripts/setup-validator.sh
         &format!("--chain-id={}", get_chain_id()),
         "--keyring-backend=test",
         "--yes",
-        "--from=validator1",
+        "--from=orchestrator0",
     ];
     let mut cmd = if let Some(bin) = chain_binary() {
         std::process::Command::new(bin)
