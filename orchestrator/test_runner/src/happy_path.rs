@@ -162,23 +162,25 @@ pub async fn test_valset_update(
         .to_address("cosmosvaloper")
         .unwrap()
         .to_string();
-
     // should be about 4% of the total power to start
     let amount = deep_space::Coin {
         amount: (STARTING_STAKE_PER_VALIDATOR / 4).into(),
         denom: "stake".to_string(),
     };
-
+    let fee = deep_space::Coin {
+        amount: 125000000u32.into(),
+        denom: "stake".to_string(),
+    };
     info!(
         "Delegating {} to {} in order to generate a validator set update",
         amount, delegate_address
     );
 
-    let delres = contact
+    let del_tx = contact
         .delegate_to_validator(
             delegate_address.parse().unwrap(),
             amount.clone(),
-            get_fee(),
+            fee,
             validator_to_change,
             Some(OPERATION_TIMEOUT),
         )
@@ -186,8 +188,8 @@ pub async fn test_valset_update(
         .expect("Failed to delegate");
 
     info!(
-        "Delegated {} to {} delres {:?}",
-        amount, delegate_address, delres
+        "Delegated {} to {} del_tx {:?}",
+        amount, delegate_address, del_tx
     );
 
     let mut current_eth_valset_nonce = get_valset_nonce(gravity_address, *MINER_ADDRESS, &web30)
