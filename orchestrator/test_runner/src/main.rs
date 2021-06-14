@@ -175,6 +175,7 @@ pub async fn main() {
             .await;
             return;
         } else if test_type == "BATCH_STRESS" {
+            info!("Starting batch stress test");
             let contact = Contact::new(
                 COSMOS_NODE_GRPC.as_str(),
                 TOTAL_TIMEOUT,
@@ -184,7 +185,7 @@ pub async fn main() {
             transaction_stress_test(&web30, &contact, keys, gravity_address, erc20_addresses).await;
             return;
         } else if test_type == "VALSET_STRESS" {
-            info!("Starting Valset update stress test");
+            info!("Starting valset stress test");
             validator_set_stress_test(&web30, &contact, keys, gravity_address).await;
             return;
         } else if test_type == "V2_HAPPY_PATH" {
