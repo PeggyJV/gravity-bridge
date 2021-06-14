@@ -26,14 +26,13 @@ func (c *Chain) CreateAndInitializeValidators(count uint8) (err error){
 		if err := node.createKey("val"); err != nil {
 			return err
 		}
+		if err := node.createNodeKey(); err != nil {
+			return err
+		}
+		if err := node.createConsensusKey(); err != nil {
+			return err
+		}
 	}
-
-	//for _, n := range c.Validators {
-	//	if err = addGenesisAccount(n.ConfigDir(), n.Moniker, n.KeyInfo.GetAddress(), "100000000000stake,100000000000footoken"); err != nil {
-	//		return
-	//	}
-	//}
-
 	return
 }
 

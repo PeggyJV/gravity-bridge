@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -104,7 +105,7 @@ func TestBasicChain(t *testing.T) {
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdktypes.Msg)(nil), &types.MsgCreateValidator{}, &gravitytypes.MsgDelegateKeys{})
-	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{})
+	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{}, &ed25519.PubKey{})
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 
 	for i, v := range chain.Validators {
@@ -135,8 +136,10 @@ func TestBasicChain(t *testing.T) {
 	out, err := tmjson.MarshalIndent(genDoc, "", "  ")
 	require.NoError(t, err, "error marshalling genesis doc")
 
-	err = ioutil.WriteFile(genFilePath, out, fs.ModePerm)
-	require.NoError(t, err, "error writing out genesis file")
+	for _, validator := range chain.Validators {
+		err = ioutil.WriteFile(filepath.Join(validator.ConfigDir(), "config", "genesis.json"), out, fs.ModePerm)
+		require.NoError(t, err, "error writing out genesis file")
+	}
 
 	// update config.toml files
 	for i, v := range chain.Validators {

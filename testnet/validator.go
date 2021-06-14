@@ -2,11 +2,14 @@ package main
 
 import (
 	"crypto/ecdsa"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	"github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/privval"
 	"os"
 	"path"
 	"path/filepath"
@@ -14,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -44,9 +48,12 @@ type Validator struct {
 	Moniker string
 
 	// Key management
-	Mnemonic   string
-	KeyInfo    keyring.Info
-	PrivateKey cryptotypes.PrivKey
+	Mnemonic         string
+	KeyInfo          keyring.Info
+	PrivateKey       cryptotypes.PrivKey
+	ConsensusKey     privval.FilePVKey
+	ConsensusPrivKey cryptotypes.PrivKey
+	NodeKey          p2p.NodeKey
 
 	EthereumKey EthereumKey
 }
@@ -124,11 +131,6 @@ func (v *Validator) init() error {
 	config.SetRoot(v.ConfigDir())
 	config.Moniker = v.Moniker
 
-	_, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, "")
-	if err != nil {
-		return err
-	}
-
 	genDoc, err := getGenDoc(v.ConfigDir())
 	if err != nil {
 		return err
@@ -143,10 +145,45 @@ func (v *Validator) init() error {
 	genDoc.Validators = nil
 	genDoc.AppState = appState
 	if err = genutil.ExportGenesisFile(genDoc, config.GenesisFile()); err != nil {
-		return errors.Wrap(err, "Failed to export gensis file")
+		return errors.Wrap(err, "Failed to export genesis file")
 	}
 
 	cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+	return nil
+}
+
+func (v *Validator) createNodeKey() error {
+	serverCtx := server.NewDefaultContext()
+	config := serverCtx.Config
+	config.SetRoot(v.ConfigDir())
+	config.Moniker = v.Moniker
+
+	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+	if err != nil {
+		return err
+	}
+	v.NodeKey = *nodeKey
+	return nil
+}
+
+func (v *Validator) createConsensusKey() (err error) {
+	serverCtx := server.NewDefaultContext()
+	config := serverCtx.Config
+	config.SetRoot(v.ConfigDir())
+	config.Moniker = v.Moniker
+
+	pvKeyFile := config.PrivValidatorKeyFile()
+	if err := tmos.EnsureDir(filepath.Dir(pvKeyFile), 0777); err != nil {
+		return err
+	}
+
+	pvStateFile := config.PrivValidatorStateFile()
+	if err := tmos.EnsureDir(filepath.Dir(pvStateFile), 0777); err != nil {
+		return err
+	}
+
+	filePV := privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
+	v.ConsensusKey = filePV.Key
 	return nil
 }
 
@@ -326,8 +363,21 @@ func (v *Validator) buildCreateValidatorMsg(amount sdktypes.Coin) (sdktypes.Msg,
 	// get the initial validator min self delegation
 	minSelfDelegation, _ := sdktypes.NewIntFromString("1")
 
+	valPubKey, err := cryptocodec.FromTmPubKeyInterface(v.ConsensusKey.PubKey)
+	if err != nil {
+		return nil, err
+	}
+	pubKeyStr, err := sdktypes.Bech32ifyPubKey(sdktypes.Bech32PubKeyTypeConsPub, valPubKey)
+	if err != nil {
+		return nil, err
+	}
+	pubKey, err := sdktypes.GetPubKeyFromBech32(sdktypes.Bech32PubKeyTypeConsPub, pubKeyStr)
+	if err != nil {
+		return nil, err
+	}
+
 	msg, err := types.NewMsgCreateValidator(
-		sdktypes.ValAddress(v.KeyInfo.GetAddress()), v.KeyInfo.GetPubKey(), amount, description, commissionRates, minSelfDelegation,
+		sdktypes.ValAddress(v.KeyInfo.GetAddress()), pubKey, amount, description, commissionRates, minSelfDelegation,
 	)
 	return msg, err
 }
@@ -335,13 +385,9 @@ func (v *Validator) buildCreateValidatorMsg(amount sdktypes.Coin) (sdktypes.Msg,
 func (v *Validator) buildDelegateKeysMsg() sdktypes.Msg {
 	return &gravitytypes.MsgDelegateKeys{
 		EthereumAddress:     v.EthereumKey.Address,
-		ValidatorAddress:    v.KeyInfo.GetAddress().String(),
+		ValidatorAddress:    sdktypes.ValAddress(v.KeyInfo.GetAddress()).String(),
 		OrchestratorAddress: v.Chain.Orchestrators[v.Index].KeyInfo.GetAddress().String(),
 	}
-}
-
-func (v *Validator) nodeID() string {
-	return hex.EncodeToString(v.KeyInfo.GetPubKey().Address())
 }
 
 func (v *Validator) instanceName() string {
@@ -352,7 +398,7 @@ func decodeTx(txBytes []byte) (*tx.Tx, error) {
 	var raw tx.TxRaw
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdktypes.Msg)(nil), &types.MsgCreateValidator{}, &gravitytypes.MsgDelegateKeys{})
-	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{})
+	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{}, &ed25519.PubKey{})
 	marshaller := codec.NewProtoCodec(interfaceRegistry)
 
 	// reject all unknown proto fields in the root TxRaw
@@ -398,7 +444,7 @@ func decodeTx(txBytes []byte) (*tx.Tx, error) {
 func (v *Validator) signMsg(msgs ...sdktypes.Msg) (*tx.Tx, error) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdktypes.Msg)(nil), &types.MsgCreateValidator{}, &gravitytypes.MsgDelegateKeys{})
-	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{})
+	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{}, &ed25519.PubKey{})
 	marshaller := codec.NewProtoCodec(interfaceRegistry)
 
 	signModes := []txsigning.SignMode{txsigning.SignMode_SIGN_MODE_DIRECT}
@@ -409,7 +455,7 @@ func (v *Validator) signMsg(msgs ...sdktypes.Msg) (*tx.Tx, error) {
 		return nil, err
 	}
 
-	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.nodeID(), v.instanceName()))
+	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.NodeKey.ID(), v.instanceName()))
 	fees := sdktypes.Coins{sdktypes.Coin{}}
 	txBuilder.SetFeeAmount(fees)
 	txBuilder.SetGasLimit(200000)

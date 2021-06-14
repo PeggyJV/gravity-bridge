@@ -28,4 +28,4 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/cosmos/gravity-bridge/module => github.com/peggyjv/gravity-bridge/module v0.0.0-20210521223012-f1557cd2a31b
+replace github.com/cosmos/gravity-bridge/module => github.com/peggyjv/gravity-bridge/module v0.0.0-20210612031159-dae2f0d5b179
