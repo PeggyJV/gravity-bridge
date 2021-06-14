@@ -37,5 +37,7 @@ COPY --from=build-env /go/src/github.com/althea-net/cosmos-gravity-bridge/module
 
 EXPOSE 26656 26657 1317 9090
 
+
+
 # Run gravity by default
 CMD sh home/startup.sh

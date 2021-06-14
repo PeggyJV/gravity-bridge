@@ -80,7 +80,7 @@ func createMnemonic() (string, error) {
 }
 
 func (v *Validator) ConfigDir() string {
-	return fmt.Sprintf("%s/%s%d", v.Chain.ConfigDir(), v.Moniker, v.Index)
+	return fmt.Sprintf("%s/%s", v.Chain.ConfigDir(), v.instanceName())
 }
 
 // MkDir creates the directory for the testnode
@@ -344,6 +344,10 @@ func (v *Validator) nodeID() string {
 	return hex.EncodeToString(v.KeyInfo.GetPubKey().Address())
 }
 
+func (v *Validator) instanceName() string {
+	return fmt.Sprintf("%s%d", v.Moniker, v.Index)
+}
+
 func decodeTx(txBytes []byte) (*tx.Tx, error) {
 	var raw tx.TxRaw
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
@@ -405,7 +409,7 @@ func (v *Validator) signMsg(msgs ...sdktypes.Msg) (*tx.Tx, error) {
 		return nil, err
 	}
 
-	txBuilder.SetMemo(fmt.Sprintf("%s@%s%d:26656", v.nodeID(), v.Moniker, v.Index))
+	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.nodeID(), v.instanceName()))
 	fees := sdktypes.Coins{sdktypes.Coin{}}
 	txBuilder.SetFeeAmount(fees)
 	txBuilder.SetGasLimit(200000)

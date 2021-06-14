@@ -4,6 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/fs"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
 	"github.com/BurntSushi/toml"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -14,17 +21,10 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	gravitytypes "github.com/cosmos/gravity-bridge/module/x/gravity/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
-	"io/fs"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
-
+	dt "github.com/ory/dockertest/v3"
+	dc "github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 )
 
 func TestBasicChain(t *testing.T) {
@@ -66,8 +66,8 @@ func TestBasicChain(t *testing.T) {
 	// add them to the ethereum genesis
 	ethGenesis := EthereumGenesis{
 		Difficulty: "0x400",
-		GasLimit: "0xB71B00",
-		Alloc: make(map[string]Allocation, len(chain.Validators) + 1),
+		GasLimit:   "0xB71B00",
+		Alloc:      make(map[string]Allocation, len(chain.Validators)+1),
 	}
 	ethGenesis.Alloc["0xBf660843528035a5A4921534E156a27e64B231fE"] = Allocation{Balance: "0x1337000000000000000000"}
 	for _, v := range chain.Validators {
@@ -102,12 +102,10 @@ func TestBasicChain(t *testing.T) {
 	coin := sdktypes.Coin{Denom: "stake", Amount: amount}
 	genTxs := make([]json.RawMessage, len(chain.Validators))
 
-
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdktypes.Msg)(nil), &types.MsgCreateValidator{}, &gravitytypes.MsgDelegateKeys{})
 	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{})
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
-
 
 	for i, v := range chain.Validators {
 		cvm, err := v.buildCreateValidatorMsg(coin)
@@ -149,7 +147,7 @@ func TestBasicChain(t *testing.T) {
 
 		configToml.P2P.Laddr = "tcp://0.0.0.0:26656"
 		configToml.P2P.AddrBookStrict = false
-		configToml.P2P.ExternalAddress = fmt.Sprintf("%s%d:%d", v.Moniker, v.Index, 26656)
+		configToml.P2P.ExternalAddress = fmt.Sprintf("%s:%d", v.instanceName(), 26656)
 		configToml.RPC.Laddr = "tcp://0.0.0.0:26657"
 		configToml.StateSync.Enable = true
 
@@ -159,7 +157,7 @@ func TestBasicChain(t *testing.T) {
 
 		var peers []string
 
-		for j :=0; j < len(chain.Validators); j++ {
+		for j := 0; j < len(chain.Validators); j++ {
 			if i == j {
 				continue
 			}
@@ -182,27 +180,96 @@ func TestBasicChain(t *testing.T) {
 		err = os.WriteFile(startupPath, []byte(fmt.Sprintf("gravity --home home start --pruning=nothing > home.n%d.log", v.Index)), fs.ModePerm)
 	}
 
-	// bring up validators and ethereum
-	dockerEnv := map[string]string{"DOCKER_SCAN_SUGGEST": "false"}
-	dco := testcontainers.NewLocalDockerCompose([]string{"docker-compose.yml"}, "testnet").WithEnv(dockerEnv)
-	defer dco.Down()
+	// bring up docker network
+	pool, err := dt.NewPool("")
+	require.NoError(t, err, "error creating docker pool")
+	network, err := pool.CreateNetwork("testnet")
+	require.NoError(t, err, "error creating testnet network")
+	defer network.Close()
 
-	execErr := dco.WithCommand([]string{"build", "ethereum", "gravity0", "gravity1", "gravity2", "gravity3"}).Invoke()
-	require.NoError(t, execErr.Error, "unable to build ethereum and validators")
+	hostConfig := func(config *dc.HostConfig) {
+		// set AutoRemove to true so that stopped container goes away by itself
+		//config.AutoRemove = true
+		//config.RestartPolicy = dc.RestartPolicy{
+		//	Name: "no",
+		//}
+		//config.LogConfig.Type = "json-file"
+	}
 
-	execErr = dco.WithCommand([]string{"up", "--no-start", "ethereum", "gravity0", "gravity1", "gravity2", "gravity3"}).Invoke()
-	require.NoError(t, execErr.Error, "unable to bring up ethereum and validators")
+	// bring up ethereum
+	t.Log("building and running ethereum")
+	ethereum, err := pool.BuildAndRunWithBuildOptions(&dt.BuildOptions{
+		Dockerfile: "ethereum/Dockerfile",
+		ContextDir: "./",
+	},
+		&dt.RunOptions{
+			Name:      "ethereum",
+			NetworkID: network.Network.ID,
+			PortBindings: map[dc.Port][]dc.PortBinding{
+				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
+			},
+			Env: []string{},
+		}, hostConfig)
+	require.NoError(t, err, "error bringing up ethereum")
+	t.Logf("deployed ethereum at %s", ethereum.Container.ID)
 
-	execErr = dco.WithCommand([]string{"start", "ethereum", "gravity0", "gravity1", "gravity2", "gravity3"}).Invoke()
-	require.NoError(t, execErr.Error, "unable to start ethereum and validators")
+	// build validators
+	for _, validator := range chain.Validators {
+		t.Logf("building %s", validator.instanceName())
+		err = pool.Client.BuildImage(dc.BuildImageOptions{
+			Name: validator.instanceName(),
+			Dockerfile: "Dockerfile",
+			ContextDir: "./module",
+			OutputStream: ioutil.Discard,
+		})
+		require.NoError(t, err, "error building %s", validator.instanceName())
+		t.Logf("built %s", validator.instanceName())
+	}
 
-	// build contract deployer
-	execErr = dco.WithCommand([]string{"build", "contract_deployer"}).Invoke()
-	require.NoError(t, execErr.Error, "unable to build contract deployer")
+	for _, validator := range chain.Validators {
+		runOpts := &dt.RunOptions{
+			Name:      validator.instanceName(),
+			NetworkID: network.Network.ID,
+			Mounts: []string{fmt.Sprintf("/Users/mvid/Development/crypto/cosmos-gravity-bridge/testdata/testchain/%s/:/root/home", validator.instanceName())},
+			Repository: validator.instanceName(),
+		}
 
-	execErr = dco.WithExposedService("contract_deployer", 12345, wait.NewLogStrategy("Gravity deployed at Address")).
-		WithCommand([]string{"up", "contract_deployer"}).Invoke()
-	//require.NoError(t, execErr.Error, "unable to start contract deployer")
+		// expose the first validator for debugging and communication
+		if validator.Index == 0 {
+			runOpts.PortBindings = map[dc.Port][]dc.PortBinding{
+				"1317/tcp":  {{HostIP: "", HostPort: "1317"}},
+				"6060/tcp":  {{HostIP: "", HostPort: "6060"}},
+				"6061/tcp":  {{HostIP: "", HostPort: "6061"}},
+				"6062/tcp":  {{HostIP: "", HostPort: "6062"}},
+				"6063/tcp":  {{HostIP: "", HostPort: "6063"}},
+				"6064/tcp":  {{HostIP: "", HostPort: "6064"}},
+				"6065/tcp":  {{HostIP: "", HostPort: "6065"}},
+				"9090/tcp":  {{HostIP: "", HostPort: "9090"}},
+				"26656/tcp": {{HostIP: "", HostPort: "26656"}},
+				"26657/tcp": {{HostIP: "", HostPort: "26657"}},
+			}
+		}
 
-	execErr = dco.WithCommand([]string{"ps"}).Invoke()
+		resource, err := pool.RunWithOptions(runOpts, hostConfig)
+		require.NoError(t, err, "error bringing up %s", validator.instanceName())
+		t.Logf("deployed %s at %s", validator.instanceName(), resource.Container.ID)
+
+	}
+
+		// bring up the contract deployer and deploy contract
+	t.Log("building contract_deployer")
+	contractDeployer, err := pool.BuildAndRunWithBuildOptions(&dt.BuildOptions{
+		Dockerfile: "Dockerfile",
+		ContextDir: "./solidity",
+	},
+		&dt.RunOptions{
+			Name:      "contract_deployer",
+			NetworkID: network.Network.ID,
+			PortBindings: map[dc.Port][]dc.PortBinding{
+				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
+			},
+			Env: []string{},
+		}, hostConfig)
+	require.NoError(t, err, "error bringing up contract deployer")
+	t.Logf("deployed contract deployer at %s", contractDeployer.Container.ID)
 }
