@@ -165,7 +165,7 @@ func TestBasicChain(t *testing.T) {
 				continue
 			}
 			peer := chain.Validators[j]
-			peerID := fmt.Sprintf("%s@%s%d:26656", peer.nodeID(), peer.Moniker, j)
+			peerID := fmt.Sprintf("%s@%s%d:26656", peer.NodeKey.ID(), peer.Moniker, j)
 			peers = append(peers, peerID)
 		}
 
