@@ -32,7 +32,7 @@ pub async fn happy_path_test(
     keys: Vec<ValidatorKeys>,
     gravity_address: EthAddress,
     erc20_address: EthAddress,
-    _validator_out: bool,
+    validator_out: bool,
 ) {
     let mut grpc_client = grpc_client;
 
@@ -47,19 +47,13 @@ pub async fn happy_path_test(
     // working. We'll settle for testing that the initial valset (generated
     // with the first block) is successfully updated
 
-    // TODO JEHAN: bring this back in once we have a gRPC library for delegating
-    // if !validator_out {
-    //     for _ in 0u32..2 {
-    //         test_valset_update(&web30, &keys, gravity_address).await;
-    //     }
-    // } else {
-    //     wait_for_nonzero_valset(&web30, gravity_address).await;
-    // }
-
-    // TODO JEHAN: take this out once the above has been brought back in
-    wait_for_nonzero_valset(&web30, gravity_address).await;
-
-    println!(":==: got past wait_for_nonzero_valset");
+    if !validator_out {
+        for _ in 0u32..2 {
+            test_valset_update(&web30, contact, &keys, gravity_address).await;
+        }
+    } else {
+        wait_for_nonzero_valset(&web30, gravity_address).await;
+    }
 
     // generate an address for coin sending tests, this ensures test imdepotency
     let mut rng = rand::thread_rng();
@@ -147,7 +141,10 @@ pub async fn test_valset_update(
 
     // now we send a valset request that the orchestrators will pick up on
     // in this case we send it as the first validator because they can pay the fee
-    info!("Sending in valset request");
+    info!(
+        "Sending in valset request (starting_eth_valset_nonce {})",
+        starting_eth_valset_nonce
+    );
 
     // this is hacky and not really a good way to test validator set updates in a highly
     // repeatable fashion. What we really need to do is be aware of the total staking state

@@ -51,7 +51,7 @@ lazy_static! {
 /// this value reflects the contents of /tests/container-scripts/setup-validator.sh
 /// and is used to compute if a stake change is big enough to trigger a validator set
 /// update since we want to make several such changes intentionally
-pub const STAKE_SUPPLY_PER_VALIDATOR: u128 = 1000000000;
+pub const STAKE_SUPPLY_PER_VALIDATOR: u128 = 100_000_000_000;
 /// this is the amount each validator bonds at startup
 pub const STARTING_STAKE_PER_VALIDATOR: u128 = STAKE_SUPPLY_PER_VALIDATOR / 2;
 
