@@ -156,19 +156,18 @@ pub async fn test_valset_update(
     // makes any difference, eventually it will fail because the change to the total staked
     // percentage is too small.
     let mut rng = rand::thread_rng();
-    let validator_to_change = rng.gen_range(0..keys.len());
-    let validator_to_change = keys[validator_to_change].validator_key;
+    let keys_to_change = rng.gen_range(0..keys.len());
+    let keys_to_change = &keys[keys_to_change];
+
+    let validator_to_change = keys_to_change.validator_key;
     let delegate_address = validator_to_change
         .to_address("cosmosvaloper")
         .unwrap()
         .to_string();
+
     // should be about 4% of the total power to start
     let amount = deep_space::Coin {
         amount: (STARTING_STAKE_PER_VALIDATOR / 4).into(),
-        denom: "stake".to_string(),
-    };
-    let fee = deep_space::Coin {
-        amount: 125000000u32.into(),
         denom: "stake".to_string(),
     };
     info!(
@@ -180,8 +179,8 @@ pub async fn test_valset_update(
         .delegate_to_validator(
             delegate_address.parse().unwrap(),
             amount.clone(),
-            fee,
-            validator_to_change,
+            get_fee(),
+            keys_to_change.orch_key,
             Some(OPERATION_TIMEOUT),
         )
         .await
