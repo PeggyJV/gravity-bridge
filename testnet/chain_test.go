@@ -149,7 +149,7 @@ func TestBasicChain(t *testing.T) {
 		configToml.P2P.AddrBookStrict = false
 		configToml.P2P.ExternalAddress = fmt.Sprintf("%s:%d", v.instanceName(), 26656)
 		configToml.RPC.Laddr = "tcp://0.0.0.0:26657"
-		configToml.StateSync.Enable = true
+		configToml.StateSync.Enable = false
 
 		if i > 0 {
 			configToml.LogLevel = "info"
@@ -185,7 +185,7 @@ func TestBasicChain(t *testing.T) {
 	require.NoError(t, err, "error creating docker pool")
 	network, err := pool.CreateNetwork("testnet")
 	require.NoError(t, err, "error creating testnet network")
-	defer network.Close()
+	//defer network.Close()
 
 	hostConfig := func(config *dc.HostConfig) {
 		// set AutoRemove to true so that stopped container goes away by itself
