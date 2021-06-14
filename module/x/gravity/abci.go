@@ -67,7 +67,8 @@ func createSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 	blockHeight := uint64(ctx.BlockHeight())
 	powerDiff := types.EthereumSigners(k.CurrentSignerSet(ctx)).PowerDiff(latestSignerSetTx.Signers)
 
-	createSignerSetTx := (lastUnbondingHeight == blockHeight) || (powerDiff > 0.05)
+	// TODO(levi) restore this!!!: createSignerSetTx := (lastUnbondingHeight == blockHeight) || (powerDiff > 0.05)
+	createSignerSetTx := (lastUnbondingHeight == blockHeight) || (powerDiff > 0.045) // XXX(levi) deleteme and restore the prior line! this is just for debugging
 
 	ctx.Logger().Info("signerset creation",
 		"blockHeight", blockHeight,
