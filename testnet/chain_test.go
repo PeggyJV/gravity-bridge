@@ -4,17 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"io/fs"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
-
 	"github.com/BurntSushi/toml"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -26,6 +19,13 @@ import (
 	dc "github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
 	tmjson "github.com/tendermint/tendermint/libs/json"
+	"io/fs"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
 )
 
 func TestBasicChain(t *testing.T) {
@@ -188,7 +188,7 @@ func TestBasicChain(t *testing.T) {
 	require.NoError(t, err, "error creating docker pool")
 	network, err := pool.CreateNetwork("testnet")
 	require.NoError(t, err, "error creating testnet network")
-	//defer network.Close()
+	defer network.Close()
 
 	hostConfig := func(config *dc.HostConfig) {
 		// set AutoRemove to true so that stopped container goes away by itself
@@ -196,7 +196,6 @@ func TestBasicChain(t *testing.T) {
 		//config.RestartPolicy = dc.RestartPolicy{
 		//	Name: "no",
 		//}
-		//config.LogConfig.Type = "json-file"
 	}
 
 	// bring up ethereum
@@ -220,9 +219,9 @@ func TestBasicChain(t *testing.T) {
 	for _, validator := range chain.Validators {
 		t.Logf("building %s", validator.instanceName())
 		err = pool.Client.BuildImage(dc.BuildImageOptions{
-			Name: validator.instanceName(),
-			Dockerfile: "Dockerfile",
-			ContextDir: "./module",
+			Name:         validator.instanceName(),
+			Dockerfile:   "Dockerfile",
+			ContextDir:   "./module",
 			OutputStream: ioutil.Discard,
 		})
 		require.NoError(t, err, "error building %s", validator.instanceName())
@@ -231,9 +230,9 @@ func TestBasicChain(t *testing.T) {
 
 	for _, validator := range chain.Validators {
 		runOpts := &dt.RunOptions{
-			Name:      validator.instanceName(),
-			NetworkID: network.Network.ID,
-			Mounts: []string{fmt.Sprintf("/Users/mvid/Development/crypto/cosmos-gravity-bridge/testdata/testchain/%s/:/root/home", validator.instanceName())},
+			Name:       validator.instanceName(),
+			NetworkID:  network.Network.ID,
+			Mounts:     []string{fmt.Sprintf("/Users/mvid/Development/crypto/cosmos-gravity-bridge/testdata/testchain/%s/:/root/home", validator.instanceName())},
 			Repository: validator.instanceName(),
 		}
 
@@ -256,15 +255,15 @@ func TestBasicChain(t *testing.T) {
 		resource, err := pool.RunWithOptions(runOpts, hostConfig)
 		require.NoError(t, err, "error bringing up %s", validator.instanceName())
 		t.Logf("deployed %s at %s", validator.instanceName(), resource.Container.ID)
-
 	}
 
-		// bring up the contract deployer and deploy contract
+	// bring up the contract deployer and deploy contract
 	t.Log("building contract_deployer")
-	contractDeployer, err := pool.BuildAndRunWithBuildOptions(&dt.BuildOptions{
-		Dockerfile: "Dockerfile",
-		ContextDir: "./solidity",
-	},
+	contractDeployer, err := pool.BuildAndRunWithBuildOptions(
+		&dt.BuildOptions{
+			Dockerfile: "Dockerfile",
+			ContextDir: "./solidity",
+		},
 		&dt.RunOptions{
 			Name:      "contract_deployer",
 			NetworkID: network.Network.ID,
@@ -272,7 +271,74 @@ func TestBasicChain(t *testing.T) {
 				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
 			},
 			Env: []string{},
-		}, hostConfig)
+		}, func(config *dc.HostConfig){})
 	require.NoError(t, err, "error bringing up contract deployer")
 	t.Logf("deployed contract deployer at %s", contractDeployer.Container.ID)
+
+	container := contractDeployer.Container
+	for container.State.Running {
+		time.Sleep(10 * time.Second)
+		container, err = pool.Client.InspectContainer(contractDeployer.Container.ID)
+		require.NoError(t, err, "error inspecting contract deployer")
+	}
+
+	logOutput := bytes.Buffer{}
+	err = pool.Client.Logs(dc.LogsOptions{
+		Container: contractDeployer.Container.ID,
+		OutputStream: &logOutput,
+		Stdout:       true,
+	})
+	require.NoError(t, err, "error getting contract deployer logs")
+
+	var gravityContract string
+	for _, s := range strings.Split(logOutput.String(), "\n") {
+		if strings.HasPrefix(s, "Gravity deployed at Address") {
+			strSpl := strings.Split(s, "-")
+			gravityContract = strings.ReplaceAll(strSpl[1], " ", "")
+			break
+		}
+	}
+	err = pool.RemoveContainerByName(container.Name)
+	require.NoError(t, err, "error removing contract deployer container")
+
+	// build orchestrators
+	for _, orchestrator := range chain.Orchestrators {
+		t.Logf("building %s", orchestrator.instanceName())
+		err = pool.Client.BuildImage(dc.BuildImageOptions{
+			Name:         orchestrator.instanceName(),
+			Dockerfile:   "Dockerfile",
+			ContextDir:   "./orchestrator",
+			OutputStream: ioutil.Discard,
+		})
+		require.NoError(t, err, "error building %s", orchestrator.instanceName())
+		t.Logf("built %s", orchestrator.instanceName())
+	}
+
+	// deploy orchestrators
+	for _, orchestrator := range chain.Orchestrators {
+		validator := chain.Validators[orchestrator.Index]
+		env := []string{
+			fmt.Sprintf("VALIDATOR=%s", validator.instanceName()),
+			fmt.Sprintf("COSMOS_GRPC=http://%s:9090/", validator.instanceName()),
+			fmt.Sprintf("COSMOS_RPC=http://%s:1317", validator.instanceName()),
+			fmt.Sprintf("VALIDATOR=%s", validator.instanceName()),
+			fmt.Sprintf("COSMOS_PHRASE=%s", orchestrator.Mnemonic),
+			fmt.Sprintf("ETH_PRIVATE_KEY=%s", validator.EthereumKey.PrivateKey),
+			fmt.Sprintf("CONTRACT_ADDR=%s", gravityContract),
+			"DENOM=stake",
+			"ETH_RPC=http://ethereum:8545",
+			"RUST_BACKTRACE=full",
+		}
+		t.Logf("env: %s", env)
+		runOpts := &dt.RunOptions{
+			Name:       orchestrator.instanceName(),
+			NetworkID:  network.Network.ID,
+			Repository: orchestrator.instanceName(),
+			Env: env,
+		}
+
+		resource, err := pool.RunWithOptions(runOpts, hostConfig)
+		require.NoError(t, err, "error bringing up %s", orchestrator.instanceName())
+		t.Logf("deployed %s at %s", orchestrator.instanceName(), resource.Container.ID)
+	}
 }

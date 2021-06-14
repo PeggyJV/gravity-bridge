@@ -64,15 +64,6 @@ type EthereumKey struct {
 	Address    string `json:"address"`
 }
 
-type Orchestrator struct {
-	Chain *Chain
-	Index uint8
-
-	// Key management
-	Mnemonic string
-	KeyInfo  keyring.Info
-}
-
 // createMnemonic creates a new mnemonic
 func createMnemonic() (string, error) {
 	entropySeed, err := bip39.NewEntropy(256)
