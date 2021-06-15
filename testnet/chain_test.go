@@ -329,7 +329,6 @@ func TestBasicChain(t *testing.T) {
 			"ETH_RPC=http://ethereum:8545",
 			"RUST_BACKTRACE=full",
 		}
-		t.Logf("env: %s", env)
 		runOpts := &dt.RunOptions{
 			Name:       orchestrator.instanceName(),
 			NetworkID:  network.Network.ID,
