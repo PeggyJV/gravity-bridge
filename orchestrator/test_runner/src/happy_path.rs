@@ -4,7 +4,6 @@ use crate::utils::*;
 use crate::MINER_ADDRESS;
 use crate::MINER_PRIVATE_KEY;
 use crate::OPERATION_TIMEOUT;
-use crate::STARTING_STAKE_PER_VALIDATOR;
 use crate::TOTAL_TIMEOUT;
 use clarity::PrivateKey as EthPrivateKey;
 use clarity::{Address as EthAddress, Uint256};
@@ -163,8 +162,10 @@ pub async fn test_valset_update(
         .to_string();
 
     // should be about 4% of the total power to start
+    // let amount = crate::STAKE_SUPPLY_PER_VALIDATOR / 4; // 25B
+    let amount = crate::STARTING_STAKE_PER_VALIDATOR / 4; // 12.5B
     let amount = deep_space::Coin {
-        amount: (STARTING_STAKE_PER_VALIDATOR / 4).into(),
+        amount: amount.into(),
         denom: "stake".to_string(),
     };
     info!(
