@@ -192,8 +192,6 @@ pub async fn test_valset_update(
             continue; // retry
         }
 
-        // TODO(levi) consider contact.wait_for_tx(res, OPERATION_TIMEOUT) here
-
         info!("Delegated {} to {}", amount, delegate_address);
         break;
     }
