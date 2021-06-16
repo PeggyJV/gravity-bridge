@@ -20,8 +20,6 @@ type KeyOutput struct {
 }
 
 func TestKeyGen(t *testing.T) {
-	buf := bytes.NewBuffer(nil)
-
 	mnemonic := "weasel lunch attack blossom tone drum unfair worry risk level negative height sight nation inside task oyster client shiver aware neck mansion gun dune"
 
 	// generate key from binary
@@ -29,6 +27,8 @@ func TestKeyGen(t *testing.T) {
 	keyCmd.Flags().String(cli.OutputFlag, "json", "output flag")
 	keyCmd.SetArgs([]string{"--dry-run=true", "--output=json", "--recover=true", "orch"})
 	keyCmd.SetIn(strings.NewReader(mnemonic + "\n"))
+
+	buf := bytes.NewBuffer(nil)
 	keyCmd.SetOut(buf)
 	keyCmd.SetErr(buf)
 
@@ -41,6 +41,7 @@ func TestKeyGen(t *testing.T) {
 	err = json.Unmarshal(output, &key)
 	require.NoError(t, err)
 
+	// generate a memory key directly
 	kb, err := keyring.New("testnet", keyring.BackendMemory, "", nil)
 	if err != nil {
 		return
@@ -52,7 +53,7 @@ func TestKeyGen(t *testing.T) {
 		return
 	}
 
-	account, err := kb.NewAccount("", mnemonic, "", "", algo)
+	account, err := kb.NewAccount("", mnemonic, "", "m/44'/118'/0'/0/0", algo)
 	require.NoError(t, err)
 
 	require.Equal(t, account.GetAddress().String(), key.Address)

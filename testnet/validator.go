@@ -197,7 +197,7 @@ func createMemoryKey() (mnemonic string, info *keyring.Info, err error) {
 		return
 	}
 
-	account, err := kb.NewAccount("", mnemonic, "", "", algo)
+	account, err := kb.NewAccount("", mnemonic, "", sdktypes.FullFundraiserPath, algo)
 	info = &account
 	return
 }
@@ -222,7 +222,7 @@ func (v *Validator) createKey(name string) (err error) {
 	}
 	v.Mnemonic = mnemonic
 
-	info, err := kb.NewAccount(name, mnemonic, "", "", algo)
+	info, err := kb.NewAccount(name, mnemonic, "", sdktypes.FullFundraiserPath, algo)
 	if err != nil {
 		return err
 	}
