@@ -162,8 +162,8 @@ pub async fn test_valset_update(
         .to_string();
 
     // should be about 4% of the total power to start
-    // let amount = crate::STAKE_SUPPLY_PER_VALIDATOR / 4; // 25B
-    let amount = crate::STARTING_STAKE_PER_VALIDATOR / 4; // 12.5B
+    // let amount = crate::STARTING_STAKE_PER_VALIDATOR / 4; // 12.5B
+    let amount = crate::STAKE_SUPPLY_PER_VALIDATOR / 4; // 25B
     let amount = deep_space::Coin {
         amount: amount.into(),
         denom: "stake".to_string(),
