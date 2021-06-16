@@ -173,21 +173,30 @@ pub async fn test_valset_update(
         amount, delegate_address
     );
 
-    let del_tx = contact
-        .delegate_to_validator(
-            delegate_address.parse().unwrap(),
-            amount.clone(),
-            get_fee(),
-            keys_to_change.orch_key,
-            Some(OPERATION_TIMEOUT),
-        )
-        .await
-        .expect("Failed to delegate");
+    loop {
+        let res = contact
+            .delegate_to_validator(
+                delegate_address.parse().unwrap(),
+                amount.clone(),
+                get_fee(),
+                keys_to_change.orch_key,
+                Some(OPERATION_TIMEOUT),
+            )
+            .await;
 
-    info!(
-        "Delegated {} to {} del_tx {:?}",
-        amount, delegate_address, del_tx
-    );
+        if res.is_err() {
+            warn!("Delegate to validator failed (will retry) {:?}", res);
+            if Instant::now() - start > TOTAL_TIMEOUT {
+                panic!("Delegate to validator timed out.");
+            }
+            continue; // retry
+        }
+
+        // TODO(levi) consider contact.wait_for_tx(res, OPERATION_TIMEOUT) here
+
+        info!("Delegated {} to {}", amount, delegate_address);
+        break;
+    }
 
     let mut current_eth_valset_nonce = get_valset_nonce(gravity_address, *MINER_ADDRESS, &web30)
         .await
