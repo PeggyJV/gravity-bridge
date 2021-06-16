@@ -28,6 +28,18 @@ import (
 	"time"
 )
 
+func writeFile(path string, body []byte) error {
+	if _, err := os.Create(path); err != nil {
+		return err
+	}
+
+	if err := ioutil.WriteFile(path, body, 0644); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func TestBasicChain(t *testing.T) {
 	err := os.RemoveAll("testdata/")
 	require.NoError(t, err, "unable to reset testdata directory")
@@ -228,11 +240,14 @@ func TestBasicChain(t *testing.T) {
 		t.Logf("built %s", validator.instanceName())
 	}
 
+	wd, err := os.Getwd()
+	require.NoError(t, err, "couldn't get working directory")
+
 	for _, validator := range chain.Validators {
 		runOpts := &dt.RunOptions{
 			Name:       validator.instanceName(),
 			NetworkID:  network.Network.ID,
-			Mounts:     []string{fmt.Sprintf("/Users/mvid/Development/crypto/cosmos-gravity-bridge/testdata/testchain/%s/:/root/home", validator.instanceName())},
+			Mounts:     []string{fmt.Sprintf("%s/testdata/testchain/%s/:/root/home", wd, validator.instanceName())},
 			Repository: validator.instanceName(),
 		}
 
@@ -282,16 +297,16 @@ func TestBasicChain(t *testing.T) {
 		require.NoError(t, err, "error inspecting contract deployer")
 	}
 
-	logOutput := bytes.Buffer{}
+	contractDeployerLogOutput := bytes.Buffer{}
 	err = pool.Client.Logs(dc.LogsOptions{
 		Container: contractDeployer.Container.ID,
-		OutputStream: &logOutput,
+		OutputStream: &contractDeployerLogOutput,
 		Stdout:       true,
 	})
 	require.NoError(t, err, "error getting contract deployer logs")
 
 	var gravityContract string
-	for _, s := range strings.Split(logOutput.String(), "\n") {
+	for _, s := range strings.Split(contractDeployerLogOutput.String(), "\n") {
 		if strings.HasPrefix(s, "Gravity deployed at Address") {
 			strSpl := strings.Split(s, "-")
 			gravityContract = strings.ReplaceAll(strSpl[1], " ", "")
@@ -340,4 +355,50 @@ func TestBasicChain(t *testing.T) {
 		require.NoError(t, err, "error bringing up %s", orchestrator.instanceName())
 		t.Logf("deployed %s at %s", orchestrator.instanceName(), resource.Container.ID)
 	}
+
+	// write test runner files to config directory
+	var ethKeys []string
+	var validatorPhrases []string
+	for _, validator := range chain.Validators {
+		ethKeys = append(ethKeys, validator.EthereumKey.PrivateKey)
+		validatorPhrases = append(validatorPhrases, validator.Mnemonic)
+	}
+	var orchestratorPhrases []string
+	for _, orchestrator := range chain.Orchestrators {
+		orchestratorPhrases = append(orchestratorPhrases, orchestrator.Mnemonic)
+	}
+
+
+	err = writeFile(filepath.Join(chain.DataDir, "validator-eth-keys"), []byte(strings.Join(ethKeys, "\n")))
+	require.NoError(t, err)
+	err = writeFile(filepath.Join(chain.DataDir, "validator-phrases"), []byte(strings.Join(validatorPhrases, "\n")))
+	require.NoError(t, err)
+	err = writeFile(filepath.Join(chain.DataDir, "orchestrator-phrases"), []byte(strings.Join(orchestratorPhrases, "\n")))
+	require.NoError(t, err)
+	err = writeFile(filepath.Join(chain.DataDir, "contracts"), contractDeployerLogOutput.Bytes())
+	require.NoError(t, err)
+
+
+	// bring up the test runner
+	t.Log("building contract_deployer")
+	_, err = pool.BuildAndRunWithBuildOptions(
+		&dt.BuildOptions{
+			Dockerfile: "testnet.Dockerfile",
+			ContextDir: "./orchestrator",
+		},
+		&dt.RunOptions{
+			Name:      "test_runner",
+			NetworkID: network.Network.ID,
+			PortBindings: map[dc.Port][]dc.PortBinding{
+				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
+			},
+			Mounts: []string{fmt.Sprintf("%s/testdata:/testdata", wd)},
+			Env: []string{
+				"RUST_BACKTRACE=1",
+				"RUST_LOG=INFO",
+				"TEST_TYPE=V2_HAPPY_PATH",
+			},
+		}, func(config *dc.HostConfig){})
+	require.NoError(t, err, "error bringing up test runner")
+	t.Logf("deployed test runner at %s", contractDeployer.Container.ID)
 }
