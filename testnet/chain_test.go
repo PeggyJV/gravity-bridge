@@ -204,10 +204,10 @@ func TestBasicChain(t *testing.T) {
 
 	hostConfig := func(config *dc.HostConfig) {
 		// set AutoRemove to true so that stopped container goes away by itself
-		//config.AutoRemove = true
-		//config.RestartPolicy = dc.RestartPolicy{
-		//	Name: "no",
-		//}
+		config.AutoRemove = true
+		config.RestartPolicy = dc.RestartPolicy{
+			Name: "no",
+		}
 	}
 
 	// bring up ethereum
@@ -380,7 +380,7 @@ func TestBasicChain(t *testing.T) {
 
 
 	// bring up the test runner
-	t.Log("building contract_deployer")
+	t.Log("building and deploying test runner")
 	_, err = pool.BuildAndRunWithBuildOptions(
 		&dt.BuildOptions{
 			Dockerfile: "testnet.Dockerfile",
