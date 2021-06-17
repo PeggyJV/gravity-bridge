@@ -120,9 +120,6 @@ async fn main() {
         "Ethereum Address: {} Cosmos Address {}",
         public_eth_key, public_cosmos_key
     );
-    info!(
-        "Cosmos phrase: {} Prefix: {}", args.flag_cosmos_phrase, &contact.get_prefix()
-    );
 
     // check if the cosmos node is syncing, if so wait for it
     // we can't move any steps above this because they may fail on an incorrect

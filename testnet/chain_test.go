@@ -69,9 +69,9 @@ func TestBasicChain(t *testing.T) {
 		require.NoError(t, err, "error creating orchestrator accounts")
 	}
 
-	// copy around the genesis file with the accounts
+	// file_copy around the genesis file with the accounts
 	for _, v := range chain.Validators[1:] {
-		_, err = copy(filepath.Join(path, "config", "genesis.json"), filepath.Join(v.ConfigDir(), "config", "genesis.json"))
+		_, err = fileCopy(filepath.Join(path, "config", "genesis.json"), filepath.Join(v.ConfigDir(), "config", "genesis.json"))
 		require.NoError(t, err, "error copying over genesis files")
 	}
 
