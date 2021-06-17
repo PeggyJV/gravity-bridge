@@ -41,7 +41,7 @@ pub async fn check_for_events(
             vec!["SendToCosmosEvent(address,address,bytes32,uint256,uint256)"],
         )
         .await;
-    trace!("Deposits {:?}", deposits);
+    debug!("Deposit events detected {:?}", deposits);
 
     let batches = web3
         .check_for_events(
@@ -51,7 +51,7 @@ pub async fn check_for_events(
             vec!["TransactionBatchExecutedEvent(uint256,address,uint256)"],
         )
         .await;
-    trace!("Batches {:?}", batches);
+    debug!("Batche events detected {:?}", batches);
 
     let valsets = web3
         .check_for_events(
@@ -61,7 +61,7 @@ pub async fn check_for_events(
             vec!["ValsetUpdatedEvent(uint256,uint256,address[],uint256[])"],
         )
         .await;
-    trace!("Valsets {:?}", valsets);
+    debug!("Valset events detected {:?}", valsets);
 
     let erc20_deployed = web3
         .check_for_events(
@@ -71,7 +71,7 @@ pub async fn check_for_events(
             vec!["ERC20DeployedEvent(string,address,string,string,uint8,uint256)"],
         )
         .await;
-    trace!("ERC20 Deployments {:?}", erc20_deployed);
+    debug!("ERC20 events detected {:?}", erc20_deployed);
 
     let logic_calls = web3
         .check_for_events(
@@ -81,25 +81,25 @@ pub async fn check_for_events(
             vec!["LogicCallEvent(bytes32,uint256,bytes,uint256)"],
         )
         .await;
-    trace!("Logic call executions {:?}", logic_calls);
+    debug!("Logic call events detected {:?}", logic_calls);
 
     if let (Ok(valsets), Ok(batches), Ok(deposits), Ok(deploys), Ok(logic_calls)) =
         (valsets, batches, deposits, erc20_deployed, logic_calls)
     {
         let deposits = SendToCosmosEvent::from_logs(&deposits)?;
-        trace!("parsed deposits {:?}", deposits);
+        debug!("parsed deposits {:?}", deposits);
 
         let batches = TransactionBatchExecutedEvent::from_logs(&batches)?;
-        trace!("parsed batches {:?}", batches);
+        debug!("parsed batches {:?}", batches);
 
         let valsets = ValsetUpdatedEvent::from_logs(&valsets)?;
-        trace!("parsed valsets {:?}", valsets);
+        debug!("parsed valsets {:?}", valsets);
 
         let erc20_deploys = Erc20DeployedEvent::from_logs(&deploys)?;
-        trace!("parsed erc20 deploys {:?}", erc20_deploys);
+        debug!("parsed erc20 deploys {:?}", erc20_deploys);
 
         let logic_calls = LogicCallExecutedEvent::from_logs(&logic_calls)?;
-        trace!("logic call executions {:?}", logic_calls);
+        debug!("logic call executions {:?}", logic_calls);
 
         // note that starting block overlaps with our last checked block, because we have to deal with
         // the possibility that the relayer was killed after relaying only one of multiple events in a single
@@ -114,48 +114,48 @@ pub async fn check_for_events(
         let erc20_deploys = Erc20DeployedEvent::filter_by_event_nonce(last_event_nonce, &erc20_deploys);
         let logic_calls = LogicCallExecutedEvent::filter_by_event_nonce(last_event_nonce, &logic_calls);
 
-        if !deposits.is_empty() {
+        for deposit in deposits.iter() {
             info!(
-                "Oracle observed deposit with ethereum sender {}, cosmos_reciever {}, amount {}, and event nonce {}",
-                deposits[0].sender, deposits[0].destination, deposits[0].amount, deposits[0].event_nonce
-            )
+                    "Oracle observed deposit with ethereum sender {}, cosmos_reciever {}, amount {}, and event nonce {}",
+                    deposit.sender, deposit.destination, deposit.amount, deposit.event_nonce
+            );
         }
 
-        if !batches.is_empty() {
+        for batch in batches.iter() {
             info!(
                 "Oracle observed batch with nonce {}, contract {}, and event nonce {}",
-                batches[0].batch_nonce, batches[0].erc20, batches[0].event_nonce
-            )
+                batch.batch_nonce, batch.erc20, batch.event_nonce
+            );
         }
 
-        if !valsets.is_empty() {
+        for valset in valsets.iter() {
             info!(
                 "Oracle observed valset with nonce {}, event nonce {}, block height {} and members {:?}",
-                valsets[0].valset_nonce, valsets[0].event_nonce, valsets[0].block_height, valsets[0].members,
+                valset.valset_nonce, valset.event_nonce, valset.block_height, valset.members,
             )
         }
 
-        if !erc20_deploys.is_empty() {
+        for erc20_deploy in erc20_deploys.iter() {
             info!(
                 "Oracle observed ERC20 deployment with denom {} erc20 name {} and symbol {} and event nonce {}",
-                erc20_deploys[0].cosmos_denom, erc20_deploys[0].name, erc20_deploys[0].symbol, erc20_deploys[0].event_nonce,
+                erc20_deploy.cosmos_denom, erc20_deploy.name, erc20_deploy.symbol, erc20_deploy.event_nonce,
             )
         }
 
-        if !logic_calls.is_empty() {
+        for logic_call in logic_calls.iter() {
             info!(
                 "Oracle observed logic call execution with ID {} Nonce {} and event nonce {}",
-                bytes_to_hex_str(&logic_calls[0].invalidation_id),
-                logic_calls[0].invalidation_nonce,
-                logic_calls[0].event_nonce
-            )
+                bytes_to_hex_str(&logic_call.invalidation_id),
+                logic_call.invalidation_nonce,
+                logic_call.event_nonce
+            );
         }
 
         if !deposits.is_empty()
             || !batches.is_empty()
+            || !valsets.is_empty()
             || !erc20_deploys.is_empty()
             || !logic_calls.is_empty()
-            || !valsets.is_empty()
         {
             let res = send_ethereum_claims(
                 contact,
