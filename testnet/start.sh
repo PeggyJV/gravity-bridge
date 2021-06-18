@@ -85,13 +85,9 @@ find $home_dir -name validator_key.json | xargs cat | jq -r '.mnemonic' > $CHAIN
 
 echo "Adding validator addresses to genesis files"
 $gravity $home0 add-genesis-account $($gravity $home0 keys show val -a $kbt) $coins &>/dev/null
-#$gravity $home0 add-genesis-account $($FED $home0 keys show feeder) $coins &>/dev/null
 $gravity $home0 add-genesis-account $($gravity $home1 keys show val -a $kbt) $coins &>/dev/null
-#$gravity $home0 add-genesis-account $($FED $home1 keys show feeder) $coins &>/dev/null
 $gravity $home0 add-genesis-account $($gravity $home2 keys show val -a $kbt) $coins &>/dev/null
-#$gravity $home0 add-genesis-account $($FED $home2 keys show feeder) $coins &>/dev/null
 $gravity $home0 add-genesis-account $($gravity $home3 keys show val -a $kbt) $coins &>/dev/null
-#$gravity $home0 add-genesis-account $($FED $home3 keys show feeder) $coins &>/dev/null
 
 echo "Generating orchestrator keys"
 $gravity $home0 keys add --dry-run=true --output=json orch | jq . >> $n0dir/orchestrator_key.json
@@ -100,6 +96,10 @@ $gravity $home2 keys add --dry-run=true --output=json orch | jq . >> $n2dir/orch
 $gravity $home3 keys add --dry-run=true --output=json orch | jq . >> $n3dir/orchestrator_key.json
 
 find $home_dir -name orchestrator_key.json | xargs cat | jq -r '.mnemonic' > $CHAINDIR/orchestrator-phrases
+
+echo "Adding denom metadata to genesis"
+jq ".app_state.bank.denom_metadata += [{\"description\":\"footoken\",\"display\":\"mfootoken\",\"base\":\"footoken\",\"denom_units\":[{\"denom\":\"footoken\",\"exponent\":0,\"aliases\":[]},{\"denom\":\"mfootoken\",\"exponent\":6,\"aliases\":[]}]}]" $n0cfgDir/genesis.json | sponge $n0cfgDir/genesis.json
+jq ".app_state.bank.denom_metadata += [{\"description\":\"stake\",\"display\":\"mstake\",\"base\":\"stake\",\"denom_units\":[{\"denom\":\"stake\",\"exponent\":0,\"aliases\":[]},{\"denom\":\"mstake\",\"exponent\":3,\"aliases\":[]}]}]" $n0cfgDir/genesis.json | sponge $n0cfgDir/genesis.json
 
 echo "Adding orchestrator keys to genesis"
 n0orchKey="$(jq .address $n0dir/orchestrator_key.json)"
@@ -214,9 +214,9 @@ chmod +x $home_dir/*/startup.sh
 echo "Building ethereum and validator images"
 docker-compose build ethereum $n0name $n1name $n2name $n3name
 
-echo "Starting testnet"
-docker-compose up --no-start ethereum $n0name $n1name $n2name $n3name &>/dev/null
-docker-compose start ethereum $n0name $n1name $n2name $n3name &>/dev/null
+echo "Starting ethereum and validators"
+docker-compose up --no-start ethereum $n0name $n1name $n2name $n3name
+docker-compose start ethereum $n0name $n1name $n2name $n3name
 
 echo "Waiting for cosmos cluster to sync"
 sleep 10
@@ -229,7 +229,6 @@ if [[ ! $contractAddress ]]; then
   exit 1
 fi
 echo "Contract address: $contractAddress"
-
 docker-compose logs --no-color --no-log-prefix contract_deployer > $CHAINDIR/contracts
 
 echo "Gathering keys for orchestrators"
