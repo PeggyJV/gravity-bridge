@@ -4,6 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/fs"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -19,13 +27,6 @@ import (
 	dc "github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
 	tmjson "github.com/tendermint/tendermint/libs/json"
-	"io/fs"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
-	"time"
 )
 
 func writeFile(path string, body []byte) error {
@@ -200,7 +201,9 @@ func TestBasicChain(t *testing.T) {
 	require.NoError(t, err, "error creating docker pool")
 	network, err := pool.CreateNetwork("testnet")
 	require.NoError(t, err, "error creating testnet network")
-	defer network.Close()
+	defer func (){
+		network.Close()
+	}()
 
 	hostConfig := func(config *dc.HostConfig) {
 		// set AutoRemove to true so that stopped container goes away by itself
@@ -226,6 +229,9 @@ func TestBasicChain(t *testing.T) {
 		}, hostConfig)
 	require.NoError(t, err, "error bringing up ethereum")
 	t.Logf("deployed ethereum at %s", ethereum.Container.ID)
+	defer func(){
+		ethereum.Close()
+	}()
 
 	// build validators
 	for _, validator := range chain.Validators {
@@ -270,6 +276,9 @@ func TestBasicChain(t *testing.T) {
 		resource, err := pool.RunWithOptions(runOpts, hostConfig)
 		require.NoError(t, err, "error bringing up %s", validator.instanceName())
 		t.Logf("deployed %s at %s", validator.instanceName(), resource.Container.ID)
+		defer func(){
+			resource.Close()
+		}()
 	}
 
 	// bring up the contract deployer and deploy contract
@@ -289,6 +298,9 @@ func TestBasicChain(t *testing.T) {
 		}, func(config *dc.HostConfig){})
 	require.NoError(t, err, "error bringing up contract deployer")
 	t.Logf("deployed contract deployer at %s", contractDeployer.Container.ID)
+	defer func(){
+		contractDeployer.Close()
+	}()
 
 	container := contractDeployer.Container
 	for container.State.Running {
@@ -348,12 +360,15 @@ func TestBasicChain(t *testing.T) {
 			Name:       orchestrator.instanceName(),
 			NetworkID:  network.Network.ID,
 			Repository: orchestrator.instanceName(),
-			Env: env,
+			Env:        env,
 		}
 
 		resource, err := pool.RunWithOptions(runOpts, hostConfig)
 		require.NoError(t, err, "error bringing up %s", orchestrator.instanceName())
 		t.Logf("deployed %s at %s", orchestrator.instanceName(), resource.Container.ID)
+		defer func(){
+			resource.Close()
+		}()
 	}
 
 	// write test runner files to config directory
@@ -381,7 +396,7 @@ func TestBasicChain(t *testing.T) {
 
 	// bring up the test runner
 	t.Log("building and deploying test runner")
-	_, err = pool.BuildAndRunWithBuildOptions(
+	test_runner, err := pool.BuildAndRunWithBuildOptions(
 		&dt.BuildOptions{
 			Dockerfile: "testnet.Dockerfile",
 			ContextDir: "./orchestrator",
@@ -396,9 +411,12 @@ func TestBasicChain(t *testing.T) {
 			Env: []string{
 				"RUST_BACKTRACE=1",
 				"RUST_LOG=INFO",
-				"TEST_TYPE=V2_HAPPY_PATH",
+				"TEST_TYPE=HAPPY_PATH",
 			},
 		}, func(config *dc.HostConfig){})
 	require.NoError(t, err, "error bringing up test runner")
 	t.Logf("deployed test runner at %s", contractDeployer.Container.ID)
+	defer func(){
+		test_runner.Close()
+	}()
 }

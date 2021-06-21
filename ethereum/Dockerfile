@@ -18,6 +18,6 @@ ENTRYPOINT geth --identity "GravityTestnet" --nodiscover \
            --http.vhosts "*" \
            --miner.threads=1 \
            --nousb \
-           --verbosity=5 \
-           --miner.etherbase=0xBf660843528035a5A4921534E156a27e64B231fE \
-           --rpc.allow-unprotected-txs
+           --verbosity=3 \
+           --miner.etherbase=0xBf660843528035a5A4921534E156a27e64B231fE
+#           --rpc.allow-unprotected-txs
