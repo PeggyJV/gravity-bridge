@@ -173,7 +173,16 @@ pub async fn test_valset_update(
         amount, delegate_address
     );
 
+    let mut attempts: u8 = 0;
     loop {
+        attempts = attempts + 1;
+        if attempts >= 100 {
+            panic!(
+                "Delegate to validator giving up after {} attempts",
+                attempts
+            );
+        }
+
         let res = contact
             .delegate_to_validator(
                 delegate_address.parse().unwrap(),
