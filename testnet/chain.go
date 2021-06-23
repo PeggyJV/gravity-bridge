@@ -36,6 +36,33 @@ func (c *Chain) CreateAndInitializeValidators(count uint8) (err error){
 	return
 }
 
+func (c *Chain) CreateAndInitializeValidatorsWithMnemonics(count uint8, mnemonics []string) (err error){
+	for i := uint8(0); i < count; i++ {
+		// create node
+		node := c.createValidator(i)
+
+		// generate genesis files
+		err = node.init()
+		if err != nil {
+			return
+		}
+
+		c.Validators = append(c.Validators, &node)
+
+		// create keys
+		if err := node.createKeyFromMnemonic("val", mnemonics[i]); err != nil {
+			return err
+		}
+		if err := node.createNodeKey(); err != nil {
+			return err
+		}
+		if err := node.createConsensusKey(); err != nil {
+			return err
+		}
+	}
+	return
+}
+
 func (c *Chain) CreateAndInitializeOrchestrators(count uint8) (err error){
 	for i := uint8(0); i < count; i++ {
 		// create orchestrator
@@ -48,6 +75,25 @@ func (c *Chain) CreateAndInitializeOrchestrators(count uint8) (err error){
 		}
 		orchestrator.KeyInfo = *info
 		orchestrator.Mnemonic = mnemonic
+
+		c.Orchestrators = append(c.Orchestrators, &orchestrator)
+	}
+	return
+}
+
+
+func (c *Chain) CreateAndInitializeOrchestratorsWithMnemonics(count uint8, mnemonics []string) (err error){
+	for i := uint8(0); i < count; i++ {
+		// create orchestrator
+		orchestrator := c.createOrchestrator(i)
+
+		// create keys
+		info, err := createMemoryKeyFromMnemonic(mnemonics[i]);
+		if err != nil {
+			return err
+		}
+		orchestrator.KeyInfo = *info
+		orchestrator.Mnemonic = mnemonics[i]
 
 		c.Orchestrators = append(c.Orchestrators, &orchestrator)
 	}

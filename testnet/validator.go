@@ -180,6 +180,18 @@ func (v *Validator) createConsensusKey() (err error) {
 
 // createMemoryKey creates a key but doesn't store it to any files
 func createMemoryKey() (mnemonic string, info *keyring.Info, err error) {
+	// Get bip39 mnemonic
+	mnemonic, err = createMnemonic()
+	if err != nil {
+		return
+	}
+
+	account, err := createMemoryKeyFromMnemonic(mnemonic)
+	return mnemonic, account, err
+}
+
+// createMemoryKey creates a key but doesn't store it to any files
+func createMemoryKeyFromMnemonic(mnemonic string) (info *keyring.Info, err error) {
 	kb, err := keyring.New("testnet", keyring.BackendMemory, "", nil)
 	if err != nil {
 		return
@@ -191,19 +203,12 @@ func createMemoryKey() (mnemonic string, info *keyring.Info, err error) {
 		return
 	}
 
-	// Get bip39 mnemonic
-	mnemonic, err = createMnemonic()
-	if err != nil {
-		return
-	}
-
 	account, err := kb.NewAccount("", mnemonic, "", sdktypes.FullFundraiserPath, algo)
 	info = &account
 	return
 }
 
-// createKey creates a new account and writes it to a validator's config directory
-func (v *Validator) createKey(name string) (err error) {
+func (v *Validator) createKeyFromMnemonic(name string, mnemonic string) (err error) {
 	kb, err := keyring.New("testnet", keyring.BackendTest, v.ConfigDir(), nil)
 	if err != nil {
 		return err
@@ -215,11 +220,6 @@ func (v *Validator) createKey(name string) (err error) {
 		return err
 	}
 
-	// Get bip39 mnemonic
-	mnemonic, err := createMnemonic()
-	if err != nil {
-		return err
-	}
 	v.Mnemonic = mnemonic
 
 	info, err := kb.NewAccount(name, mnemonic, "", sdktypes.FullFundraiserPath, algo)
@@ -239,6 +239,16 @@ func (v *Validator) createKey(name string) (err error) {
 	v.PrivateKey = privKey
 
 	return nil
+}
+
+// createKey creates a new account and writes it to a validator's config directory
+func (v *Validator) createKey(name string) (err error) {
+	// Get bip39 mnemonic
+	mnemonic, err := createMnemonic()
+	if err != nil {
+		return err
+	}
+	return v.createKeyFromMnemonic(name, mnemonic)
 }
 
 func addGenesisAccount(path string, moniker string, accAddr sdktypes.AccAddress, coinsStr string) (err error) {
