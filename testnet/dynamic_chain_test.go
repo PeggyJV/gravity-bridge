@@ -315,6 +315,7 @@ func TestBasicChainDynamicKeys(t *testing.T) {
 	}
 	err = pool.RemoveContainerByName(container.Name)
 	require.NoError(t, err, "error removing contract deployer container")
+	require.NotEmptyf(t, gravityContract, "empty gravity contract")
 
 	// build orchestrators
 	for _, orchestrator := range chain.Orchestrators {
