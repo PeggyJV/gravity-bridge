@@ -19,5 +19,5 @@ ENTRYPOINT geth --identity "GravityTestnet" --nodiscover \
            --miner.threads=1 \
            --nousb \
            --verbosity=3 \
-           --miner.etherbase=0xBf660843528035a5A4921534E156a27e64B231fE
-#           --rpc.allow-unprotected-txs
+           --miner.etherbase=0xBf660843528035a5A4921534E156a27e64B231fE \
+           --rpc.allow-unprotected-txs
