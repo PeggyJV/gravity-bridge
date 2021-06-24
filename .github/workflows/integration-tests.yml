@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16
-        uses: actions/setup-g@v2
+        uses: actions/setup-go@v2
         with:
           go-version: ^1.16
       - name: Build test binary
@@ -22,8 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - uses: actions/checkout@v2
       - name: Run all up happy-path test
-        uses: actions/checkout@v2
         run: ./testnet/testnet.test -run BasicChainDynamicKeys -test.failfast
   validator-out:
     runs-on: ubuntu-latest
