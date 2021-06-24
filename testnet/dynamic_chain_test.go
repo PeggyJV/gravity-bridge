@@ -406,7 +406,6 @@ func TestBasicChainDynamicKeys(t *testing.T) {
 		testRunner.Close()
 	}()
 
-
 	container = testRunner.Container
 	for container.State.Running {
 		time.Sleep(10 * time.Second)
@@ -420,7 +419,5 @@ func TestBasicChainDynamicKeys(t *testing.T) {
 		OutputStream: &testRunnerLogOutput,
 		Stdout:       true,
 	})
-
-	successfulOutput := "Successfully updated txbatch nonce to"
-	require.Contains(t, testRunnerLogOutput.String(), successfulOutput)
+	require.Contains(t, testRunnerLogOutput.String(), "Successfully updated txbatch nonce to")
 }
