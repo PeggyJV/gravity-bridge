@@ -7,12 +7,24 @@ on:
     branches: [master, main]
 
 jobs:
-  happy-path:
+  build:
+    name: Test Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Set up Go 1.16
+        uses: actions/setup-g@v2
+        with:
+          go-version: ^1.16
+      - name: Build test binary
+        run: cd testnet && go test -c
+
+  happy-path:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Run all up happy-path test
-        run: pushd testnet && go test -c && popd && ./testnet/testnet.test -run BasicChainDynamicKeys -test.failfast
+        uses: actions/checkout@v2
+        run: ./testnet/testnet.test -run BasicChainDynamicKeys -test.failfast
   validator-out:
     runs-on: ubuntu-latest
     steps:
