@@ -405,4 +405,22 @@ func TestBasicChainDynamicKeys(t *testing.T) {
 	defer func() {
 		testRunner.Close()
 	}()
+
+
+	container = testRunner.Container
+	for container.State.Running {
+		time.Sleep(10 * time.Second)
+		container, err = pool.Client.InspectContainer(testRunner.Container.ID)
+		require.NoError(t, err, "error inspecting test runner")
+	}
+
+	testRunnerLogOutput := bytes.Buffer{}
+	err = pool.Client.Logs(docker.LogsOptions{
+		Container:    testRunner.Container.ID,
+		OutputStream: &testRunnerLogOutput,
+		Stdout:       true,
+	})
+
+	successfulOutput := "Successfully updated txbatch nonce to"
+	require.Contains(t, testRunnerLogOutput.String(), successfulOutput)
 }

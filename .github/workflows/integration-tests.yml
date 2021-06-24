@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run all up happy-path test
-        run: make e2e_happy_path
+        run: pushd testnet && go test -c && popd && ./testnet/testnet.test -run BasicChainDynamicKeys -test.failfast
   validator-out:
     runs-on: ubuntu-latest
     steps:
