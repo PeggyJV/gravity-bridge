@@ -413,12 +413,18 @@ func TestBasicChainDynamicKeys(t *testing.T) {
 		container, err = pool.Client.InspectContainer(testRunner.Container.ID)
 		require.NoError(t, err, "error inspecting test runner")
 	}
+	require.Equal(t, 0, container.State.ExitCode, "container exited with error")
 
 	testRunnerLogOutput := bytes.Buffer{}
+	testRunnerErrOutput := bytes.Buffer{}
 	err = pool.Client.Logs(docker.LogsOptions{
-		Container:    testRunner.Container.ID,
-		OutputStream: &testRunnerLogOutput,
-		Stdout:       true,
+		Container:         testRunner.Container.ID,
+		OutputStream:      &testRunnerLogOutput,
+		ErrorStream:       &testRunnerErrOutput,
+		Stdout:            true,
+		Stderr:            true,
+		InactivityTimeout: time.Second * 60,
 	})
+	require.NoError(t, err, "error getting test_runner logs")
 	require.Contains(t, testRunnerLogOutput.String(), "Successfully updated txbatch nonce to")
 }
