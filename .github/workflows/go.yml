@@ -23,7 +23,6 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-            module/build/gravity
           key: gravity
       - name: install-go
         uses: actions/setup-go@v2
@@ -50,6 +49,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./module
+          file: ci.Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

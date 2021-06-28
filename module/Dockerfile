@@ -44,3 +44,4 @@ EXPOSE 26656 26657 1317 9090
 
 # Run gravity by default
 CMD sh home/startup.sh
+# todo: remove this script, it isn't needed
