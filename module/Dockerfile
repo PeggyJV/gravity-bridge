@@ -28,7 +28,7 @@ RUN go mod download
 COPY . .
 
 # install simapp, remove packages
-RUN make build-linux
+RUN make build
 
 # Final image
 FROM alpine:edge
