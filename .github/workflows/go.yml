@@ -12,16 +12,19 @@ env:
 
 jobs:
   go-build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
     steps:
       - name: go-cache
         uses: actions/cache@v2
         with: 
-          path: module/build/gravity
-          key: ${{ matrix.os }}-gravity
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            module/build/gravity
+          key: gravity
       - name: install-go
         uses: actions/setup-go@v2
         with:
@@ -32,16 +35,6 @@ jobs:
         run: cd module && make test
       - name: go-build
         run: cd module && make build
-  go-docker:
-    permissions:
-      contents: read
-      packages: write
-    name: go-docker
-    runs-on: ubuntu-latest
-    needs: go-build
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
       - name: container-login
         uses: docker/login-action@v1
         with:
