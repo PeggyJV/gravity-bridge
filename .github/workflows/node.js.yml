@@ -10,27 +10,40 @@ on:
     branches: [master, main]
 
 jobs:
-  core-tests:
+  node-build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [ 16.x ]
     steps:
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - uses: actions/checkout@v2
-      - name: Build and test Solidity contracts
-        uses: actions/setup-node@v1
+      - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
       - run: cd solidity && npm ci
       - run: cd solidity && npm run typechain
       - run: cd solidity && npm run evm &
       - run: cd solidity && npm run test
+      - run: cd solidity && nexe dist/contract-deployer.js --build --resource "./dist/**/*"
+
   arbitrary-logic-tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [16.x]
     steps:
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
       - uses: actions/checkout@v2
       - name: Test arbitrary logic on mainnet fork
         uses: actions/setup-node@v1
