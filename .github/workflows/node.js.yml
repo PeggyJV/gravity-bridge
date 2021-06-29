@@ -30,6 +30,7 @@ jobs:
       - run: cd solidity && npm run typechain
       - run: cd solidity && npm run evm &
       - run: cd solidity && npm run test
+      - run: npm i nexe -g
       - run: cd solidity && nexe dist/contract-deployer.js --build --resource "./dist/**/*"
 
   arbitrary-logic-tests:
