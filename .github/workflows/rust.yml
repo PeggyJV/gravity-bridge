@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v2
       - uses: actions/cache@v2
         with:
           path: |
@@ -25,7 +26,6 @@ jobs:
             ~/.cargo/git/db/
             orchestrator/target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('orchestrator/Cargo.lock') }}
-      - uses: actions/checkout@v2
       - name: Build Orchestrator
         run: cd orchestrator && cargo build --release --bin orchestrator
       - name: Run Orchestrator tests

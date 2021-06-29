@@ -16,11 +16,11 @@ jobs:
       matrix:
         node-version: [ 16.x ]
     steps:
+      - uses: actions/checkout@v2
       - uses: actions/cache@v2
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('solidity/package-lock.json') }}
-      - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
