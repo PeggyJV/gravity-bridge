@@ -24,7 +24,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             orchestrator/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('orchestrator/Cargo.lock') }}
       - uses: actions/checkout@v2
       - name: Build Orchestrator
         run: cd orchestrator && cargo build --release --bin orchestrator
