@@ -12,12 +12,39 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  rust-build:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            orchestrator/target/
       - uses: actions/checkout@v2
       - name: Build Orchestrator
-        run: cd orchestrator && cargo build --all --verbose
+        run: cd orchestrator && make build
       - name: Run Orchestrator tests
-        run: cd orchestrator && cargo test --all --verbose
+        run: cd orchestrator && make test
+      - name: container-login
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: labels
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-orchestrator
+      - name: build-and-push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./orchestrator
+          file: orchestrator/ci.Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
