@@ -30,9 +30,9 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-orchestrator
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-gravity
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-solidity
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-orchestrator
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-gravity
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-solidity
       - name: Run all up happy-path test
         run: cd testnet && go test -c && cd .. && ./testnet/testnet.test -test.run BasicChainDynamicKeys -test.failfast
   validator-out:
