@@ -221,19 +221,6 @@ func TestPrebuiltCiHappyPath(t *testing.T) {
 		ethereum.Close()
 	}()
 
-	// build validators
-	for _, validator := range chain.Validators {
-		t.Logf("building %s", validator.instanceName())
-		err = pool.Client.BuildImage(docker.BuildImageOptions{
-			Name:         validator.instanceName(),
-			Dockerfile:   "Dockerfile",
-			ContextDir:   "./module",
-			OutputStream: ioutil.Discard,
-		})
-		require.NoError(t, err, "error building %s", validator.instanceName())
-		t.Logf("built %s", validator.instanceName())
-	}
-
 	wd, err := os.Getwd()
 	require.NoError(t, err, "couldn't get working directory")
 
@@ -242,7 +229,8 @@ func TestPrebuiltCiHappyPath(t *testing.T) {
 			Name:       validator.instanceName(),
 			NetworkID:  network.Network.ID,
 			Mounts:     []string{fmt.Sprintf("%s/testdata/testchain/%s/:/root/home", wd, validator.instanceName())},
-			Repository: validator.instanceName(),
+			Repository: "gravity",
+			Tag:        "prebuilt",
 		}
 
 		// expose the first validator for debugging and communication
@@ -270,15 +258,13 @@ func TestPrebuiltCiHappyPath(t *testing.T) {
 	}
 
 	// bring up the contract deployer and deploy contract
-	t.Log("building contract_deployer")
-	contractDeployer, err := pool.BuildAndRunWithBuildOptions(
-		&dockertest.BuildOptions{
-			Dockerfile: "Dockerfile",
-			ContextDir: "./solidity",
-		},
+	t.Log("running contract_deployer")
+	contractDeployer, err := pool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:      "contract_deployer",
-			NetworkID: network.Network.ID,
+			Name:       "contract_deployer",
+			Repository: "solidity",
+			Tag:        "prebuilt",
+			NetworkID:  network.Network.ID,
 			PortBindings: map[docker.Port][]docker.PortBinding{
 				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
 			},
@@ -317,19 +303,6 @@ func TestPrebuiltCiHappyPath(t *testing.T) {
 	require.NoError(t, err, "error removing contract deployer container")
 	require.NotEmptyf(t, gravityContract, "empty gravity contract")
 
-	// build orchestrators
-	for _, orchestrator := range chain.Orchestrators {
-		t.Logf("building %s", orchestrator.instanceName())
-		err = pool.Client.BuildImage(docker.BuildImageOptions{
-			Name:         orchestrator.instanceName(),
-			Dockerfile:   "Dockerfile",
-			ContextDir:   "./orchestrator",
-			OutputStream: ioutil.Discard,
-		})
-		require.NoError(t, err, "error building %s", orchestrator.instanceName())
-		t.Logf("built %s", orchestrator.instanceName())
-	}
-
 	// deploy orchestrators
 	for _, orchestrator := range chain.Orchestrators {
 		validator := chain.Validators[orchestrator.Index]
@@ -348,7 +321,8 @@ func TestPrebuiltCiHappyPath(t *testing.T) {
 		runOpts := &dockertest.RunOptions{
 			Name:       orchestrator.instanceName(),
 			NetworkID:  network.Network.ID,
-			Repository: orchestrator.instanceName(),
+			Repository: "orchestrator",
+			Tag:        "prebuilt",
 			Env:        env,
 		}
 
