@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ master, main ]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   happy-path:
     runs-on: ubuntu-latest
@@ -15,6 +19,20 @@ jobs:
         with:
           go-version: ^1.16
       - uses: actions/checkout@v2
+      - name: container-login
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: docker metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-orchestrator
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-gravity
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-solidity
       - name: Run all up happy-path test
         run: cd testnet && go test -c && cd .. && ./testnet/testnet.test -test.run BasicChainDynamicKeys -test.failfast
   validator-out:
