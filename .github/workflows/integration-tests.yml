@@ -10,7 +10,7 @@ on:
       - completed
     branches:
       - main
-    pull_request:
+  pull_request:
 
 env:
   REGISTRY: ghcr.io
@@ -22,6 +22,8 @@ jobs:
 #    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: ahmadnassri/action-workflow-run-wait@v1
+        with:
+          timeout: 1200000
       - name: Set up Go 1.16
         uses: actions/setup-go@v2
         with:
