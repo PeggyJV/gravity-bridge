@@ -8,7 +8,7 @@ on:
       - Go
     types:
       - completed
-    branches: [ ** ]
+    branches: [ "**" ]
 
 env:
   REGISTRY: ghcr.io
