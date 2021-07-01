@@ -45,11 +45,11 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-orchestrator
       - name: check for binary
         run: ls orchestrator/target/release
-#      - name: build-and-push
-#        uses: docker/build-push-action@v2
-#        with:
-#          context: ./orchestrator
-#          file: orchestrator/ci.Dockerfile
-#          push: true
-#          tags: ${{ steps.meta.outputs.tags }}
-#          labels: ${{ steps.meta.outputs.labels }}
+      - name: build-and-push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./orchestrator
+          file: orchestrator/ci.Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
