@@ -2,8 +2,12 @@ name: Integration tests
 
 on:
   workflow_run:
-    workflows: [ "Rust", "Solidity", "Go" ]
-    types: [ completed ]
+    workflows:
+      - "Rust"
+      - "Solidity"
+      - "Go"
+    types:
+      - completed
 
 env:
   REGISTRY: ghcr.io
