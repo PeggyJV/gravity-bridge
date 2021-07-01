@@ -16,7 +16,7 @@ env:
 jobs:
   happy-path:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+#    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v2
