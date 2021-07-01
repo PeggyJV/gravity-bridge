@@ -3,9 +3,9 @@ name: Integration tests
 on:
   workflow_run:
     workflows:
-      - "Rust"
-      - "Solidity"
-      - "Go"
+      - Rust
+      - Solidity
+      - Go
     types:
       - completed
 
