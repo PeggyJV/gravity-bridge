@@ -28,7 +28,7 @@ import (
 	"time"
 )
 
-func TestPrebuiltCiHappyPath(t *testing.T) {
+func TestPrebuiltCi(t *testing.T) {
 	err := os.RemoveAll("testdata/")
 	require.NoError(t, err, "unable to reset testdata directory")
 
@@ -355,6 +355,11 @@ func TestPrebuiltCiHappyPath(t *testing.T) {
 	err = writeFile(filepath.Join(chain.DataDir, "contracts"), contractDeployerLogOutput.Bytes())
 	require.NoError(t, err)
 
+	testType := os.Getenv("TEST_TYPE")
+	if testType == "" {
+		testType = "HAPPY_PATH"
+	}
+
 	// bring up the test runner
 	t.Log("building and deploying test runner")
 	testRunner, err := pool.BuildAndRunWithBuildOptions(
@@ -372,7 +377,7 @@ func TestPrebuiltCiHappyPath(t *testing.T) {
 			Env: []string{
 				"RUST_BACKTRACE=1",
 				"RUST_LOG=INFO",
-				"TEST_TYPE=HAPPY_PATH",
+				fmt.Sprintf("TEST_TYPE=%s", testType),
 			},
 		}, func(config *docker.HostConfig) {})
 	require.NoError(t, err, "error bringing up test runner")
