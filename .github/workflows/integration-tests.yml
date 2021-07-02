@@ -157,10 +157,10 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-gravity
-      - name: check outputs
-        run: echo ${{ steps.meta-gravity.outputs.tags }}
-      - name: rename gravity
-        run: docker pull ${{ steps.meta-gravity.outputs.tags }} && docker rename ${{ steps.meta-gravity.outputs.tags }} gravity:prebuilt
+      - name: pull gravity image
+        run: docker pull ${{ steps.meta-gravity.outputs.tags }}
+      - name: pull gravity image
+        run: docker rename ${{ steps.meta-gravity.outputs.tags }} gravity:prebuilt
       - name: Run all up happy-path test
         run: cd testnet && go test -c && cd .. && ./testnet/testnet.test -test.run BasicChainDynamicKeys -test.failfast
 #  validator-out:
