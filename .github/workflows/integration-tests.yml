@@ -158,7 +158,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-gravity
       - name: check outputs
-        run: echo ${{ steps.meta-gravity.outputs }}
+        run: echo ${{ steps.meta-gravity.outputs.tags }}
       - name: rename gravity
         run: docker rename ${{ steps.meta-gravity.outputs.tags[0] }} gravity:prebuilt
       - name: Run all up happy-path test
