@@ -55,9 +55,6 @@ jobs:
 
   node-build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [ 16.x ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
@@ -66,7 +63,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('solidity/package-lock.json') }}
       - uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 16.x
       - run: cd solidity && npm ci
       - run: cd solidity && npm run typechain
       - run: cd solidity && npm run evm &
@@ -161,7 +158,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-gravity
       - name: rename gravity
-        run: docker rename ${{ steps.meta-gravity.output.labels[0] }} gravity:prebuilt
+        run: docker rename ${{ steps.meta-gravity.output.tags[0] }} gravity:prebuilt
       - name: Run all up happy-path test
         run: cd testnet && go test -c && cd .. && ./testnet/testnet.test -test.run BasicChainDynamicKeys -test.failfast
 #  validator-out:
