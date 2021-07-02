@@ -159,8 +159,8 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-gravity
       - name: pull gravity image
         run: docker pull ${{ steps.meta-gravity.outputs.tags }}
-      - name: pull gravity image
-        run: docker rename ${{ steps.meta-gravity.outputs.tags }} gravity:prebuilt
+      - name: rename gravity image
+        run: docker tag ${{ steps.meta-gravity.outputs.tags }} gravity:prebuilt
       - name: Run all up happy-path test
         run: cd testnet && go test -c && cd .. && ./testnet/testnet.test -test.run BasicChainDynamicKeys -test.failfast
 #  validator-out:
