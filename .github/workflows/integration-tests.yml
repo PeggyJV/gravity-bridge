@@ -143,9 +143,15 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: ^1.16
-      - uses: actions/checkout@v2
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: go-cache
+        uses: actions/cache@v2
         with:
-          ref: ${{ github.event.workflow_run.head_branch }}
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('testnet/go.sum') }}
       - name: container-login
         uses: docker/login-action@v1
         with:
@@ -180,7 +186,7 @@ jobs:
       - name: rename solidity image
         run: docker tag ${{ steps.meta-solidity.outputs.tags }} solidity:prebuilt
       - name: Run all up happy-path test
-        run: cd testnet && go test -c && cd .. && ./testnet/testnet.test -test.run BasicChainDynamicKeys -test.failfast
+        run: cd testnet && go test -c && cd .. && ./testnet/testnet.test -test.run PrebuiltCiHappyPath -test.failfast
 #  validator-out:
 #    runs-on: ubuntu-latest
 #    steps:
