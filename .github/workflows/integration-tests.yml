@@ -1,27 +1,147 @@
 name: Integration tests
 
 on:
-  workflow_run:
-    workflows:
-      - Rust
-      - Solidity
-      - Go
-    types:
-      - completed
-    branches: [ "**" ]
+  push:
+    branches:
+      - main
+  pull_request:
 
 env:
+  CARGO_TERM_COLOR: always
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  rust-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            orchestrator/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('orchestrator/Cargo.lock') }}
+      - name: Build Orchestrator
+        run: cd orchestrator && cargo build --release --bin orchestrator
+      - name: Run Orchestrator tests
+        run: cd orchestrator && cargo test --all --verbose
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: container-login
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: labels
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-orchestrator
+      - name: check for binary
+        run: ls orchestrator/target/release
+      - name: build-and-push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./orchestrator
+          file: orchestrator/ci.Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  node-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 16.x ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('solidity/package-lock.json') }}
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: cd solidity && npm ci
+      - run: cd solidity && npm run typechain
+      - run: cd solidity && npm run evm &
+      - run: cd solidity && npm run test
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: container-login
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: labels
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-solidity
+      - name: build-and-push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./solidity
+          file: solidity/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  go-build:
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: install-go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.16
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: go-cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('module/go.sum') }}
+      - name: go-test
+        run: cd module && make test
+      - name: go-build
+        run: cd module && make build
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: container-login
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: labels
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-gravity
+      - name: build-and-push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./module
+          file: module/ci.Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
   happy-path:
     runs-on: ubuntu-latest
-#    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    needs: [rust-build, node-build, go-build]
     steps:
-      - uses: ahmadnassri/action-workflow-run-wait@v1
-        with:
-          timeout: 1200000
       - name: Set up Go 1.16
         uses: actions/setup-go@v2
         with:
@@ -44,39 +164,39 @@ jobs:
         run: docker rename ${{ steps.meta-gravity.output.labels[0] }} gravity:prebuilt
       - name: Run all up happy-path test
         run: cd testnet && go test -c && cd .. && ./testnet/testnet.test -test.run BasicChainDynamicKeys -test.failfast
-  validator-out:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run all up test with a validator out
-        run: make e2e_validator_out
-  valset-stress:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run all up valset stress test
-        run: make e2e_valset_stress
-  batch-stress:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run all up batch stress test
-        run: make e2e_batch_stress
-  v2-happy-path:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run all up batch stress test
-        run: make e2e_v2_happy_path
-  arbitrary-logic:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run all up arbitrary logic test
-        run: make e2e_arbitrary_logic
-  orchestrator-keys:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run all up arbitrary logic test
-        run: make e2e_orchestrator_keys
+#  validator-out:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Run all up test with a validator out
+#        run: make e2e_validator_out
+#  valset-stress:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Run all up valset stress test
+#        run: make e2e_valset_stress
+#  batch-stress:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Run all up batch stress test
+#        run: make e2e_batch_stress
+#  v2-happy-path:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Run all up batch stress test
+#        run: make e2e_v2_happy_path
+#  arbitrary-logic:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Run all up arbitrary logic test
+#        run: make e2e_arbitrary_logic
+#  orchestrator-keys:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Run all up arbitrary logic test
+#        run: make e2e_orchestrator_keys
