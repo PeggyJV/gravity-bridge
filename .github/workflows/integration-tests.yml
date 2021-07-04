@@ -190,7 +190,7 @@ jobs:
         run: docker pull ${{ steps.meta-solidity.outputs.tags }}
       - name: rename solidity image
         run: docker tag ${{ steps.meta-solidity.outputs.tags }} solidity:prebuilt
-      - name: Run all up happy-path test
+      - name: Run all up ci test
         run: cd testnet && go test -c && cd .. && ./testnet/testnet.test -test.run PrebuiltCi -test.failfast
         env:
           TEST_TYPE: ${{ matrix.test_type}}

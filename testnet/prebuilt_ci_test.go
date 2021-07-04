@@ -301,7 +301,7 @@ func TestPrebuiltCi(t *testing.T) {
 	}
 	err = pool.RemoveContainerByName(container.Name)
 	require.NoError(t, err, "error removing contract deployer container")
-	require.NotEmptyf(t, gravityContract, "empty gravity contract")
+	require.NotEmptyf(t, gravityContract, "empty gravity contract: %s", contractDeployerLogOutput.String())
 
 	// deploy orchestrators
 	for _, orchestrator := range chain.Orchestrators {
