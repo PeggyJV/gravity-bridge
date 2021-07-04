@@ -1,6 +1,7 @@
 FROM alpine:edge
 
 COPY contract-deployer /usr/bin/contract-deployer
+COPY contracts contracts
 
 CMD contract-deployer \
     --cosmos-node="http://gravity0:26657" \
