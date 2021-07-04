@@ -135,7 +135,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  happy-path:
+  integration-tests:
     runs-on: ubuntu-latest
     needs: [rust-build, node-build, go-build]
     strategy:
