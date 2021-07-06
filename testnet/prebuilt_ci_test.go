@@ -309,6 +309,7 @@ func TestPrebuiltCi(t *testing.T) {
 	err = pool.Client.Logs(docker.LogsOptions{
 		Container:    contractDeployer.Container.ID,
 		OutputStream: &contractDeployerLogOutput,
+		ErrorStream: &contractDeployerLogOutput,
 		Stdout:       true,
 		Stderr: 	  true,
 	})
