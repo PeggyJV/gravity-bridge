@@ -195,10 +195,10 @@ func TestPrebuiltCi(t *testing.T) {
 
 	hostConfig := func(config *docker.HostConfig) {
 		// set AutoRemove to true so that stopped container goes away by itself
-		config.AutoRemove = true
-		config.RestartPolicy = docker.RestartPolicy{
-			Name: "no",
-		}
+		//config.AutoRemove = true
+		//config.RestartPolicy = docker.RestartPolicy{
+		//	Name: "no",
+		//}
 	}
 
 	// bring up ethereum

@@ -1,5 +1,7 @@
 FROM alpine:edge
 
+RUN apk add bash
+
 # Install ca-certificates
 RUN apk add --update ca-certificates
 
