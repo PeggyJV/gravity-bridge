@@ -303,6 +303,7 @@ func TestPrebuiltCi(t *testing.T) {
 		container, err = pool.Client.InspectContainer(contractDeployer.Container.ID)
 		require.NoError(t, err, "error inspecting contract deployer")
 	}
+	t.Logf("container no longer running: %s", container.State)
 
 	contractDeployerLogOutput := bytes.Buffer{}
 	err = pool.Client.Logs(docker.LogsOptions{
