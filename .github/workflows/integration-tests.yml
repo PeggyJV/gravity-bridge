@@ -173,11 +173,11 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-orchestrator
-      - name: docker solidity metadata
-        id: meta-solidity
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-solidity
+#      - name: docker solidity metadata
+#        id: meta-solidity
+#        uses: docker/metadata-action@v3
+#        with:
+#          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-solidity
       - name: pull gravity image
         run: docker pull ${{ steps.meta-gravity.outputs.tags }}
       - name: rename gravity image
@@ -186,10 +186,10 @@ jobs:
         run: docker pull ${{ steps.meta-orchestrator.outputs.tags }}
       - name: rename orchestrator image
         run: docker tag ${{ steps.meta-gravity.outputs.tags }} orchestrator:prebuilt
-      - name: pull solidity image
-        run: docker pull ${{ steps.meta-solidity.outputs.tags }}
-      - name: rename solidity image
-        run: docker tag ${{ steps.meta-solidity.outputs.tags }} solidity:prebuilt
+#      - name: pull solidity image
+#        run: docker pull ${{ steps.meta-solidity.outputs.tags }}
+#      - name: rename solidity image
+#        run: docker tag ${{ steps.meta-solidity.outputs.tags }} solidity:prebuilt
       - name: Run all up ci test
         run: cd testnet && go test -c && cd .. && ./testnet/testnet.test -test.run PrebuiltCi -test.failfast
         env:
