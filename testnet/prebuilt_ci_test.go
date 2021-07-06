@@ -251,6 +251,11 @@ func TestPrebuiltCi(t *testing.T) {
 
 		resource, err := pool.RunWithOptions(runOpts, hostConfig)
 		require.NoError(t, err, "error bringing up %s", validator.instanceName())
+
+		// this is a hack, to see if the container has an error shortly after launching
+		time.Sleep(5)
+		require.True(t, resource.Container.State.Running, "validator not running after 5 seconds")
+		
 		t.Logf("deployed %s at %s", validator.instanceName(), resource.Container.ID)
 		defer func() {
 			resource.Close()
