@@ -310,6 +310,7 @@ func TestPrebuiltCi(t *testing.T) {
 		Container:    contractDeployer.Container.ID,
 		OutputStream: &contractDeployerLogOutput,
 		Stdout:       true,
+		Stderr: 	  true,
 	})
 	require.NoError(t, err, "error getting contract deployer logs")
 
