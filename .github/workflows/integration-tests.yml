@@ -53,42 +53,42 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  node-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('solidity/package-lock.json') }}
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 16.x
-      - run: cd solidity && npm ci
-      - run: cd solidity && npm run typechain
-      - run: cd solidity && npm run evm &
-      - run: cd solidity && npm run test
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      - name: container-login
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: labels
-        id: meta
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-solidity
-      - name: build-and-push
-        uses: docker/build-push-action@v2
-        with:
-          context: ./solidity
-          file: solidity/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+#  node-build:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: actions/cache@v2
+#        with:
+#          path: ~/.npm
+#          key: ${{ runner.os }}-node-${{ hashFiles('solidity/package-lock.json') }}
+#      - uses: actions/setup-node@v1
+#        with:
+#          node-version: 16.x
+#      - run: cd solidity && npm ci
+#      - run: cd solidity && npm run typechain
+#      - run: cd solidity && npm run evm &
+#      - run: cd solidity && npm run test
+#      - name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v1
+#      - name: container-login
+#        uses: docker/login-action@v1
+#        with:
+#          registry: ${{ env.REGISTRY }}
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#      - name: labels
+#        id: meta
+#        uses: docker/metadata-action@v3
+#        with:
+#          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-solidity
+#      - name: build-and-push
+#        uses: docker/build-push-action@v2
+#        with:
+#          context: ./solidity
+#          file: solidity/Dockerfile
+#          push: true
+#          tags: ${{ steps.meta.outputs.tags }}
+#          labels: ${{ steps.meta.outputs.labels }}
 
   go-build:
     permissions:
@@ -137,7 +137,7 @@ jobs:
 
   integration-tests:
     runs-on: ubuntu-latest
-    needs: [rust-build, node-build, go-build]
+    needs: [rust-build, go-build]
     strategy:
       matrix:
         test_type: ["HAPPY_PATH", "VALIDATOR_OUT", "BATCH_STRESS",
@@ -194,39 +194,3 @@ jobs:
         run: cd testnet && go test -c && cd .. && ./testnet/testnet.test -test.run PrebuiltCi -test.failfast
         env:
           TEST_TYPE: ${{ matrix.test_type}}
-#  validator-out:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Run all up test with a validator out
-#        run: make e2e_validator_out
-#  valset-stress:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Run all up valset stress test
-#        run: make e2e_valset_stress
-#  batch-stress:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Run all up batch stress test
-#        run: make e2e_batch_stress
-#  v2-happy-path:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Run all up batch stress test
-#        run: make e2e_v2_happy_path
-#  arbitrary-logic:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Run all up arbitrary logic test
-#        run: make e2e_arbitrary_logic
-#  orchestrator-keys:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Run all up arbitrary logic test
-#        run: make e2e_orchestrator_keys
