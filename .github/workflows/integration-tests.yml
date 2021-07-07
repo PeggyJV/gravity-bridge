@@ -218,6 +218,6 @@ jobs:
       - name: rename test-runner image
         run: docker tag ${{ steps.meta-test-runner.outputs.tags }} test-runner:prebuilt
       - name: Run all up ci test
-        run: cd testnet && go test -c && cd .. && ./testnet/testnet.test -test.run PrebuiltCi -test.failfast
+        run: cd testnet && go test -c && cd .. && ./testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v
         env:
           TEST_TYPE: ${{ matrix.test_type}}
