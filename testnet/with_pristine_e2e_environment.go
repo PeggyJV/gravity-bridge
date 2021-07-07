@@ -4,6 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/fs"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/cosmos/cosmos-sdk/codec"
 	types3 "github.com/cosmos/cosmos-sdk/codec/types"
@@ -19,16 +27,15 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
 	json2 "github.com/tendermint/tendermint/libs/json"
-	"io/fs"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
-	"time"
 )
 
-func TestBasicChainDynamicKeys(t *testing.T) {
+func withPristineE2EEnvironment(t *testing.T, cb func(
+	string,
+	*dockertest.Pool,
+	*dockertest.Network,
+)) {
+	t.Helper()
+
 	err := os.RemoveAll("testdata/")
 	require.NoError(t, err, "unable to reset testdata directory")
 
@@ -83,8 +90,7 @@ func TestBasicChainDynamicKeys(t *testing.T) {
 	ethGenesisMarshal, err := json.MarshalIndent(ethGenesis, "", "  ")
 	require.NoError(t, err, "error marshalling ethereum genesis file")
 
-	err = ioutil.WriteFile(filepath.Join(chain.ConfigDir(), "ETHGenesis.json"), ethGenesisMarshal, 0644)
-	require.NoError(t, err, "error writing ethereum genesis file")
+	writeFile(t, filepath.Join(chain.ConfigDir(), "ETHGenesis.json"), ethGenesisMarshal)
 
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
@@ -138,8 +144,7 @@ func TestBasicChainDynamicKeys(t *testing.T) {
 	require.NoError(t, err, "error marshalling genesis doc")
 
 	for _, validator := range chain.Validators {
-		err = ioutil.WriteFile(filepath.Join(validator.ConfigDir(), "config", "genesis.json"), out, fs.ModePerm)
-		require.NoError(t, err, "error writing out genesis file")
+		writeFile(t, filepath.Join(validator.ConfigDir(), "config", "genesis.json"), out)
 	}
 
 	// update config.toml files
@@ -177,11 +182,14 @@ func TestBasicChainDynamicKeys(t *testing.T) {
 		err = encoder.Encode(configToml)
 		require.NoError(t, err, "error encoding config toml")
 
+		// todo(levi) use writeFile?
 		err = os.WriteFile(path, b.Bytes(), fs.ModePerm)
 		require.NoError(t, err, "error writing config toml")
 
 		startupPath := filepath.Join(v.ConfigDir(), "startup.sh")
+		// todo(levi) use writeFile?
 		err = os.WriteFile(startupPath, []byte(fmt.Sprintf("gravity --home home start --pruning=nothing > home.n%d.log", v.Index)), fs.ModePerm)
+		require.NoError(t, err, "error startup.sh")
 	}
 
 	// bring up docker network
@@ -241,7 +249,7 @@ func TestBasicChainDynamicKeys(t *testing.T) {
 		runOpts := &dockertest.RunOptions{
 			Name:       validator.instanceName(),
 			NetworkID:  network.Network.ID,
-			Mounts:     []string{fmt.Sprintf("%s/testdata/testchain/%s/:/root/home", wd, validator.instanceName())},
+			Mounts:     []string{fmt.Sprintf("%s/testdata/%s/%s/:/root/home", wd, chain.ID, validator.instanceName())},
 			Repository: validator.instanceName(),
 		}
 
@@ -372,56 +380,10 @@ func TestBasicChainDynamicKeys(t *testing.T) {
 		orchestratorPhrases = append(orchestratorPhrases, orchestrator.Mnemonic)
 	}
 
-	err = writeFile(filepath.Join(chain.DataDir, "validator-eth-keys"), []byte(strings.Join(ethKeys, "\n")))
-	require.NoError(t, err)
-	err = writeFile(filepath.Join(chain.DataDir, "validator-phrases"), []byte(strings.Join(validatorPhrases, "\n")))
-	require.NoError(t, err)
-	err = writeFile(filepath.Join(chain.DataDir, "orchestrator-phrases"), []byte(strings.Join(orchestratorPhrases, "\n")))
-	require.NoError(t, err)
-	err = writeFile(filepath.Join(chain.DataDir, "contracts"), contractDeployerLogOutput.Bytes())
-	require.NoError(t, err)
+	writeFile(t, filepath.Join(chain.DataDir, "validator-eth-keys"), []byte(strings.Join(ethKeys, "\n")))
+	writeFile(t, filepath.Join(chain.DataDir, "validator-phrases"), []byte(strings.Join(validatorPhrases, "\n")))
+	writeFile(t, filepath.Join(chain.DataDir, "orchestrator-phrases"), []byte(strings.Join(orchestratorPhrases, "\n")))
+	writeFile(t, filepath.Join(chain.DataDir, "contracts"), contractDeployerLogOutput.Bytes())
 
-	// bring up the test runner
-	t.Log("building and deploying test runner")
-	testRunner, err := pool.BuildAndRunWithBuildOptions(
-		&dockertest.BuildOptions{
-			Dockerfile: "testnet.Dockerfile",
-			ContextDir: "./orchestrator",
-		},
-		&dockertest.RunOptions{
-			Name:      "test_runner",
-			NetworkID: network.Network.ID,
-			PortBindings: map[docker.Port][]docker.PortBinding{
-				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
-			},
-			Mounts: []string{fmt.Sprintf("%s/testdata:/testdata", wd)},
-			Env: []string{
-				"RUST_BACKTRACE=1",
-				"RUST_LOG=INFO",
-				"TEST_TYPE=HAPPY_PATH",
-			},
-		}, func(config *docker.HostConfig) {})
-	require.NoError(t, err, "error bringing up test runner")
-	t.Logf("deployed test runner at %s", contractDeployer.Container.ID)
-	defer func() {
-		testRunner.Close()
-	}()
-
-	container = testRunner.Container
-	for container.State.Running {
-		time.Sleep(10 * time.Second)
-		container, err = pool.Client.InspectContainer(testRunner.Container.ID)
-		require.NoError(t, err, "error inspecting test runner")
-	}
-	require.Equal(t, 0, container.State.ExitCode, "container exited with error")
-
-	testRunnerErrOutput := bytes.Buffer{}
-	err = pool.Client.Logs(docker.LogsOptions{
-		Container:         testRunner.Container.ID,
-		ErrorStream:       &testRunnerErrOutput,
-		Stderr:            true,
-		InactivityTimeout: time.Second * 60,
-	})
-	require.NoError(t, err, "error getting test_runner logs")
-	require.Contains(t, testRunnerErrOutput.String(), "Successfully updated txbatch nonce to")
+	cb(wd, pool, network)
 }

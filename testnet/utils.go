@@ -3,7 +3,11 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
+	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func fileCopy(src, dst string) (int64, error) {
@@ -31,3 +35,12 @@ func fileCopy(src, dst string) (int64, error) {
 	return nBytes, err
 }
 
+func writeFile(t *testing.T, path string, body []byte) {
+	t.Helper()
+
+	_, err := os.Create(path)
+	require.NoError(t, err)
+
+	ioutil.WriteFile(path, body, 0644)
+	require.NoError(t, err)
+}
