@@ -11,7 +11,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
 )
 
 type msgServer struct {
@@ -37,6 +37,18 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 	// ensure that the validator exists
 	if k.Keeper.StakingKeeper.Validator(ctx, val) == nil {
 		return nil, sdkerrors.Wrap(stakingtypes.ErrNoValidatorFound, val.String())
+	}
+
+	// check ethereum address is not currently used
+	validators := k.getValidatorsByEthereumAddress(ctx, eth)
+	if len(validators) > 0 {
+		return nil, sdkerrors.Wrap(fmt.Errorf("ethereum address %s in use", eth.String()), fmt.Sprintf("%s", validators))
+	}
+
+	// check orchestrator is not currently used
+	ethAddrs := k.getEthereumAddressesByOrchestrator(ctx, orch)
+	if len(ethAddrs) > 0 {
+		return nil, sdkerrors.Wrap(fmt.Errorf("orchestrator address %s in use", orch.String()), fmt.Sprintf("%s", ethAddrs))
 	}
 
 	// set the three indexes
