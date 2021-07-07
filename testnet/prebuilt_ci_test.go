@@ -391,14 +391,12 @@ func TestPrebuiltCi(t *testing.T) {
 
 	// bring up the test runner
 	t.Log("building and deploying test runner")
-	testRunner, err := pool.BuildAndRunWithBuildOptions(
-		&dockertest.BuildOptions{
-			Dockerfile: "testnet.Dockerfile",
-			ContextDir: "./orchestrator",
-		},
+	testRunner, err := pool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:      "test_runner",
-			NetworkID: network.Network.ID,
+			Name:       "test_runner",
+			Repository: "test-runner",
+			Tag:        "prebuilt",
+			NetworkID:  network.Network.ID,
 			PortBindings: map[docker.Port][]docker.PortBinding{
 				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
 			},
@@ -409,6 +407,25 @@ func TestPrebuiltCi(t *testing.T) {
 				fmt.Sprintf("TEST_TYPE=%s", testType),
 			},
 		}, func(config *docker.HostConfig) {})
+
+	//testRunner, err := pool.BuildAndRunWithBuildOptions(
+	//	&dockertest.BuildOptions{
+	//		Dockerfile: "testnet.Dockerfile",
+	//		ContextDir: "./orchestrator",
+	//	},
+	//	&dockertest.RunOptions{
+	//		Name:      "test_runner",
+	//		NetworkID: network.Network.ID,
+	//		PortBindings: map[docker.Port][]docker.PortBinding{
+	//			"8545/tcp": {{HostIP: "", HostPort: "8545"}},
+	//		},
+	//		Mounts: []string{fmt.Sprintf("%s/testdata:/testdata", wd)},
+	//		Env: []string{
+	//			"RUST_BACKTRACE=1",
+	//			"RUST_LOG=INFO",
+	//			fmt.Sprintf("TEST_TYPE=%s", testType),
+	//		},
+	//	}, func(config *docker.HostConfig) {})
 	require.NoError(t, err, "error bringing up test runner")
 	t.Logf("deployed test runner at %s", contractDeployer.Container.ID)
 	defer func() {
