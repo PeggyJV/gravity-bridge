@@ -361,6 +361,10 @@ func TestPrebuiltCi(t *testing.T) {
 		defer func() {
 			resource.Close()
 		}()
+
+		// this is a hack, to see if the container has an error shortly after launching
+		time.Sleep(5)
+		require.True(t, resource.Container.State.Running, "orchestrator not running after 5 seconds")
 	}
 
 	// write test runner files to config directory
