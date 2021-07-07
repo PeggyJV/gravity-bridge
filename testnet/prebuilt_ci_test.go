@@ -402,8 +402,8 @@ func TestPrebuiltCi(t *testing.T) {
 			},
 			Mounts: []string{fmt.Sprintf("%s/testdata:/testdata", wd)},
 			Env: []string{
-				"RUST_BACKTRACE=1",
-				"RUST_LOG=INFO",
+				"RUST_BACKTRACE=full",
+				"RUST_LOG=DEBUG",
 				fmt.Sprintf("TEST_TYPE=%s", testType),
 			},
 		}, func(config *docker.HostConfig) {})
