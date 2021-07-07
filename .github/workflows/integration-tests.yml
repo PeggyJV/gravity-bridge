@@ -17,6 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
+        id: rust-cache
         with:
           path: |
             ~/.cargo/bin/
@@ -28,7 +29,17 @@ jobs:
       - name: Run Orchestrator tests
         run: cd orchestrator && cargo test --all --verbose
       - name: Set up Docker Buildx
+        id: buildx
         uses: docker/setup-buildx-action@v1
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        id: docker-cache
+        with:
+          path: /tmp/.buildx-cache
+          # Key is named differently to avoid collision
+          key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-multi-buildx
       - name: container-login
         uses: docker/login-action@v1
         with:
@@ -46,17 +57,34 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./orchestrator
+          builder: ${{ steps.buildx.outputs.name }}
           file: orchestrator/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+      - name: Move docker cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   test-runner-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up Docker Buildx
+        id: buildx
         uses: docker/setup-buildx-action@v1
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        id: docker-cache
+        with:
+          path: /tmp/.buildx-cache
+          # Key is named differently to avoid collision
+          key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-multi-buildx
       - name: container-login
         uses: docker/login-action@v1
         with:
@@ -68,14 +96,23 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-test-runner
+      - name: check for binary
+        run: ls orchestrator/target/release
       - name: build-and-push
         uses: docker/build-push-action@v2
         with:
           context: ./orchestrator
+          builder: ${{ steps.buildx.outputs.name }}
           file: orchestrator/testnet.Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+      - name: Move docker cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   go-build:
     permissions:
