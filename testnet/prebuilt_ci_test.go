@@ -255,7 +255,7 @@ func TestPrebuiltCi(t *testing.T) {
 		// this is a hack, to see if the container has an error shortly after launching
 		time.Sleep(5)
 		require.True(t, resource.Container.State.Running, "validator not running after 5 seconds")
-		
+
 		t.Logf("deployed %s at %s", validator.instanceName(), resource.Container.ID)
 		defer func() {
 			resource.Close()
@@ -314,9 +314,9 @@ func TestPrebuiltCi(t *testing.T) {
 	err = pool.Client.Logs(docker.LogsOptions{
 		Container:    contractDeployer.Container.ID,
 		OutputStream: &contractDeployerLogOutput,
-		ErrorStream: &contractDeployerLogOutput,
+		ErrorStream:  &contractDeployerLogOutput,
 		Stdout:       true,
-		Stderr: 	  true,
+		Stderr:       true,
 	})
 	require.NoError(t, err, "error getting contract deployer logs")
 
@@ -421,15 +421,18 @@ func TestPrebuiltCi(t *testing.T) {
 		container, err = pool.Client.InspectContainer(testRunner.Container.ID)
 		require.NoError(t, err, "error inspecting test runner")
 	}
-	require.Equal(t, 0, container.State.ExitCode, "container exited with error")
 
-	testRunnerErrOutput := bytes.Buffer{}
+	testRunnerOutput := bytes.Buffer{}
 	err = pool.Client.Logs(docker.LogsOptions{
 		Container:         testRunner.Container.ID,
-		ErrorStream:       &testRunnerErrOutput,
+		ErrorStream:       &testRunnerOutput,
+		OutputStream:      &testRunnerOutput,
 		Stderr:            true,
+		Stdout:            true,
 		InactivityTimeout: time.Second * 60,
 	})
 	require.NoError(t, err, "error getting test_runner logs")
-	require.Contains(t, testRunnerErrOutput.String(), "Successfully updated txbatch nonce to")
+	t.Logf("Test logs:\n%s", testRunnerOutput)
+	require.Equal(t, 0, container.State.ExitCode, "test_runner container exited with error")
+	require.Contains(t, testRunnerOutput.String(), "Successfully updated txbatch nonce to")
 }
