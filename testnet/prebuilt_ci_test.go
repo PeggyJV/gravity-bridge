@@ -439,5 +439,4 @@ func TestPrebuiltCi(t *testing.T) {
 	require.NoError(t, err, "error getting test_runner logs")
 	t.Logf("Test logs:\n%s", testRunnerOutput.String())
 	require.Equal(t, 0, container.State.ExitCode, "test_runner container exited with error")
-	require.Contains(t, testRunnerOutput.String(), "Successfully updated txbatch nonce to")
 }
