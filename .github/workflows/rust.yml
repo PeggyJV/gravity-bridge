@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  rust-build:
+  rust-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
