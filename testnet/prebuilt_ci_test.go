@@ -264,34 +264,13 @@ func TestPrebuiltCi(t *testing.T) {
 		}()
 	}
 
-	//// bring up the contract deployer and deploy contract
-	//t.Log("running contract_deployer")
-	//contractDeployer, err := pool.RunWithOptions(
-	//	&dockertest.RunOptions{
-	//		Name:       "contract_deployer",
-	//		Repository: "solidity",
-	//		Tag:        "prebuilt",
-	//		NetworkID:  network.Network.ID,
-	//		PortBindings: map[docker.Port][]docker.PortBinding{
-	//			"8545/tcp": {{HostIP: "", HostPort: "8545"}},
-	//		},
-	//		Env: []string{},
-	//	}, func(config *docker.HostConfig) {})
-	//require.NoError(t, err, "error bringing up contract_deployer")
-	//t.Logf("deployed contract_deployer at %s", contractDeployer.Container.ID)
-	//defer func() {
-	//	contractDeployer.Close()
-	//}()
-
 	// bring up the contract deployer and deploy contract
-	t.Log("building contract_deployer")
-	contractDeployer, err := pool.BuildAndRunWithBuildOptions(
-		&dockertest.BuildOptions{
-			Dockerfile: "Dockerfile",
-			ContextDir: "./solidity",
-		},
+	t.Log("deploying contract_deployer")
+	contractDeployer, err := pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:      "contract_deployer",
+			Repository: "solidity",
+			Tag: "prebuilt",
 			NetworkID: network.Network.ID,
 			PortBindings: map[docker.Port][]docker.PortBinding{
 				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
