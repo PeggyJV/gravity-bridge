@@ -489,5 +489,4 @@ func TestBasicChainDynamicKeys(t *testing.T) {
 		InactivityTimeout: time.Second * 60,
 	})
 	require.NoError(t, err, "error getting test_runner logs")
-	require.Contains(t, testRunnerErrOutput.String(), "Successfully updated txbatch nonce to")
 }
