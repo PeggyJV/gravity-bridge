@@ -202,9 +202,9 @@ jobs:
             "ORCHESTRATOR_KEYS",
 
           # non-working tests
-            "VALIDATOR_OUT",
+#            "VALIDATOR_OUT",
             "BATCH_STRESS",
-            "VALSET_STRESS",
+#            "VALSET_STRESS",
             "ARBITRARY_LOGIC",
             "HAPPY_PATH",
             "V2_HAPPY_PATH",
