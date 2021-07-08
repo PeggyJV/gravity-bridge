@@ -38,7 +38,7 @@ func TestHappyPath(t *testing.T) {
 					"TEST_TYPE=HAPPY_PATH",
 				},
 			},
-			func(config *docker.HostConfig) {},
+			noRestart,
 		)
 		require.NoError(t, err, "error bringing up test runner")
 

@@ -36,37 +36,33 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 )) {
 	t.Helper()
 
-	err := os.RemoveAll("testdata/")
-	require.NoError(t, err, "unable to reset testdata directory")
-
 	chain := Chain{
-		DataDir:    "testdata",
-		ID:         "testchain",
-		Validators: nil,
+		DataDir: "testdata",
+		ID:      "testchain",
 	}
 
-	err = chain.CreateAndInitializeValidators(4)
+	err := chain.CreateAndInitializeValidators(4)
 	require.NoError(t, err, "error initializing validators")
 
 	err = chain.CreateAndInitializeOrchestrators(uint8(len(chain.Validators)))
 	require.NoError(t, err, "error initializing orchestrators")
 
 	// add validator accounts to genesis file
-	path := chain.Validators[0].ConfigDir()
+	configDir := chain.Validators[0].ConfigDir()
 	for _, n := range chain.Validators {
-		err = addGenesisAccount(path, "", n.KeyInfo.GetAddress(), "100000000000stake,100000000000footoken")
+		err = addGenesisAccount(configDir, "", n.KeyInfo.GetAddress(), "100000000000stake,100000000000footoken")
 		require.NoError(t, err, "error creating validator accounts")
 	}
 
 	// add orchestrator accounts to genesis file
 	for _, n := range chain.Orchestrators {
-		err = addGenesisAccount(path, "", n.KeyInfo.GetAddress(), "100000000000stake,100000000000footoken")
+		err = addGenesisAccount(configDir, "", n.KeyInfo.GetAddress(), "100000000000stake,100000000000footoken")
 		require.NoError(t, err, "error creating orchestrator accounts")
 	}
 
 	// file_copy around the genesis file with the accounts
 	for _, v := range chain.Validators[1:] {
-		_, err = fileCopy(filepath.Join(path, "config", "genesis.json"), filepath.Join(v.ConfigDir(), "config", "genesis.json"))
+		_, err = fileCopy(filepath.Join(configDir, "config", "genesis.json"), filepath.Join(v.ConfigDir(), "config", "genesis.json"))
 		require.NoError(t, err, "error copying over genesis files")
 	}
 
@@ -94,7 +90,7 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
-	config.SetRoot(path)
+	config.SetRoot(configDir)
 	config.Moniker = chain.Validators[0].Moniker
 
 	genFilePath := config.GenesisFile()
@@ -201,20 +197,13 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 		network.Close()
 	}()
 
-	hostConfig := func(config *docker.HostConfig) {
-		// set AutoRemove to true so that stopped container goes away by itself
-		config.AutoRemove = true
-		config.RestartPolicy = docker.RestartPolicy{
-			Name: "no",
-		}
-	}
-
 	// bring up ethereum
 	t.Log("building and running ethereum")
-	ethereum, err := pool.BuildAndRunWithBuildOptions(&dockertest.BuildOptions{
-		Dockerfile: "ethereum/Dockerfile",
-		ContextDir: "./",
-	},
+	ethereum, err := pool.BuildAndRunWithBuildOptions(
+		&dockertest.BuildOptions{
+			Dockerfile: "ethereum/Dockerfile",
+			ContextDir: "./",
+		},
 		&dockertest.RunOptions{
 			Name:      "ethereum",
 			NetworkID: network.Network.ID,
@@ -222,12 +211,11 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
 			},
 			Env: []string{},
-		}, hostConfig)
+		},
+		noRestart,
+	)
 	require.NoError(t, err, "error bringing up ethereum")
 	t.Logf("deployed ethereum at %s", ethereum.Container.ID)
-	defer func() {
-		ethereum.Close()
-	}()
 
 	// build validators
 	for _, validator := range chain.Validators {
@@ -237,9 +225,9 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 			Dockerfile:   "Dockerfile",
 			ContextDir:   "./module",
 			OutputStream: ioutil.Discard,
+			// OutputStream: os.Stderr,
 		})
 		require.NoError(t, err, "error building %s", validator.instanceName())
-		t.Logf("built %s", validator.instanceName())
 	}
 
 	wd, err := os.Getwd()
@@ -269,12 +257,9 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 			}
 		}
 
-		resource, err := pool.RunWithOptions(runOpts, hostConfig)
+		resource, err := pool.RunWithOptions(runOpts, noRestart)
 		require.NoError(t, err, "error bringing up %s", validator.instanceName())
 		t.Logf("deployed %s at %s", validator.instanceName(), resource.Container.ID)
-		defer func() {
-			resource.Close()
-		}()
 	}
 
 	// bring up the contract deployer and deploy contract
@@ -291,12 +276,11 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
 			},
 			Env: []string{},
-		}, func(config *docker.HostConfig) {})
+		},
+		noRestart,
+	)
 	require.NoError(t, err, "error bringing up contract_deployer")
 	t.Logf("deployed contract_deployer at %s", contractDeployer.Container.ID)
-	defer func() {
-		contractDeployer.Close()
-	}()
 
 	container := contractDeployer.Container
 	for container.State.Running {
@@ -333,9 +317,9 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 			Dockerfile:   "Dockerfile",
 			ContextDir:   "./orchestrator",
 			OutputStream: ioutil.Discard,
+			// OutputStream: os.Stderr,
 		})
 		require.NoError(t, err, "error building %s", orchestrator.instanceName())
-		t.Logf("built %s", orchestrator.instanceName())
 	}
 
 	// deploy orchestrators
@@ -360,12 +344,9 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 			Env:        env,
 		}
 
-		resource, err := pool.RunWithOptions(runOpts, hostConfig)
+		resource, err := pool.RunWithOptions(runOpts, noRestart)
 		require.NoError(t, err, "error bringing up %s", orchestrator.instanceName())
 		t.Logf("deployed %s at %s", orchestrator.instanceName(), resource.Container.ID)
-		defer func() {
-			resource.Close()
-		}()
 	}
 
 	// write test runner files to config directory
@@ -386,4 +367,10 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	writeFile(t, filepath.Join(chain.DataDir, "contracts"), contractDeployerLogOutput.Bytes())
 
 	cb(wd, pool, network)
+}
+
+func noRestart(config *docker.HostConfig) {
+	config.RestartPolicy = docker.RestartPolicy{
+		Name: "no",
+	}
 }

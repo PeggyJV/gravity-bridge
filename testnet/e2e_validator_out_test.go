@@ -16,7 +16,8 @@ func TestValidatorOut(t *testing.T) {
 		pool *dockertest.Pool,
 		network *dockertest.Network,
 	) {
-		// TODO(levi) stop a validator here
+		err := pool.RemoveContainerByName("gravity0")
+		require.NoError(t, err, "error removing gravity0")
 
 		// bring up the test runner
 		t.Log("building and deploying test runner")
