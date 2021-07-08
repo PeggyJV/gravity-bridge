@@ -489,4 +489,5 @@ func TestBasicChainDynamicKeys(t *testing.T) {
 		InactivityTimeout: time.Second * 60,
 	})
 	require.NoError(t, err, "error getting test_runner logs")
+	require.Equal(t, 0, container.State.ExitCode, "test_runner container exited with error")
 }
