@@ -1,0 +1,30 @@
+name: Go tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  go-test:
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.16
+      - name: Checkout Branch
+        uses: actions/checkout@v2
+      - name: Create Go cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('module/go.sum') }}
+      - name: Run Go tests
+        run: cd module && make test
