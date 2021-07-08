@@ -207,7 +207,7 @@ jobs:
 #            "VALSET_STRESS",
             "ARBITRARY_LOGIC",
             "HAPPY_PATH",
-            "V2_HAPPY_PATH",
+#            "V2_HAPPY_PATH",
         ]
     steps:
       - name: Set up Go 1.16
