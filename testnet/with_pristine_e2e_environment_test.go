@@ -225,7 +225,6 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 			Dockerfile:   "Dockerfile",
 			ContextDir:   "./module",
 			OutputStream: ioutil.Discard,
-			// OutputStream: os.Stderr,
 		})
 		require.NoError(t, err, "error building %s", validator.instanceName())
 	}
@@ -317,7 +316,6 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 			Dockerfile:   "Dockerfile",
 			ContextDir:   "./orchestrator",
 			OutputStream: ioutil.Discard,
-			// OutputStream: os.Stderr,
 		})
 		require.NoError(t, err, "error building %s", orchestrator.instanceName())
 	}
