@@ -28,6 +28,7 @@ e2e_clean_slate:
 		1>/dev/null \
 		2>/dev/null \
 		|| true
+	@docker network rm testnet
 	@sudo rm -fr testdata
 	@cd testnet && go test -c
 

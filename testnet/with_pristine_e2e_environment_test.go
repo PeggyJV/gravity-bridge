@@ -97,6 +97,44 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	appState, genDoc, err := types.GenesisStateFromGenFile(genFilePath)
 	require.NoError(t, err, "error reading genesis file")
 
+	var bank Bank
+	err = json.Unmarshal(appState["bank"], &bank)
+	require.NoError(t, err, "error unmarshalling bank genesis state")
+	bank.DenomMetadata = append(bank.DenomMetadata, DenomMetadata{
+		Description: "footoken",
+		Display:     "mfootoken",
+		Base:        "footoken",
+		DenomUnits: []DenomUnit{
+			{
+				Denom:    "footoken",
+				Exponent: 0,
+			},
+			{
+				Denom:    "mfootoken",
+				Exponent: 6,
+			},
+		},
+	})
+	bank.DenomMetadata = append(bank.DenomMetadata, DenomMetadata{
+		Description: "stake",
+		Display:     "mstake",
+		Base:        "stake",
+		DenomUnits: []DenomUnit{
+			{
+				Denom:    "stake",
+				Exponent: 0,
+			},
+			{
+				Denom:    "mstake",
+				Exponent: 3,
+			},
+		},
+	})
+
+	bz, err := json.Marshal(bank)
+	require.NoError(t, err, "error marshalling bank state")
+	appState["bank"] = bz
+
 	var genUtil GenUtil
 	err = json.Unmarshal(appState["genutil"], &genUtil)
 	require.NoError(t, err, "error unmarshalling genesis state")
@@ -128,7 +166,7 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	}
 	genUtil.GenTxs = genTxs
 
-	bz, err := json.Marshal(genUtil)
+	bz, err = json.Marshal(genUtil)
 	require.NoError(t, err, "error marshalling gen_util state")
 	appState["genutil"] = bz
 
