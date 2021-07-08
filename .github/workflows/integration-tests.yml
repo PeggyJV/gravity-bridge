@@ -137,12 +137,12 @@ jobs:
       matrix:
         test_type: [
             "HAPPY_PATH",
-            "VALIDATOR_OUT",
-            "BATCH_STRESS",
-            "VALSET_STRESS",
             "V2_HAPPY_PATH",
-            "ARBITRARY_LOGIC",
-            "ORCHESTRATOR_KEYS"
+#            "VALIDATOR_OUT",
+#            "BATCH_STRESS",
+#            "VALSET_STRESS",
+#            "ARBITRARY_LOGIC",
+#            "ORCHESTRATOR_KEYS"
         ]
     steps:
       - name: Set up Go 1.16
