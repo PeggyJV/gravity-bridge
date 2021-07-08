@@ -53,7 +53,7 @@ e2e_orchestrator_keys: e2e_clean_slate
 	@testnet/testnet.test -test.run TestOrchestratorKeys -test.failfast -test.v || make -s fail
 
 fail:
-	@echo test failed; dumping container logs into ./testdata for review
+	@echo 'test failed; dumping container logs into ./testdata for review'
 	@docker logs contract_deployer > testdata/contract_deployer.log 2>&1
 	@docker logs gravity0 > testdata/gravity0.log 2>&1
 	@docker logs gravity1 > testdata/gravity1.log 2>&1
