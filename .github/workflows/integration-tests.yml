@@ -200,13 +200,13 @@ jobs:
         test_type: [
           # working tests
             "ORCHESTRATOR_KEYS",
+            "ARBITRARY_LOGIC",
 
           # non-working tests
 #            "VALIDATOR_OUT",
             "BATCH_STRESS",
 #            "VALSET_STRESS",
-            "ARBITRARY_LOGIC",
-            "HAPPY_PATH",
+#            "HAPPY_PATH",
 #            "V2_HAPPY_PATH",
         ]
     steps:
