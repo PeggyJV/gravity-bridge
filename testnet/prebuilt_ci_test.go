@@ -4,21 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/BurntSushi/toml"
-	"github.com/cosmos/cosmos-sdk/codec"
-	types3 "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	types6 "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/server"
-	types2 "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	types4 "github.com/cosmos/cosmos-sdk/x/staking/types"
-	types5 "github.com/cosmos/gravity-bridge/module/x/gravity/types"
-	"github.com/ory/dockertest/v3"
-	"github.com/ory/dockertest/v3/docker"
-	"github.com/stretchr/testify/require"
-	json2 "github.com/tendermint/tendermint/libs/json"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -26,6 +11,23 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/BurntSushi/toml"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/server"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	gravitytypes "github.com/cosmos/gravity-bridge/module/x/gravity/types"
+	"github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3/docker"
+	"github.com/stretchr/testify/require"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+
 )
 
 func TestPrebuiltCi(t *testing.T) {
@@ -100,13 +102,13 @@ func TestPrebuiltCi(t *testing.T) {
 	require.NoError(t, err, "error unmarshalling genesis state")
 
 	// generate gentxs
-	amount, _ := types2.NewIntFromString("100000000000")
-	coin := types2.Coin{Denom: "stake", Amount: amount}
+	amount, _ := sdktypes.NewIntFromString("100000000000")
+	coin := sdktypes.Coin{Denom: "stake", Amount: amount}
 	genTxs := make([]json.RawMessage, len(chain.Validators))
 
-	interfaceRegistry := types3.NewInterfaceRegistry()
-	interfaceRegistry.RegisterImplementations((*types2.Msg)(nil), &types4.MsgCreateValidator{}, &types5.MsgDelegateKeys{})
-	interfaceRegistry.RegisterImplementations((*types6.PubKey)(nil), &secp256k1.PubKey{}, &ed25519.PubKey{})
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	interfaceRegistry.RegisterImplementations((*sdktypes.Msg)(nil), &stakingtypes.MsgCreateValidator{}, &gravitytypes.MsgDelegateKeys{})
+	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{}, &ed25519.PubKey{})
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 
 	for i, v := range chain.Validators {
@@ -134,7 +136,7 @@ func TestPrebuiltCi(t *testing.T) {
 	require.NoError(t, err, "error marshalling app state")
 
 	genDoc.AppState = bz
-	out, err := json2.MarshalIndent(genDoc, "", "  ")
+	out, err := tmjson.MarshalIndent(genDoc, "", "  ")
 	require.NoError(t, err, "error marshalling genesis doc")
 
 	for _, validator := range chain.Validators {
