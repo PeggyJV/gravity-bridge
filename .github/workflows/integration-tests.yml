@@ -200,13 +200,14 @@ jobs:
         test_type: [
           # working tests
             "ORCHESTRATOR_KEYS",
+
+          # non-working tests
             "VALIDATOR_OUT",
             "BATCH_STRESS",
             "VALSET_STRESS",
             "ARBITRARY_LOGIC",
-          # non-working tests
-          # "HAPPY_PATH",
-          # "V2_HAPPY_PATH",
+            "HAPPY_PATH",
+            "V2_HAPPY_PATH",
         ]
     steps:
       - name: Set up Go 1.16
