@@ -54,14 +54,14 @@ e2e_orchestrator_keys: e2e_clean_slate
 
 fail:
 	@echo 'test failed; dumping container logs into ./testdata for review'
-	@docker logs contract_deployer > testdata/contract_deployer.log 2>&1
-	@docker logs gravity0 > testdata/gravity0.log 2>&1
-	@docker logs gravity1 > testdata/gravity1.log 2>&1
-	@docker logs gravity2 > testdata/gravity2.log 2>&1
-	@docker logs gravity3 > testdata/gravity3.log 2>&1
-	@docker logs orchestrator0 > testdata/orchestrator0.log 2>&1
-	@docker logs orchestrator1 > testdata/orchestrator1.log 2>&1
-	@docker logs orchestrator2 > testdata/orchestrator2.log 2>&1
-	@docker logs orchestrator3 > testdata/orchestrator3.log 2>&1
-	@docker logs test_runner > testdata/test_runner.log 2>&1
+	@docker logs contract_deployer > testdata/contract_deployer.log 2>&1 || true
+	@docker logs gravity0 > testdata/gravity0.log 2>&1 || true
+	@docker logs gravity1 > testdata/gravity1.log 2>&1 || true
+	@docker logs gravity2 > testdata/gravity2.log 2>&1 || true
+	@docker logs gravity3 > testdata/gravity3.log 2>&1 || true
+	@docker logs orchestrator0 > testdata/orchestrator0.log 2>&1 || true
+	@docker logs orchestrator1 > testdata/orchestrator1.log 2>&1 || true
+	@docker logs orchestrator2 > testdata/orchestrator2.log 2>&1 || true
+	@docker logs orchestrator3 > testdata/orchestrator3.log 2>&1 || true
+	@docker logs test_runner > testdata/test_runner.log 2>&1 || true
 	@false
