@@ -227,13 +227,6 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	network, err := pool.CreateNetwork("testnet")
 	require.NoError(t, err, "error creating testnet network")
 
-	hostConfig := func(config *docker.HostConfig) {
-		// in this case we don't want the nodes to restart on failure
-		config.RestartPolicy = docker.RestartPolicy{
-			Name: "no",
-		}
-	}
-
 	// bring up ethereum
 	t.Log("building and running ethereum")
 	ethereum, err := pool.BuildAndRunWithBuildOptions(
@@ -249,7 +242,7 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 			},
 			Env: []string{},
 		},
-		hostConfig,
+		noRestart,
 	)
 	require.NoError(t, err, "error bringing up ethereum")
 	t.Logf("deployed ethereum at %s", ethereum.Container.ID)
@@ -293,7 +286,7 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 			}
 		}
 
-		resource, err := pool.RunWithOptions(runOpts, hostConfig)
+		resource, err := pool.RunWithOptions(runOpts, noRestart)
 		require.NoError(t, err, "error bringing up %s", validator.instanceName())
 		t.Logf("deployed %s at %s", validator.instanceName(), resource.Container.ID)
 	}
@@ -313,7 +306,7 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 			},
 			Env: []string{},
 		},
-		hostConfig,
+		noRestart,
 	)
 	require.NoError(t, err, "error bringing up contract_deployer")
 	t.Logf("deployed contract_deployer at %s", contractDeployer.Container.ID)
@@ -379,7 +372,7 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 			Env:        env,
 		}
 
-		resource, err := pool.RunWithOptions(runOpts, hostConfig)
+		resource, err := pool.RunWithOptions(runOpts, noRestart)
 		require.NoError(t, err, "error bringing up %s", orchestrator.instanceName())
 		t.Logf("deployed %s at %s", orchestrator.instanceName(), resource.Container.ID)
 	}
@@ -402,4 +395,11 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	writeFile(t, filepath.Join(chain.DataDir, "contracts"), contractDeployerLogOutput.Bytes())
 
 	cb(wd, pool, network)
+}
+
+func noRestart(config *docker.HostConfig) {
+	// in this case we don't want the nodes to restart on failure
+	config.RestartPolicy = docker.RestartPolicy{
+		Name: "no",
+	}
 }

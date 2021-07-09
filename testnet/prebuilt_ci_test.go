@@ -226,14 +226,6 @@ func TestPrebuiltCi(t *testing.T) {
 		network.Close()
 	}()
 
-	hostConfig := func(config *docker.HostConfig) {
-		// set AutoRemove to true so that stopped container goes away by itself
-		//config.AutoRemove = true
-		config.RestartPolicy = docker.RestartPolicy{
-			Name: "no",
-		}
-	}
-
 	// bring up ethereum
 	t.Log("building and running ethereum")
 	ethereum, err := pool.BuildAndRunWithBuildOptions(&dockertest.BuildOptions{
@@ -247,7 +239,7 @@ func TestPrebuiltCi(t *testing.T) {
 				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
 			},
 			Env: []string{},
-		}, hostConfig)
+		}, noRestart)
 	require.NoError(t, err, "error bringing up ethereum")
 	t.Logf("deployed ethereum at %s", ethereum.Container.ID)
 	defer func() {
@@ -282,7 +274,7 @@ func TestPrebuiltCi(t *testing.T) {
 			}
 		}
 
-		resource, err := pool.RunWithOptions(runOpts, hostConfig)
+		resource, err := pool.RunWithOptions(runOpts, noRestart)
 		require.NoError(t, err, "error bringing up %s", validator.instanceName())
 
 		// this is a hack, to see if the container has an error shortly after launching
@@ -367,7 +359,7 @@ func TestPrebuiltCi(t *testing.T) {
 			Env:        env,
 		}
 
-		resource, err := pool.RunWithOptions(runOpts, hostConfig)
+		resource, err := pool.RunWithOptions(runOpts, noRestart)
 		require.NoError(t, err, "error bringing up %s", orchestrator.instanceName())
 		t.Logf("deployed %s at %s", orchestrator.instanceName(), resource.Container.ID)
 		defer func() {
