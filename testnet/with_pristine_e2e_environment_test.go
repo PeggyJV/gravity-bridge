@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -227,17 +226,8 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	require.NoError(t, err, "error creating docker pool")
 	network, err := pool.CreateNetwork("testnet")
 	require.NoError(t, err, "error creating testnet network")
-	defer func() {
-		network.Close()
-	}()
 
-	// if the env var AUTO_REMOVE is set to a string parseable to true, then it will set
-	// containers to "attempt" to clean themselves up on close/failure. This doesn't seem
-	// to happen consistently with certain code/test failures
-	autoRemove, _ := strconv.ParseBool(os.Getenv("AUTO_REMOVE"))
 	hostConfig := func(config *docker.HostConfig) {
-		// set AUTO_REMOVE to true so that stopped container goes away by itself
-		config.AutoRemove = autoRemove
 		// in this case we don't want the nodes to restart on failure
 		config.RestartPolicy = docker.RestartPolicy{
 			Name: "no",
@@ -263,11 +253,6 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	)
 	require.NoError(t, err, "error bringing up ethereum")
 	t.Logf("deployed ethereum at %s", ethereum.Container.ID)
-	if autoRemove {
-		defer func() {
-			ethereum.Close()
-		}()
-	}
 
 	// build validators
 	for _, validator := range chain.Validators {
@@ -311,11 +296,6 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 		resource, err := pool.RunWithOptions(runOpts, hostConfig)
 		require.NoError(t, err, "error bringing up %s", validator.instanceName())
 		t.Logf("deployed %s at %s", validator.instanceName(), resource.Container.ID)
-		if autoRemove {
-			defer func() {
-				resource.Close()
-			}()
-		}
 	}
 
 	// bring up the contract deployer and deploy contract
@@ -337,11 +317,6 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	)
 	require.NoError(t, err, "error bringing up contract_deployer")
 	t.Logf("deployed contract_deployer at %s", contractDeployer.Container.ID)
-	if autoRemove {
-		defer func() {
-			contractDeployer.Close()
-		}()
-	}
 
 	container := contractDeployer.Container
 	for container.State.Running {
@@ -407,11 +382,6 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 		resource, err := pool.RunWithOptions(runOpts, hostConfig)
 		require.NoError(t, err, "error bringing up %s", orchestrator.instanceName())
 		t.Logf("deployed %s at %s", orchestrator.instanceName(), resource.Container.ID)
-		if autoRemove {
-			defer func() {
-				resource.Close()
-			}()
-		}
 	}
 
 	// write test runner files to config directory
