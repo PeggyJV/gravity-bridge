@@ -5,3 +5,5 @@ authors = []
 edition = "2018"
 
 [dependencies]
+signatory = "0.22.0"
+hkd32 = "0.6.0"

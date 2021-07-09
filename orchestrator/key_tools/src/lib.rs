@@ -9,7 +9,7 @@
 // - leverages the signatory crate to manage the keystore
 // - generates keys the hkd32 crate
 // - provides abscissa commands
-// 
+//
 // todos for this library:
 // [ ] Function that loads a key from keystore by name then converts it to a given format
 //     exact list of formats need to be pinned down; generally aiming to play nice with:
