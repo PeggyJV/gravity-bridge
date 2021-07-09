@@ -30,6 +30,7 @@ import (
 
 )
 
+
 func TestPrebuiltCi(t *testing.T) {
 	err := os.RemoveAll("testdata/")
 	require.NoError(t, err, "unable to reset testdata directory")
@@ -131,6 +132,10 @@ func TestPrebuiltCi(t *testing.T) {
 		},
 	})
 
+	bz, err := json.Marshal(bank)
+	require.NoError(t, err, "error marshalling bank state")
+	appState["bank"] = bz
+
 	var genUtil GenUtil
 	err = json.Unmarshal(appState["genutil"], &genUtil)
 	require.NoError(t, err, "error unmarshalling genesis state")
@@ -162,7 +167,7 @@ func TestPrebuiltCi(t *testing.T) {
 	}
 	genUtil.GenTxs = genTxs
 
-	bz, err := json.Marshal(genUtil)
+	bz, err = json.Marshal(genUtil)
 	require.NoError(t, err, "error marshalling gen_util state")
 	appState["genutil"] = bz
 
@@ -215,6 +220,9 @@ func TestPrebuiltCi(t *testing.T) {
 
 		err = os.WriteFile(path, b.Bytes(), fs.ModePerm)
 		require.NoError(t, err, "error writing config toml")
+
+		startupPath := filepath.Join(v.ConfigDir(), "startup.sh")
+		err = os.WriteFile(startupPath, []byte(fmt.Sprintf("gravity --home home start --pruning=nothing > home.n%d.log", v.Index)), fs.ModePerm)
 	}
 
 	// bring up docker network
@@ -225,6 +233,13 @@ func TestPrebuiltCi(t *testing.T) {
 	defer func() {
 		network.Close()
 	}()
+
+	hostConfig := func(config *docker.HostConfig) {
+		// in this case we don't want the nodes to restart on failure
+		config.RestartPolicy = docker.RestartPolicy{
+			Name: "no",
+		}
+	}
 
 	// bring up ethereum
 	t.Log("building and running ethereum")
@@ -242,9 +257,6 @@ func TestPrebuiltCi(t *testing.T) {
 		}, noRestart)
 	require.NoError(t, err, "error bringing up ethereum")
 	t.Logf("deployed ethereum at %s", ethereum.Container.ID)
-	defer func() {
-		ethereum.Close()
-	}()
 
 	wd, err := os.Getwd()
 	require.NoError(t, err, "couldn't get working directory")
@@ -274,7 +286,7 @@ func TestPrebuiltCi(t *testing.T) {
 			}
 		}
 
-		resource, err := pool.RunWithOptions(runOpts, noRestart)
+		resource, err := pool.RunWithOptions(runOpts, hostConfig)
 		require.NoError(t, err, "error bringing up %s", validator.instanceName())
 
 		// this is a hack, to see if the container has an error shortly after launching
@@ -282,9 +294,7 @@ func TestPrebuiltCi(t *testing.T) {
 		require.True(t, resource.Container.State.Running, "validator not running after 5 seconds")
 
 		t.Logf("deployed %s at %s", validator.instanceName(), resource.Container.ID)
-		defer func() {
-			resource.Close()
-		}()
+
 	}
 
 	// bring up the contract deployer and deploy contract
@@ -302,9 +312,7 @@ func TestPrebuiltCi(t *testing.T) {
 		}, func(config *docker.HostConfig) {})
 	require.NoError(t, err, "error bringing up contract_deployer")
 	t.Logf("deployed contract_deployer at %s", contractDeployer.Container.ID)
-	defer func() {
-		contractDeployer.Close()
-	}()
+
 
 	container := contractDeployer.Container
 	for container.State.Running {
@@ -359,13 +367,9 @@ func TestPrebuiltCi(t *testing.T) {
 			Env:        env,
 		}
 
-		resource, err := pool.RunWithOptions(runOpts, noRestart)
+		resource, err := pool.RunWithOptions(runOpts, hostConfig)
 		require.NoError(t, err, "error bringing up %s", orchestrator.instanceName())
 		t.Logf("deployed %s at %s", orchestrator.instanceName(), resource.Container.ID)
-		defer func() {
-			resource.Close()
-		}()
-
 		// this is a hack, to see if the container has an error shortly after launching
 		time.Sleep(5)
 		require.True(t, resource.Container.State.Running, "orchestrator not running after 5 seconds")
@@ -414,9 +418,7 @@ func TestPrebuiltCi(t *testing.T) {
 
 	require.NoError(t, err, "error bringing up test runner")
 	t.Logf("deployed test runner at %s", contractDeployer.Container.ID)
-	defer func() {
-		testRunner.Close()
-	}()
+
 
 	container = testRunner.Container
 	for container.State.Running {
