@@ -44,7 +44,7 @@ func writeFile(t *testing.T, path string, body []byte) {
 	_, err := os.Create(path)
 	require.NoError(t, err)
 
-	ioutil.WriteFile(path, body, 0644)
+	err = ioutil.WriteFile(path, body, 0644)
 	require.NoError(t, err)
 }
 

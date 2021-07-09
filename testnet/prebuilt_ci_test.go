@@ -8,62 +8,60 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/cosmos/cosmos-sdk/codec"
-	types3 "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	types6 "github.com/cosmos/cosmos-sdk/crypto/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
-	types2 "github.com/cosmos/cosmos-sdk/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	types4 "github.com/cosmos/cosmos-sdk/x/staking/types"
-	types5 "github.com/cosmos/gravity-bridge/module/x/gravity/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	gravitytypes "github.com/cosmos/gravity-bridge/module/x/gravity/types"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
-	json2 "github.com/tendermint/tendermint/libs/json"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+
 )
 
-func withPristineE2EEnvironment(t *testing.T, cb func(
-	string,
-	*dockertest.Pool,
-	*dockertest.Network,
-)) {
-	t.Helper()
+func TestPrebuiltCi(t *testing.T) {
+	err := os.RemoveAll("testdata/")
+	require.NoError(t, err, "unable to reset testdata directory")
 
 	chain := Chain{
-		DataDir: "testdata",
-		ID:      "testchain",
+		DataDir:    "testdata",
+		ID:         "testchain",
+		Validators: nil,
 	}
 
-	err := chain.CreateAndInitializeValidators(4)
+	err = chain.CreateAndInitializeValidators(4)
 	require.NoError(t, err, "error initializing validators")
 
 	err = chain.CreateAndInitializeOrchestrators(uint8(len(chain.Validators)))
 	require.NoError(t, err, "error initializing orchestrators")
 
 	// add validator accounts to genesis file
-	configDir := chain.Validators[0].ConfigDir()
+	path := chain.Validators[0].ConfigDir()
 	for _, n := range chain.Validators {
-		err = addGenesisAccount(configDir, "", n.KeyInfo.GetAddress(), "100000000000stake,100000000000footoken")
+		err = addGenesisAccount(path, "", n.KeyInfo.GetAddress(), "100000000000stake,100000000000footoken")
 		require.NoError(t, err, "error creating validator accounts")
 	}
 
 	// add orchestrator accounts to genesis file
 	for _, n := range chain.Orchestrators {
-		err = addGenesisAccount(configDir, "", n.KeyInfo.GetAddress(), "100000000000stake,100000000000footoken")
+		err = addGenesisAccount(path, "", n.KeyInfo.GetAddress(), "100000000000stake,100000000000footoken")
 		require.NoError(t, err, "error creating orchestrator accounts")
 	}
 
 	// file_copy around the genesis file with the accounts
 	for _, v := range chain.Validators[1:] {
-		_, err = fileCopy(filepath.Join(configDir, "config", "genesis.json"), filepath.Join(v.ConfigDir(), "config", "genesis.json"))
+		_, err = fileCopy(filepath.Join(path, "config", "genesis.json"), filepath.Join(v.ConfigDir(), "config", "genesis.json"))
 		require.NoError(t, err, "error copying over genesis files")
 	}
 
@@ -87,11 +85,12 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	ethGenesisMarshal, err := json.MarshalIndent(ethGenesis, "", "  ")
 	require.NoError(t, err, "error marshalling ethereum genesis file")
 
-	writeFile(t, filepath.Join(chain.ConfigDir(), "ETHGenesis.json"), ethGenesisMarshal)
+	err = ioutil.WriteFile(filepath.Join(chain.ConfigDir(), "ETHGenesis.json"), ethGenesisMarshal, 0644)
+	require.NoError(t, err, "error writing ethereum genesis file")
 
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
-	config.SetRoot(configDir)
+	config.SetRoot(path)
 	config.Moniker = chain.Validators[0].Moniker
 
 	genFilePath := config.GenesisFile()
@@ -107,11 +106,11 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 		Base:        "footoken",
 		DenomUnits: []DenomUnit{
 			{
-				Denom:    "footoken",
+				Denom: "footoken",
 				Exponent: 0,
 			},
 			{
-				Denom:    "mfootoken",
+				Denom: "mfootoken",
 				Exponent: 6,
 			},
 		},
@@ -122,32 +121,28 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 		Base:        "stake",
 		DenomUnits: []DenomUnit{
 			{
-				Denom:    "stake",
+				Denom: "stake",
 				Exponent: 0,
 			},
 			{
-				Denom:    "mstake",
+				Denom: "mstake",
 				Exponent: 3,
 			},
 		},
 	})
-
-	bz, err := json.Marshal(bank)
-	require.NoError(t, err, "error marshalling bank state")
-	appState["bank"] = bz
 
 	var genUtil GenUtil
 	err = json.Unmarshal(appState["genutil"], &genUtil)
 	require.NoError(t, err, "error unmarshalling genesis state")
 
 	// generate gentxs
-	amount, _ := types2.NewIntFromString("100000000000")
-	coin := types2.Coin{Denom: "stake", Amount: amount}
+	amount, _ := sdktypes.NewIntFromString("100000000000")
+	coin := sdktypes.Coin{Denom: "stake", Amount: amount}
 	genTxs := make([]json.RawMessage, len(chain.Validators))
 
-	interfaceRegistry := types3.NewInterfaceRegistry()
-	interfaceRegistry.RegisterImplementations((*types2.Msg)(nil), &types4.MsgCreateValidator{}, &types5.MsgDelegateKeys{})
-	interfaceRegistry.RegisterImplementations((*types6.PubKey)(nil), &secp256k1.PubKey{}, &ed25519.PubKey{})
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	interfaceRegistry.RegisterImplementations((*sdktypes.Msg)(nil), &stakingtypes.MsgCreateValidator{}, &gravitytypes.MsgDelegateKeys{})
+	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{}, &ed25519.PubKey{})
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 
 	for i, v := range chain.Validators {
@@ -167,7 +162,7 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	}
 	genUtil.GenTxs = genTxs
 
-	bz, err = json.Marshal(genUtil)
+	bz, err := json.Marshal(genUtil)
 	require.NoError(t, err, "error marshalling gen_util state")
 	appState["genutil"] = bz
 
@@ -175,11 +170,12 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	require.NoError(t, err, "error marshalling app state")
 
 	genDoc.AppState = bz
-	out, err := json2.MarshalIndent(genDoc, "", "  ")
+	out, err := tmjson.MarshalIndent(genDoc, "", "  ")
 	require.NoError(t, err, "error marshalling genesis doc")
 
 	for _, validator := range chain.Validators {
-		writeFile(t, filepath.Join(validator.ConfigDir(), "config", "genesis.json"), out)
+		err = ioutil.WriteFile(filepath.Join(validator.ConfigDir(), "config", "genesis.json"), out, fs.ModePerm)
+		require.NoError(t, err, "error writing out genesis file")
 	}
 
 	// update config.toml files
@@ -217,7 +213,6 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 		err = encoder.Encode(configToml)
 		require.NoError(t, err, "error encoding config toml")
 
-		// todo(levi) use writeFile?
 		err = os.WriteFile(path, b.Bytes(), fs.ModePerm)
 		require.NoError(t, err, "error writing config toml")
 	}
@@ -231,14 +226,9 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 		network.Close()
 	}()
 
-	// if the env var AUTO_REMOVE is set to a string parseable to true, then it will set
-	// containers to "attempt" to clean themselves up on close/failure. This doesn't seem
-	// to happen consistently with certain code/test failures
-	autoRemove, _ := strconv.ParseBool(os.Getenv("AUTO_REMOVE"))
 	hostConfig := func(config *docker.HostConfig) {
-		// set AUTO_REMOVE to true so that stopped container goes away by itself
-		config.AutoRemove = autoRemove
-		// in this case we don't want the nodes to restart on failure
+		// set AutoRemove to true so that stopped container goes away by itself
+		//config.AutoRemove = true
 		config.RestartPolicy = docker.RestartPolicy{
 			Name: "no",
 		}
@@ -246,11 +236,10 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 
 	// bring up ethereum
 	t.Log("building and running ethereum")
-	ethereum, err := pool.BuildAndRunWithBuildOptions(
-		&dockertest.BuildOptions{
-			Dockerfile: "ethereum/Dockerfile",
-			ContextDir: "./",
-		},
+	ethereum, err := pool.BuildAndRunWithBuildOptions(&dockertest.BuildOptions{
+		Dockerfile: "ethereum/Dockerfile",
+		ContextDir: "./",
+	},
 		&dockertest.RunOptions{
 			Name:      "ethereum",
 			NetworkID: network.Network.ID,
@@ -258,28 +247,12 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
 			},
 			Env: []string{},
-		},
-		hostConfig,
-	)
+		}, hostConfig)
 	require.NoError(t, err, "error bringing up ethereum")
 	t.Logf("deployed ethereum at %s", ethereum.Container.ID)
-	if autoRemove {
-		defer func() {
-			ethereum.Close()
-		}()
-	}
-
-	// build validators
-	for _, validator := range chain.Validators {
-		t.Logf("building %s", validator.instanceName())
-		err = pool.Client.BuildImage(docker.BuildImageOptions{
-			Name:         validator.instanceName(),
-			Dockerfile:   "Dockerfile",
-			ContextDir:   "./module",
-			OutputStream: ioutil.Discard,
-		})
-		require.NoError(t, err, "error building %s", validator.instanceName())
-	}
+	defer func() {
+		ethereum.Close()
+	}()
 
 	wd, err := os.Getwd()
 	require.NoError(t, err, "couldn't get working directory")
@@ -288,8 +261,9 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 		runOpts := &dockertest.RunOptions{
 			Name:       validator.instanceName(),
 			NetworkID:  network.Network.ID,
-			Mounts:     []string{fmt.Sprintf("%s/testdata/%s/%s/:/root/home", wd, chain.ID, validator.instanceName())},
-			Repository: validator.instanceName(),
+			Mounts:     []string{fmt.Sprintf("%s/testdata/testchain/%s/:/root/home", wd, validator.instanceName())},
+			Repository: "gravity",
+			Tag:        "prebuilt",
 		}
 
 		// expose the first validator for debugging and communication
@@ -310,38 +284,35 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 
 		resource, err := pool.RunWithOptions(runOpts, hostConfig)
 		require.NoError(t, err, "error bringing up %s", validator.instanceName())
+
+		// this is a hack, to see if the container has an error shortly after launching
+		time.Sleep(5)
+		require.True(t, resource.Container.State.Running, "validator not running after 5 seconds")
+
 		t.Logf("deployed %s at %s", validator.instanceName(), resource.Container.ID)
-		if autoRemove {
-			defer func() {
-				resource.Close()
-			}()
-		}
+		defer func() {
+			resource.Close()
+		}()
 	}
 
 	// bring up the contract deployer and deploy contract
-	t.Log("building contract_deployer")
-	contractDeployer, err := pool.BuildAndRunWithBuildOptions(
-		&dockertest.BuildOptions{
-			Dockerfile: "Dockerfile",
-			ContextDir: "./solidity",
-		},
+	t.Log("deploying contract_deployer")
+	contractDeployer, err := pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:      "contract_deployer",
+			Repository: "solidity",
+			Tag: "prebuilt",
 			NetworkID: network.Network.ID,
 			PortBindings: map[docker.Port][]docker.PortBinding{
 				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
 			},
 			Env: []string{},
-		},
-		hostConfig,
-	)
+		}, func(config *docker.HostConfig) {})
 	require.NoError(t, err, "error bringing up contract_deployer")
 	t.Logf("deployed contract_deployer at %s", contractDeployer.Container.ID)
-	if autoRemove {
-		defer func() {
-			contractDeployer.Close()
-		}()
-	}
+	defer func() {
+		contractDeployer.Close()
+	}()
 
 	container := contractDeployer.Container
 	for container.State.Running {
@@ -349,12 +320,15 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 		container, err = pool.Client.InspectContainer(contractDeployer.Container.ID)
 		require.NoError(t, err, "error inspecting contract deployer")
 	}
+	t.Logf("container no longer running: %s", container.State.String())
 
 	contractDeployerLogOutput := bytes.Buffer{}
 	err = pool.Client.Logs(docker.LogsOptions{
 		Container:    contractDeployer.Container.ID,
 		OutputStream: &contractDeployerLogOutput,
+		ErrorStream:  &contractDeployerLogOutput,
 		Stdout:       true,
+		Stderr:       true,
 	})
 	require.NoError(t, err, "error getting contract deployer logs")
 
@@ -368,19 +342,7 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	}
 	err = pool.RemoveContainerByName(container.Name)
 	require.NoError(t, err, "error removing contract deployer container")
-	require.NotEmptyf(t, gravityContract, "empty gravity contract")
-
-	// build orchestrators
-	for _, orchestrator := range chain.Orchestrators {
-		t.Logf("building %s", orchestrator.instanceName())
-		err = pool.Client.BuildImage(docker.BuildImageOptions{
-			Name:         orchestrator.instanceName(),
-			Dockerfile:   "Dockerfile",
-			ContextDir:   "./orchestrator",
-			OutputStream: ioutil.Discard,
-		})
-		require.NoError(t, err, "error building %s", orchestrator.instanceName())
-	}
+	require.NotEmptyf(t, gravityContract, "empty gravity contract: %s", contractDeployerLogOutput.String())
 
 	// deploy orchestrators
 	for _, orchestrator := range chain.Orchestrators {
@@ -400,18 +362,21 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 		runOpts := &dockertest.RunOptions{
 			Name:       orchestrator.instanceName(),
 			NetworkID:  network.Network.ID,
-			Repository: orchestrator.instanceName(),
+			Repository: "orchestrator",
+			Tag:        "prebuilt",
 			Env:        env,
 		}
 
 		resource, err := pool.RunWithOptions(runOpts, hostConfig)
 		require.NoError(t, err, "error bringing up %s", orchestrator.instanceName())
 		t.Logf("deployed %s at %s", orchestrator.instanceName(), resource.Container.ID)
-		if autoRemove {
-			defer func() {
-				resource.Close()
-			}()
-		}
+		defer func() {
+			resource.Close()
+		}()
+
+		// this is a hack, to see if the container has an error shortly after launching
+		time.Sleep(5)
+		require.True(t, resource.Container.State.Running, "orchestrator not running after 5 seconds")
 	}
 
 	// write test runner files to config directory
@@ -431,5 +396,53 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	writeFile(t, filepath.Join(chain.DataDir, "orchestrator-phrases"), []byte(strings.Join(orchestratorPhrases, "\n")))
 	writeFile(t, filepath.Join(chain.DataDir, "contracts"), contractDeployerLogOutput.Bytes())
 
-	cb(wd, pool, network)
+	testType := os.Getenv("TEST_TYPE")
+	if testType == "" {
+		testType = "HAPPY_PATH"
+	}
+
+	// bring up the test runner
+	t.Log("building and deploying test runner")
+	testRunner, err := pool.RunWithOptions(
+		&dockertest.RunOptions{
+			Name:       "test_runner",
+			Repository: "test-runner",
+			Tag:        "prebuilt",
+			NetworkID:  network.Network.ID,
+			PortBindings: map[docker.Port][]docker.PortBinding{
+				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
+			},
+			Mounts: []string{fmt.Sprintf("%s/testdata:/testdata", wd)},
+			Env: []string{
+				"RUST_BACKTRACE=full",
+				"RUST_LOG=INFO",
+				fmt.Sprintf("TEST_TYPE=%s", testType),
+			},
+		}, func(config *docker.HostConfig) {})
+
+	require.NoError(t, err, "error bringing up test runner")
+	t.Logf("deployed test runner at %s", contractDeployer.Container.ID)
+	defer func() {
+		testRunner.Close()
+	}()
+
+	container = testRunner.Container
+	for container.State.Running {
+		time.Sleep(10 * time.Second)
+		container, err = pool.Client.InspectContainer(testRunner.Container.ID)
+		require.NoError(t, err, "error inspecting test runner")
+	}
+
+	testRunnerOutput := bytes.Buffer{}
+	err = pool.Client.Logs(docker.LogsOptions{
+		Container:         testRunner.Container.ID,
+		ErrorStream:       &testRunnerOutput,
+		OutputStream:      &testRunnerOutput,
+		Stderr:            true,
+		Stdout:            true,
+		InactivityTimeout: time.Second * 60,
+	})
+	require.NoError(t, err, "error getting test_runner logs")
+	t.Logf("Test logs:\n%s", testRunnerOutput.String())
+	require.Equal(t, 0, container.State.ExitCode, "test_runner container exited with error")
 }
