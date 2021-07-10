@@ -1,4 +1,3 @@
-
 // This library should provide functions that support command line workflows that
 // - loads keys by name from a keystore
 //   on failure, because the named key does not exist, it offers to create it
@@ -19,8 +18,23 @@
 
 #[cfg(test)]
 mod tests {
+    use hkd32::mnemonic;
+    use rand_core;
+
+    // NOTE these are not _real_ tests. I'm using them to bring together dependencies and learn how to use them.
+    // NOTE run w/ `cargo test -- --nocapture` to see the println
+
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn create_random_mnemonic_phrase() {
+        let p = mnemonic::Phrase::random(&mut rand_core::OsRng, mnemonic::Language::English);
+        println!(">> {}", p.phrase());
+    }
+
+    #[test]
+    fn recover_phrase_from_mnemonic() {
+        const MNEMONIC: &str = "save able shop proud seek reflect prepare mechanic armor car core shuffle room axis file diet axis try secret evolve opinion prosper flush buyer";
+        let p = mnemonic::Phrase::new(MNEMONIC, mnemonic::Language::English);
+        let p = p.unwrap();
+        assert_eq!(MNEMONIC, p.phrase())
     }
 }
