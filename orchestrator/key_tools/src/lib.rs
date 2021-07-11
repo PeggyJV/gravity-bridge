@@ -27,22 +27,32 @@ mod tests {
     // NOTE these are not _real_ tests. I'm using them to bring together dependencies and learn how to use them.
     // NOTE run w/ `cargo test -- --nocapture` to see the println
 
+    // Questions:
+    // - How do I get from a mnemonic::Phrase to a pkcs8::PrivateKeyDocument (for keystore.store)?
+    //   -- maybe derive_subkey?? or possibly to_seed?? (latter requires a password)
+    // - What "display formats" do we care about?
+    //   -- and where can I find examples??
+
     #[test]
-    fn load_key_by_name() {
-        let tmp = tempfile::tempdir().expect("Failed to create temp dir!");
-        let keystore = FsKeyStore::create_or_open(&tmp.path().join("key-store"))
-            .expect("Failed to create or open key-store");
+    fn store_load_and_delete_my_key() {
+        let tempdir = tempfile::tempdir().expect("Could not create tempdir");
 
-        let my_key = secp256k1::SigningKey::generate_pkcs8();
+        let keystore = tempdir.path().join("keystore");
+        println!(">> {:?}", keystore);
 
-        let key_name = "my_key".parse().expect("Failed to parse key_name");
+        let keystore = FsKeyStore::create_or_open(&keystore)
+            .expect("Could not create or open keystore");
+
+        let key_name = "my_key".parse().expect("Could not parse key name");
 
         keystore
-            .store(&key_name, &my_key)
-            .expect("Failed to store my_key!");
+            .store(&key_name, &secp256k1::SigningKey::generate_pkcs8())
+            .expect("Could not store key");
 
-        let key_info = keystore.info(&key_name).expect("Failed to info my_key!");
+        let key_info = keystore.info(&key_name).expect("Could not lookup key");
         println!(">> {:?}", key_info);
+
+        keystore.delete(&key_name).expect("Could not delete key");
     }
 
     #[test]
