@@ -5,9 +5,13 @@ authors = []
 edition = "2018"
 
 [dependencies]
-rand_core = { version="0.6.3", features=["getrandom"] }
-signatory = "0.22.0"
-hkd32 = { version="0.6.0", features=["mnemonic"] }
+hkd32 = { version = "0.6.0", features = ["mnemonic"] }
+rand_core = { version = "0.6.3", features = ["getrandom"] }
+signatory = { version = "0.23.0-pre.2", features = [
+	"std",
+	"ecdsa",
+	"secp256k1",
+] }
 
 [dev-dependencies]
-log = "0.4"
+tempfile = "3.0.2"
