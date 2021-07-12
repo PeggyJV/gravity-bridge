@@ -1,3 +1,4 @@
+
 // This library should provide functions that support command line workflows that
 // - loads keys by name from a keystore
 //   on failure, because the named key does not exist, it offers to create it
@@ -7,7 +8,7 @@
 // - loads and converts keys to different representations used by different tools
 // - leverages the signatory crate to manage the keystore
 // - generates keys the hkd32 crate
-// - provides abscissa commands
+// - provides abscissa commands (maybe)
 //
 // todos for this library:
 // [ ] Function that loads a key from keystore by name then converts it to a given format
@@ -15,6 +16,20 @@
 //     - clarity
 //     - ethers
 //     - contact / deep_space
+
+// --------------------
+
+// Wondering if this "lib" should become a binary / stand-alone cli tool. 
+// This create could still provide a reusable abscissa command, but I think
+// but a standalone tool with usage like this feels worthwhile:
+//   `key-tool show my-key`
+//     - uses default location for the keystore (flag with default value)
+//     - prints several representations of the key (clarity, ethers, etc.)
+//     - if the keys isn't found
+//       - Key not found. Do you want to add it?
+//         1) With a recovery phrase?
+//         2) Generate a new key?
+//         3) Exit
 
 #[cfg(test)]
 mod tests {
