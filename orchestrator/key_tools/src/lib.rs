@@ -1,4 +1,3 @@
-
 // This library should provide functions that support command line workflows that
 // - loads keys by name from a keystore
 //   on failure, because the named key does not exist, it offers to create it
@@ -19,7 +18,7 @@
 
 // --------------------
 
-// Wondering if this "lib" should become a binary / stand-alone cli tool. 
+// Wondering if this "lib" should become a binary / stand-alone cli tool.
 // This create could still provide a reusable abscissa command, but I think
 // but a standalone tool with usage like this feels worthwhile:
 //   `key-tool show my-key`
@@ -49,14 +48,40 @@ mod tests {
     //   -- and where can I find examples??
 
     #[test]
+    fn convert_signatory_to_clarity_pubkey() {
+        let signatory_key = &secp256k1::SigningKey::generate_pkcs8();
+        println!("{}", signatory_key.to_pem().as_str());
+
+
+        println!(">> algorithm {:?}", signatory_key.private_key_info().algorithm);
+
+        // let clarity_key = clarity::private_key::PrivateKey::from_slice(
+        // signatory_key.private_key_info().private_key,
+        // )
+        // .expect("Could not create clarity key");
+        //
+        // let clarity_pubkey = clarity_key
+        // .to_public_key()
+        // .expect("Could not create clarity pub key");
+        //
+        // println!(">> {}", clarity_pubkey);
+    }
+
+    #[test]
+    fn convert_phrase_to_private_key_document() {
+        let phrase = mnemonic::Phrase::random(&mut rand_core::OsRng, mnemonic::Language::English);
+
+    }
+
+    #[test]
     fn store_load_and_delete_my_key() {
         let tempdir = tempfile::tempdir().expect("Could not create tempdir");
 
         let keystore = tempdir.path().join("keystore");
         println!(">> {:?}", keystore);
 
-        let keystore = FsKeyStore::create_or_open(&keystore)
-            .expect("Could not create or open keystore");
+        let keystore =
+            FsKeyStore::create_or_open(&keystore).expect("Could not create or open keystore");
 
         let key_name = "my_key".parse().expect("Could not parse key name");
 
