@@ -1858,6 +1858,7 @@ name = "key-tools"
 version = "0.1.0"
 dependencies = [
  "clarity",
+ "deep_space 2.4.3",
  "hkd32",
  "rand_core 0.6.3",
  "signatory",

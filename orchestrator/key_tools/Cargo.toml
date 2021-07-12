@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 clarity = "0.4.12"
+deep_space = "2.4.3"
 hkd32 = { version = "0.6.0", features = ["mnemonic"] }
 rand_core = { version = "0.6.3", features = ["getrandom"] }
 signatory = { version = "0.23.0-pre.2", features = [

@@ -32,12 +32,6 @@
 
 #[cfg(test)]
 mod tests {
-    use hkd32::mnemonic;
-    use rand_core;
-    use signatory::ecdsa::secp256k1;
-    use signatory::FsKeyStore;
-    use signatory::GeneratePkcs8;
-
     // NOTE these are not _real_ tests. I'm using them to bring together dependencies and learn how to use them.
     // NOTE run w/ `cargo test -- --nocapture` to see the println
 
@@ -46,31 +40,36 @@ mod tests {
     //   -- maybe derive_subkey?? or possibly to_seed?? (latter requires a password)
     // - What "display formats" do we care about?
     //   -- and where can I find examples??
+    use hkd32;
+    use rand_core;
+    use signatory::ecdsa::secp256k1;
+    use signatory::FsKeyStore;
+    use signatory::GeneratePkcs8;
+
+    const RECOVERY_PHRASE: &str = "save able shop proud seek reflect prepare mechanic armor car core shuffle room axis file diet axis try secret evolve opinion prosper flush buyer";
 
     #[test]
-    fn convert_signatory_to_clarity_pubkey() {
-        let signatory_key = &secp256k1::SigningKey::generate_pkcs8();
-        println!("{}", signatory_key.to_pem().as_str());
+    fn convert_pkcs8_to_clarity() {
+        // TODO(levi) convert signatory::pkcs8::PrivateKeyDocument to clarity::private_key::PrivateKey
+        let _pkcs8_key = &secp256k1::SigningKey::generate_pkcs8();
 
+        let _clarity_key: clarity::private_key::PrivateKey;
 
-        println!(">> algorithm {:?}", signatory_key.private_key_info().algorithm);
+        // clarity::private_key::PrivateKey::from_slice(_pkcs8_key.private_key_info().private_key).unwrap();
 
-        // let clarity_key = clarity::private_key::PrivateKey::from_slice(
-        // signatory_key.private_key_info().private_key,
-        // )
-        // .expect("Could not create clarity key");
-        //
-        // let clarity_pubkey = clarity_key
-        // .to_public_key()
-        // .expect("Could not create clarity pub key");
-        //
-        // println!(">> {}", clarity_pubkey);
+        // eg: let clarity_key = clarity::private_key::PrivateKey::from_slice(???).expect("Could not create clarity key");
     }
 
     #[test]
-    fn convert_phrase_to_private_key_document() {
-        let phrase = mnemonic::Phrase::random(&mut rand_core::OsRng, mnemonic::Language::English);
+    fn convert_hkd32_mnemonic_phrase_to_pkcs8() {
+        let lang = hkd32::mnemonic::Language::English;
+        let _key_material = hkd32::KeyMaterial::from_mnemonic(RECOVERY_PHRASE, lang)
+            .expect("Could not recover key material");
+        // key_material.as_bytes()
 
+        // let _signatory_key: signatory::pkcs8::PrivateKeyDocument;
+
+        // TODO(ugochi): figure out how to init _signatory_key from _phrase
     }
 
     #[test]
@@ -89,23 +88,55 @@ mod tests {
             .store(&key_name, &secp256k1::SigningKey::generate_pkcs8())
             .expect("Could not store key");
 
-        let key_info = keystore.info(&key_name).expect("Could not lookup key");
+        let key_info = keystore.info(&key_name).expect("Could not load key info");
         println!(">> {:?}", key_info);
 
         keystore.delete(&key_name).expect("Could not delete key");
     }
 
     #[test]
-    fn create_random_mnemonic_phrase() {
-        let p = mnemonic::Phrase::random(&mut rand_core::OsRng, mnemonic::Language::English);
+    fn explore_hkd32_mnemonic_create_phrase() {
+        let lang = hkd32::mnemonic::Language::English;
+        let p = hkd32::mnemonic::Phrase::random(&mut rand_core::OsRng, lang);
         println!(">> {}", p.phrase());
     }
 
     #[test]
-    fn recover_phrase_from_mnemonic() {
-        const MNEMONIC: &str = "save able shop proud seek reflect prepare mechanic armor car core shuffle room axis file diet axis try secret evolve opinion prosper flush buyer";
-        let p = mnemonic::Phrase::new(MNEMONIC, mnemonic::Language::English)
-            .expect("Failed to create phrase!");
-        assert_eq!(MNEMONIC, p.phrase())
+    fn explore_hkd32_mnemonic_recover_phrase() {
+        let lang = hkd32::mnemonic::Language::English;
+        let p = hkd32::mnemonic::Phrase::new(RECOVERY_PHRASE, lang);
+        let p = p.expect("Failed to create phrase!");
+        assert_eq!(p.phrase(), RECOVERY_PHRASE);
+
+        // Things you can do with p:
+        // p.derive_subkey(path: impl AsRef<Path>)
+        // p.to_seed(password: &str)
+        // p.entropy();
+        // p.language()
+    }
+
+    #[test]
+    fn explore_deep_space_from_phrase() {
+        let pass_phrase = "";
+        let _deep_space_key = deep_space::PrivateKey::from_phrase(RECOVERY_PHRASE, pass_phrase)
+            .expect("Could not generate key from phrase");
+
+        // _deep_space_key.0
+    }
+
+    #[test]
+    fn explore_xxx() {
+        // use signatory::ecdsa::elliptic_curve::AlgorithmParameters;
+        // let oid = signatory::ecdsa::Secp256k1::OID;
+
+        let oid = signatory::ecdsa::elliptic_curve::ALGORITHM_OID;
+        let oid = signatory::pkcs8::ObjectIdentifier::from(oid);
+
+        let aid = signatory::pkcs8::AlgorithmIdentifier {
+            oid,
+            parameters: None,
+        };
+
+        signatory::pkcs8::PrivateKeyInfo::new(aid, &[]);
     }
 }
