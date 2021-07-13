@@ -69,6 +69,7 @@ func CmdSendToEthereum() *cobra.Command {
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -102,6 +103,7 @@ func CmdCancelSendToEthereum() *cobra.Command {
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -150,17 +152,18 @@ func CmdSetDelegateKeys() *cobra.Command {
 				return err
 			}
 
-			valAddr, err := sdk.ValAddressFromHex(args[0])
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
-			orcAddr, err := sdk.AccAddressFromHex(args[1])
+			orcAddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 			ethAddr, err := parseContractAddress(args[2])
 			if err != nil {
 				return err
+			}
 
 			msg := types.NewMsgDelegateKeys(valAddr, orcAddr, ethAddr)
 			if err = msg.ValidateBasic(); err != nil {
