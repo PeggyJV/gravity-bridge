@@ -9,11 +9,10 @@ clarity = "0.4.12"
 deep_space = "2.4.3"
 hkd32 = { version = "0.6.0", features = ["mnemonic"] }
 rand_core = { version = "0.6.3", features = ["getrandom"] }
-signatory = { version = "0.23.0-pre.2", features = [
-	"std",
-	"ecdsa",
-	"secp256k1",
-] }
+bip32 = "0"
+k256 = { version = "0.7", features = ["pem"] }
+pkcs8 = { version = "0.3", features = ["pem"] }
+signatory = "0.23.0-pre"
 
 [dev-dependencies]
 tempfile = "3.0.2"
