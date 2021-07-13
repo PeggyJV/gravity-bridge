@@ -68,7 +68,7 @@ mod tests {
         println!{"{}", mnemonic.phrase()};
 
         let seed = mnemonic.to_seed("MYPASSWORD"); // There should be a way to collect passwords as an args or so.
-        let xprv = XPrv::new(seed).unwrap();
+        let xprv = XPrv::new(&seed).unwrap();
         // I don't know why I'm getting an error here. This should convert bip32 mnemonic_phrase to pkcs8
         let private_key_der = k256::SecretKey::from(xprv.private_key()).to_pkcs8_der();
         let keystore_path = Path::new("keystore");
