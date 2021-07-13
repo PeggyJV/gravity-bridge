@@ -61,21 +61,17 @@ mod tests {
     }
 
     #[test]
-    fn convert_hkd32_mnemonic_phrase_to_pkcs8() {
+    fn convert_bip32_mnemonic_phrase_to_pkcs8() {
         let mnemonic = Mnemonic::random(&mut OsRng, Default::default());
         println!{"**Important** write this mnemonic in a safe place.\n"}
 
         println!{"{}", mnemonic.phrase()};
 
-        let seed = mnemonic.to_seed("MYPASSWORD"); // todo: password argument
+        let seed = mnemonic.to_seed("MYPASSWORD"); // There should be a way to collect passwords as an args or so.
         let xprv = XPrv::new(seed).unwrap();
+        // I don't know why I'm getting an error here. This should convert bip32 mnemonic_phrase to pkcs8
         let private_key_der = k256::SecretKey::from(xprv.private_key()).to_pkcs8_der();
         let keystore_path = Path::new("keystore");
-        if !keystore_path.exists() {
-            FsKeyStore::create(keystore_path).unwrap();
-        }
-        let keystore = FsKeyStore::open(keystore_path).unwrap();
-        keystore.store(&name: String, &private_key_der).unwrap();
         // key_material.as_bytes()
 
         // let _signatory_key: signatory::pkcs8::PrivateKeyDocument;
