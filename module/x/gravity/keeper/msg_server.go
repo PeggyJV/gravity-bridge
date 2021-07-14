@@ -29,47 +29,79 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys) (*types.MsgDelegateKeysResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	orch, err := sdk.AccAddressFromBech32(msg.OrchestratorAddress)
+	orchAddr, err := sdk.AccAddressFromBech32(msg.OrchestratorAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	eth := common.HexToAddress(msg.EthereumAddress)
+	ethAddr := common.HexToAddress(msg.EthereumAddress)
 
 	// ensure that the validator exists
-	if k.Keeper.StakingKeeper.Validator(ctx, val) == nil {
-		return nil, sdkerrors.Wrap(stakingtypes.ErrNoValidatorFound, val.String())
+	if k.Keeper.StakingKeeper.Validator(ctx, valAddr) == nil {
+		return nil, sdkerrors.Wrap(stakingtypes.ErrNoValidatorFound, valAddr.String())
 	}
 
-	// check ethereum address is not currently used
-	validators := k.getValidatorsByEthereumAddress(ctx, eth)
+	// NOTE: If a validator previously set their delegate keys, then there must
+	// exist Ethereum and orchestrator keys for that validator. In this case, we
+	// delete the values and allow the validator to update them, being sure to
+	// reset the keys to their original values in the case of either of the new
+	// keys existing.
+	//
+	// Otherwise, we treat the validator as it is setting their delegate keys for
+	// the first time and only erroring if either of the keys exist.
+
+	currEthAddr := k.GetValidatorEthereumAddress(ctx, valAddr)
+	if len(currEthAddr) > 0 {
+		k.DeleteValidatorEthereumAddress(ctx, valAddr)
+	}
+
+	// check if Ethereum address is currently not used
+	validators := k.getValidatorsByEthereumAddress(ctx, ethAddr)
 	if len(validators) > 0 {
-		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "ethereum address %s in use", eth)
+		if len(currEthAddr) > 0 {
+			// reset to the original value in case of failure
+			k.setValidatorEthereumAddress(ctx, valAddr, currEthAddr)
+		}
+
+		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "ethereum address %s in use", ethAddr)
+	}
+
+	currOrchAddr := k.GetEthereumOrchestratorAddress(ctx, currEthAddr)
+	if len(currOrchAddr) > 0 {
+		k.DeleteEthereumOrchestratorAddress(ctx, ethAddr)
 	}
 
 	// check orchestrator is not currently used
-	ethAddrs := k.getEthereumAddressesByOrchestrator(ctx, orch)
+	ethAddrs := k.getEthereumAddressesByOrchestrator(ctx, orchAddr)
 	if len(ethAddrs) > 0 {
-		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "orchestrator address %s in use", orch)
+		if len(currOrchAddr) > 0 {
+			// reset to the original value in case of failure
+			k.setEthereumOrchestratorAddress(ctx, currEthAddr, currOrchAddr)
+		}
+		if len(currEthAddr) > 0 {
+			// reset to the original value in case of failure
+			k.setValidatorEthereumAddress(ctx, valAddr, currEthAddr)
+		}
+
+		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "orchestrator address %s in use", orchAddr)
 	}
 
-	// set the three indexes
-	k.SetOrchestratorValidatorAddress(ctx, val, orch)
-	k.setValidatorEthereumAddress(ctx, val, eth)
-	k.setEthereumOrchestratorAddress(ctx, eth, orch)
+	k.SetOrchestratorValidatorAddress(ctx, valAddr, orchAddr)
+	k.setValidatorEthereumAddress(ctx, valAddr, ethAddr)
+	k.setEthereumOrchestratorAddress(ctx, ethAddr, orchAddr)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, msg.Type()),
-			sdk.NewAttribute(types.AttributeKeySetOrchestratorAddr, orch.String()),
-			sdk.NewAttribute(types.AttributeKeySetEthereumAddr, eth.Hex()),
-			sdk.NewAttribute(types.AttributeKeyValidatorAddr, val.String()),
+			sdk.NewAttribute(types.AttributeKeySetOrchestratorAddr, orchAddr.String()),
+			sdk.NewAttribute(types.AttributeKeySetEthereumAddr, ethAddr.Hex()),
+			sdk.NewAttribute(types.AttributeKeyValidatorAddr, valAddr.String()),
 		),
 	)
 
