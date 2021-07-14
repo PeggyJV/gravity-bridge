@@ -182,6 +182,15 @@ func (k Keeper) GetValidatorEthereumAddress(ctx sdk.Context, valAddr sdk.ValAddr
 	return common.BytesToAddress(store.Get(key))
 }
 
+// DeleteValidatorEthereumAddress removes a registered Ethereum address from
+// state.
+func (k Keeper) DeleteValidatorEthereumAddress(ctx sdk.Context, valAddr sdk.ValAddress) common.Address {
+	store := ctx.KVStore(k.storeKey)
+	key := types.MakeValidatorEthereumAddressKey(valAddr)
+
+	return common.BytesToAddress(store.Get(key))
+}
+
 func (k Keeper) getValidatorsByEthereumAddress(ctx sdk.Context, ethAddr common.Address) (vals []sdk.ValAddress) {
 	iter := ctx.KVStore(k.storeKey).Iterator(nil, nil)
 
