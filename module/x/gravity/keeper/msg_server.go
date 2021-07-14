@@ -29,9 +29,16 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys) (*types.MsgDelegateKeysResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	// these errors are checked in validate basic
-	val, _ := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	orch, _ := sdk.AccAddressFromBech32(msg.OrchestratorAddress)
+	val, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	orch, err := sdk.AccAddressFromBech32(msg.OrchestratorAddress)
+	if err != nil {
+		return nil, err
+	}
+
 	eth := common.HexToAddress(msg.EthereumAddress)
 
 	// ensure that the validator exists
@@ -42,13 +49,13 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 	// check ethereum address is not currently used
 	validators := k.getValidatorsByEthereumAddress(ctx, eth)
 	if len(validators) > 0 {
-		return nil, sdkerrors.Wrap(fmt.Errorf("ethereum address %s in use", eth.String()), fmt.Sprintf("%s", validators))
+		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "ethereum address %s in use", eth)
 	}
 
 	// check orchestrator is not currently used
 	ethAddrs := k.getEthereumAddressesByOrchestrator(ctx, orch)
 	if len(ethAddrs) > 0 {
-		return nil, sdkerrors.Wrap(fmt.Errorf("orchestrator address %s in use", orch.String()), fmt.Sprintf("%s", ethAddrs))
+		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "orchestrator address %s in use", orch)
 	}
 
 	// set the three indexes
@@ -67,7 +74,6 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 	)
 
 	return &types.MsgDelegateKeysResponse{}, nil
-
 }
 
 // SubmitEthereumTxConfirmation handles MsgSubmitEthereumTxConfirmation
