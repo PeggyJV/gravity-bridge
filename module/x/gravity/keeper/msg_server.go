@@ -60,7 +60,7 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 		k.DeleteValidatorEthereumAddress(ctx, valAddr)
 	}
 
-	// check if Ethereum address is currently not used
+	// check if the Ethereum address is currently not used
 	validators := k.getValidatorsByEthereumAddress(ctx, ethAddr)
 	if len(validators) > 0 {
 		if len(currEthAddr) > 0 {
@@ -76,7 +76,7 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 		k.DeleteEthereumOrchestratorAddress(ctx, ethAddr)
 	}
 
-	// check orchestrator is not currently used
+	// check if the orchestrator address is currently not used
 	ethAddrs := k.getEthereumAddressesByOrchestrator(ctx, orchAddr)
 	if len(ethAddrs) > 0 {
 		if len(currOrchAddr) > 0 {
