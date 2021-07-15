@@ -298,7 +298,10 @@ func TestMsgServer_SubmitEthereumEvent(t *testing.T) {
 }
 
 func TestMsgServer_SetDelegateKeys(t *testing.T) {
-	ethPrivKey, err := ethCrypto.GenerateKey()
+	ethPrivKey1, err := ethCrypto.GenerateKey()
+	require.NoError(t, err)
+
+	ethPrivKey2, err := ethCrypto.GenerateKey()
 	require.NoError(t, err)
 
 	var (
@@ -306,9 +309,13 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 		ctx = env.Context
 		gk  = env.GravityKeeper
 
-		orcAddr1, _ = sdk.AccAddressFromBech32("cosmos1dg55rtevlfxh46w88yjpdd08sqhh5cc3xhkcej")
-		valAddr1    = sdk.ValAddress(orcAddr1)
-		ethAddr1    = crypto.PubkeyToAddress(ethPrivKey.PublicKey)
+		orcAddr1 = sdk.AccAddress("addr1_______________")
+		valAddr1 = sdk.ValAddress(orcAddr1)
+		ethAddr1 = crypto.PubkeyToAddress(ethPrivKey1.PublicKey)
+
+		orcAddr2 = sdk.AccAddress("addr2_______________")
+		valAddr2 = sdk.ValAddress(orcAddr2)
+		ethAddr2 = crypto.PubkeyToAddress(ethPrivKey2.PublicKey)
 	)
 
 	// setup for getSignerValidator
@@ -321,9 +328,24 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 		OrchestratorAddress: orcAddr1.String(),
 		EthereumAddress:     ethAddr1.String(),
 	}
-
 	_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), msg)
 	require.NoError(t, err)
+
+	otherValMsg := &types.MsgDelegateKeys{
+		ValidatorAddress:    valAddr2.String(),
+		OrchestratorAddress: orcAddr1.String(),
+		EthereumAddress:     ethAddr1.String(),
+	}
+	_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), otherValMsg)
+	require.Error(t, err)
+
+	otherValMsg = &types.MsgDelegateKeys{
+		ValidatorAddress:    valAddr2.String(),
+		OrchestratorAddress: orcAddr1.String(),
+		EthereumAddress:     ethAddr2.String(),
+	}
+	_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), otherValMsg)
+	require.Error(t, err)
 }
 
 func TestMsgServer_SetDelegateKeys_Existing(t *testing.T) {
