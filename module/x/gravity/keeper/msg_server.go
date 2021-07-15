@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
@@ -54,16 +55,17 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 	//
 	// Otherwise, we treat the validator as it is setting their delegate keys for
 	// the first time and only erroring if either of the keys exist.
+	var emptyEthAddr common.Address
 
 	currEthAddr := k.GetValidatorEthereumAddress(ctx, valAddr)
-	if len(currEthAddr) > 0 {
+	if !bytes.Equal(emptyEthAddr.Bytes(), currEthAddr.Bytes()) {
 		k.DeleteValidatorEthereumAddress(ctx, valAddr)
 	}
 
 	// check if the Ethereum address is currently not used
 	validators := k.getValidatorsByEthereumAddress(ctx, ethAddr)
 	if len(validators) > 0 {
-		if len(currEthAddr) > 0 {
+		if !bytes.Equal(emptyEthAddr.Bytes(), currEthAddr.Bytes()) {
 			// reset to the original value in case of failure
 			k.setValidatorEthereumAddress(ctx, valAddr, currEthAddr)
 		}
@@ -80,7 +82,7 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 	// check if the orchestrator address is currently not used
 	ethAddrs := k.getEthereumAddressesByOrchestrator(ctx, orchAddr)
 	if len(ethAddrs) > 0 {
-		if len(currEthAddr) > 0 {
+		if !bytes.Equal(emptyEthAddr.Bytes(), currEthAddr.Bytes()) {
 			// reset to the original value in case of failure
 			k.setValidatorEthereumAddress(ctx, valAddr, currEthAddr)
 		}
