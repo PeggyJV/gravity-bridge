@@ -417,7 +417,16 @@ func TestMsgServer_SetDelegateKeys_Existing(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 			_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), tc.msg)
-			require.Equalf(t, tc.expectErr, err != nil, "unexpected result: %v", err)
+			if err != nil {
+				require.Error(t, err, "expected error")
+
+				// ensure values remain unchanged in case of error
+				currEthAddr := gk.GetValidatorEthereumAddress(ctx, valAddr1)
+				require.Equal(t, valMsg.EthereumAddress, currEthAddr.String())
+				require.Equal(t, valMsg.OrchestratorAddress, gk.GetEthereumOrchestratorAddress(ctx, currEthAddr).String())
+			} else {
+				require.NoError(t, err, "unexpected error")
+			}
 
 			// reset state
 			_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), valMsg)
