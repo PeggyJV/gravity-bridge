@@ -325,3 +325,103 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 	_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), msg)
 	require.NoError(t, err)
 }
+
+func TestMsgServer_SetDelegateKeys_Existing(t *testing.T) {
+	ethPrivKey1, err := ethCrypto.GenerateKey()
+	require.NoError(t, err)
+
+	ethPrivKey2, err := ethCrypto.GenerateKey()
+	require.NoError(t, err)
+
+	ethPrivKeyOther, err := ethCrypto.GenerateKey()
+	require.NoError(t, err)
+
+	var (
+		env = CreateTestEnv(t)
+		ctx = env.Context
+		gk  = env.GravityKeeper
+
+		orcAddr1 = sdk.AccAddress("addr1_______________")
+		valAddr1 = sdk.ValAddress(orcAddr1)
+		ethAddr1 = crypto.PubkeyToAddress(ethPrivKey1.PublicKey)
+
+		orcAddr2 = sdk.AccAddress("addr2_______________")
+		ethAddr2 = crypto.PubkeyToAddress(ethPrivKey2.PublicKey)
+
+		orcAddrOther = sdk.AccAddress("addrOther___________")
+		valAddrOther = sdk.ValAddress(orcAddrOther)
+		ethAddrOther = crypto.PubkeyToAddress(ethPrivKeyOther.PublicKey)
+	)
+
+	// setup for getSignerValidator
+	gk.StakingKeeper = NewStakingKeeperMock(valAddr1, valAddrOther)
+
+	msgServer := NewMsgServerImpl(gk)
+
+	valMsg := &types.MsgDelegateKeys{
+		ValidatorAddress:    valAddr1.String(),
+		OrchestratorAddress: orcAddr1.String(),
+		EthereumAddress:     ethAddr1.String(),
+	}
+	_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), valMsg)
+	require.NoError(t, err)
+
+	otherValMsg := &types.MsgDelegateKeys{
+		ValidatorAddress:    valAddrOther.String(),
+		OrchestratorAddress: orcAddrOther.String(),
+		EthereumAddress:     ethAddrOther.String(),
+	}
+	_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), otherValMsg)
+	require.NoError(t, err)
+
+	testCases := map[string]struct {
+		msg       *types.MsgDelegateKeys
+		expectErr bool
+	}{
+		"both keys are available": {
+			msg: &types.MsgDelegateKeys{
+				ValidatorAddress:    valAddr1.String(),
+				OrchestratorAddress: orcAddr2.String(),
+				EthereumAddress:     ethAddr2.String(),
+			},
+			expectErr: false,
+		},
+		"neither key is available": {
+			msg: &types.MsgDelegateKeys{
+				ValidatorAddress:    valAddr1.String(),
+				OrchestratorAddress: orcAddrOther.String(),
+				EthereumAddress:     ethAddrOther.String(),
+			},
+			expectErr: true,
+		},
+		"either key is available (orchestrator)": {
+			msg: &types.MsgDelegateKeys{
+				ValidatorAddress:    valAddr1.String(),
+				OrchestratorAddress: orcAddr2.String(),
+				EthereumAddress:     ethAddrOther.String(),
+			},
+			expectErr: true,
+		},
+		"either key is available (ethereum)": {
+			msg: &types.MsgDelegateKeys{
+				ValidatorAddress:    valAddr1.String(),
+				OrchestratorAddress: orcAddrOther.String(),
+				EthereumAddress:     ethAddr2.String(),
+			},
+			expectErr: true,
+		},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), tc.msg)
+			require.Equalf(t, tc.expectErr, err != nil, "unexpected result: %v", err)
+
+			// reset state
+			_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), valMsg)
+			require.NoError(t, err)
+		})
+	}
+}
