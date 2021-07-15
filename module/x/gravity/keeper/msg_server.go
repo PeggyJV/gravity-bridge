@@ -73,19 +73,21 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 
 	currOrchAddr := k.GetEthereumOrchestratorAddress(ctx, currEthAddr)
 	if len(currOrchAddr) > 0 {
-		k.DeleteEthereumOrchestratorAddress(ctx, ethAddr)
+		k.DeleteEthereumOrchestratorAddress(ctx, currEthAddr)
+		k.DeleteOrchestratorValidatorAddress(ctx, currOrchAddr)
 	}
 
 	// check if the orchestrator address is currently not used
 	ethAddrs := k.getEthereumAddressesByOrchestrator(ctx, orchAddr)
 	if len(ethAddrs) > 0 {
-		if len(currOrchAddr) > 0 {
-			// reset to the original value in case of failure
-			k.setEthereumOrchestratorAddress(ctx, currEthAddr, currOrchAddr)
-		}
 		if len(currEthAddr) > 0 {
 			// reset to the original value in case of failure
 			k.setValidatorEthereumAddress(ctx, valAddr, currEthAddr)
+		}
+		if len(currOrchAddr) > 0 {
+			// reset to the original value in case of failure
+			k.setEthereumOrchestratorAddress(ctx, currEthAddr, currOrchAddr)
+			k.SetOrchestratorValidatorAddress(ctx, valAddr, currOrchAddr)
 		}
 
 		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "orchestrator address %s in use", orchAddr)
