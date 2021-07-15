@@ -152,14 +152,30 @@ func (k Keeper) iterateEthereumSignatures(ctx sdk.Context, storeIndex []byte, cb
 //  ORC -> VAL ADDRESS //
 /////////////////////////
 
-// SetOrchestratorValidatorAddress sets the Orchestrator key for a given validator
-func (k Keeper) SetOrchestratorValidatorAddress(ctx sdk.Context, val sdk.ValAddress, orch sdk.AccAddress) {
-	ctx.KVStore(k.storeKey).Set(types.MakeOrchestratorValidatorAddressKey(orch), val.Bytes())
+// SetOrchestratorValidatorAddress sets the Orchestrator key for a given validator.
+func (k Keeper) SetOrchestratorValidatorAddress(ctx sdk.Context, val sdk.ValAddress, orchAddr sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.MakeOrchestratorValidatorAddressKey(orchAddr)
+
+	store.Set(key, val.Bytes())
 }
 
-// GetOrchestratorValidatorAddress returns the validator key associated with an orchestrator key
-func (k Keeper) GetOrchestratorValidatorAddress(ctx sdk.Context, orch sdk.AccAddress) sdk.ValAddress {
-	return sdk.ValAddress(ctx.KVStore(k.storeKey).Get(types.MakeOrchestratorValidatorAddressKey(orch)))
+// GetOrchestratorValidatorAddress returns the validator key associated with an
+// orchestrator key.
+func (k Keeper) GetOrchestratorValidatorAddress(ctx sdk.Context, orchAddr sdk.AccAddress) sdk.ValAddress {
+	store := ctx.KVStore(k.storeKey)
+	key := types.MakeOrchestratorValidatorAddressKey(orchAddr)
+
+	return sdk.ValAddress(store.Get(key))
+}
+
+// DeleteOrchestratorValidatorAddress removes a registered orchestrator key for a
+// given validator.
+func (k Keeper) DeleteOrchestratorValidatorAddress(ctx sdk.Context, orchAddr sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.MakeOrchestratorValidatorAddressKey(orchAddr)
+
+	store.Delete(key)
 }
 
 ////////////////////////
@@ -184,11 +200,11 @@ func (k Keeper) GetValidatorEthereumAddress(ctx sdk.Context, valAddr sdk.ValAddr
 
 // DeleteValidatorEthereumAddress removes a registered Ethereum address from
 // state.
-func (k Keeper) DeleteValidatorEthereumAddress(ctx sdk.Context, valAddr sdk.ValAddress) common.Address {
+func (k Keeper) DeleteValidatorEthereumAddress(ctx sdk.Context, valAddr sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.MakeValidatorEthereumAddressKey(valAddr)
 
-	return common.BytesToAddress(store.Get(key))
+	store.Delete(key)
 }
 
 func (k Keeper) getValidatorsByEthereumAddress(ctx sdk.Context, ethAddr common.Address) (vals []sdk.ValAddress) {
