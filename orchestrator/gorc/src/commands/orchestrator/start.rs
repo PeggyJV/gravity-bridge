@@ -1,5 +1,5 @@
-// use crate::application::APP;
-use abscissa_core::{Command, Options, Runnable};
+use crate::application::APP;
+use abscissa_core::{Application, Command, Options, Runnable};
 // use clarity::address::Address as EthAddress;
 // use clarity::PrivateKey as EthPrivateKey;
 // use deep_space::Contact;
@@ -10,11 +10,20 @@ use abscissa_core::{Command, Options, Runnable};
 
 #[derive(Command, Debug, Options)]
 pub struct StartCommand {
-    //
+    #[options(help = "cosmos key name")]
+    cosmos_key_name: String,
+
+    #[options(help = "ethereum key name")]
+    eth_key_name: String,
 }
 
 impl Runnable for StartCommand {
     fn run(&self) {
+        let config = APP.config();
+
+        let cosmos_key = config.load_deep_space_key(self.cosmos_key_name.to_string());
+        let _ = cosmos_key; // XXX deleteme
+
         //      let cosmos_key: deep_space::private_key::PrivateKey; // TODO init from keystore
         //      let ethereum_key: EthPrivateKey; // TODO init from keystore
 

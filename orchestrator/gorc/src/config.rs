@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use signatory::FsKeyStore;
+use std::path::Path;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -7,6 +9,26 @@ pub struct GorcConfig {
     pub gravity: GravitySection,
     pub ethereum: EthereumSection,
     pub cosmos: CosmosSection,
+}
+
+impl GorcConfig {
+    pub fn load_deep_space_key(&self, name: String) -> deep_space::private_key::PrivateKey {
+        let keystore = Path::new(&self.keystore);
+        let keystore = FsKeyStore::create_or_open(keystore).expect("Could not open keystore");
+        let name = name.parse().expect("Could not parse name");
+        let key = keystore.load(&name).expect("Could not load key");
+
+        let key = key
+            .to_pem()
+            .parse::<k256::elliptic_curve::SecretKey<k256::Secp256k1>>()
+            .expect("Could not parse key");
+
+        let key = deep_space::utils::bytes_to_hex_str(&key.to_bytes());
+
+        return key
+            .parse::<deep_space::private_key::PrivateKey>()
+            .expect("Could not parse private key");
+    }
 }
 
 impl Default for GorcConfig {
