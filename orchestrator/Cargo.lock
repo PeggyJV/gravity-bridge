@@ -1525,6 +1525,7 @@ dependencies = [
  "pkcs8",
  "rand_core 0.6.2",
  "regex",
+ "relayer",
  "rpassword",
  "serde",
  "signatory",

@@ -1,12 +1,15 @@
-use crate::application::APP;
-use abscissa_core::{Application, Command, Options, Runnable};
+use crate::{application::APP, prelude::*};
+use abscissa_core::{Command, Options, Runnable};
 use clarity::address::Address as EthAddress;
-// use clarity::PrivateKey as EthPrivateKey;
-// use deep_space::Contact;
-// use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-// use orchestrator::main_loop::orchestrator_main_loop;
-// use tonic::transport::Channel;
-// use web30::client::Web3;
+use gravity_utils::connection_prep::{
+    check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
+    wait_for_cosmos_node_ready,
+};
+use orchestrator::main_loop::{
+    orchestrator_main_loop, ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED,
+};
+use relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
+use std::cmp::min;
 
 #[derive(Command, Debug, Options)]
 pub struct StartCommand {
@@ -20,10 +23,13 @@ pub struct StartCommand {
 impl Runnable for StartCommand {
     fn run(&self) {
         let config = APP.config();
+        let cosmos_prefix = config.cosmos.prefix.clone();
 
         let cosmos_key = config.load_deep_space_key(self.cosmos_key.clone());
+        let cosmos_address = cosmos_key.to_address(&cosmos_prefix).unwrap();
 
         let ethereum_key = config.load_clarity_key(self.ethereum_key.clone());
+        let ethereum_address = ethereum_key.to_public_key().unwrap();
 
         let contract_address: EthAddress = config
             .gravity
@@ -31,28 +37,62 @@ impl Runnable for StartCommand {
             .parse()
             .expect("Could not parse gravity contract address");
 
-        let pay_fees_in = config.gravity.fees_denom.clone();
+        let fees_denom = config.gravity.fees_denom.clone();
 
-        let _ = cosmos_key; // XXX deleteme
-        let _ = ethereum_key; // XXX deleteme
-        let _ = contract_address; // XXX deleteme
-        let _ = pay_fees_in; // XXX deleteme
+        let timeout = min(
+            min(ETH_SIGNER_LOOP_SPEED, ETH_ORACLE_LOOP_SPEED),
+            RELAYER_LOOP_SPEED,
+        );
 
-        //      let web3: Web3; // TODO init from config
-        //      let contact: Contact; // TODO init from config
-        //      let grpc_client: GravityQueryClient<Channel>; // TODO init from config
+        abscissa_tokio::run(&APP, async {
+            let connections = create_rpc_connections(
+                cosmos_prefix,
+                Some(config.cosmos.grpc.clone()),
+                Some(config.ethereum.rpc.clone()),
+                timeout,
+            )
+            .await;
 
-        //      abscissa_tokio::run(&APP, async {
-        //          orchestrator_main_loop(
-        //              cosmos_key,
-        //              ethereum_key,
-        //              web3,
-        //              contact,
-        //              grpc_client,
-        //              gravity_contract_address,
-        //              pay_fees_in,
-        //          )
-        //          .await;
-        //      });
+            let mut grpc = connections.grpc.clone().unwrap();
+            let contact = connections.contact.clone().unwrap();
+            let web3 = connections.web3.clone().unwrap();
+
+            info!("Starting Relayer + Oracle + Ethereum Signer");
+            info!("Ethereum Address: {}", ethereum_address);
+            info!("Cosmos Address {}", cosmos_address);
+
+            // check if the cosmos node is syncing, if so wait for it
+            // we can't move any steps above this because they may fail on an incorrect
+            // historic chain state while syncing occurs
+            wait_for_cosmos_node_ready(&contact).await;
+
+            // check if the delegate addresses are correctly configured
+            check_delegate_addresses(
+                &mut grpc,
+                ethereum_address,
+                cosmos_address,
+                &contact.get_prefix(),
+            )
+            .await;
+
+            // check if we actually have the promised balance of tokens to pay fees
+            check_for_fee_denom(&fees_denom, cosmos_address, &contact).await;
+            check_for_eth(ethereum_address, &web3).await;
+
+            orchestrator_main_loop(
+                cosmos_key,
+                ethereum_key,
+                web3,
+                contact,
+                grpc,
+                contract_address,
+                fees_denom,
+            )
+            .await;
+        })
+        .unwrap_or_else(|e| {
+            status_err!("executor exited with error: {}", e);
+            std::process::exit(1);
+        });
     }
 }
