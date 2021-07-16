@@ -1521,6 +1521,7 @@ dependencies = [
  "gumdrop",
  "k256",
  "once_cell",
+ "orchestrator",
  "pkcs8",
  "rand_core 0.6.2",
  "regex",
@@ -1529,6 +1530,7 @@ dependencies = [
  "signatory",
  "thiserror",
  "tokio 1.5.0",
+ "tonic",
  "web30",
 ]
 
