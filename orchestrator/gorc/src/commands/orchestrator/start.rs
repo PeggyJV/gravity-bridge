@@ -31,14 +31,16 @@ impl Runnable for StartCommand {
             .parse()
             .expect("Could not parse gravity contract address");
 
+        let pay_fees_in = config.gravity.fees_denom.clone();
+
         let _ = cosmos_key; // XXX deleteme
         let _ = ethereum_key; // XXX deleteme
         let _ = contract_address; // XXX deleteme
+        let _ = pay_fees_in; // XXX deleteme
 
         //      let web3: Web3; // TODO init from config
         //      let contact: Contact; // TODO init from config
         //      let grpc_client: GravityQueryClient<Channel>; // TODO init from config
-        //      let pay_fees_in: String; // TODO init from config
 
         //      abscissa_tokio::run(&APP, async {
         //          orchestrator_main_loop(
