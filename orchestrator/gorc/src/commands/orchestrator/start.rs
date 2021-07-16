@@ -1,6 +1,6 @@
 use crate::application::APP;
 use abscissa_core::{Application, Command, Options, Runnable};
-// use clarity::address::Address as EthAddress;
+use clarity::address::Address as EthAddress;
 // use clarity::PrivateKey as EthPrivateKey;
 // use deep_space::Contact;
 // use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
@@ -22,15 +22,22 @@ impl Runnable for StartCommand {
         let config = APP.config();
 
         let cosmos_key = config.load_deep_space_key(self.cosmos_key.clone());
-        let _ = cosmos_key; // XXX deleteme
 
         let ethereum_key = config.load_clarity_key(self.ethereum_key.clone());
+
+        let contract_address: EthAddress = config
+            .gravity
+            .contract
+            .parse()
+            .expect("Could not parse gravity contract address");
+
+        let _ = cosmos_key; // XXX deleteme
         let _ = ethereum_key; // XXX deleteme
+        let _ = contract_address; // XXX deleteme
 
         //      let web3: Web3; // TODO init from config
         //      let contact: Contact; // TODO init from config
         //      let grpc_client: GravityQueryClient<Channel>; // TODO init from config
-        //      let gravity_contract_address: EthAddress; // TODO init from config
         //      let pay_fees_in: String; // TODO init from config
 
         //      abscissa_tokio::run(&APP, async {
