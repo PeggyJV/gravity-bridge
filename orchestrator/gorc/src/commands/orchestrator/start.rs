@@ -11,23 +11,22 @@ use abscissa_core::{Application, Command, Options, Runnable};
 #[derive(Command, Debug, Options)]
 pub struct StartCommand {
     #[options(help = "cosmos key name")]
-    cosmos_key_name: String,
+    cosmos_key: String,
 
     #[options(help = "ethereum key name")]
-    eth_key_name: String,
+    ethereum_key: String,
 }
 
 impl Runnable for StartCommand {
     fn run(&self) {
         let config = APP.config();
 
-        let cosmos_key = config.load_deep_space_key(self.cosmos_key_name.to_string());
+        let cosmos_key = config.load_deep_space_key(self.cosmos_key.clone());
         let _ = cosmos_key; // XXX deleteme
 
-        //      let cosmos_key: deep_space::private_key::PrivateKey; // TODO init from keystore
-        //      let ethereum_key: EthPrivateKey; // TODO init from keystore
+        let ethereum_key = config.load_clarity_key(self.ethereum_key.clone());
+        let _ = ethereum_key; // XXX deleteme
 
-        //      // let config = APP.config();
         //      let web3: Web3; // TODO init from config
         //      let contact: Contact; // TODO init from config
         //      let grpc_client: GravityQueryClient<Channel>; // TODO init from config

@@ -11,9 +11,7 @@ pub struct ShowCosmosKeyCmd {
 impl Runnable for ShowCosmosKeyCmd {
     fn run(&self) {
         let config = APP.config();
-
         let name = self.args.get(0).expect("name is required");
-
         let key = config.load_deep_space_key(name.clone());
 
         let address = key
