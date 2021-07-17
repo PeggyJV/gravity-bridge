@@ -58,6 +58,27 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "orchestrator address %s in use", orchAddr)
 	}
 
+	valAccAddr := sdk.AccAddress(valAddr)
+	valAccSeq, err := k.accountKeeper.GetSequence(ctx, valAccAddr)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "failed to get sequence for validator account %s", valAccAddr)
+	}
+
+	signMsgBz := k.cdc.MustMarshalBinaryBare(&types.DelegateKeysSignMsg{
+		ValidatorAddress: valAddr.String(),
+		// We decrement since we process the message after the ante-handler which
+		// increments the nonce.
+		Nonce: valAccSeq - 1,
+	})
+
+	if err = types.ValidateEthereumSignature(signMsgBz, msg.EthSignature, ethAddr); err != nil {
+		return nil, sdkerrors.Wrapf(
+			types.ErrDelegateKeys,
+			"failed to validate delegate keys signature for address %s",
+			ethAddr,
+		)
+	}
+
 	k.SetOrchestratorValidatorAddress(ctx, valAddr, orchAddr)
 	k.setValidatorEthereumAddress(ctx, valAddr, ethAddr)
 	k.setEthereumOrchestratorAddress(ctx, ethAddr, orchAddr)
