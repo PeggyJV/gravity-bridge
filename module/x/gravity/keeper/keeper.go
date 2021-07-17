@@ -152,14 +152,21 @@ func (k Keeper) iterateEthereumSignatures(ctx sdk.Context, storeIndex []byte, cb
 //  ORC -> VAL ADDRESS //
 /////////////////////////
 
-// SetOrchestratorValidatorAddress sets the Orchestrator key for a given validator
-func (k Keeper) SetOrchestratorValidatorAddress(ctx sdk.Context, val sdk.ValAddress, orch sdk.AccAddress) {
-	ctx.KVStore(k.storeKey).Set(types.MakeOrchestratorValidatorAddressKey(orch), val.Bytes())
+// SetOrchestratorValidatorAddress sets the Orchestrator key for a given validator.
+func (k Keeper) SetOrchestratorValidatorAddress(ctx sdk.Context, val sdk.ValAddress, orchAddr sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.MakeOrchestratorValidatorAddressKey(orchAddr)
+
+	store.Set(key, val.Bytes())
 }
 
-// GetOrchestratorValidatorAddress returns the validator key associated with an orchestrator key
-func (k Keeper) GetOrchestratorValidatorAddress(ctx sdk.Context, orch sdk.AccAddress) sdk.ValAddress {
-	return sdk.ValAddress(ctx.KVStore(k.storeKey).Get(types.MakeOrchestratorValidatorAddressKey(orch)))
+// GetOrchestratorValidatorAddress returns the validator key associated with an
+// orchestrator key.
+func (k Keeper) GetOrchestratorValidatorAddress(ctx sdk.Context, orchAddr sdk.AccAddress) sdk.ValAddress {
+	store := ctx.KVStore(k.storeKey)
+	key := types.MakeOrchestratorValidatorAddressKey(orchAddr)
+
+	return sdk.ValAddress(store.Get(key))
 }
 
 ////////////////////////
@@ -167,13 +174,19 @@ func (k Keeper) GetOrchestratorValidatorAddress(ctx sdk.Context, orch sdk.AccAdd
 ////////////////////////
 
 // setValidatorEthereumAddress sets the ethereum address for a given validator
-func (k Keeper) setValidatorEthereumAddress(ctx sdk.Context, validator sdk.ValAddress, ethAddr common.Address) {
-	ctx.KVStore(k.storeKey).Set(types.MakeValidatorEthereumAddressKey(validator), ethAddr.Bytes())
+func (k Keeper) setValidatorEthereumAddress(ctx sdk.Context, valAddr sdk.ValAddress, ethAddr common.Address) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.MakeValidatorEthereumAddressKey(valAddr)
+
+	store.Set(key, ethAddr.Bytes())
 }
 
-// GetValidatorEthereumAddress returns the eth address for a given gravity validator
-func (k Keeper) GetValidatorEthereumAddress(ctx sdk.Context, validator sdk.ValAddress) common.Address {
-	return common.BytesToAddress(ctx.KVStore(k.storeKey).Get(types.MakeValidatorEthereumAddressKey(validator)))
+// GetValidatorEthereumAddress returns the eth address for a given gravity validator.
+func (k Keeper) GetValidatorEthereumAddress(ctx sdk.Context, valAddr sdk.ValAddress) common.Address {
+	store := ctx.KVStore(k.storeKey)
+	key := types.MakeValidatorEthereumAddressKey(valAddr)
+
+	return common.BytesToAddress(store.Get(key))
 }
 
 func (k Keeper) getValidatorsByEthereumAddress(ctx sdk.Context, ethAddr common.Address) (vals []sdk.ValAddress) {
@@ -196,12 +209,18 @@ func (k Keeper) getValidatorsByEthereumAddress(ctx sdk.Context, ethAddr common.A
 
 // setEthereumOrchestratorAddress sets the eth orch addr mapping
 func (k Keeper) setEthereumOrchestratorAddress(ctx sdk.Context, ethAddr common.Address, orch sdk.AccAddress) {
-	ctx.KVStore(k.storeKey).Set(types.MakeEthereumOrchestratorAddressKey(ethAddr), orch.Bytes())
+	store := ctx.KVStore(k.storeKey)
+	key := types.MakeEthereumOrchestratorAddressKey(ethAddr)
+
+	store.Set(key, orch.Bytes())
 }
 
 // GetEthereumOrchestratorAddress gets the orch address for a given eth address
 func (k Keeper) GetEthereumOrchestratorAddress(ctx sdk.Context, ethAddr common.Address) sdk.AccAddress {
-	return sdk.AccAddress(ctx.KVStore(k.storeKey).Get(types.MakeEthereumOrchestratorAddressKey(ethAddr)))
+	store := ctx.KVStore(k.storeKey)
+	key := types.MakeEthereumOrchestratorAddressKey(ethAddr)
+
+	return sdk.AccAddress(store.Get(key))
 }
 
 func (k Keeper) getEthereumAddressesByOrchestrator(ctx sdk.Context, orch sdk.AccAddress) (ethAddrs []common.Address) {
