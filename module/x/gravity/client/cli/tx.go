@@ -164,8 +164,12 @@ func CmdSetDelegateKeys() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			ethsig, err := parseContractAddress(args[3])
+			if err != nil {
+				return err
+			}
 
-			msg := types.NewMsgDelegateKeys(valAddr, orcAddr, ethAddr)
+			msg := types.NewMsgDelegateKeys(valAddr, orcAddr, ethAddr, common.Hex2Bytes(ethsig))
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
