@@ -22,12 +22,12 @@ var (
 	_ cdctypes.UnpackInterfacesMessage = &EthereumEventVoteRecord{}
 )
 
-// NewMsgDelegateKeys returns a new MsgDelegateKeys
-func NewMsgDelegateKeys(val sdk.ValAddress, orch sdk.AccAddress, eth string, ethSig []byte) *MsgDelegateKeys {
+// NewMsgDelegateKeys returns a reference to a new MsgDelegateKeys.
+func NewMsgDelegateKeys(val sdk.ValAddress, orchAddr sdk.AccAddress, ethAddr string, ethSig []byte) *MsgDelegateKeys {
 	return &MsgDelegateKeys{
 		ValidatorAddress:    val.String(),
-		OrchestratorAddress: orch.String(),
-		EthereumAddress:     eth,
+		OrchestratorAddress: orchAddr.String(),
+		EthereumAddress:     ethAddr,
 		EthSignature:        ethSig,
 	}
 }
