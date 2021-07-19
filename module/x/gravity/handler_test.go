@@ -285,7 +285,6 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 }
 
 func TestMsgSetDelegateAddresses(t *testing.T) {
-
 	ethPrivKey, err := ethCrypto.GenerateKey()
 	ethPrivKey2, err := ethCrypto.GenerateKey()
 
@@ -302,8 +301,8 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 		blockHeight  int64          = 200
 		blockHeight2 int64          = 210
 	)
-	input := keeper.CreateTestEnv(t)
 
+	input := keeper.CreateTestEnv(t)
 	input.GravityKeeper.StakingKeeper = keeper.NewStakingKeeperMock(valAddress)
 	ctx := input.Context
 	wctx := sdk.WrapSDKContext(ctx)
@@ -312,8 +311,8 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	acc2 := input.AccountKeeper.NewAccountWithAddress(ctx, cosmosAddress2)
 	acc3 := input.AccountKeeper.NewAccountWithAddress(ctx, cosmosAddress3)
 
-	//Set the sequence to 1 because the antehandler will do this in the full
-	//chain.
+	// Set the sequence to 1 because the antehandler will do this in the full
+	// chain.
 	acc.SetSequence(1)
 	acc2.SetSequence(1)
 	acc3.SetSequence(1)
@@ -329,7 +328,6 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	signMsgBz := input.Marshaler.MustMarshalBinaryBare(&ethMsg)
 
 	sig, err := types.NewEthereumSignature(signMsgBz, ethPrivKey)
-
 	require.NoError(t, err)
 
 	k := input.GravityKeeper
@@ -362,7 +360,6 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	signMsgBz = input.Marshaler.MustMarshalBinaryBare(&ethMsg)
 
 	sig, err = types.NewEthereumSignature(signMsgBz, ethPrivKey2)
-
 	require.NoError(t, err)
 
 	msg = types.NewMsgDelegateKeys(valAddress, cosmosAddress2, ethAddress2.String(), sig)
