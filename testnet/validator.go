@@ -384,11 +384,28 @@ func (v *Validator) buildCreateValidatorMsg(amount sdktypes.Coin) (sdktypes.Msg,
 }
 
 func (v *Validator) buildDelegateKeysMsg() sdktypes.Msg {
-	return &gravitytypes.MsgDelegateKeys{
-		EthereumAddress:     v.EthereumKey.Address,
-		ValidatorAddress:    sdktypes.ValAddress(v.KeyInfo.GetAddress()).String(),
-		OrchestratorAddress: v.Chain.Orchestrators[v.Index].KeyInfo.GetAddress().String(),
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	interfaceRegistry.RegisterImplementations((*sdktypes.Msg)(nil), &types.MsgCreateValidator{}, &gravitytypes.MsgDelegateKeys{})
+	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{}, &ed25519.PubKey{})
+	marshaller := codec.NewProtoCodec(interfaceRegistry)
+
+	signMsg = types.DelegateKeysSignMsg{
+		ValidatorAddress: sdktypes.ValAddress(v.KeyInfo.GetAddress()).String(),
+		Nonce:            0,
 	}
+
+	signMsgBz := marshaller.MustMarshalBinaryBare(&signMsg)
+	ethSig, err = types.NewEthereumSignature(signMsgBz, nil)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create Ethereum signature: %s", err))
+	}
+
+	return gravitytypes.NewMsgDelegateKeys(
+		signMsg.ValidatorAddress,
+		v.Chain.Orchestrators[v.Index].KeyInfo.GetAddress().String(),
+		v.EthereumKey.Address,
+		ethSig,
+	)
 }
 
 func (v *Validator) instanceName() string {
