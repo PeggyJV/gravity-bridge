@@ -413,8 +413,8 @@ func (v *Validator) buildDelegateKeysMsg() sdktypes.Msg {
 	}
 
 	return gravitytypes.NewMsgDelegateKeys(
-		signMsg.ValidatorAddress,
-		v.Chain.Orchestrators[v.Index].KeyInfo.GetAddress().String(),
+		sdktypes.ValAddress(v.KeyInfo.GetAddress()),
+		v.Chain.Orchestrators[v.Index].KeyInfo.GetAddress(),
 		v.EthereumKey.Address,
 		ethSig,
 	)
