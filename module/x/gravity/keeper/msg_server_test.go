@@ -313,9 +313,9 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 	// setup for getSignerValidator
 	gk.StakingKeeper = NewStakingKeeperMock(valAddr1)
 
+	// Set the sequence to 1 because the antehandler will do this in the full
+	// chain.
 	acc := env.AccountKeeper.NewAccountWithAddress(ctx, orcAddr1)
-	//Set the sequence to 1 because the antehandler will do this in the full
-	//chain.
 	acc.SetSequence(1)
 	env.AccountKeeper.SetAccount(ctx, acc)
 
@@ -328,7 +328,6 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 	signMsgBz := env.Marshaler.MustMarshalBinaryBare(&ethMsg)
 
 	sig, err := types.NewEthereumSignature(signMsgBz, ethPrivKey)
-
 	require.NoError(t, err)
 
 	msg := &types.MsgDelegateKeys{
