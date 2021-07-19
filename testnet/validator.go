@@ -4,15 +4,16 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+
 	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
-	"os"
-	"path"
-	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -328,6 +329,7 @@ func (v *Validator) generateEthereumKey() (err error) {
 	if err != nil {
 		return err
 	}
+
 	privateKeyBytes := crypto.FromECDSA(privateKey)
 
 	publicKey := privateKey.Public()
@@ -389,13 +391,23 @@ func (v *Validator) buildDelegateKeysMsg() sdktypes.Msg {
 	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{}, &ed25519.PubKey{})
 	marshaller := codec.NewProtoCodec(interfaceRegistry)
 
-	signMsg = types.DelegateKeysSignMsg{
+	privKeyBz, err := hexutil.Decode(v.EthereumKey.PrivateKey)
+	if err != nil {
+		panic(fmt.Sprintf("failed to HEX decode private key: %s", err))
+	}
+
+	privKey, err := crypto.ToECDSA(privKeyBz)
+	if err != nil {
+		panic(fmt.Sprintf("failed to convert private key: %s", err))
+	}
+
+	signMsg := gravitytypes.DelegateKeysSignMsg{
 		ValidatorAddress: sdktypes.ValAddress(v.KeyInfo.GetAddress()).String(),
 		Nonce:            0,
 	}
 
 	signMsgBz := marshaller.MustMarshalBinaryBare(&signMsg)
-	ethSig, err = types.NewEthereumSignature(signMsgBz, nil)
+	ethSig, err := gravitytypes.NewEthereumSignature(signMsgBz, privKey)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create Ethereum signature: %s", err))
 	}
