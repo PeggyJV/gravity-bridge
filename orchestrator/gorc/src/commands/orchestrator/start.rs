@@ -44,7 +44,7 @@ impl Runnable for StartCommand {
             RELAYER_LOOP_SPEED,
         );
 
-        abscissa_tokio::run(&APP, async {
+        abscissa_tokio::run_with_actix(&APP, async {
             let connections = create_rpc_connections(
                 cosmos_prefix,
                 Some(config.cosmos.grpc.clone()),
