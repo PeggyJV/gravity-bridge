@@ -172,7 +172,7 @@ the validator's address and operator account current nonce.`,
 
 			ethsig := common.FromHex(args[3])
 
-			msg := types.NewMsgDelegateKeys(valAddr, orcAddr, ethAddr, common.Hex2Bytes(ethsig))
+			msg := types.NewMsgDelegateKeys(valAddr, orcAddr, ethAddr, ethsig)
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}

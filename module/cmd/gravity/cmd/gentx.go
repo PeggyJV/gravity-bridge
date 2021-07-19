@@ -126,7 +126,7 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 				return errors.Wrapf(err, "failed to parse orchAddress(%s)", args[3])
 			}
 
-			ethsig := command.FromHex(args[4])
+			ethSig := common.FromHex(args[4])
 
 			moniker := config.Moniker
 			if m, _ := cmd.Flags().GetString(cli.FlagMoniker); m != "" {
