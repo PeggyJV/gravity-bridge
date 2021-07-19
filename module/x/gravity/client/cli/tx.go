@@ -144,7 +144,7 @@ func CmdRequestBatchTx() *cobra.Command {
 func CmdSetDelegateKeys() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-delegate-keys [validator-address] [orchestrator-address] [ethereum-address] [ethereum-signature]",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(4),
 		Short: "Set gravity delegate keys",
 		Long: `Set a validator's Ethereum and orchestrator addresses. The validator must
 sign over a binary Proto-encoded DelegateKeysSignMsg message. The message contains
@@ -170,10 +170,7 @@ the validator's address and operator account current nonce.`,
 				return err
 			}
 
-			ethsig, err := parseContractAddress(args[3])
-			if err != nil {
-				return err
-			}
+			ethsig := common.FromHex(args[3])
 
 			msg := types.NewMsgDelegateKeys(valAddr, orcAddr, ethAddr, common.Hex2Bytes(ethsig))
 			if err = msg.ValidateBasic(); err != nil {
