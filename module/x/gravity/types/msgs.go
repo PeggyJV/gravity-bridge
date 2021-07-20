@@ -49,6 +49,10 @@ func (msg *MsgDelegateKeys) ValidateBasic() (err error) {
 	if !common.IsHexAddress(msg.EthereumAddress) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "ethereum address")
 	}
+	if len(msg.EthSignature) == 0 {
+		return ErrEmptyEthSig
+	}
+
 	return nil
 }
 
