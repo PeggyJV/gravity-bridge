@@ -415,7 +415,7 @@ func (v *Validator) buildDelegateKeysMsg() sdktypes.Msg {
 		sdktypes.ValAddress(v.KeyInfo.GetAddress()),
 		v.Chain.Orchestrators[v.Index].KeyInfo.GetAddress(),
 		v.EthereumKey.Address,
-		ethSig,
+		hexutil.Encode(ethSig),
 	)
 }
 
