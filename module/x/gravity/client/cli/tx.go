@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/spf13/cobra"
 
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
@@ -170,8 +171,8 @@ the validator's address and operator account current nonce.`,
 				return err
 			}
 
-			if sigBz := common.FromHex(args[3]); len(sigBz) == 0 {
-				return fmt.Errorf("invalid ethereum signature: %s", args[3])
+			if sigBz, err := hexutil.Decode(args[3]); err != nil || len(sigBz) == 0 {
+				return fmt.Errorf("invalid ethereum signature (%s): %w", args[3], err)
 			}
 
 			msg := types.NewMsgDelegateKeys(valAddr, orcAddr, ethAddr, args[3])

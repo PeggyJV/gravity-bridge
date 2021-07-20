@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	cfg "github.com/tendermint/tendermint/config"
@@ -126,8 +127,6 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 				return errors.Wrapf(err, "failed to parse orchAddress(%s)", args[3])
 			}
 
-			ethSig := common.FromHex(args[4])
-
 			moniker := config.Moniker
 			if m, _ := cmd.Flags().GetString(cli.FlagMoniker); m != "" {
 				moniker = m
@@ -182,11 +181,15 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 				return errors.Wrap(err, "failed to build create-validator message")
 			}
 
+			if sigBz, e := hexutil.Decode(args[4]); e != nil || len(sigBz) == 0 {
+				return fmt.Errorf("invalid ethereum signature (%s): %w", args[3], e)
+			}
+
 			delegateGravityMsg := &gravitytypes.MsgDelegateKeys{
 				ValidatorAddress:    sdk.ValAddress(key.GetAddress()).String(),
 				OrchestratorAddress: orchAddress.String(),
 				EthereumAddress:     ethAddress,
-				EthSignature:        common.ToHex(ethSig),
+				EthSignature:        args[4],
 			}
 
 			msgs := []sdk.Msg{msg, delegateGravityMsg}
