@@ -58,13 +58,15 @@ pub async fn update_gravity_delegate_addresses(
         validator_address: our_valoper_address.clone(),
         nonce:*sequence,
     };
-    let mut bytes = Vec::new();
 
+    let size = Message::encoded_len(&eth_sign_msg);
+    let mut buf = BytesMut::with_capacity(size);
+    Message::encode(&eth_sign_msg, &mut buf).expect("Failed to encode!");
+    info!("Signing delegate keys message {}", bytes_to_hex_str(&buf));
 
-    eth_sign_msg.encode(&mut bytes).map_err(|x|CosmosGrpcError::BadInput(x.to_string()))?;
+    let eth_signature = eth_private_key.sign_ethereum_msg(&buf).to_bytes().to_vec();
 
-    let eth_signature = eth_private_key.sign_ethereum_msg(&bytes).to_bytes().to_vec();
-
+    info!("Signature {}", bytes_to_hex_str(&buf));
 
 
     let msg_set_orch_address = proto::MsgDelegateKeys {

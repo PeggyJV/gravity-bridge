@@ -2,6 +2,7 @@ package types
 
 import (
 	"crypto/ecdsa"
+	"fmt"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
@@ -24,6 +25,10 @@ func NewEthereumSignature(hash []byte, privateKey *ecdsa.PrivateKey) ([]byte, er
 // ValidateEthereumSignature takes a message, an associated signature and public key and
 // returns an error if the signature isn't valid
 func ValidateEthereumSignature(hash []byte, signature []byte, ethAddress common.Address) error {
+
+	fmt.Printf("message bytes %x", hash)
+	fmt.Printf("signature bytes %x", signature)
+
 	/// signature to public key: invalid signature length: invalid
 	/// signature not matching: invalid: invalid
 	if len(signature) < 65 {
