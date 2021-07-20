@@ -181,7 +181,8 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 				return errors.Wrap(err, "failed to build create-validator message")
 			}
 
-			if sigBz, e := hexutil.Decode(args[4]); e != nil || len(sigBz) == 0 {
+			ethSig := args[4]
+			if sigBz, e := hexutil.Decode(ethSig); e != nil || len(sigBz) == 0 {
 				return fmt.Errorf("invalid ethereum signature (%s): %w", args[3], e)
 			}
 
@@ -189,7 +190,7 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 				ValidatorAddress:    sdk.ValAddress(key.GetAddress()).String(),
 				OrchestratorAddress: orchAddress.String(),
 				EthereumAddress:     ethAddress,
-				EthSignature:        args[4],
+				EthSignature:        ethSig,
 			}
 
 			msgs := []sdk.Msg{msg, delegateGravityMsg}
