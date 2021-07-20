@@ -183,7 +183,7 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 
 			ethSig := args[4]
 			if sigBz, e := hexutil.Decode(ethSig); e != nil || len(sigBz) == 0 {
-				return fmt.Errorf("invalid ethereum signature (%s): %w", args[3], e)
+				return fmt.Errorf("invalid ethereum signature (%s): %w", ethSig, e)
 			}
 
 			delegateGravityMsg := &gravitytypes.MsgDelegateKeys{
