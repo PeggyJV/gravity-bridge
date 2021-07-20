@@ -70,7 +70,7 @@ pub async fn update_gravity_delegate_addresses(
         validator_address: our_valoper_address.to_string(),
         orchestrator_address: delegate_cosmos_address.to_string(),
         ethereum_address: delegate_eth_address.to_string(),
-        eth_signature:bytes_to_hex_str(eth_signature),
+        eth_signature:"0x".to_string() + &bytes_to_hex_str(eth_signature),
     };
 
     let fee = Fee {
