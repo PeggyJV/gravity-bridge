@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 var (
@@ -52,7 +53,7 @@ func (msg *MsgDelegateKeys) ValidateBasic() (err error) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "ethereum address")
 	}
 
-	if sigBz := common.FromHex(msg.EthSignature); len(sigBz) == 0 {
+	if sigBz, err := hexutil.Decode(msg.EthSignature); err != nil || len(sigBz) == 0 {
 		return ErrMalformedEthSig
 	}
 
