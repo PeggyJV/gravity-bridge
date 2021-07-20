@@ -170,9 +170,11 @@ the validator's address and operator account current nonce.`,
 				return err
 			}
 
-			ethsig := common.FromHex(args[3])
+			if sigBz := common.FromHex(args[3]); len(sigBz) == 0 {
+				return fmt.Errorf("invalid ethereum signature: %s", args[3])
+			}
 
-			msg := types.NewMsgDelegateKeys(valAddr, orcAddr, ethAddr, ethsig)
+			msg := types.NewMsgDelegateKeys(valAddr, orcAddr, ethAddr, args[3])
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}

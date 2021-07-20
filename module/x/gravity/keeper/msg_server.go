@@ -71,7 +71,7 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 		Nonce: valAccSeq - 1,
 	})
 
-	if err = types.ValidateEthereumSignature(signMsgBz, msg.EthSignature, ethAddr); err != nil {
+	if err = types.ValidateEthereumSignature(signMsgBz, common.FromHex(msg.EthSignature), ethAddr); err != nil {
 		return nil, sdkerrors.Wrapf(
 			types.ErrDelegateKeys,
 			"failed to validate delegate keys signature for Ethereum address %s",

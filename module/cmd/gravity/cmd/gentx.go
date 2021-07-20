@@ -186,7 +186,7 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 				ValidatorAddress:    sdk.ValAddress(key.GetAddress()).String(),
 				OrchestratorAddress: orchAddress.String(),
 				EthereumAddress:     ethAddress,
-				EthSignature:        ethSig,
+				EthSignature:        common.ToHex(ethSig),
 			}
 
 			msgs := []sdk.Msg{msg, delegateGravityMsg}

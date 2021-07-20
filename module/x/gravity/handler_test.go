@@ -334,7 +334,7 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	h := NewHandler(input.GravityKeeper)
 	ctx = ctx.WithBlockTime(blockTime)
 
-	msg := types.NewMsgDelegateKeys(valAddress, cosmosAddress, ethAddress.String(), sig)
+	msg := types.NewMsgDelegateKeys(valAddress, cosmosAddress, ethAddress.String(), common.ToHex(sig))
 	ctx = ctx.WithBlockTime(blockTime).WithBlockHeight(blockHeight)
 	_, err = h(ctx, msg)
 	require.NoError(t, err)
@@ -362,7 +362,7 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	sig, err = types.NewEthereumSignature(signMsgBz, ethPrivKey2)
 	require.NoError(t, err)
 
-	msg = types.NewMsgDelegateKeys(valAddress, cosmosAddress2, ethAddress2.String(), sig)
+	msg = types.NewMsgDelegateKeys(valAddress, cosmosAddress2, ethAddress2.String(), common.ToHex(sig))
 	ctx = ctx.WithBlockTime(blockTime2).WithBlockHeight(blockHeight2)
 	_, err = h(ctx, msg)
 	require.NoError(t, err)

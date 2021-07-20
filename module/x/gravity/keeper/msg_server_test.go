@@ -3,13 +3,13 @@ package keeper
 import (
 	"testing"
 
-	"github.com/ethereum/go-ethereum/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 
-	ethCrypto "github.com/ethereum/go-ethereum/crypto"
+	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
 )
 
 func TestMsgServer_SubmitEthereumSignature(t *testing.T) {
@@ -334,7 +334,7 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 		ValidatorAddress:    valAddr1.String(),
 		OrchestratorAddress: orcAddr1.String(),
 		EthereumAddress:     ethAddr1.String(),
-		EthSignature:        sig,
+		EthSignature:        common.ToHex(sig),
 	}
 
 	_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), msg)

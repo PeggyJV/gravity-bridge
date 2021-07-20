@@ -23,7 +23,7 @@ var (
 )
 
 // NewMsgDelegateKeys returns a reference to a new MsgDelegateKeys.
-func NewMsgDelegateKeys(val sdk.ValAddress, orchAddr sdk.AccAddress, ethAddr string, ethSig []byte) *MsgDelegateKeys {
+func NewMsgDelegateKeys(val sdk.ValAddress, orchAddr sdk.AccAddress, ethAddr, ethSig string) *MsgDelegateKeys {
 	return &MsgDelegateKeys{
 		ValidatorAddress:    val.String(),
 		OrchestratorAddress: orchAddr.String(),
@@ -43,12 +43,19 @@ func (msg *MsgDelegateKeys) ValidateBasic() (err error) {
 	if _, err = sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.ValidatorAddress)
 	}
+
 	if _, err = sdk.AccAddressFromBech32(msg.OrchestratorAddress); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.OrchestratorAddress)
 	}
+
 	if !common.IsHexAddress(msg.EthereumAddress) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "ethereum address")
 	}
+
+	if sigBz := common.FromHex(msg.EthSignature); len(sigBz) == 0 {
+		return ErrMalformedEthSig
+	}
+
 	return nil
 }
 

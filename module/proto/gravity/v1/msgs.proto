@@ -186,7 +186,7 @@ message MsgDelegateKeys {
   string validator_address = 1;
   string orchestrator_address = 2;
   string ethereum_address = 3;
-  bytes  eth_signature = 4;
+  string eth_signature = 4;
 }
 
 message MsgDelegateKeysResponse {}
