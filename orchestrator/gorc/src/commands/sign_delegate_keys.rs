@@ -1,4 +1,5 @@
 use crate::application::APP;
+use crate::prelude::*;
 use abscissa_core::{Application, Command, Options, Runnable};
 use gravity_proto::gravity as proto;
 
@@ -37,7 +38,7 @@ impl Runnable for SignDelegateKeysCmd {
             .expect("Failed to encode DelegateKeysSignMsg!");
 
         let signature = key.sign_ethereum_msg(&buf);
-
+        error!("Eth Key {}\n MsgBytes {}\n Nonce {} \n Validator address {}",key.to_public_key().unwrap(), clarity::utils::bytes_to_hex_str(&buf),nonce, val );
         println!("{}", signature);
     }
 }
