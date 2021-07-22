@@ -14,7 +14,6 @@ const (
 
 // NewEthereumSignature creates a new signuature over a given byte array
 func NewEthereumSignature(hash []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
-	hash = crypto.Keccak256Hash(hash).Bytes()
 	if privateKey == nil {
 		return nil, sdkerrors.Wrap(ErrInvalid, "did not pass in private key")
 	}
@@ -25,7 +24,6 @@ func NewEthereumSignature(hash []byte, privateKey *ecdsa.PrivateKey) ([]byte, er
 // ValidateEthereumSignature takes a message, an associated signature and public key and
 // returns an error if the signature isn't valid
 func ValidateEthereumSignature(hash []byte, signature []byte, ethAddress common.Address) error {
-	hash = crypto.Keccak256Hash(hash).Bytes()
 
 	/// signature to public key: invalid signature length: invalid
 	/// signature not matching: invalid: invalid

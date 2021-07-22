@@ -329,8 +329,9 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 		Nonce:            0,
 	}
 	signMsgBz := env.Marshaler.MustMarshalBinaryBare(&ethMsg)
+	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
 
-	sig, err := types.NewEthereumSignature(signMsgBz, ethPrivKey)
+	sig, err := types.NewEthereumSignature(hash, ethPrivKey)
 	require.NoError(t, err)
 
 	msg := &types.MsgDelegateKeys{
@@ -384,12 +385,13 @@ func TestEthVerify(t *testing.T) {
 	require.NoError(t, err)
 
 	fmt.Println("MESSAGE BYTES TO SIGN:", hexutil.Encode(signMsgBz))
+	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
 
-	sig, err := types.NewEthereumSignature(signMsgBz, privKey)
+	sig, err := types.NewEthereumSignature(hash, privKey)
 	sig[64] += 27 // change the V value
 	require.NoError(t, err)
 
-	err = types.ValidateEthereumSignature(signMsgBz, sig, address)
+	err = types.ValidateEthereumSignature(hash, sig, address)
 	require.NoError(t, err)
 
 	// replace gorcSig with what the following command produces:
