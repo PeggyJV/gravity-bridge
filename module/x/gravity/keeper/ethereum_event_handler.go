@@ -6,8 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	banktyeps "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
-
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
 )
 
@@ -55,10 +55,17 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 				fmt.Sprintf("ERC20 %s already exists for denom %s", existingERC20.Hex(), event.CosmosDenom))
 		}
 
-		// Check if denom exists
-		// TODO: document that peggy chains require denom metadata set
-		metadata := a.keeper.bankKeeper.GetDenomMetaData(ctx, event.CosmosDenom)
-		if metadata.Base == "" {
+		var metadata banktypes.Metadata
+		a.keeper.bankKeeper.IterateAllDenomMetaData(ctx, func(md banktypes.Metadata) bool {
+			// iterate over the metadata and find if it matches the
+			if md.Base == event.CosmosDenom || md.Display == event.CosmosDenom {
+				metadata = md
+				return true
+			}
+			return false
+		})
+
+		if metadata == nil {
 			return sdkerrors.Wrap(types.ErrInvalid, fmt.Sprintf("denom not found %s", event.CosmosDenom))
 		}
 
