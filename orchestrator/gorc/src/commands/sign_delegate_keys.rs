@@ -3,9 +3,7 @@ use abscissa_core::{Application, Command, Options, Runnable};
 use cosmos_gravity::query;
 use gravity_proto::gravity as proto;
 use gravity_utils::connection_prep::create_rpc_connections;
-use orchestrator::main_loop::{
-    ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED,
-};
+use orchestrator::main_loop::{ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED};
 use relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
 use std::cmp::min;
 
@@ -55,10 +53,7 @@ impl Runnable for SignDelegateKeysCmd {
                 Some(nonce) => nonce.clone(),
                 None => valset.nonce.to_string(),
             };
-            
-            let nonce = nonce
-                .parse::<u64>()
-                .expect("cannot parse nonce");
+            let nonce = nonce.parse::<u64>().expect("cannot parse nonce");
 
             let msg = proto::DelegateKeysSignMsg {
                 validator_address: val.clone(),
