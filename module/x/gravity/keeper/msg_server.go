@@ -10,6 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
 )
@@ -64,18 +65,25 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "failed to get sequence for validator account %s", valAccAddr)
 	}
 
+	var nonce uint64
+	if valAccSeq > 0 {
+		nonce = valAccSeq - 1
+	}
+
 	signMsgBz := k.cdc.MustMarshalBinaryBare(&types.DelegateKeysSignMsg{
 		ValidatorAddress: valAddr.String(),
 		// We decrement since we process the message after the ante-handler which
 		// increments the nonce.
-		Nonce: valAccSeq - 1,
+		Nonce: nonce,
 	})
 
-	if err = types.ValidateEthereumSignature(signMsgBz, msg.EthSignature, ethAddr); err != nil {
+	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
+
+	if err = types.ValidateEthereumSignature(hash, msg.EthSignature, ethAddr); err != nil {
 		return nil, sdkerrors.Wrapf(
 			types.ErrDelegateKeys,
-			"failed to validate delegate keys signature for Ethereum address %X",
-			ethAddr,
+			"failed to validate delegate keys signature for Ethereum address %X; %s",
+			ethAddr, err,
 		)
 	}
 
