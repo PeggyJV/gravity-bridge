@@ -35,23 +35,24 @@ impl Runnable for SignDelegateKeysCmd {
                 RELAYER_LOOP_SPEED,
             );
 
-            let connections = create_rpc_connections(
-                cosmos_prefix,
-                Some(config.cosmos.grpc.clone()),
-                Some(config.ethereum.rpc.clone()),
-                timeout,
-            )
-            .await;
-
-            let mut grpc = connections.grpc.clone().unwrap();
-
-            let valset = query::get_latest_valset(&mut grpc).await;
-
-            let valset = valset.unwrap().expect("Valset cannot be retrieved");
-
             let nonce = match self.args.get(2) {
                 Some(nonce) => nonce.clone(),
-                None => valset.nonce.to_string(),
+                None => {
+                    let connections = create_rpc_connections(
+                        cosmos_prefix,
+                        Some(config.cosmos.grpc.clone()),
+                        Some(config.ethereum.rpc.clone()),
+                        timeout,
+                    )
+                    .await;
+        
+                    let mut grpc = connections.grpc.clone().unwrap();
+        
+                    let valset = query::get_latest_valset(&mut grpc).await;
+        
+                    let valset = valset.unwrap().expect("Valset cannot be retrieved");
+                    valset.nonce.to_string()
+                }
             };
             let nonce = nonce.parse::<u64>().expect("cannot parse nonce");
 
