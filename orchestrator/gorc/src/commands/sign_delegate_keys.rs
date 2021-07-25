@@ -1,9 +1,13 @@
 use crate::application::APP;
 use abscissa_core::{Application, Command, Options, Runnable};
-use cosmos_gravity::query as QueryValSet;
+use cosmos_gravity::query;
 use gravity_proto::gravity as proto;
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use tonic::transport::Channel;
+use gravity_utils::connection_prep::create_rpc_connections;
+use orchestrator::main_loop::{
+    ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED,
+};
+use relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
+use std::cmp::min;
 
 #[derive(Command, Debug, Default, Options)]
 pub struct SignDelegateKeysCmd {
@@ -26,15 +30,38 @@ impl Runnable for SignDelegateKeysCmd {
             let val = self.args.get(1).expect("validator-address is required");
             // TODO(levi) ensure this is a valoper address for the next release
 
-            let nonce = self.args.get(2).expect("nonce is required");
+            let cosmos_prefix = config.cosmos.prefix.clone();
+
+            let timeout = min(
+                min(ETH_SIGNER_LOOP_SPEED, ETH_ORACLE_LOOP_SPEED),
+                RELAYER_LOOP_SPEED,
+            );
+
+            let connections = create_rpc_connections(
+                cosmos_prefix,
+                Some(config.cosmos.grpc.clone()),
+                Some(config.ethereum.rpc.clone()),
+                timeout,
+            )
+            .await;
+
+            let mut grpc = connections.grpc.clone().unwrap();
+
+
+            let valset = query::get_latest_valset(&mut grpc).await;
+
+            println!("{:#?}", valset);
+
+            // This is were I have Problems, How do I get the nonce? valset.nonce doesn't work. Everyother thing works fine
+            // Without the nonce, the match below will keep throwing a mismatch error
+
+            let nonce = match self.args.get(2) {
+                Some(nonce) => nonce.clone(),
+                None => valset,
+            };
+
             let nonce = nonce.parse().expect("could not parse nonce");
 
-            let client = &mut config.cosmos.grpc.clone();
-            let client = client
-                .parse::<GravityQueryClient<Channel>>()
-                .expect("Could not parse derivation path");
-
-            let valset = QueryValSet::get_valset(&mut client, nonce);
 
             let msg = proto::DelegateKeysSignMsg {
                 validator_address: val.clone(),
