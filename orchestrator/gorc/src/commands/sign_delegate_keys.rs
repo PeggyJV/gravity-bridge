@@ -1,4 +1,4 @@
-use crate::application::APP;
+use crate::{application::APP, prelude::*};
 use abscissa_core::{Application, Command, Options, Runnable};
 use cosmos_gravity::query;
 use gravity_proto::gravity as proto;
@@ -23,7 +23,7 @@ pub struct SignDelegateKeysCmd {
 impl Runnable for SignDelegateKeysCmd {
     fn run(&self) {
         let config = APP.config();
-        abscissa_tokio::run(&APP, async {
+        abscissa_tokio::run_with_actix(&APP, async {
             let name = self.args.get(0).expect("ethereum-key-name is required");
             let key = config.load_clarity_key(name.clone());
 
@@ -47,21 +47,18 @@ impl Runnable for SignDelegateKeysCmd {
 
             let mut grpc = connections.grpc.clone().unwrap();
 
-
             let valset = query::get_latest_valset(&mut grpc).await;
 
-            println!("{:#?}", valset);
-
-            // This is were I have Problems, How do I get the nonce? valset.nonce doesn't work. Everyother thing works fine
-            // Without the nonce, the match below will keep throwing a mismatch error
+            let valset = valset.unwrap().expect("Valset cannot be retrieved");
 
             let nonce = match self.args.get(2) {
                 Some(nonce) => nonce.clone(),
-                None => valset,
+                None => valset.nonce.to_string(),
             };
-
-            let nonce = nonce.parse().expect("could not parse nonce");
-
+            
+            let nonce = nonce
+                .parse::<u64>()
+                .expect("cannot parse nonce");
 
             let msg = proto::DelegateKeysSignMsg {
                 validator_address: val.clone(),
@@ -75,6 +72,10 @@ impl Runnable for SignDelegateKeysCmd {
             let signature = key.sign_ethereum_msg(&buf);
 
             println!("{}", signature);
+        })
+        .unwrap_or_else(|e| {
+            status_err!("executor exited with error: {}", e);
+            std::process::exit(1);
         });
     }
 }
