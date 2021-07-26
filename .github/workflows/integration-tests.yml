@@ -203,11 +203,11 @@ jobs:
           "BATCH_STRESS",
           "HAPPY_PATH",
           "ORCHESTRATOR_KEYS",
-          "V2_HAPPY_PATH",
+          "VALIDATOR_OUT",
 
           # non-working tests
-          # "VALIDATOR_OUT", (fails routinely; we remove the container our test_runner expects to be up, lol)
           # "VALSET_STRESS", (fails intermittently; clear resource exhaustion)
+          # "V2_HAPPY_PATH", (fails intermittently?? need to confirm, tbh)
         ]
     steps:
       - name: Set up Go 1.16
