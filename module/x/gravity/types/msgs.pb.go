@@ -1079,6 +1079,7 @@ type MsgDelegateKeys struct {
 	ValidatorAddress    string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
 	OrchestratorAddress string `protobuf:"bytes,2,opt,name=orchestrator_address,json=orchestratorAddress,proto3" json:"orchestrator_address,omitempty"`
 	EthereumAddress     string `protobuf:"bytes,3,opt,name=ethereum_address,json=ethereumAddress,proto3" json:"ethereum_address,omitempty"`
+	EthSignature        []byte `protobuf:"bytes,4,opt,name=eth_signature,json=ethSignature,proto3" json:"eth_signature,omitempty"`
 }
 
 func (m *MsgDelegateKeys) Reset()         { *m = MsgDelegateKeys{} }
@@ -1135,6 +1136,13 @@ func (m *MsgDelegateKeys) GetEthereumAddress() string {
 	return ""
 }
 
+func (m *MsgDelegateKeys) GetEthSignature() []byte {
+	if m != nil {
+		return m.EthSignature
+	}
+	return nil
+}
+
 type MsgDelegateKeysResponse struct {
 }
 
@@ -1171,6 +1179,61 @@ func (m *MsgDelegateKeysResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDelegateKeysResponse proto.InternalMessageInfo
 
+// DelegateKeysSignMsg defines the message structure an operator is expected to
+// sign when submitting a MsgDelegateKeys message. The resulting signature should
+// populate the eth_signature field.
+type DelegateKeysSignMsg struct {
+	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
+	Nonce            uint64 `protobuf:"varint,2,opt,name=nonce,proto3" json:"nonce,omitempty"`
+}
+
+func (m *DelegateKeysSignMsg) Reset()         { *m = DelegateKeysSignMsg{} }
+func (m *DelegateKeysSignMsg) String() string { return proto.CompactTextString(m) }
+func (*DelegateKeysSignMsg) ProtoMessage()    {}
+func (*DelegateKeysSignMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2f8523f2f6feb451, []int{20}
+}
+func (m *DelegateKeysSignMsg) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DelegateKeysSignMsg) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DelegateKeysSignMsg.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DelegateKeysSignMsg) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DelegateKeysSignMsg.Merge(m, src)
+}
+func (m *DelegateKeysSignMsg) XXX_Size() int {
+	return m.Size()
+}
+func (m *DelegateKeysSignMsg) XXX_DiscardUnknown() {
+	xxx_messageInfo_DelegateKeysSignMsg.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DelegateKeysSignMsg proto.InternalMessageInfo
+
+func (m *DelegateKeysSignMsg) GetValidatorAddress() string {
+	if m != nil {
+		return m.ValidatorAddress
+	}
+	return ""
+}
+
+func (m *DelegateKeysSignMsg) GetNonce() uint64 {
+	if m != nil {
+		return m.Nonce
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*MsgSendToEthereum)(nil), "gravity.v1.MsgSendToEthereum")
 	proto.RegisterType((*MsgSendToEthereumResponse)(nil), "gravity.v1.MsgSendToEthereumResponse")
@@ -1192,6 +1255,7 @@ func init() {
 	proto.RegisterType((*MsgSubmitEthereumEventResponse)(nil), "gravity.v1.MsgSubmitEthereumEventResponse")
 	proto.RegisterType((*MsgDelegateKeys)(nil), "gravity.v1.MsgDelegateKeys")
 	proto.RegisterType((*MsgDelegateKeysResponse)(nil), "gravity.v1.MsgDelegateKeysResponse")
+	proto.RegisterType((*DelegateKeysSignMsg)(nil), "gravity.v1.DelegateKeysSignMsg")
 }
 
 func init() { proto.RegisterFile("gravity/v1/msgs.proto", fileDescriptor_2f8523f2f6feb451) }
@@ -2345,6 +2409,13 @@ func (m *MsgDelegateKeys) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.EthSignature) > 0 {
+		i -= len(m.EthSignature)
+		copy(dAtA[i:], m.EthSignature)
+		i = encodeVarintMsgs(dAtA, i, uint64(len(m.EthSignature)))
+		i--
+		dAtA[i] = 0x22
+	}
 	if len(m.EthereumAddress) > 0 {
 		i -= len(m.EthereumAddress)
 		copy(dAtA[i:], m.EthereumAddress)
@@ -2389,6 +2460,41 @@ func (m *MsgDelegateKeysResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	_ = i
 	var l int
 	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *DelegateKeysSignMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DelegateKeysSignMsg) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DelegateKeysSignMsg) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Nonce != 0 {
+		i = encodeVarintMsgs(dAtA, i, uint64(m.Nonce))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.ValidatorAddress) > 0 {
+		i -= len(m.ValidatorAddress)
+		copy(dAtA[i:], m.ValidatorAddress)
+		i = encodeVarintMsgs(dAtA, i, uint64(len(m.ValidatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -2756,6 +2862,10 @@ func (m *MsgDelegateKeys) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovMsgs(uint64(l))
 	}
+	l = len(m.EthSignature)
+	if l > 0 {
+		n += 1 + l + sovMsgs(uint64(l))
+	}
 	return n
 }
 
@@ -2765,6 +2875,22 @@ func (m *MsgDelegateKeysResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	return n
+}
+
+func (m *DelegateKeysSignMsg) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ValidatorAddress)
+	if l > 0 {
+		n += 1 + l + sovMsgs(uint64(l))
+	}
+	if m.Nonce != 0 {
+		n += 1 + sovMsgs(uint64(m.Nonce))
+	}
 	return n
 }
 
@@ -5144,6 +5270,40 @@ func (m *MsgDelegateKeys) Unmarshal(dAtA []byte) error {
 			}
 			m.EthereumAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EthSignature", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMsgs
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthMsgs
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMsgs
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EthSignature = append(m.EthSignature[:0], dAtA[iNdEx:postIndex]...)
+			if m.EthSignature == nil {
+				m.EthSignature = []byte{}
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMsgs(dAtA[iNdEx:])
@@ -5194,6 +5354,107 @@ func (m *MsgDelegateKeysResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgDelegateKeysResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMsgs(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMsgs
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DelegateKeysSignMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMsgs
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DelegateKeysSignMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DelegateKeysSignMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMsgs
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMsgs
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMsgs
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Nonce", wireType)
+			}
+			m.Nonce = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMsgs
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Nonce |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMsgs(dAtA[iNdEx:])
