@@ -199,15 +199,15 @@ jobs:
       matrix:
         test_type: [
           # working tests
-            "ORCHESTRATOR_KEYS",
-            "ARBITRARY_LOGIC",
+          "ARBITRARY_LOGIC",
+          "BATCH_STRESS",
+          "HAPPY_PATH",
+          "ORCHESTRATOR_KEYS",
+          "V2_HAPPY_PATH",
 
           # non-working tests
-#            "VALIDATOR_OUT",
-#            "BATCH_STRESS",
-#            "VALSET_STRESS",
-#            "HAPPY_PATH",
-#            "V2_HAPPY_PATH",
+          # "VALIDATOR_OUT", (fails routinely; we remove the container our test_runner expects to be up, lol)
+          # "VALSET_STRESS", (fails intermittently; clear resource exhaustion)
         ]
     steps:
       - name: Set up Go 1.16
