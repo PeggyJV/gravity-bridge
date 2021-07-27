@@ -91,8 +91,8 @@ func (a EthereumEventProcessor) verifyERC20DeployedEvent(ctx sdk.Context, event 
 	// a token does not have metadata defined, e.g. an IBC token, we successfully
 	// handle the token under the following conditions:
 	//
-	// 1. The ERC20 name is not equal to the token's denomination. Otherwise, this
-	// 		mean that ERC20 tokens would have an untenable UX.
+	// 1. The ERC20 name is equal to the token's denomination. Otherwise, this
+	// 		means that ERC20 tokens would have an untenable UX.
 	// 2. The ERC20 token has zero decimals as this is what we default to since
 	// 		we cannot know or infer the real decimal value for the Cosmos token.
 	// 3. The ERC20 symbol is empty.
