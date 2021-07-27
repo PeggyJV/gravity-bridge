@@ -96,6 +96,10 @@ func (a EthereumEventProcessor) verifyERC20DeployedEvent(ctx sdk.Context, event 
 	// 2. The ERC20 token has zero decimals as this is what we default to since
 	// 		we cannot know or infer the real decimal value for the Cosmos token.
 	// 3. The ERC20 symbol is empty.
+	//
+	// NOTE: This path is not encouraged and all supported assets should have
+	// metadata defined. If metadata cannot be defined, consider adding the token's
+	// metadata on the fly.
 	metadata := a.keeper.bankKeeper.GetDenomMetaData(ctx, event.CosmosDenom)
 	if metadata.Base == "" {
 		if event.Erc20Name != event.CosmosDenom {
