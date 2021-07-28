@@ -325,15 +325,14 @@ func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20Par
 
 	if metadata.Base != "" { // we have metadata, use it:
 		var (
-			erc20Name            = metadata.Base
-			erc20Symbol          = metadata.Base
-			erc20Decimals uint64 = 0
+			erc20Name     = metadata.Display
+			erc20Symbol   = metadata.Display
+			erc20Decimals uint64
 		)
 		for _, denomUnit := range metadata.DenomUnits {
 			if denomUnit.Denom == metadata.Display {
-				erc20Name = denomUnit.Denom
-				erc20Symbol = denomUnit.Denom
 				erc20Decimals = uint64(denomUnit.Exponent)
+				break
 			}
 		}
 		res := &types.DenomToERC20ParamsResponse{
@@ -345,7 +344,7 @@ func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20Par
 	}
 
 	// we don't have metadata; play nice with the rules in EthereumEventProcessor.verifyERC20DeployedEvent
-	// TODO(levi) find out how we know that req.Denom is something the chain will actually regocnize:
+	// TODO(levi) find out how we know that req.Denom is something the chain will actually regcognize:
 	res := &types.DenomToERC20ParamsResponse{
 		Erc20Name:     req.Denom,
 		Erc20Symbol:   "",
