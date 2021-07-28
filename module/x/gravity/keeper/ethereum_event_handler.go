@@ -82,7 +82,7 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 func (a EthereumEventProcessor) verifyERC20DeployedEvent(ctx sdk.Context, event *types.ERC20DeployedEvent) error {
 	if existingERC20, exists := a.keeper.getCosmosOriginatedERC20(ctx, event.CosmosDenom); exists {
 		return sdkerrors.Wrapf(
-			types.ErrInvalid,
+			types.ErrInvalidERC20Event,
 			"ERC20 token %s already exists for denom %s", existingERC20.Hex(), event.CosmosDenom,
 		)
 	}
@@ -104,21 +104,21 @@ func (a EthereumEventProcessor) verifyERC20DeployedEvent(ctx sdk.Context, event 
 	if metadata.Base == "" {
 		if event.Erc20Name != event.CosmosDenom {
 			return sdkerrors.Wrapf(
-				types.ErrInvalid,
+				types.ErrInvalidERC20Event,
 				"invalid ERC20 name for token without metadata; got: %s, expected: %s", event.Erc20Name, event.CosmosDenom,
 			)
 		}
 
 		if event.Erc20Symbol != "" {
 			return sdkerrors.Wrapf(
-				types.ErrInvalid,
+				types.ErrInvalidERC20Event,
 				"expected empty ERC20 symbol for token without metadata; got: %s", event.Erc20Symbol,
 			)
 		}
 
 		if event.Erc20Decimals != 0 {
 			return sdkerrors.Wrapf(
-				types.ErrInvalid,
+				types.ErrInvalidERC20Event,
 				"expected zero ERC20 decimals for token without metadata; got: %d", event.Erc20Decimals,
 			)
 		}
@@ -132,14 +132,14 @@ func (a EthereumEventProcessor) verifyERC20DeployedEvent(ctx sdk.Context, event 
 func verifyERC20Token(metadata banktypes.Metadata, event *types.ERC20DeployedEvent) error {
 	if event.Erc20Name != metadata.Display {
 		return sdkerrors.Wrapf(
-			types.ErrInvalid,
+			types.ErrInvalidERC20Event,
 			"ERC20 name %s does not match the denom display %s", event.Erc20Name, metadata.Description,
 		)
 	}
 
 	if event.Erc20Symbol != metadata.Display {
 		return sdkerrors.Wrapf(
-			types.ErrInvalid,
+			types.ErrInvalidERC20Event,
 			"ERC20 symbol %s does not match denom display %s", event.Erc20Symbol, metadata.Display,
 		)
 	}
@@ -170,7 +170,7 @@ func verifyERC20Token(metadata banktypes.Metadata, event *types.ERC20DeployedEve
 
 	if uint64(decimals) != event.Erc20Decimals {
 		return sdkerrors.Wrapf(
-			types.ErrInvalid,
+			types.ErrInvalidERC20Event,
 			"ERC20 decimals %d does not match denom decimals %d", event.Erc20Decimals, decimals,
 		)
 	}
