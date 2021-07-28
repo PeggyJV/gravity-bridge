@@ -307,6 +307,10 @@ func (k Keeper) ERC20ToDenom(c context.Context, req *types.ERC20ToDenomRequest) 
 	return res, nil
 }
 
+func (k Keeper) DenomToERC20Params(context.Context, *types.DenomToERC20ParamsRequest) (*types.DenomToERC20ParamsResponse, error) {
+	panic("not implemented")
+}
+
 func (k Keeper) DenomToERC20(c context.Context, req *types.DenomToERC20Request) (*types.DenomToERC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	cosmosOriginated, erc20, err := k.DenomToERC20Lookup(ctx, req.Denom)
