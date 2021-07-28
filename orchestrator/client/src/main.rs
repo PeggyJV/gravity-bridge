@@ -377,7 +377,7 @@ async fn main() {
 
         println!("Starting deploy of ERC20");
         let res = deploy_erc20(
-            denom.clone(),
+            res.base_denom,
             res.erc20_name,
             res.erc20_symbol,
             u8::try_from(res.erc20_decimals).unwrap(),

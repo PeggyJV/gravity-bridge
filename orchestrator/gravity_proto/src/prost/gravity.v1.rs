@@ -777,10 +777,12 @@ pub struct DenomToErc20ParamsRequest {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DenomToErc20ParamsResponse {
     #[prost(string, tag = "1")]
-    pub erc20_name: ::prost::alloc::string::String,
+    pub base_denom: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
+    pub erc20_name: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
     pub erc20_symbol: ::prost::alloc::string::String,
-    #[prost(uint64, tag = "3")]
+    #[prost(uint64, tag = "4")]
     pub erc20_decimals: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
