@@ -5,6 +5,7 @@ import (
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -307,8 +308,48 @@ func (k Keeper) ERC20ToDenom(c context.Context, req *types.ERC20ToDenomRequest) 
 	return res, nil
 }
 
-func (k Keeper) DenomToERC20Params(context.Context, *types.DenomToERC20ParamsRequest) (*types.DenomToERC20ParamsResponse, error) {
-	panic("not implemented")
+func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20ParamsRequest) (*types.DenomToERC20ParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	metadata := k.bankKeeper.GetDenomMetaData(ctx, req.Denom) // lookup by base
+
+	if metadata.Base == "" { // not found, try to lookup by display
+		k.bankKeeper.IterateAllDenomMetaData(ctx, func(md banktypes.Metadata) bool {
+			if md.Display == req.Denom {
+				metadata = md
+				return true
+			}
+			return false
+		})
+	}
+
+	if metadata.Base == "" { // still wasn't found, return an error
+		// TODO(levi) this could be an IBC token, but it's not clear we should support that.
+		// TODO(levi) review verifyERC20DeployedEvent then decide if we can skip the error path here:
+		return nil, sdkerrors.Wrapf(types.ErrDenomNotFound, "denom %s", req.Denom)
+	}
+
+	var (
+		erc20Name            = metadata.Base
+		erc20Symbol          = metadata.Base
+		erc20Decimals uint64 = 0
+	)
+
+	for _, denomUnit := range metadata.DenomUnits {
+		if denomUnit.Denom == metadata.Display {
+			erc20Name = denomUnit.Denom
+			erc20Symbol = denomUnit.Denom
+			erc20Decimals = uint64(denomUnit.Exponent)
+		}
+	}
+
+	res := &types.DenomToERC20ParamsResponse{
+		Erc20Name:     erc20Name,
+		Erc20Symbol:   erc20Symbol,
+		Erc20Decimals: erc20Decimals,
+	}
+
+	return res, nil
 }
 
 func (k Keeper) DenomToERC20(c context.Context, req *types.DenomToERC20Request) (*types.DenomToERC20Response, error) {

@@ -133,7 +133,7 @@ func verifyERC20Token(metadata banktypes.Metadata, event *types.ERC20DeployedEve
 	if event.Erc20Name != metadata.Display {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidERC20Event,
-			"ERC20 name %s does not match the denom display %s", event.Erc20Name, metadata.Description,
+			"ERC20 name %s does not match the denom display %s", event.Erc20Name, metadata.Display,
 		)
 	}
 

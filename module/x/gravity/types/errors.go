@@ -10,4 +10,5 @@ var (
 	ErrDelegateKeys      = sdkerrors.Register(ModuleName, 5, "failed to delegate keys")
 	ErrEmptyEthSig       = sdkerrors.Register(ModuleName, 6, "empty Ethereum signature")
 	ErrInvalidERC20Event = sdkerrors.Register(ModuleName, 7, "invalid ERC20 deployed event")
+	ErrDenomNotFound     = sdkerrors.Register(ModuleName, 8, "denom not found")
 )
