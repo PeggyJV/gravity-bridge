@@ -259,6 +259,13 @@ message ERC20ToDenomResponse {
   bool cosmos_originated = 2;
 }
 
+message DenomToERC20ParamsRequest { string denom = 1; }
+message DenomToERC20ParamsResponse {
+  string erc20_name = 1;
+  string erc20_symbol = 2;
+  uint64 erc20_decimals = 3;
+}
+
 message DenomToERC20Request { string denom = 1; }
 message DenomToERC20Response {
   string erc20 = 1;
