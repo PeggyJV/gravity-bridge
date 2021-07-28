@@ -323,33 +323,37 @@ func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20Par
 		})
 	}
 
-	if metadata.Base == "" { // still wasn't found, return an error
-		// TODO(levi) this could be an IBC token, but it's not clear we should support that.
-		// TODO(levi) review verifyERC20DeployedEvent then decide if we can skip the error path here:
-		return nil, sdkerrors.Wrapf(types.ErrDenomNotFound, "denom %s", req.Denom)
-	}
+	if metadata.Base != "" {
+		var (
+			erc20Name            = metadata.Base
+			erc20Symbol          = metadata.Base
+			erc20Decimals uint64 = 0
+		)
 
-	var (
-		erc20Name            = metadata.Base
-		erc20Symbol          = metadata.Base
-		erc20Decimals uint64 = 0
-	)
-
-	for _, denomUnit := range metadata.DenomUnits {
-		if denomUnit.Denom == metadata.Display {
-			erc20Name = denomUnit.Denom
-			erc20Symbol = denomUnit.Denom
-			erc20Decimals = uint64(denomUnit.Exponent)
+		for _, denomUnit := range metadata.DenomUnits {
+			if denomUnit.Denom == metadata.Display {
+				erc20Name = denomUnit.Denom
+				erc20Symbol = denomUnit.Denom
+				erc20Decimals = uint64(denomUnit.Exponent)
+			}
 		}
+
+		res := &types.DenomToERC20ParamsResponse{
+			Erc20Name:     erc20Name,
+			Erc20Symbol:   erc20Symbol,
+			Erc20Decimals: erc20Decimals,
+		}
+
+		return res, nil
 	}
 
 	res := &types.DenomToERC20ParamsResponse{
-		Erc20Name:     erc20Name,
-		Erc20Symbol:   erc20Symbol,
-		Erc20Decimals: erc20Decimals,
+		Erc20Name:     req.Denom,
+		Erc20Symbol:   "",
+		Erc20Decimals: 0,
 	}
-
 	return res, nil
+
 }
 
 func (k Keeper) DenomToERC20(c context.Context, req *types.DenomToERC20Request) (*types.DenomToERC20Response, error) {
