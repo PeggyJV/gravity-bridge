@@ -345,7 +345,6 @@ func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20Par
 	}
 
 	// we don't have metadata; play nice with the rules in EthereumEventProcessor.verifyERC20DeployedEvent
-	// TODO(levi) find out how we know that req.Denom is something the chain will actually regcognize:
 	res := &types.DenomToERC20ParamsResponse{
 		BaseDenom:     req.Denom,
 		Erc20Name:     req.Denom,
