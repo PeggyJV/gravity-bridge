@@ -4,6 +4,7 @@
 mod deploy;
 mod keys;
 mod orchestrator;
+mod print_config;
 mod query;
 mod sign_delegate_keys;
 mod tests;
@@ -46,6 +47,9 @@ pub enum GorcCmd {
 
     #[options(help = "display version information")]
     Version(version::VersionCmd),
+
+    #[options(help = "print config file template")]
+    PrintConfigCmd(print_config::PrintConfigCmd),
 }
 
 /// This trait allows you to define how application configuration is loaded.
