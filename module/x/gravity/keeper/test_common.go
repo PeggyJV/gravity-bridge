@@ -35,6 +35,7 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -159,13 +160,13 @@ var (
 	}
 
 	// InitTokens holds the number of tokens to initialize an account with
-	InitTokens = sdk.TokensFromConsensusPower(110)
+	InitTokens = sdk.TokensFromConsensusPower(110, sdk.DefaultPowerReduction)
 
 	// InitCoins holds the number of coins to initialize an account with
 	InitCoins = sdk.NewCoins(sdk.NewCoin(TestingStakeParams.BondDenom, InitTokens))
 
 	// StakingAmount holds the staking power to start a validator with
-	StakingAmount = sdk.TokensFromConsensusPower(10)
+	StakingAmount = sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
 
 	// StakingCoins holds the staking coins to start a validator with
 	StakingCoins = sdk.NewCoins(sdk.NewCoin(TestingStakeParams.BondDenom, StakingAmount))
@@ -223,7 +224,7 @@ func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, toke
 }
 
 func (input TestInput) AddBalanceToBank(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
-	return input.BankKeeper.SetBalances(ctx, addr, balances)
+	return fundAccount(ctx, input.BankKeeper, addr, balances)
 }
 
 // SetupFiveValChain does all the initialization for a 5 Validator chain using the keys here
@@ -245,7 +246,7 @@ func SetupFiveValChain(t *testing.T) (TestInput, sdk.Context) {
 		)
 
 		// Set the balance for the account
-		input.BankKeeper.SetBalances(input.Context, acc.GetAddress(), InitCoins)
+		require.NoError(t, fundAccount(input.Context, input.BankKeeper, acc.GetAddress(), InitCoins))
 
 		// Set the account in state
 		input.AccountKeeper.SetAccount(input.Context, acc)
@@ -365,19 +366,19 @@ func CreateTestEnv(t *testing.T) TestInput {
 
 	// total supply to track this
 	totalSupply := sdk.NewCoins(sdk.NewInt64Coin("stake", 100000000))
-	bankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
+	// bankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
 
 	// set up initial accounts
 	for name, perms := range maccPerms {
 		mod := authtypes.NewEmptyModuleAccount(name, perms...)
 		if name == stakingtypes.NotBondedPoolName {
-			err = bankKeeper.SetBalances(ctx, mod.GetAddress(), totalSupply)
-			require.NoError(t, err)
+			require.NoError(t, fundAccount(ctx, bankKeeper, mod.GetAddress(), totalSupply))
 		} else if name == distrtypes.ModuleName {
 			// some big pot to pay out
-			err = bankKeeper.SetBalances(ctx, mod.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("stake", 500000)))
-			require.NoError(t, err)
+			amt := sdk.NewCoins(sdk.NewInt64Coin("stake", 500000))
+			require.NoError(t, fundAccount(ctx, bankKeeper, mod.GetAddress(), amt))
 		}
+
 		accountKeeper.SetModuleAccount(ctx, mod)
 	}
 
@@ -704,4 +705,12 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey ccrypto.PubKey, am
 func NewTestMsgUnDelegateValidator(address sdk.ValAddress, amt sdk.Int) *stakingtypes.MsgUndelegate {
 	msg := stakingtypes.NewMsgUndelegate(sdk.AccAddress(address), address, sdk.NewCoin("stake", amt))
 	return msg
+}
+
+func fundAccount(ctx sdk.Context, bankKeeper types.BankKeeper, addr sdk.AccAddress, amounts sdk.Coins) error {
+	if err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
+		return err
+	}
+
+	return bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amounts)
 }
