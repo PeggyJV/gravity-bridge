@@ -20,7 +20,7 @@ pub struct Erc20 {
 impl Runnable for Erc20 {
     fn run(&self) {
         abscissa_tokio::run(&APP, async {
-            self.deploy_erc20().await;
+            self.deploy().await;
         })
         .unwrap_or_else(|e| {
             status_err!("executor exited with error: {}", e);
@@ -30,7 +30,7 @@ impl Runnable for Erc20 {
 }
 
 impl Erc20 {
-    async fn deploy_erc20(&self) {
+    async fn deploy(&self) {
         let denom = self.args.get(0).expect("denom is required");
 
         let config = APP.config();
