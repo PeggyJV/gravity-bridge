@@ -209,7 +209,7 @@ type TestInput struct {
 	BankKeeper     bankkeeper.BaseKeeper
 	GovKeeper      govkeeper.Keeper
 	Context        sdk.Context
-	Marshaler      codec.Marshaler
+	Marshaler      codec.Codec
 	LegacyAmino    *codec.LegacyAmino
 }
 
@@ -467,7 +467,7 @@ func MakeTestCodec() *codec.LegacyAmino {
 }
 
 // MakeTestMarshaler creates a proto codec for use in testing
-func MakeTestMarshaler() codec.Marshaler {
+func MakeTestMarshaler() codec.Codec {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
 	ModuleBasics.RegisterInterfaces(interfaceRegistry)
