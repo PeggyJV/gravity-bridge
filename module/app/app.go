@@ -78,6 +78,10 @@ import (
 	ibchost "github.com/cosmos/ibc-go/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/modules/core/keeper"
 	"github.com/gorilla/mux"
+	gravityparams "github.com/peggyjv/gravity-bridge/module/app/params"
+	"github.com/peggyjv/gravity-bridge/module/x/gravity"
+	"github.com/peggyjv/gravity-bridge/module/x/gravity/keeper"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/x/gravity/types"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -86,13 +90,6 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
-
-	// ibckeeper "github.com/cosmos/cosmos-sdk/x/ibc/core/keeper"
-
-	gravityparams "github.com/peggyjv/gravity-bridge/module/app/params"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/keeper"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/x/gravity/types"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
