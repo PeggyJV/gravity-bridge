@@ -5,7 +5,6 @@ import (
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -310,41 +309,34 @@ func (k Keeper) ERC20ToDenom(c context.Context, req *types.ERC20ToDenomRequest) 
 
 func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20ParamsRequest) (*types.DenomToERC20ParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-
-	metadata := k.bankKeeper.GetDenomMetaData(ctx, req.Denom) // lookup by base
-
-	if metadata.Base == "" { // not found, try to lookup by display
-		k.bankKeeper.IterateAllDenomMetaData(ctx, func(md banktypes.Metadata) bool {
-			if md.Display == req.Denom {
-				metadata = md
-				return true
-			}
-			return false
-		})
+	if existingERC20, exists := k.getCosmosOriginatedERC20(ctx, req.Denom); exists {
+		return nil, sdkerrors.Wrapf(
+			types.ErrInvalidERC20Event,
+			"ERC20 token %s already exists for denom %s", existingERC20.Hex(), req.Denom,
+		)
 	}
 
-	if metadata.Base != "" { // we have metadata, use it:
-		var (
-			erc20Name     = metadata.Display
-			erc20Symbol   = metadata.Display
-			erc20Decimals uint64
-		)
-		for _, denomUnit := range metadata.DenomUnits {
-			if denomUnit.Denom == metadata.Display {
+	// use metadata, if we can find it
+	if md := k.bankKeeper.GetDenomMetaData(ctx, req.Denom); md.Base != "" {
+		var erc20Decimals uint64
+		for _, denomUnit := range md.DenomUnits {
+			if denomUnit.Denom == md.Display {
 				erc20Decimals = uint64(denomUnit.Exponent)
 				break
 			}
 		}
 		res := &types.DenomToERC20ParamsResponse{
-			BaseDenom:     metadata.Base,
-			Erc20Name:     erc20Name,
-			Erc20Symbol:   erc20Symbol,
+			BaseDenom:     md.Base,
+			Erc20Name:     md.Display,
+			Erc20Symbol:   md.Display,
 			Erc20Decimals: erc20Decimals,
 		}
 		return res, nil
 	}
 
-	// we don't have metadata; play nice with the rules in EthereumEventProcessor.verifyERC20DeployedEvent
+	// TODO: verify req.Denom exists (meaning an account holds it) after we upgrade to 0.4.3
+
+	// no metadata, go with a zero decimal, no symbol erc-20
 	res := &types.DenomToERC20ParamsResponse{
 		BaseDenom:     req.Denom,
 		Erc20Name:     req.Denom,

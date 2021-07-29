@@ -35,7 +35,6 @@ type BankKeeper interface {
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	GetDenomMetaData(ctx sdk.Context, denom string) bank.Metadata
-	IterateAllDenomMetaData(ctx sdk.Context, cb func(bank.Metadata) bool)
 }
 
 type SlashingKeeper interface {
