@@ -421,6 +421,7 @@ func CreateTestEnv(t *testing.T) TestInput {
 		stakingKeeper,
 		bankKeeper,
 		slashingKeeper,
+		sdk.DefaultPowerReduction,
 	)
 
 	stakingKeeper = *stakingKeeper.SetHooks(

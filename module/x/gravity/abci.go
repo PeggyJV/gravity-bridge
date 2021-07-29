@@ -251,7 +251,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 							ctx,
 							valInfo.cons,
 							ctx.BlockHeight(),
-							valInfo.val.ConsensusPower(sdk.DefaultPowerReduction),
+							valInfo.val.ConsensusPower(k.PowerReduction),
 							params.SlashFractionBatch,
 						)
 						k.StakingKeeper.Jail(ctx, valInfo.cons)
@@ -272,7 +272,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 								ctx,
 								valInfo.cons,
 								ctx.BlockHeight(),
-								valInfo.val.ConsensusPower(sdk.DefaultPowerReduction),
+								valInfo.val.ConsensusPower(k.PowerReduction),
 								params.SlashFractionSignerSetTx,
 							)
 							k.StakingKeeper.Jail(ctx, valInfo.cons)

@@ -408,6 +408,7 @@ func NewGravityApp(
 		stakingKeeper,
 		app.bankKeeper,
 		app.slashingKeeper,
+		sdk.DefaultPowerReduction,
 	)
 
 	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
