@@ -562,7 +562,7 @@ func CmdDenomToERC20Params() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "denom-to-erc20-params [denom]",
 		Args:  cobra.ExactArgs(1),
-		Short: "given a cosmos denom return the correct erc20 name, symbol and decimals",
+		Short: "given a cosmos base or display denom return the correct erc20 name, symbol and decimals",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
