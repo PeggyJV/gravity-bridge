@@ -366,7 +366,6 @@ func CreateTestEnv(t *testing.T) TestInput {
 
 	// total supply to track this
 	totalSupply := sdk.NewCoins(sdk.NewInt64Coin("stake", 100000000))
-	// bankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
 
 	// set up initial accounts
 	for name, perms := range maccPerms {
