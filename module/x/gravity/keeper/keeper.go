@@ -30,7 +30,7 @@ type Keeper struct {
 
 	storeKey       sdk.StoreKey
 	paramSpace     paramtypes.Subspace
-	cdc            codec.BinaryMarshaler
+	cdc            codec.Codec
 	accountKeeper  types.AccountKeeper
 	bankKeeper     types.BankKeeper
 	SlashingKeeper types.SlashingKeeper
@@ -38,7 +38,7 @@ type Keeper struct {
 
 // NewKeeper returns a new instance of the gravity keeper
 func NewKeeper(
-	cdc codec.BinaryMarshaler,
+	cdc codec.Codec,
 	storeKey sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
 	accKeeper types.AccountKeeper,
