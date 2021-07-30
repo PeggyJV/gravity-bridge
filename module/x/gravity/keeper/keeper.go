@@ -35,6 +35,7 @@ type Keeper struct {
 	bankKeeper     types.BankKeeper
 	SlashingKeeper types.SlashingKeeper
 	PowerReduction sdk.Int
+	hooks          types.GravityHooks
 }
 
 // NewKeeper returns a new instance of the gravity keeper
