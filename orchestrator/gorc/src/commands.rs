@@ -21,17 +21,20 @@ pub const CONFIG_FILE: &str = "gorc.toml";
 /// Gorc Subcommands
 #[derive(Command, Debug, Options, Runnable)]
 pub enum GorcCmd {
-    #[options(help = "get usage information")]
-    Help(Help<Self>),
-
     #[options(help = "tools for contract deployment")]
     Deploy(deploy::DeployCmd),
+
+    #[options(help = "get usage information")]
+    Help(Help<Self>),
 
     #[options(help = "key management commands")]
     Keys(keys::KeysCmd),
 
     #[options(help = "orchestrator management commands")]
     Orchestrator(orchestrator::OrchestratorCmd),
+
+    #[options(help = "print config file template")]
+    PrintConfigCmd(print_config::PrintConfigCmd),
 
     #[options(help = "query state on either ethereum or cosmos chains")]
     Query(query::QueryCmd),
@@ -47,9 +50,6 @@ pub enum GorcCmd {
 
     #[options(help = "display version information")]
     Version(version::VersionCmd),
-
-    #[options(help = "print config file template")]
-    PrintConfigCmd(print_config::PrintConfigCmd),
 }
 
 /// This trait allows you to define how application configuration is loaded.
