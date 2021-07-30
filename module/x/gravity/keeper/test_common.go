@@ -35,7 +35,6 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -346,6 +345,7 @@ func CreateTestEnv(t *testing.T) TestInput {
 	for acc := range maccPerms {
 		blockedAddr[authtypes.NewModuleAddress(acc).String()] = true
 	}
+
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		marshaler,
 		keyBank,
@@ -371,11 +371,11 @@ func CreateTestEnv(t *testing.T) TestInput {
 	for name, perms := range maccPerms {
 		mod := authtypes.NewEmptyModuleAccount(name, perms...)
 		if name == stakingtypes.NotBondedPoolName {
-			require.NoError(t, fundAccount(ctx, bankKeeper, mod.GetAddress(), totalSupply))
+			require.NoError(t, fundModAccount(ctx, bankKeeper, mod.GetName(), totalSupply))
 		} else if name == distrtypes.ModuleName {
 			// some big pot to pay out
 			amt := sdk.NewCoins(sdk.NewInt64Coin("stake", 500000))
-			require.NoError(t, fundAccount(ctx, bankKeeper, mod.GetAddress(), amt))
+			require.NoError(t, fundModAccount(ctx, bankKeeper, mod.GetName(), amt))
 		}
 
 		accountKeeper.SetModuleAccount(ctx, mod)
@@ -708,9 +708,17 @@ func NewTestMsgUnDelegateValidator(address sdk.ValAddress, amt sdk.Int) *staking
 }
 
 func fundAccount(ctx sdk.Context, bankKeeper types.BankKeeper, addr sdk.AccAddress, amounts sdk.Coins) error {
-	if err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
+	if err := bankKeeper.MintCoins(ctx, types.ModuleName, amounts); err != nil {
 		return err
 	}
 
-	return bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amounts)
+	return bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, amounts)
+}
+
+func fundModAccount(ctx sdk.Context, bankKeeper types.BankKeeper, recipientMod string, amounts sdk.Coins) error {
+	if err := bankKeeper.MintCoins(ctx, types.ModuleName, amounts); err != nil {
+		return err
+	}
+
+	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, recipientMod, amounts)
 }
