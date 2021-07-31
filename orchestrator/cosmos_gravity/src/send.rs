@@ -28,12 +28,12 @@ pub async fn update_gravity_delegate_addresses(
     contact: &Contact,
     delegate_eth_address: EthAddress,
     delegate_cosmos_address: Address,
-    cosmos_private_key: CosmosPrivateKey,
+    cosmos_key: CosmosPrivateKey,
     eth_private_key: EthPrivateKey,
     fee: Coin,
 ) -> Result<TxResponse, CosmosGrpcError> {
     trace!("Updating Gravity Delegate addresses");
-    let our_valoper_address = cosmos_private_key
+    let our_valoper_address = cosmos_key
         .to_address(&contact.get_prefix())
         .unwrap()
         // This works so long as the format set by the cosmos hub is maintained
@@ -44,11 +44,7 @@ pub async fn update_gravity_delegate_addresses(
         .unwrap();
 
     let sequence = &contact
-        .get_account_info(
-            cosmos_private_key
-                .to_address(&contact.get_prefix())
-                .unwrap(),
-        )
+        .get_account_info(cosmos_key.to_address(&contact.get_prefix()).unwrap())
         .await?
         .sequence;
 
@@ -71,7 +67,7 @@ pub async fn update_gravity_delegate_addresses(
 
     let msg = Msg::new("/gravity.v1.MsgDelegateKeys", msg_set_orch_address);
 
-    send_messages(contact, cosmos_private_key, fee, vec![msg]).await
+    send_messages(contact, cosmos_key, fee, vec![msg]).await
 }
 
 /// Send in a confirmation for an array of validator sets, it's far more efficient to send these
@@ -82,17 +78,17 @@ pub async fn send_valset_confirms(
     eth_private_key: EthPrivateKey,
     fee: Coin,
     valsets: Vec<Valset>,
-    cosmos_private_key: CosmosPrivateKey,
+    cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Result<TxResponse, CosmosGrpcError> {
     let messages = build::signer_set_tx_confirmation_messages(
         contact,
         eth_private_key,
         valsets,
-        cosmos_private_key,
+        cosmos_key,
         gravity_id,
     );
-    send_messages(contact, cosmos_private_key, fee, messages).await
+    send_messages(contact, cosmos_key, fee, messages).await
 }
 
 /// Send in a confirmation for a specific transaction batch
@@ -101,17 +97,17 @@ pub async fn send_batch_confirm(
     eth_private_key: EthPrivateKey,
     fee: Coin,
     transaction_batches: Vec<TransactionBatch>,
-    cosmos_private_key: CosmosPrivateKey,
+    cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Result<TxResponse, CosmosGrpcError> {
     let messages = build::batch_tx_confirmation_messages(
         contact,
         eth_private_key,
         transaction_batches,
-        cosmos_private_key,
+        cosmos_key,
         gravity_id,
     );
-    send_messages(contact, cosmos_private_key, fee, messages).await
+    send_messages(contact, cosmos_key, fee, messages).await
 }
 
 /// Send in a confirmation for a specific logic call
@@ -120,22 +116,22 @@ pub async fn send_logic_call_confirm(
     eth_private_key: EthPrivateKey,
     fee: Coin,
     logic_calls: Vec<LogicCall>,
-    cosmos_private_key: CosmosPrivateKey,
+    cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Result<TxResponse, CosmosGrpcError> {
     let messages = build::contract_call_tx_confirmation_messages(
         contact,
         eth_private_key,
         logic_calls,
-        cosmos_private_key,
+        cosmos_key,
         gravity_id,
     );
-    send_messages(contact, cosmos_private_key, fee, messages).await
+    send_messages(contact, cosmos_key, fee, messages).await
 }
 
 pub async fn send_ethereum_claims(
     contact: &Contact,
-    cosmos_private_key: CosmosPrivateKey,
+    cosmos_key: CosmosPrivateKey,
     deposits: Vec<SendToCosmosEvent>,
     withdraws: Vec<TransactionBatchExecutedEvent>,
     erc20_deploys: Vec<Erc20DeployedEvent>,
@@ -145,28 +141,26 @@ pub async fn send_ethereum_claims(
 ) -> Result<TxResponse, CosmosGrpcError> {
     let messages = build::submit_ethereum_event_messages(
         contact,
-        cosmos_private_key,
+        cosmos_key,
         deposits,
         withdraws,
         erc20_deploys,
         logic_calls,
         valsets,
     );
-    send_messages(contact, cosmos_private_key, fee, messages).await
+    send_messages(contact, cosmos_key, fee, messages).await
 }
 
 /// Sends tokens from Cosmos to Ethereum. These tokens will not be sent immediately instead
 /// they will require some time to be included in a batch
 pub async fn send_to_eth(
-    cosmos_private_key: CosmosPrivateKey,
+    cosmos_key: CosmosPrivateKey,
     destination: EthAddress,
     amount: Coin,
     fee: Coin,
     contact: &Contact,
 ) -> Result<TxResponse, CosmosGrpcError> {
-    let our_address = cosmos_private_key
-        .to_address(&contact.get_prefix())
-        .unwrap();
+    let our_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     if amount.denom != fee.denom {
         return Err(CosmosGrpcError::BadInput(format!(
             "{} {} is an invalid denom set for SendToEth you must pay fees in the same token your sending",
@@ -203,18 +197,16 @@ pub async fn send_to_eth(
 
     let msg = Msg::new("/gravity.v1.MsgSendToEthereum", msg_send_to_eth);
 
-    send_messages(contact, cosmos_private_key, fee, vec![msg]).await
+    send_messages(contact, cosmos_key, fee, vec![msg]).await
 }
 
 pub async fn send_request_batch(
-    cosmos_private_key: CosmosPrivateKey,
+    cosmos_key: CosmosPrivateKey,
     denom: String,
     fee: Coin,
     contact: &Contact,
 ) -> Result<TxResponse, CosmosGrpcError> {
-    let our_address = cosmos_private_key
-        .to_address(&contact.get_prefix())
-        .unwrap();
+    let our_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
     let msg_request_batch = proto::MsgRequestBatchTx {
         signer: our_address.to_string(),
@@ -223,18 +215,16 @@ pub async fn send_request_batch(
 
     let msg = Msg::new("/gravity.v1.MsgRequestBatchTx", msg_request_batch);
 
-    send_messages(contact, cosmos_private_key, fee, vec![msg]).await
+    send_messages(contact, cosmos_key, fee, vec![msg]).await
 }
 
 async fn send_messages(
     contact: &Contact,
-    cosmos_private_key: CosmosPrivateKey,
+    cosmos_key: CosmosPrivateKey,
     fee: Coin,
     messages: Vec<Msg>,
 ) -> Result<TxResponse, CosmosGrpcError> {
-    let our_address = cosmos_private_key
-        .to_address(&contact.get_prefix())
-        .unwrap();
+    let our_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
     let fee = Fee {
         amount: vec![fee],
@@ -245,11 +235,24 @@ async fn send_messages(
 
     let args = contact.get_message_args(our_address, fee).await?;
 
-    let msg_bytes = cosmos_private_key.sign_std_msg(&messages, args, MEMO)?;
+    let msg_bytes = cosmos_key.sign_std_msg(&messages, args, MEMO)?;
 
     let response = contact
         .send_transaction(msg_bytes, BroadcastMode::Sync)
         .await?;
 
     contact.wait_for_tx(response, TIMEOUT).await
+}
+
+pub async fn send_main_loop(
+    contact: &Contact,
+    cosmos_key: CosmosPrivateKey,
+    fee: Coin,
+    mut rx: tokio::sync::mpsc::Receiver<Vec<Msg>>,
+) {
+    while let Some(messages) = rx.recv().await {
+        send_messages(contact, cosmos_key, fee.clone(), messages)
+            .await
+            .expect("could not send transaction");
+    }
 }

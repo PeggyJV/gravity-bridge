@@ -5,19 +5,20 @@
 use crate::{ethereum_event_watcher::check_for_events, oracle_resync::get_last_checked_block};
 use clarity::{address::Address as EthAddress, Uint256};
 use clarity::{utils::bytes_to_hex_str, PrivateKey as EthPrivateKey};
+use cosmos_gravity::send::send_main_loop;
 use cosmos_gravity::{
+    build,
     query::{
         get_oldest_unsigned_logic_call, get_oldest_unsigned_transaction_batch,
         get_oldest_unsigned_valsets,
     },
-    send::{send_batch_confirm, send_logic_call_confirm, send_valset_confirms},
+    send::{send_batch_confirm, send_logic_call_confirm},
 };
 use deep_space::client::ChainStatus;
-use deep_space::Contact;
 use deep_space::error::CosmosGrpcError;
 use deep_space::{coin::Coin, private_key::PrivateKey as CosmosPrivateKey};
+use deep_space::{Contact, Msg};
 use ethereum_gravity::utils::get_gravity_id;
-use futures::future::join3;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use relayer::main_loop::relayer_main_loop;
 use std::time::Duration;
@@ -51,7 +52,11 @@ pub async fn orchestrator_main_loop(
         amount: 1u32.into(),
     };
 
-    let a = eth_oracle_main_loop(
+    let (tx, rx) = tokio::sync::mpsc::channel(1);
+
+    let a = send_main_loop(&contact, cosmos_key, fee.to_owned(), rx);
+
+    let b = eth_oracle_main_loop(
         cosmos_key,
         web3.clone(),
         contact.clone(),
@@ -59,7 +64,8 @@ pub async fn orchestrator_main_loop(
         gravity_contract_address,
         fee.clone(),
     );
-    let b = eth_signer_main_loop(
+
+    let c = eth_signer_main_loop(
         cosmos_key,
         ethereum_key,
         web3.clone(),
@@ -67,14 +73,17 @@ pub async fn orchestrator_main_loop(
         grpc_client.clone(),
         gravity_contract_address,
         fee.clone(),
+        tx.clone(),
     );
-    let c = relayer_main_loop(
+
+    let d = relayer_main_loop(
         ethereum_key,
         web3,
         grpc_client.clone(),
         gravity_contract_address,
     );
-    join3(a, b, c).await;
+
+    futures::future::join4(a, b, c, d).await;
 }
 
 const DELAY: Duration = Duration::from_secs(5);
@@ -154,18 +163,17 @@ pub async fn eth_oracle_main_loop(
         .await
         {
             Ok(new_block) => last_checked_block = new_block,
-            Err(e) => {error!(
+            Err(e) => {
+                error!(
                 "Failed to get events for block range, Check your Eth node and Cosmos gRPC {:?}",
                 e
             );
-            if let gravity_utils::error::GravityError::CosmosGrpcError(err)=e{
-                if let CosmosGrpcError::TransactionFailed{tx:_,time:_} =err{
-                    delay_for(Duration::from_secs(10)).await;
+                if let gravity_utils::error::GravityError::CosmosGrpcError(err) = e {
+                    if let CosmosGrpcError::TransactionFailed { tx: _, time: _ } = err {
+                        delay_for(Duration::from_secs(10)).await;
+                    }
                 }
             }
-                
-            
-        },
         }
 
         // a bit of logic that tires to keep things running every LOOP_SPEED seconds exactly
@@ -187,13 +195,14 @@ pub async fn eth_signer_main_loop(
     web3: Web3,
     contact: Contact,
     grpc_client: GravityQueryClient<Channel>,
-    gravity_contract_address: EthAddress,
+    contract_address: EthAddress,
     fee: Coin,
+    tx: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let our_ethereum_address = ethereum_key.to_public_key().unwrap();
     let mut grpc_client = grpc_client;
-    let gravity_id = get_gravity_id(gravity_contract_address, our_ethereum_address, &web3).await;
+    let gravity_id = get_gravity_id(contract_address, our_ethereum_address, &web3).await;
     if gravity_id.is_err() {
         error!("Failed to get GravityID, check your Eth node");
         return;
@@ -252,16 +261,15 @@ pub async fn eth_signer_main_loop(
                         valsets.len(),
                         valsets[0].nonce
                     );
-                    let res = send_valset_confirms(
+
+                    let messages = build::signer_set_tx_confirmation_messages(
                         &contact,
                         ethereum_key,
-                        fee.clone(),
                         valsets,
                         cosmos_key,
-                        gravity_id.clone(),
-                    )
-                    .await;
-                    trace!("Valset confirm result is {:?}", res);
+                        gravity_id.to_owned(),
+                    );
+                    tx.send(messages).await.expect("Could not send messages");
                 }
             }
             Err(e) => trace!(
