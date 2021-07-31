@@ -13,7 +13,7 @@ use gravity_utils::types::*;
 use prost::Message;
 use prost_types::Any;
 
-pub fn signer_set_tx_confirmations(
+pub fn signer_set_tx_confirmation_messages(
     contact: &Contact,
     eth_private_key: EthPrivateKey,
     valsets: Vec<Valset>,
@@ -51,7 +51,7 @@ pub fn signer_set_tx_confirmations(
     messages
 }
 
-pub fn batch_tx_confirmations(
+pub fn batch_tx_confirmation_messages(
     contact: &Contact,
     eth_private_key: EthPrivateKey,
     transaction_batches: Vec<TransactionBatch>,
@@ -96,7 +96,7 @@ pub fn batch_tx_confirmations(
     messages
 }
 
-pub fn contract_call_tx_confirmations(
+pub fn contract_call_tx_confirmation_messages(
     contact: &Contact,
     eth_private_key: EthPrivateKey,
     logic_calls: Vec<LogicCall>,
