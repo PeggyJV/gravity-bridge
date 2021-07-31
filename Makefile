@@ -41,25 +41,25 @@ e2e_clean_slate:
 	@cd testnet && go test -c
 
 e2e_batch_stress: e2e_clean_slate
-	@TEST_TYPE="BATCH_STRESS" testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@TEST_TYPE="BATCH_STRESS"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
 
 e2e_happy_path: e2e_clean_slate
-	@TEST_TYPE="HAPPY_PATH" testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@TEST_TYPE="HAPPY_PATH"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
 
 e2e_validator_out: e2e_clean_slate
-	@TEST_TYPE="VALIDATOR_OUT" testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@TEST_TYPE="VALIDATOR_OUT"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
 
 e2e_valset_stress: e2e_clean_slate
-	@TEST_TYPE="VALSET_STRESS" testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@TEST_TYPE="VALSET_STRESS"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
 
 e2e_v2_happy_path: e2e_clean_slate
-	@TEST_TYPE="V2_HAPPY_PATH" testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@TEST_TYPE="V2_HAPPY_PATH"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
 
 e2e_arbitrary_logic: e2e_clean_slate
-	@TEST_TYPE="ARBITRARY_LOGIC" testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@TEST_TYPE="ARBITRARY_LOGIC"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
 
 e2e_orchestrator_keys: e2e_clean_slate
-	@TEST_TYPE="ORCHESTRATOR_KEYS" testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@TEST_TYPE="ORCHESTRATOR_KEYS"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
 
 fail:
 	@echo 'test failed; dumping container logs into ./testdata for review'
