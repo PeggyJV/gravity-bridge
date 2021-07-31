@@ -951,7 +951,7 @@ dependencies = [
 [[package]]
 name = "cosmos-sdk-proto"
 version = "0.5.0"
-source = "git+http://github.com/cosmos/cosmos-rust?branch=zaki/update-tm-0.21#32ded1e7766632221de25332354add128f812ed0"
+source = "git+http://github.com/cosmos/cosmos-rust?branch=main"
 dependencies = [
  "prost",
  "prost-types",
@@ -1118,7 +1118,7 @@ dependencies = [
  "base64",
  "bech32 0.8.0",
  "bytes 1.0.1",
- "cosmos-sdk-proto 0.5.0 (git+http://github.com/cosmos/cosmos-rust?branch=zaki/update-tm-0.21)",
+ "cosmos-sdk-proto 0.5.0 (git+http://github.com/cosmos/cosmos-rust?branch=main)",
  "hmac 0.11.0",
  "log",
  "num-bigint 0.4.0",
