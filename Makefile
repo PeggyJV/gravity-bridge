@@ -36,7 +36,7 @@ e2e_clean_slate:
 		2>/dev/null \
 		|| true
 	@docker network rm testnet 1>/dev/null 2>/dev/null || true
-	@rm -fr testdata
+	@sudo rm -fr testdata
 	@make e2e_build_images
 	@cd testnet && go test -c
 
