@@ -283,15 +283,17 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	t.Log("deploying contract_deployer")
 	contractDeployer, err := pool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:      "contract_deployer",
+			Name:       "contract_deployer",
 			Repository: "solidity",
-			Tag: "prebuilt",
-			NetworkID: network.Network.ID,
+			Tag:        "prebuilt",
+			NetworkID:  network.Network.ID,
 			PortBindings: map[docker.Port][]docker.PortBinding{
 				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
 			},
 			Env: []string{},
-		}, func(config *docker.HostConfig) {})
+		},
+		noRestart,
+	)
 	require.NoError(t, err, "error bringing up contract_deployer")
 	t.Logf("deployed contract_deployer at %s", contractDeployer.Container.ID)
 
