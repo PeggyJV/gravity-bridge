@@ -312,7 +312,6 @@ func TestPrebuiltCi(t *testing.T) {
 	require.NoError(t, err, "error bringing up contract_deployer")
 	t.Logf("deployed contract_deployer at %s", contractDeployer.Container.ID)
 
-
 	container := contractDeployer.Container
 	for container.State.Running {
 		time.Sleep(10 * time.Second)

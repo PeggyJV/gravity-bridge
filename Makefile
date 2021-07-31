@@ -16,7 +16,7 @@ e2e_slow_loris:
 	@make -s e2e_validator_out
 	@make -s e2e_valset_stress
 
-e2e_clean_slate:
+e2e_clean_slate: e2e_build_images
 	@docker rm --force \
 		$(shell docker ps -qa --filter="name=contract_deployer") \
 		$(shell docker ps -qa --filter="name=ethereum") \
@@ -37,29 +37,28 @@ e2e_clean_slate:
 		|| true
 	@docker network rm testnet 1>/dev/null 2>/dev/null || true
 	@sudo rm -fr testdata
-	@make e2e_build_images
 	@cd testnet && go test -c
 
 e2e_batch_stress: e2e_clean_slate
-	@TEST_TYPE="BATCH_STRESS"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@testnet/testnet.test -test.run TestBatchStress -test.failfast -test.v || make -s fail
 
 e2e_happy_path: e2e_clean_slate
-	@TEST_TYPE="HAPPY_PATH"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@testnet/testnet.test -test.run TestHappyPath -test.failfast -test.v || make -s fail
 
 e2e_validator_out: e2e_clean_slate
-	@TEST_TYPE="VALIDATOR_OUT"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@testnet/testnet.test -test.run TestValidatorOut -test.failfast -test.v || make -s fail
 
 e2e_valset_stress: e2e_clean_slate
-	@TEST_TYPE="VALSET_STRESS"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@testnet/testnet.test -test.run TestValsetStress -test.failfast -test.v || make -s fail
 
 e2e_v2_happy_path: e2e_clean_slate
-	@TEST_TYPE="V2_HAPPY_PATH"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@testnet/testnet.test -test.run TestV2HappyPath -test.failfast -test.v || make -s fail
 
 e2e_arbitrary_logic: e2e_clean_slate
-	@TEST_TYPE="ARBITRARY_LOGIC"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@testnet/testnet.test -test.run TestArbitraryLogic -test.failfast -test.v || make -s fail
 
 e2e_orchestrator_keys: e2e_clean_slate
-	@TEST_TYPE="ORCHESTRATOR_KEYS"; testnet/testnet.test -test.run PrebuiltCi -test.failfast -test.v || make -s fail
+	@testnet/testnet.test -test.run TestOrchestratorKeys -test.failfast -test.v || make -s fail
 
 fail:
 	@echo 'test failed; dumping container logs into ./testdata for review'

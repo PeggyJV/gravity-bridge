@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -247,18 +246,6 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	require.NoError(t, err, "error bringing up ethereum")
 	t.Logf("deployed ethereum at %s", ethereum.Container.ID)
 
-	// build validators
-	for _, validator := range chain.Validators {
-		t.Logf("building %s", validator.instanceName())
-		err = pool.Client.BuildImage(docker.BuildImageOptions{
-			Name:         validator.instanceName(),
-			Dockerfile:   "Dockerfile",
-			ContextDir:   "./module",
-			OutputStream: ioutil.Discard,
-		})
-		require.NoError(t, err, "error building %s", validator.instanceName())
-	}
-
 	wd, err := os.Getwd()
 	require.NoError(t, err, "couldn't get working directory")
 
@@ -267,7 +254,8 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 			Name:       validator.instanceName(),
 			NetworkID:  network.Network.ID,
 			Mounts:     []string{fmt.Sprintf("%s/testdata/%s/%s/:/root/home", wd, chain.ID, validator.instanceName())},
-			Repository: validator.instanceName(),
+			Repository: "gravity",
+			Tag:        "prebuilt",
 		}
 
 		// expose the first validator for debugging and communication
@@ -292,22 +280,18 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	}
 
 	// bring up the contract deployer and deploy contract
-	t.Log("building contract_deployer")
-	contractDeployer, err := pool.BuildAndRunWithBuildOptions(
-		&dockertest.BuildOptions{
-			Dockerfile: "Dockerfile",
-			ContextDir: "./solidity",
-		},
+	t.Log("deploying contract_deployer")
+	contractDeployer, err := pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:      "contract_deployer",
+			Repository: "solidity",
+			Tag: "prebuilt",
 			NetworkID: network.Network.ID,
 			PortBindings: map[docker.Port][]docker.PortBinding{
 				"8545/tcp": {{HostIP: "", HostPort: "8545"}},
 			},
 			Env: []string{},
-		},
-		noRestart,
-	)
+		}, func(config *docker.HostConfig) {})
 	require.NoError(t, err, "error bringing up contract_deployer")
 	t.Logf("deployed contract_deployer at %s", contractDeployer.Container.ID)
 
@@ -338,18 +322,6 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 	require.NoError(t, err, "error removing contract deployer container")
 	require.NotEmptyf(t, gravityContract, "empty gravity contract")
 
-	// build orchestrators
-	for _, orchestrator := range chain.Orchestrators {
-		t.Logf("building %s", orchestrator.instanceName())
-		err = pool.Client.BuildImage(docker.BuildImageOptions{
-			Name:         orchestrator.instanceName(),
-			Dockerfile:   "Dockerfile",
-			ContextDir:   "./orchestrator",
-			OutputStream: ioutil.Discard,
-		})
-		require.NoError(t, err, "error building %s", orchestrator.instanceName())
-	}
-
 	// deploy orchestrators
 	for _, orchestrator := range chain.Orchestrators {
 		validator := chain.Validators[orchestrator.Index]
@@ -368,7 +340,8 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 		runOpts := &dockertest.RunOptions{
 			Name:       orchestrator.instanceName(),
 			NetworkID:  network.Network.ID,
-			Repository: orchestrator.instanceName(),
+			Repository: "orchestrator",
+			Tag:        "prebuilt",
 			Env:        env,
 		}
 
