@@ -164,9 +164,11 @@ pub async fn send_main_loop(
     fee: Coin,
     mut rx: tokio::sync::mpsc::Receiver<Vec<Msg>>,
 ) {
+    // TODO(levi) accept a tuple that tells us to halt on error?
     while let Some(messages) = rx.recv().await {
-        send_messages(contact, cosmos_key, fee.clone(), messages)
-            .await
-            .expect("could not send transaction");
+        match send_messages(contact, cosmos_key, fee.clone(), messages).await {
+            Ok(res) => trace!("okay: {:?}", res),
+            Err(err) => error!("fail: {}", err),
+        }
     }
 }
