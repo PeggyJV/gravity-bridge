@@ -12,7 +12,6 @@ use cosmos_gravity::{
         get_oldest_unsigned_logic_call, get_oldest_unsigned_transaction_batch,
         get_oldest_unsigned_valsets,
     },
-    send::{send_batch_confirm, send_logic_call_confirm},
 };
 use deep_space::client::ChainStatus;
 use deep_space::error::CosmosGrpcError;
@@ -72,7 +71,6 @@ pub async fn orchestrator_main_loop(
         contact.clone(),
         grpc_client.clone(),
         gravity_contract_address,
-        fee.clone(),
         tx.clone(),
     );
 
@@ -196,19 +194,19 @@ pub async fn eth_signer_main_loop(
     contact: Contact,
     grpc_client: GravityQueryClient<Channel>,
     contract_address: EthAddress,
-    fee: Coin,
     tx: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let our_ethereum_address = ethereum_key.to_public_key().unwrap();
     let mut grpc_client = grpc_client;
+
     let gravity_id = get_gravity_id(contract_address, our_ethereum_address, &web3).await;
     if gravity_id.is_err() {
         error!("Failed to get GravityID, check your Eth node");
         return;
     }
     let gravity_id = gravity_id.unwrap();
-    let gravity_id = String::from_utf8(gravity_id.clone()).expect("Invalid GravityID");
+    let gravity_id = String::from_utf8(gravity_id).expect("Invalid GravityID");
 
     loop {
         let loop_start = Instant::now();
@@ -261,13 +259,12 @@ pub async fn eth_signer_main_loop(
                         valsets.len(),
                         valsets[0].nonce
                     );
-
                     let messages = build::signer_set_tx_confirmation_messages(
                         &contact,
                         ethereum_key,
                         valsets,
                         cosmos_key,
-                        gravity_id.to_owned(),
+                        gravity_id.clone(),
                     );
                     tx.send(messages).await.expect("Could not send messages");
                 }
@@ -288,16 +285,15 @@ pub async fn eth_signer_main_loop(
                     last_unsigned_batch.total_fee.amount,
                     last_unsigned_batch.batch_timeout,
                 );
-                let res = send_batch_confirm(
+                let transaction_batches = vec![last_unsigned_batch];
+                let messages = build::batch_tx_confirmation_messages(
                     &contact,
                     ethereum_key,
-                    fee.clone(),
-                    vec![last_unsigned_batch],
+                    transaction_batches,
                     cosmos_key,
                     gravity_id.clone(),
-                )
-                .await;
-                info!("Batch confirm result is {:?}", res);
+                );
+                tx.send(messages).await.expect("Could not send messages");
             }
             Ok(None) => info!("No unsigned batches! Everything good!"),
             Err(e) => info!(
@@ -315,16 +311,15 @@ pub async fn eth_signer_main_loop(
                     bytes_to_hex_str(&logic_call.invalidation_id),
                     logic_call.invalidation_nonce
                 );
-                let res = send_logic_call_confirm(
+                let logic_calls = vec![logic_call];
+                let messages = build::contract_call_tx_confirmation_messages(
                     &contact,
                     ethereum_key,
-                    fee.clone(),
-                    vec![logic_call],
+                    logic_calls,
                     cosmos_key,
                     gravity_id.clone(),
-                )
-                .await;
-                trace!("call confirm result is {:?}", res);
+                );
+                tx.send(messages).await.expect("Could not send messages");
             }
         } else if let Err(e) = logic_calls {
             info!(

@@ -15,20 +15,18 @@ use prost_types::Any;
 
 pub fn signer_set_tx_confirmation_messages(
     contact: &Contact,
-    eth_private_key: EthPrivateKey,
+    ethereum_key: EthPrivateKey,
     valsets: Vec<Valset>,
-    cosmos_private_key: CosmosPrivateKey,
+    cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Vec<Msg> {
-    let our_cosmos_address = cosmos_private_key
-        .to_address(&contact.get_prefix())
-        .unwrap();
-    let our_eth_address = eth_private_key.to_public_key().unwrap();
+    let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
+    let our_eth_address = ethereum_key.to_public_key().unwrap();
 
     let mut messages = Vec::new();
     for valset in valsets {
         let message = encode_valset_confirm(gravity_id.clone(), valset.clone());
-        let eth_signature = eth_private_key.sign_ethereum_msg(&message);
+        let eth_signature = ethereum_key.sign_ethereum_msg(&message);
         let confirm = proto::SignerSetTxConfirmation {
             ethereum_signer: our_eth_address.to_string(),
             signer_set_nonce: valset.nonce,
@@ -53,21 +51,19 @@ pub fn signer_set_tx_confirmation_messages(
 
 pub fn batch_tx_confirmation_messages(
     contact: &Contact,
-    eth_private_key: EthPrivateKey,
+    ethereum_key: EthPrivateKey,
     transaction_batches: Vec<TransactionBatch>,
-    cosmos_private_key: CosmosPrivateKey,
+    cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Vec<Msg> {
-    let our_address = cosmos_private_key
-        .to_address(&contact.get_prefix())
-        .unwrap();
-    let our_eth_address = eth_private_key.to_public_key().unwrap();
+    let our_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
+    let our_eth_address = ethereum_key.to_public_key().unwrap();
 
     let mut messages = Vec::new();
     for batch in transaction_batches {
         info!("Submitting signature for batch {:?}", batch);
         let message = encode_tx_batch_confirm(gravity_id.clone(), batch.clone());
-        let eth_signature = eth_private_key.sign_ethereum_msg(&message);
+        let eth_signature = ethereum_key.sign_ethereum_msg(&message);
         info!(
             "Sending batch update address {} sig {} hash {}",
             our_eth_address,
@@ -98,21 +94,19 @@ pub fn batch_tx_confirmation_messages(
 
 pub fn contract_call_tx_confirmation_messages(
     contact: &Contact,
-    eth_private_key: EthPrivateKey,
+    ethereum_key: EthPrivateKey,
     logic_calls: Vec<LogicCall>,
-    cosmos_private_key: CosmosPrivateKey,
+    cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Vec<Msg> {
-    let our_address = cosmos_private_key
-        .to_address(&contact.get_prefix())
-        .unwrap();
+    let our_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
-    let our_eth_address = eth_private_key.to_public_key().unwrap();
+    let our_eth_address = ethereum_key.to_public_key().unwrap();
 
     let mut messages = Vec::new();
     for call in logic_calls {
         let message = encode_logic_call_confirm(gravity_id.clone(), call.clone());
-        let eth_signature = eth_private_key.sign_ethereum_msg(&message);
+        let eth_signature = ethereum_key.sign_ethereum_msg(&message);
         let confirm = proto::ContractCallTxConfirmation {
             ethereum_signer: our_eth_address.to_string(),
             signature: eth_signature.to_bytes().to_vec(),
@@ -137,16 +131,14 @@ pub fn contract_call_tx_confirmation_messages(
 
 pub fn submit_ethereum_event_messages(
     contact: &Contact,
-    cosmos_private_key: CosmosPrivateKey,
+    cosmos_key: CosmosPrivateKey,
     deposits: Vec<SendToCosmosEvent>,
     withdraws: Vec<TransactionBatchExecutedEvent>,
     erc20_deploys: Vec<Erc20DeployedEvent>,
     logic_calls: Vec<LogicCallExecutedEvent>,
     valsets: Vec<ValsetUpdatedEvent>,
 ) -> Vec<Msg> {
-    let our_address = cosmos_private_key
-        .to_address(&contact.get_prefix())
-        .unwrap();
+    let our_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
     // This sorts oracle messages by event nonce before submitting them. It's not a pretty implementation because
     // we're missing an intermediary layer of abstraction. We could implement 'EventTrait' and then implement sort

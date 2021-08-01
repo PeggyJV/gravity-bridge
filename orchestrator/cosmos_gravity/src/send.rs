@@ -29,7 +29,7 @@ pub async fn update_gravity_delegate_addresses(
     delegate_eth_address: EthAddress,
     delegate_cosmos_address: Address,
     cosmos_key: CosmosPrivateKey,
-    eth_private_key: EthPrivateKey,
+    etheruem_key: EthPrivateKey,
     fee: Coin,
 ) -> Result<TxResponse, CosmosGrpcError> {
     trace!("Updating Gravity Delegate addresses");
@@ -56,7 +56,7 @@ pub async fn update_gravity_delegate_addresses(
     let mut buf = BytesMut::with_capacity(size);
     Message::encode(&eth_sign_msg, &mut buf).expect("Failed to encode DelegateKeysSignMsg!");
 
-    let eth_signature = eth_private_key.sign_ethereum_msg(&buf).to_bytes().to_vec();
+    let eth_signature = etheruem_key.sign_ethereum_msg(&buf).to_bytes().to_vec();
 
     let msg_set_orch_address = proto::MsgDelegateKeys {
         validator_address: our_valoper_address.to_string(),
@@ -68,65 +68,6 @@ pub async fn update_gravity_delegate_addresses(
     let msg = Msg::new("/gravity.v1.MsgDelegateKeys", msg_set_orch_address);
 
     send_messages(contact, cosmos_key, fee, vec![msg]).await
-}
-
-/// Send in a confirmation for an array of validator sets, it's far more efficient to send these
-/// as a single message
-#[allow(clippy::too_many_arguments)]
-pub async fn send_valset_confirms(
-    contact: &Contact,
-    eth_private_key: EthPrivateKey,
-    fee: Coin,
-    valsets: Vec<Valset>,
-    cosmos_key: CosmosPrivateKey,
-    gravity_id: String,
-) -> Result<TxResponse, CosmosGrpcError> {
-    let messages = build::signer_set_tx_confirmation_messages(
-        contact,
-        eth_private_key,
-        valsets,
-        cosmos_key,
-        gravity_id,
-    );
-    send_messages(contact, cosmos_key, fee, messages).await
-}
-
-/// Send in a confirmation for a specific transaction batch
-pub async fn send_batch_confirm(
-    contact: &Contact,
-    eth_private_key: EthPrivateKey,
-    fee: Coin,
-    transaction_batches: Vec<TransactionBatch>,
-    cosmos_key: CosmosPrivateKey,
-    gravity_id: String,
-) -> Result<TxResponse, CosmosGrpcError> {
-    let messages = build::batch_tx_confirmation_messages(
-        contact,
-        eth_private_key,
-        transaction_batches,
-        cosmos_key,
-        gravity_id,
-    );
-    send_messages(contact, cosmos_key, fee, messages).await
-}
-
-/// Send in a confirmation for a specific logic call
-pub async fn send_logic_call_confirm(
-    contact: &Contact,
-    eth_private_key: EthPrivateKey,
-    fee: Coin,
-    logic_calls: Vec<LogicCall>,
-    cosmos_key: CosmosPrivateKey,
-    gravity_id: String,
-) -> Result<TxResponse, CosmosGrpcError> {
-    let messages = build::contract_call_tx_confirmation_messages(
-        contact,
-        eth_private_key,
-        logic_calls,
-        cosmos_key,
-        gravity_id,
-    );
-    send_messages(contact, cosmos_key, fee, messages).await
 }
 
 pub async fn send_ethereum_claims(
