@@ -2,9 +2,10 @@
 //! or a transaction batch update. It then responds to these events by performing actions on the Cosmos chain if required
 
 use clarity::{utils::bytes_to_hex_str, Address as EthAddress, Uint256};
-use cosmos_gravity::{query::get_last_event_nonce, send::send_ethereum_claims};
-use deep_space::Contact;
-use deep_space::{coin::Coin, private_key::PrivateKey as CosmosPrivateKey};
+use cosmos_gravity::build;
+use cosmos_gravity::query::get_last_event_nonce;
+use deep_space::{private_key::PrivateKey as CosmosPrivateKey};
+use deep_space::{Contact, Msg};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::{
     error::GravityError,
@@ -25,11 +26,11 @@ pub async fn check_for_events(
     contact: &Contact,
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
-    our_private_key: CosmosPrivateKey,
-    fee: Coin,
+    cosmos_key: CosmosPrivateKey,
     starting_block: Uint256,
+    tx: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) -> Result<Uint256, GravityError> {
-    let our_cosmos_address = our_private_key.to_address(&contact.get_prefix()).unwrap();
+    let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let latest_block = get_block_number_with_retry(web3).await;
     let latest_block = latest_block - get_block_delay(web3).await;
 
@@ -109,10 +110,13 @@ pub async fn check_for_events(
         let last_event_nonce = get_last_event_nonce(grpc_client, our_cosmos_address).await?;
 
         let deposits = SendToCosmosEvent::filter_by_event_nonce(last_event_nonce, &deposits);
-        let batches = TransactionBatchExecutedEvent::filter_by_event_nonce(last_event_nonce, &batches);
+        let batches =
+            TransactionBatchExecutedEvent::filter_by_event_nonce(last_event_nonce, &batches);
         let valsets = ValsetUpdatedEvent::filter_by_event_nonce(last_event_nonce, &valsets);
-        let erc20_deploys = Erc20DeployedEvent::filter_by_event_nonce(last_event_nonce, &erc20_deploys);
-        let logic_calls = LogicCallExecutedEvent::filter_by_event_nonce(last_event_nonce, &logic_calls);
+        let erc20_deploys =
+            Erc20DeployedEvent::filter_by_event_nonce(last_event_nonce, &erc20_deploys);
+        let logic_calls =
+            LogicCallExecutedEvent::filter_by_event_nonce(last_event_nonce, &logic_calls);
 
         for deposit in deposits.iter() {
             info!(
@@ -157,25 +161,25 @@ pub async fn check_for_events(
             || !erc20_deploys.is_empty()
             || !logic_calls.is_empty()
         {
-            let res = send_ethereum_claims(
+            let messages = build::submit_ethereum_event_messages(
                 contact,
-                our_private_key,
+                cosmos_key,
                 deposits,
                 batches,
                 erc20_deploys,
                 logic_calls,
                 valsets,
-                fee,
-            )
-            .await?;
-            info!("Claims response {:?}", res);
+            );
+            tx.send(messages).await.expect("Could not send messages");
+
+            // TODO(levi) wait for next block??
 
             let new_event_nonce = get_last_event_nonce(grpc_client, our_cosmos_address).await?;
             // since we can't actually trust that the above txresponse is correct we have to check here
             // we may be able to trust the tx response post grpc
             if new_event_nonce == last_event_nonce {
                 return Err(GravityError::InvalidBridgeStateError(
-                    format!("Claims did not process, trying to update but still on {}, trying again in a moment, check txhash {} for errors", last_event_nonce, res.txhash),
+                    format!("Claims did not process, trying to update but still on {}, trying again in a moment", last_event_nonce),
                 ));
             } else {
                 info!("Claims processed, new nonce {}", new_event_nonce);

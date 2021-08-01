@@ -133,7 +133,7 @@ pub fn submit_ethereum_event_messages(
     contact: &Contact,
     cosmos_key: CosmosPrivateKey,
     deposits: Vec<SendToCosmosEvent>,
-    withdraws: Vec<TransactionBatchExecutedEvent>,
+    batches: Vec<TransactionBatchExecutedEvent>,
     erc20_deploys: Vec<Erc20DeployedEvent>,
     logic_calls: Vec<LogicCallExecutedEvent>,
     valsets: Vec<ValsetUpdatedEvent>,
@@ -171,12 +171,12 @@ pub fn submit_ethereum_event_messages(
         let msg = Msg::new("/gravity.v1.MsgSubmitEthereumEvent", wrapper);
         unordered_msgs.insert(deposit.event_nonce, msg);
     }
-    for withdraw in withdraws {
+    for batch in batches {
         let event = proto::BatchExecutedEvent {
-            event_nonce: downcast_uint256(withdraw.event_nonce.clone()).unwrap(),
-            batch_nonce: downcast_uint256(withdraw.batch_nonce.clone()).unwrap(),
-            ethereum_height: downcast_uint256(withdraw.block_height).unwrap(),
-            token_contract: withdraw.erc20.to_string(),
+            event_nonce: downcast_uint256(batch.event_nonce.clone()).unwrap(),
+            batch_nonce: downcast_uint256(batch.batch_nonce.clone()).unwrap(),
+            ethereum_height: downcast_uint256(batch.block_height).unwrap(),
+            token_contract: batch.erc20.to_string(),
         };
         let size = Message::encoded_len(&event);
         let mut buf = BytesMut::with_capacity(size);
@@ -189,7 +189,7 @@ pub fn submit_ethereum_event_messages(
             }),
         };
         let msg = Msg::new("/gravity.v1.MsgSubmitEthereumEvent", wrapper);
-        unordered_msgs.insert(withdraw.event_nonce, msg);
+        unordered_msgs.insert(batch.event_nonce, msg);
     }
     for deploy in erc20_deploys {
         let event = proto::Erc20DeployedEvent {

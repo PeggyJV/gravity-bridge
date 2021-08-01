@@ -61,7 +61,7 @@ pub async fn orchestrator_main_loop(
         contact.clone(),
         grpc_client.clone(),
         gravity_contract_address,
-        fee.clone(),
+        tx.clone(),
     );
 
     let c = eth_signer_main_loop(
@@ -94,7 +94,7 @@ pub async fn eth_oracle_main_loop(
     contact: Contact,
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
-    fee: Coin,
+    tx: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let long_timeout_web30 = Web3::new(&web3.get_url(), Duration::from_secs(120));
@@ -155,8 +155,8 @@ pub async fn eth_oracle_main_loop(
             &mut grpc_client,
             gravity_contract_address,
             cosmos_key,
-            fee.clone(),
             last_checked_block.clone(),
+            tx.clone(),
         )
         .await
         {

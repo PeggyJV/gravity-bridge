@@ -1,5 +1,4 @@
-use crate::build;
-
+use bytes::BytesMut;
 use clarity::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
 use deep_space::address::Address;
@@ -12,12 +11,8 @@ use deep_space::Msg;
 use gravity_proto::cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
 use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use gravity_proto::gravity as proto;
-
-use gravity_utils::types::*;
-use std::time::Duration;
-
-use bytes::BytesMut;
 use prost::Message;
+use std::time::Duration;
 
 pub const MEMO: &str = "Sent using Althea Orchestrator";
 pub const TIMEOUT: Duration = Duration::from_secs(60);
@@ -68,28 +63,6 @@ pub async fn update_gravity_delegate_addresses(
     let msg = Msg::new("/gravity.v1.MsgDelegateKeys", msg_set_orch_address);
 
     send_messages(contact, cosmos_key, fee, vec![msg]).await
-}
-
-pub async fn send_ethereum_claims(
-    contact: &Contact,
-    cosmos_key: CosmosPrivateKey,
-    deposits: Vec<SendToCosmosEvent>,
-    withdraws: Vec<TransactionBatchExecutedEvent>,
-    erc20_deploys: Vec<Erc20DeployedEvent>,
-    logic_calls: Vec<LogicCallExecutedEvent>,
-    valsets: Vec<ValsetUpdatedEvent>,
-    fee: Coin,
-) -> Result<TxResponse, CosmosGrpcError> {
-    let messages = build::submit_ethereum_event_messages(
-        contact,
-        cosmos_key,
-        deposits,
-        withdraws,
-        erc20_deploys,
-        logic_calls,
-        valsets,
-    );
-    send_messages(contact, cosmos_key, fee, messages).await
 }
 
 /// Sends tokens from Cosmos to Ethereum. These tokens will not be sent immediately instead
@@ -159,7 +132,7 @@ pub async fn send_request_batch(
     send_messages(contact, cosmos_key, fee, vec![msg]).await
 }
 
-async fn send_messages(
+pub async fn send_messages(
     contact: &Contact,
     cosmos_key: CosmosPrivateKey,
     fee: Coin,
