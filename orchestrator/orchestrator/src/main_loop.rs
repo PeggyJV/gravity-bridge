@@ -94,7 +94,7 @@ pub async fn eth_oracle_main_loop(
     contact: Contact,
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
-    tx: tokio::sync::mpsc::Sender<Vec<Msg>>,
+    msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let long_timeout_web30 = Web3::new(&web3.get_url(), Duration::from_secs(120));
@@ -156,7 +156,7 @@ pub async fn eth_oracle_main_loop(
             gravity_contract_address,
             cosmos_key,
             last_checked_block.clone(),
-            tx.clone(),
+            msg_sender.clone(),
         )
         .await
         {
@@ -194,7 +194,7 @@ pub async fn eth_signer_main_loop(
     contact: Contact,
     grpc_client: GravityQueryClient<Channel>,
     contract_address: EthAddress,
-    tx: tokio::sync::mpsc::Sender<Vec<Msg>>,
+    msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let our_ethereum_address = ethereum_key.to_public_key().unwrap();
@@ -266,7 +266,10 @@ pub async fn eth_signer_main_loop(
                         cosmos_key,
                         gravity_id.clone(),
                     );
-                    tx.send(messages).await.expect("Could not send messages");
+                    msg_sender
+                        .send(messages)
+                        .await
+                        .expect("Could not send messages");
                 }
             }
             Err(e) => trace!(
@@ -293,7 +296,10 @@ pub async fn eth_signer_main_loop(
                     cosmos_key,
                     gravity_id.clone(),
                 );
-                tx.send(messages).await.expect("Could not send messages");
+                msg_sender
+                    .send(messages)
+                    .await
+                    .expect("Could not send messages");
             }
             Ok(None) => info!("No unsigned batches! Everything good!"),
             Err(e) => info!(
@@ -319,7 +325,10 @@ pub async fn eth_signer_main_loop(
                     cosmos_key,
                     gravity_id.clone(),
                 );
-                tx.send(messages).await.expect("Could not send messages");
+                msg_sender
+                    .send(messages)
+                    .await
+                    .expect("Could not send messages");
             }
         } else if let Err(e) = logic_calls {
             info!(

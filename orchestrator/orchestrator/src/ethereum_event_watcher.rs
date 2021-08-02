@@ -28,7 +28,7 @@ pub async fn check_for_events(
     gravity_contract_address: EthAddress,
     cosmos_key: CosmosPrivateKey,
     starting_block: Uint256,
-    tx: tokio::sync::mpsc::Sender<Vec<Msg>>,
+    msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) -> Result<Uint256, GravityError> {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let latest_block = get_block_number_with_retry(web3).await;
@@ -170,7 +170,10 @@ pub async fn check_for_events(
                 logic_calls,
                 valsets,
             );
-            tx.send(messages).await.expect("Could not send messages");
+            msg_sender
+                .send(messages)
+                .await
+                .expect("Could not send messages");
 
             let timeout = time::Duration::from_secs(30);
             contact.wait_for_next_block(timeout).await?;
