@@ -7,7 +7,7 @@ use crate::OPERATION_TIMEOUT;
 use crate::TOTAL_TIMEOUT;
 use clarity::PrivateKey as EthPrivateKey;
 use clarity::{Address as EthAddress, Uint256};
-use cosmos_gravity::send::{send_request_batch, send_to_eth};
+use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
 use cosmos_gravity::{build, query::get_oldest_unsigned_transaction_batch, send};
 use deep_space::address::Address as CosmosAddress;
 use deep_space::coin::Coin;
@@ -327,7 +327,7 @@ async fn test_batch(
     info!("Sent tokens to Ethereum with {:?}", res);
 
     info!("Requesting transaction batch");
-    send_request_batch(
+    send_request_batch_tx(
         requester_cosmos_private_key,
         token_name.clone(),
         get_fee(),
@@ -428,7 +428,7 @@ async fn submit_duplicate_erc20_send(
     for k in keys.iter() {
         let cosmos_key = k.validator_key;
 
-        let messages = build::submit_ethereum_event_messages(
+        let messages = build::ethereum_event_messages(
             contact,
             cosmos_key,
             vec![event.clone()],

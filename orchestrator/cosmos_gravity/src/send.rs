@@ -27,7 +27,6 @@ pub async fn update_gravity_delegate_addresses(
     etheruem_key: EthPrivateKey,
     fee: Coin,
 ) -> Result<TxResponse, CosmosGrpcError> {
-    trace!("Updating Gravity Delegate addresses");
     let our_valoper_address = cosmos_key
         .to_address(&contact.get_prefix())
         .unwrap()
@@ -38,30 +37,27 @@ pub async fn update_gravity_delegate_addresses(
         .to_bech32(format!("{}valoper", contact.get_prefix()))
         .unwrap();
 
-    let sequence = &contact
+    let nonce = contact
         .get_account_info(cosmos_key.to_address(&contact.get_prefix()).unwrap())
         .await?
         .sequence;
 
     let eth_sign_msg = proto::DelegateKeysSignMsg {
         validator_address: our_valoper_address.clone(),
-        nonce: *sequence,
+        nonce,
     };
-    let size = Message::encoded_len(&eth_sign_msg);
-    let mut buf = BytesMut::with_capacity(size);
-    Message::encode(&eth_sign_msg, &mut buf).expect("Failed to encode DelegateKeysSignMsg!");
 
-    let eth_signature = etheruem_key.sign_ethereum_msg(&buf).to_bytes().to_vec();
+    let mut data = BytesMut::with_capacity(eth_sign_msg.encoded_len());
+    Message::encode(&eth_sign_msg, &mut data).expect("encoding failed");
 
-    let msg_set_orch_address = proto::MsgDelegateKeys {
+    let eth_signature = etheruem_key.sign_ethereum_msg(&data).to_bytes().to_vec();
+    let msg = proto::MsgDelegateKeys {
         validator_address: our_valoper_address.to_string(),
         orchestrator_address: delegate_cosmos_address.to_string(),
         ethereum_address: delegate_eth_address.to_string(),
         eth_signature,
     };
-
-    let msg = Msg::new("/gravity.v1.MsgDelegateKeys", msg_set_orch_address);
-
+    let msg = Msg::new("/gravity.v1.MsgDelegateKeys", msg);
     send_messages(contact, cosmos_key, fee, vec![msg]).await
 }
 
@@ -74,14 +70,14 @@ pub async fn send_to_eth(
     fee: Coin,
     contact: &Contact,
 ) -> Result<TxResponse, CosmosGrpcError> {
-    let our_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
+    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     if amount.denom != fee.denom {
         return Err(CosmosGrpcError::BadInput(format!(
             "{} {} is an invalid denom set for SendToEth you must pay fees in the same token your sending",
             amount.denom, fee.denom,
         )));
     }
-    let balances = contact.get_balances(our_address).await.unwrap();
+    let balances = contact.get_balances(cosmos_address).await.unwrap();
     let mut found = false;
     for balance in balances {
         if balance.denom == amount.denom {
@@ -102,33 +98,28 @@ pub async fn send_to_eth(
         )));
     }
 
-    let msg_send_to_eth = proto::MsgSendToEthereum {
-        sender: our_address.to_string(),
+    let msg = proto::MsgSendToEthereum {
+        sender: cosmos_address.to_string(),
         ethereum_recipient: destination.to_string(),
         amount: Some(amount.into()),
         bridge_fee: Some(fee.clone().into()),
     };
-
-    let msg = Msg::new("/gravity.v1.MsgSendToEthereum", msg_send_to_eth);
-
+    let msg = Msg::new("/gravity.v1.MsgSendToEthereum", msg);
     send_messages(contact, cosmos_key, fee, vec![msg]).await
 }
 
-pub async fn send_request_batch(
+pub async fn send_request_batch_tx(
     cosmos_key: CosmosPrivateKey,
     denom: String,
     fee: Coin,
     contact: &Contact,
 ) -> Result<TxResponse, CosmosGrpcError> {
-    let our_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-
+    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let msg_request_batch = proto::MsgRequestBatchTx {
-        signer: our_address.to_string(),
+        signer: cosmos_address.to_string(),
         denom,
     };
-
     let msg = Msg::new("/gravity.v1.MsgRequestBatchTx", msg_request_batch);
-
     send_messages(contact, cosmos_key, fee, vec![msg]).await
 }
 
@@ -138,7 +129,7 @@ pub async fn send_messages(
     fee: Coin,
     messages: Vec<Msg>,
 ) -> Result<TxResponse, CosmosGrpcError> {
-    let our_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
+    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
     let fee = Fee {
         amount: vec![fee],
@@ -147,7 +138,7 @@ pub async fn send_messages(
         payer: None,
     };
 
-    let args = contact.get_message_args(our_address, fee).await?;
+    let args = contact.get_message_args(cosmos_address, fee).await?;
 
     let msg_bytes = cosmos_key.sign_std_msg(&messages, args, MEMO)?;
 
@@ -164,7 +155,6 @@ pub async fn send_main_loop(
     fee: Coin,
     mut rx: tokio::sync::mpsc::Receiver<Vec<Msg>>,
 ) {
-    // TODO(levi) accept a tuple that tells us to halt on error?
     while let Some(messages) = rx.recv().await {
         match send_messages(contact, cosmos_key, fee.clone(), messages).await {
             Ok(res) => trace!("okay: {:?}", res),
