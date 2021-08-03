@@ -18,7 +18,7 @@ use crate::get_with_retry::RETRY_TIME;
 pub async fn get_last_checked_block(
     grpc_client: GravityQueryClient<Channel>,
     our_cosmos_address: CosmosAddress,
-    gravity_contract_address: Address,
+    contract_address: Address,
     web3: &Web3,
 ) -> Uint256 {
     let mut grpc_client = grpc_client;
@@ -53,7 +53,7 @@ pub async fn get_last_checked_block(
             .check_for_events(
                 end_search.clone(),
                 Some(current_block.clone()),
-                vec![gravity_contract_address],
+                vec![contract_address],
                 vec!["TransactionBatchExecutedEvent(uint256,address,uint256)"],
             )
             .await;
@@ -61,7 +61,7 @@ pub async fn get_last_checked_block(
             .check_for_events(
                 end_search.clone(),
                 Some(current_block.clone()),
-                vec![gravity_contract_address],
+                vec![contract_address],
                 vec!["SendToCosmosEvent(address,address,bytes32,uint256,uint256)"],
             )
             .await;
@@ -69,7 +69,7 @@ pub async fn get_last_checked_block(
             .check_for_events(
                 end_search.clone(),
                 Some(current_block.clone()),
-                vec![gravity_contract_address],
+                vec![contract_address],
                 vec!["ERC20DeployedEvent(string,address,string,string,uint8,uint256)"],
             )
             .await;
@@ -77,7 +77,7 @@ pub async fn get_last_checked_block(
             .check_for_events(
                 end_search.clone(),
                 Some(current_block.clone()),
-                vec![gravity_contract_address],
+                vec![contract_address],
                 vec!["LogicCallEvent(bytes32,uint256,bytes,uint256)"],
             )
             .await;
@@ -91,7 +91,7 @@ pub async fn get_last_checked_block(
             .check_for_events(
                 end_search.clone(),
                 Some(current_block.clone()),
-                vec![gravity_contract_address],
+                vec![contract_address],
                 vec!["ValsetUpdatedEvent(uint256,uint256,address[],uint256[])"],
             )
             .await;

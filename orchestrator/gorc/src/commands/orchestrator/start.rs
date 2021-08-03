@@ -1,6 +1,7 @@
 use crate::{application::APP, prelude::*};
 use abscissa_core::{Command, Options, Runnable};
 use clarity::address::Address as EthAddress;
+use deep_space::Coin;
 use gravity_utils::connection_prep::{
     check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
     wait_for_cosmos_node_ready,
@@ -37,7 +38,11 @@ impl Runnable for StartCommand {
             .parse()
             .expect("Could not parse gravity contract address");
 
-        let fees_denom = config.gravity.fees_denom.clone();
+        let gas_price: Coin = config
+            .cosmos
+            .gas_price
+            .parse()
+            .expect("Could not parse gas_price");
 
         let timeout = min(
             min(ETH_SIGNER_LOOP_SPEED, ETH_ORACLE_LOOP_SPEED),
@@ -53,7 +58,7 @@ impl Runnable for StartCommand {
             )
             .await;
 
-            let mut grpc = connections.grpc.clone().unwrap();
+            let mut grpc_client = connections.grpc.clone().unwrap();
             let contact = connections.contact.clone().unwrap();
             let web3 = connections.web3.clone().unwrap();
 
@@ -68,7 +73,7 @@ impl Runnable for StartCommand {
 
             // check if the delegate addresses are correctly configured
             check_delegate_addresses(
-                &mut grpc,
+                &mut grpc_client,
                 ethereum_address,
                 cosmos_address,
                 &contact.get_prefix(),
@@ -76,6 +81,7 @@ impl Runnable for StartCommand {
             .await;
 
             // check if we actually have the promised balance of tokens to pay fees
+            let fees_denom = gas_price.denom.to_owned();
             check_for_fee_denom(&fees_denom, cosmos_address, &contact).await;
             check_for_eth(ethereum_address, &web3).await;
 
@@ -84,9 +90,9 @@ impl Runnable for StartCommand {
                 ethereum_key,
                 web3,
                 contact,
-                grpc,
+                grpc_client,
                 contract_address,
-                fees_denom,
+                gas_price,
             )
             .await;
         })

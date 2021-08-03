@@ -111,7 +111,7 @@ pub async fn send_to_eth(
 pub async fn send_request_batch_tx(
     cosmos_key: CosmosPrivateKey,
     denom: String,
-    fee: Coin,
+    gas_price: Coin,
     contact: &Contact,
 ) -> Result<TxResponse, CosmosGrpcError> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
@@ -120,19 +120,19 @@ pub async fn send_request_batch_tx(
         denom,
     };
     let msg = Msg::new("/gravity.v1.MsgRequestBatchTx", msg_request_batch);
-    send_messages(contact, cosmos_key, fee, vec![msg]).await
+    send_messages(contact, cosmos_key, gas_price, vec![msg]).await
 }
 
 pub async fn send_messages(
     contact: &Contact,
     cosmos_key: CosmosPrivateKey,
-    fee: Coin,
+    gas_price: Coin,
     messages: Vec<Msg>,
 ) -> Result<TxResponse, CosmosGrpcError> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
     let fee = Fee {
-        amount: vec![fee],
+        amount: vec![gas_price],
         gas_limit: 500_000_000u64 * (messages.len() as u64),
         granter: None,
         payer: None,
@@ -152,11 +152,11 @@ pub async fn send_messages(
 pub async fn send_main_loop(
     contact: &Contact,
     cosmos_key: CosmosPrivateKey,
-    fee: Coin,
+    gas_price: Coin,
     mut rx: tokio::sync::mpsc::Receiver<Vec<Msg>>,
 ) {
     while let Some(messages) = rx.recv().await {
-        match send_messages(contact, cosmos_key, fee.clone(), messages).await {
+        match send_messages(contact, cosmos_key, gas_price.to_owned(), messages).await {
             Ok(res) => trace!("okay: {:?}", res),
             Err(err) => error!("fail: {}", err),
         }

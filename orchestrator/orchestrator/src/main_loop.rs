@@ -15,7 +15,7 @@ use cosmos_gravity::{
 };
 use deep_space::client::ChainStatus;
 use deep_space::error::CosmosGrpcError;
-use deep_space::{coin::Coin, private_key::PrivateKey as CosmosPrivateKey};
+use deep_space::{private_key::PrivateKey as CosmosPrivateKey, Coin};
 use deep_space::{Contact, Msg};
 use ethereum_gravity::utils::get_gravity_id;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
@@ -43,24 +43,19 @@ pub async fn orchestrator_main_loop(
     web3: Web3,
     contact: Contact,
     grpc_client: GravityQueryClient<Channel>,
-    gravity_contract_address: EthAddress,
-    pay_fees_in: String,
+    contract_address: EthAddress,
+    gas_price: Coin,
 ) {
-    let fee = Coin {
-        denom: pay_fees_in.clone(),
-        amount: 1u32.into(),
-    };
-
     let (tx, rx) = tokio::sync::mpsc::channel(1);
 
-    let a = send_main_loop(&contact, cosmos_key, fee.to_owned(), rx);
+    let a = send_main_loop(&contact, cosmos_key, gas_price, rx);
 
     let b = eth_oracle_main_loop(
         cosmos_key,
         web3.clone(),
         contact.clone(),
         grpc_client.clone(),
-        gravity_contract_address,
+        contract_address,
         tx.clone(),
     );
 
@@ -70,7 +65,7 @@ pub async fn orchestrator_main_loop(
         web3.clone(),
         contact.clone(),
         grpc_client.clone(),
-        gravity_contract_address,
+        contract_address,
         tx.clone(),
     );
 
@@ -78,7 +73,7 @@ pub async fn orchestrator_main_loop(
         ethereum_key,
         web3,
         grpc_client.clone(),
-        gravity_contract_address,
+        contract_address,
     );
 
     futures::future::join4(a, b, c, d).await;
@@ -93,7 +88,7 @@ pub async fn eth_oracle_main_loop(
     web3: Web3,
     contact: Contact,
     grpc_client: GravityQueryClient<Channel>,
-    gravity_contract_address: EthAddress,
+    contract_address: EthAddress,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
@@ -101,7 +96,7 @@ pub async fn eth_oracle_main_loop(
     let mut last_checked_block: Uint256 = get_last_checked_block(
         grpc_client.clone(),
         our_cosmos_address,
-        gravity_contract_address,
+        contract_address,
         &long_timeout_web30,
     )
     .await;
@@ -153,7 +148,7 @@ pub async fn eth_oracle_main_loop(
             &web3,
             &contact,
             &mut grpc_client,
-            gravity_contract_address,
+            contract_address,
             cosmos_key,
             last_checked_block.clone(),
             msg_sender.clone(),
