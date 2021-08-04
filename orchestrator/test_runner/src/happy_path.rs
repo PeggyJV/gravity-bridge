@@ -1,5 +1,6 @@
 // use crate::get_chain_id;
 use crate::get_fee;
+use crate::get_gas_price;
 use crate::utils::*;
 use crate::MINER_ADDRESS;
 use crate::MINER_PRIVATE_KEY;
@@ -303,10 +304,8 @@ async fn test_batch(
     let token_name = coin.denom;
     let amount = coin.amount;
 
-    let bridge_denom_fee = Coin {
-        denom: token_name.clone(),
-        amount: 1u64.into(),
-    };
+    let gas_price = get_gas_price();
+
     let amount = amount - 5u64.into();
     info!(
         "Sending {}{} from {} on Cosmos back to Ethereum",
@@ -319,7 +318,7 @@ async fn test_batch(
             denom: token_name.clone(),
             amount: amount.clone(),
         },
-        bridge_denom_fee.clone(),
+        gas_price.clone(),
         &contact,
     )
     .await
@@ -330,7 +329,7 @@ async fn test_batch(
     send_request_batch_tx(
         requester_cosmos_private_key,
         token_name.clone(),
-        get_fee(),
+        gas_price.clone(),
         &contact,
     )
     .await
@@ -437,8 +436,8 @@ async fn submit_duplicate_erc20_send(
             vec![],
             vec![],
         );
-        let fee = get_fee();
-        let res = send::send_messages(contact, cosmos_key, fee, messages).await;
+        let gas_price = get_gas_price();
+        let res = send::send_messages(contact, cosmos_key, gas_price, messages).await;
         let res = res.unwrap();
         trace!("Submitted duplicate sendToCosmos event: {:?}", res);
     }

@@ -9,7 +9,7 @@ use log::error;
 
 use clarity::PrivateKey as EthPrivateKey;
 use cosmos_gravity::send::update_gravity_delegate_addresses;
-use deep_space::{coin::Coin, mnemonic::Mnemonic, private_key::PrivateKey as CosmosPrivateKey};
+use deep_space::{mnemonic::Mnemonic, private_key::PrivateKey as CosmosPrivateKey};
 use docopt::Docopt;
 use gravity_utils::connection_prep::check_for_fee_denom;
 use gravity_utils::connection_prep::{create_rpc_connections, wait_for_cosmos_node_ready};
@@ -64,10 +64,7 @@ async fn main() {
         .unwrap_or_else(|e| e.exit());
 
     let fee_denom = args.flag_fees;
-    let fee = Coin {
-        denom: fee_denom.clone(),
-        amount: 1u64.into(),
-    };
+    let gas_price = (1f64, fee_denom.clone());
 
     let connections = create_rpc_connections(
         args.flag_address_prefix,
@@ -118,7 +115,7 @@ async fn main() {
         cosmos_address,
         validator_key,
         ethereum_key,
-        fee.clone(),
+        gas_price,
     )
     .await
     .expect("Failed to update Eth address");

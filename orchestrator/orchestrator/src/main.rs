@@ -139,10 +139,7 @@ async fn main() {
     check_for_fee_denom(&fee_denom, public_cosmos_key, &contact).await;
     check_for_eth(public_eth_key, &web3).await;
 
-    let gas_price = deep_space::Coin {
-        amount: 1u8.into(),
-        denom: fee_denom.to_owned(),
-    };
+    let gas_price = (1f64, fee_denom);
 
     orchestrator_main_loop(
         cosmos_key,

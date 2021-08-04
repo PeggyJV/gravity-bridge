@@ -73,8 +73,13 @@ lazy_static! {
 pub fn get_fee() -> Coin {
     Coin {
         denom: get_test_token_name(),
-        amount: 1u32.into(),
+        amount: get_fee_amount().into(),
     }
+}
+pub fn get_fee_amount() -> u32 { 1u32 }
+
+pub fn get_gas_price() -> (f64, String) {
+    ((get_fee_amount() as f64), get_test_token_name())
 }
 
 pub fn get_test_token_name() -> String {

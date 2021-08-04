@@ -5,7 +5,7 @@ use std::time::{Duration, Instant};
 use crate::utils::get_user_key;
 use crate::utils::send_one_eth;
 use crate::TOTAL_TIMEOUT;
-use crate::{get_fee, utils::ValidatorKeys};
+use crate::{get_fee, get_gas_price, utils::ValidatorKeys};
 use clarity::Address as EthAddress;
 use clarity::Uint256;
 use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
@@ -144,7 +144,7 @@ pub async fn happy_path_test_v2(
         user.cosmos_key,
         user.eth_address,
         send_to_eth_coin,
-        get_fee(),
+        get_gas_price(),
         contact,
     )
     .await
@@ -158,7 +158,7 @@ pub async fn happy_path_test_v2(
     let res = send_request_batch_tx(
         keys[0].validator_key,
         token_to_send_to_eth.clone(),
-        get_fee(),
+        get_gas_price(),
         contact,
     )
     .await

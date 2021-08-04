@@ -1,7 +1,6 @@
-use crate::{get_fee, one_eth, one_hundred_eth, utils::*, TOTAL_TIMEOUT};
+use crate::{get_gas_price, one_eth, one_hundred_eth, utils::*, TOTAL_TIMEOUT};
 use clarity::Address as EthAddress;
 use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
-use deep_space::coin::Coin;
 use deep_space::Contact;
 use ethereum_gravity::{send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce};
 use futures::future::join_all;
@@ -146,11 +145,8 @@ pub async fn transaction_stress_test(
             }
             let mut send_coin = send_coin.unwrap();
             send_coin.amount = send_amount.clone();
-            let send_fee = Coin {
-                denom: send_coin.denom.clone(),
-                amount: 1u8.into(),
-            };
-            let res = send_to_eth(c_key, e_dest_addr, send_coin, send_fee, &contact);
+            let gas_price = get_gas_price();
+            let res = send_to_eth(c_key, e_dest_addr, send_coin, gas_price, &contact);
             futs.push(res);
         }
         let results = join_all(futs).await;
@@ -166,7 +162,8 @@ pub async fn transaction_stress_test(
 
     for denom in denoms {
         info!("Requesting batch for {}", denom);
-        let res = send_request_batch_tx(keys[0].validator_key, denom, get_fee(), &contact)
+        let gas_price = get_gas_price();
+        let res = send_request_batch_tx(keys[0].validator_key, denom, gas_price, &contact)
             .await
             .unwrap();
         info!("batch request response is {:?}", res);

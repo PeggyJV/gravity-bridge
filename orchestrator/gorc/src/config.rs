@@ -76,19 +76,41 @@ impl Default for EthereumSection {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct CosmosSection {
-    pub gas_price: String,
     pub grpc: String,
     pub key_derivation_path: String,
     pub prefix: String,
+    pub gas_price: GasPrice,
 }
 
 impl Default for CosmosSection {
     fn default() -> Self {
         Self {
-            gas_price: "1stake".to_owned(),
             key_derivation_path: "m/44'/118'/0'/0/0".to_owned(),
             grpc: "http://localhost:9090".to_owned(),
             prefix: "cosmos".to_owned(),
+            gas_price: GasPrice::default(),
         }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct GasPrice {
+    pub amount: f64,
+    pub denom: String,
+}
+
+impl Default for GasPrice {
+    fn default() -> Self {
+        Self {
+            amount: 0.001,
+            denom: "stake".to_owned(),
+        }
+    }
+}
+
+impl GasPrice {
+    pub fn as_tuple(&self) -> (f64, String) {
+        (self.amount, self.denom.to_owned())
     }
 }

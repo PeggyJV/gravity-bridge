@@ -1,7 +1,6 @@
 use crate::{application::APP, prelude::*};
 use abscissa_core::{Command, Options, Runnable};
 use clarity::address::Address as EthAddress;
-use deep_space::Coin;
 use gravity_utils::connection_prep::{
     check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
     wait_for_cosmos_node_ready,
@@ -38,11 +37,7 @@ impl Runnable for StartCommand {
             .parse()
             .expect("Could not parse gravity contract address");
 
-        let gas_price: Coin = config
-            .cosmos
-            .gas_price
-            .parse()
-            .expect("Could not parse gas_price");
+       let gas_price = config.cosmos.gas_price.as_tuple();
 
         let timeout = min(
             min(ETH_SIGNER_LOOP_SPEED, ETH_ORACLE_LOOP_SPEED),
@@ -81,7 +76,7 @@ impl Runnable for StartCommand {
             .await;
 
             // check if we actually have the promised balance of tokens to pay fees
-            let fees_denom = gas_price.denom.to_owned();
+            let fees_denom = gas_price.1.to_owned();
             check_for_fee_denom(&fees_denom, cosmos_address, &contact).await;
             check_for_eth(ethereum_address, &web3).await;
 

@@ -25,8 +25,8 @@ use ethereum_gravity::send_to_cosmos::send_to_cosmos;
 use gravity_proto::gravity::DenomToErc20ParamsRequest;
 use gravity_proto::gravity::DenomToErc20Request;
 use gravity_utils::connection_prep::{check_for_eth, check_for_fee_denom, create_rpc_connections};
-use std::time::Instant;
 use std::convert::TryFrom;
+use std::time::Instant;
 use std::{process::exit, time::Duration, u128};
 use tokio::time::sleep as delay_for;
 use web30::{client::Web3, jsonrpc::error::Web3Error};
@@ -190,10 +190,14 @@ async fn main() {
             amount,
             denom: gravity_denom.clone(),
         };
+
+        let bridge_fee_amount = 1f64;
         let bridge_fee = Coin {
             denom: gravity_denom.clone(),
-            amount: 1u64.into(),
+            amount: (bridge_fee_amount as u64).into(),
         };
+        let gas_price = (bridge_fee_amount.into(), bridge_fee.denom);
+
         let eth_dest: EthAddress = args.flag_eth_destination.parse().unwrap();
         check_for_fee_denom(&gravity_denom, cosmos_address, &contact).await;
 
@@ -238,7 +242,7 @@ async fn main() {
                 cosmos_key,
                 eth_dest,
                 amount.clone(),
-                bridge_fee.clone(),
+                gas_price.clone(),
                 &contact,
             )
             .await;
@@ -250,7 +254,7 @@ async fn main() {
 
         if !args.flag_no_batch {
             println!("Requesting a batch to push transaction along immediately");
-            send_request_batch_tx(cosmos_key, gravity_denom, bridge_fee, &contact)
+            send_request_batch_tx(cosmos_key, gravity_denom, gas_price, &contact)
                 .await
                 .expect("Failed to request batch");
         } else {

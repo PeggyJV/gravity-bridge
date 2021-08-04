@@ -15,7 +15,7 @@ use cosmos_gravity::{
 };
 use deep_space::client::ChainStatus;
 use deep_space::error::CosmosGrpcError;
-use deep_space::{private_key::PrivateKey as CosmosPrivateKey, Coin};
+use deep_space::{private_key::PrivateKey as CosmosPrivateKey};
 use deep_space::{Contact, Msg};
 use ethereum_gravity::utils::get_gravity_id;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
@@ -44,7 +44,7 @@ pub async fn orchestrator_main_loop(
     contact: Contact,
     grpc_client: GravityQueryClient<Channel>,
     contract_address: EthAddress,
-    gas_price: Coin,
+    gas_price: (f64, String),
 ) {
     let (tx, rx) = tokio::sync::mpsc::channel(1);
 

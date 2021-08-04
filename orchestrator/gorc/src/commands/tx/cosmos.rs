@@ -4,7 +4,7 @@ use crate::{application::APP, prelude::*, utils::*};
 use abscissa_core::{Command, Options, Runnable};
 use clarity::Address as EthAddress;
 // use clarity::Uint256;
-use cosmos_gravity::send::{send_to_eth};
+use cosmos_gravity::send::send_to_eth;
 use deep_space::{coin::Coin, private_key::PrivateKey as CosmosPrivateKey};
 use gravity_proto::gravity::DenomToErc20Request;
 use gravity_utils::connection_prep::{check_for_fee_denom, create_rpc_connections};
@@ -126,10 +126,6 @@ impl Runnable for SendToEth {
                         amount,
                         denom: denom.clone(),
                     };
-                    let bridge_fee = Coin {
-                        denom: denom.clone(),
-                        amount: 1u64.into(),
-                    };
                     let eth_dest: EthAddress = to_eth_addr.parse().unwrap();
                     check_for_fee_denom(&denom, cosmos_address, &contact).await;
 
@@ -152,11 +148,12 @@ impl Runnable for SendToEth {
                 amount,
                 denom
             );
+            let gas_price = (1f64, denom);
             let res = send_to_eth(
                 cosmos_key,
                 eth_dest,
                 amount.clone(),
-                bridge_fee.clone(),
+                gas_price,
                 &contact,
             )
             .await;
