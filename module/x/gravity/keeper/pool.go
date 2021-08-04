@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/binary"
 	"fmt"
+	"log"
 
 	"github.com/ethereum/go-ethereum/common"
 
@@ -18,13 +19,18 @@ import (
 // - burns the voucher for transfer amount and fees
 // - persists an OutgoingTx
 // - adds the TX to the `available` TX pool via a second index
-func (k Keeper) createSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, counterpartReceiver string, amount sdk.Coin, fee sdk.Coin) (uint64, error) {
+func (k Keeper) createSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, ethereumRecipient string, amount sdk.Coin, fee sdk.Coin) (uint64, error) {
 	totalAmount := amount.Add(fee)
 	totalInVouchers := sdk.Coins{totalAmount}
 
+	log.Println(">> Keeper.createSendToEthereum:",
+		"amount", amount,
+		"fee", fee,
+		"totalAmount", totalAmount,
+	)
+
 	// If the coin is a gravity voucher, burn the coins. If not, check if there is a deployed ERC20 contract representing it.
 	// If there is, lock the coins.
-
 	isCosmosOriginated, tokenContract, err := k.DenomToERC20Lookup(ctx, totalAmount.Denom)
 	if err != nil {
 		return 0, err
@@ -34,7 +40,7 @@ func (k Keeper) createSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, cou
 		return 0, err
 	}
 
-	// If it is no a cosmos-originated asset we burn
+	// If it is not a cosmos-originated asset we burn
 	if !isCosmosOriginated {
 		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, totalInVouchers); err != nil {
 			panic(err)
@@ -52,7 +58,7 @@ func (k Keeper) createSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, cou
 	k.setUnbatchedSendToEthereum(ctx, &types.SendToEthereum{
 		Id:                nextID,
 		Sender:            sender.String(),
-		EthereumRecipient: counterpartReceiver,
+		EthereumRecipient: ethereumRecipient,
 		Erc20Token:        types.NewSDKIntERC20Token(amount.Amount, tokenContract),
 		Erc20Fee:          types.NewSDKIntERC20Token(fee.Amount, tokenContract),
 	})

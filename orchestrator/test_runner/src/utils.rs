@@ -35,8 +35,8 @@ pub async fn check_cosmos_balance(
     contact: &Contact,
 ) -> Option<Coin> {
     let account_info = contact.get_balances(address).await.unwrap();
-    trace!("Cosmos balance {:?}", account_info);
     for coin in account_info {
+        info!("Cosmos balance for {} {}", address, coin);
         // make sure the name and amount is correct
         if coin.denom.starts_with(denom) {
             return Some(coin);

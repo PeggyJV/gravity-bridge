@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -200,6 +201,13 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 
 // SendToEthereum handles MsgSendToEthereum
 func (k msgServer) SendToEthereum(c context.Context, msg *types.MsgSendToEthereum) (*types.MsgSendToEthereumResponse, error) {
+	log.Println(">> msgServer.SendToEthereum:",
+		"sender", msg.Sender,
+		"recipient", msg.EthereumRecipient,
+		"amount", msg.Amount,
+		"bridgeFee", msg.BridgeFee,
+	)
+
 	ctx := sdk.UnwrapSDKContext(c)
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {

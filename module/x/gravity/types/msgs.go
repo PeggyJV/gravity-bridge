@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"log"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -169,6 +170,13 @@ func (msg MsgSendToEthereum) Type() string { return "send_to_eth" }
 // ValidateBasic runs stateless checks on the message
 // Checks if the Eth address is valid
 func (msg MsgSendToEthereum) ValidateBasic() error {
+	log.Println(">> MsgSendToEthereum.ValidateBasic:",
+		"sender", msg.Sender,
+		"recipient", msg.EthereumRecipient,
+		"amount", msg.Amount,
+		"bridgeFee", msg.BridgeFee,
+	)
+
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Sender)
 	}
@@ -189,6 +197,8 @@ func (msg MsgSendToEthereum) ValidateBasic() error {
 	if !common.IsHexAddress(msg.EthereumRecipient) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "ethereum address")
 	}
+
+	log.Println(">> MsgSendToEthereum.ValidateBasic: OK!")
 
 	return nil
 }

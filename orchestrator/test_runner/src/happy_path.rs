@@ -302,15 +302,12 @@ async fn test_batch(
         .await
         .unwrap();
     let token_name = coin.denom;
+
+    let gas_price = (1f64, token_name.to_owned());
+
     let amount = coin.amount;
-
-    let gas_price = get_gas_price();
-
     let amount = amount - 5u64.into();
-    info!(
-        "Sending {}{} from {} on Cosmos back to Ethereum",
-        amount, token_name, dest_cosmos_address
-    );
+
     let res = send_to_eth(
         dest_cosmos_private_key,
         dest_eth_address,

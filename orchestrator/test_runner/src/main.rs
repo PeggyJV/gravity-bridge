@@ -76,7 +76,9 @@ pub fn get_fee() -> Coin {
         amount: get_fee_amount().into(),
     }
 }
-pub fn get_fee_amount() -> u32 { 1u32 }
+pub fn get_fee_amount() -> u32 {
+    1u32
+}
 
 pub fn get_gas_price() -> (f64, String) {
     ((get_fee_amount() as f64), get_test_token_name())
@@ -126,13 +128,6 @@ pub async fn main() {
         .unwrap();
     let web30 = web30::client::Web3::new(ETH_NODE.as_str(), OPERATION_TIMEOUT);
     let keys = get_keys();
-
-    // // if we detect this env var we are only deploying contracts, do that then exit.
-    // if should_deploy_contracts() {
-    //     info!("test-runner in contract deploying mode, deploying contracts, then exiting");
-    //     deploy_contracts(&contact).await;
-    //     return;
-    // }
 
     let contracts = parse_contract_addresses();
     // the address of the deployed Gravity contract

@@ -70,46 +70,21 @@ pub async fn send_to_eth(
     gas_price: (f64, String),
     contact: &Contact,
 ) -> Result<TxResponse, CosmosGrpcError> {
-    let fee_amount = gas_price.0 as u64;
-    let fee = Coin {
-        amount: fee_amount.into(),
-        denom: gas_price.1.to_owned(),
+    let bridge_fee = Coin {
+        amount: 1u8.into(),
+        denom: amount.denom.to_owned(),
     };
 
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    if amount.denom != fee.denom {
-        return Err(CosmosGrpcError::BadInput(format!(
-            "{} {} is an invalid denom set for SendToEth you must pay fees in the same token your sending",
-            amount.denom, fee.denom,
-        )));
-    }
-    let balances = contact.get_balances(cosmos_address).await.unwrap();
-    let mut found = false;
-    for balance in balances {
-        if balance.denom == amount.denom {
-            let total_amount = amount.amount.clone() + (fee.amount.clone() * 2u8.into());
-            if balance.amount < total_amount {
-                return Err(CosmosGrpcError::BadInput(format!(
-                    "Insufficient balance of {} to send {}",
-                    amount.denom, total_amount,
-                )));
-            }
-            found = true;
-        }
-    }
-    if !found {
-        return Err(CosmosGrpcError::BadInput(format!(
-            "No balance of {} to send",
-            amount.denom,
-        )));
-    }
 
     let msg = proto::MsgSendToEthereum {
         sender: cosmos_address.to_string(),
         ethereum_recipient: destination.to_string(),
         amount: Some(amount.into()),
-        bridge_fee: Some(fee.clone().into()),
+        bridge_fee: Some(bridge_fee.clone().into()),
     };
+    info!("msg {:?}", msg);
+
     let msg = Msg::new("/gravity.v1.MsgSendToEthereum", msg);
     send_messages(contact, cosmos_key, gas_price, vec![msg]).await
 }
