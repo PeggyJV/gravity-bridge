@@ -97,6 +97,7 @@ pub async fn send_request_batch_tx(
     __send_messages(contact, cosmos_key, fee, vec![msg]).await
 }
 
+// TODO(Levi) teach this branch to accept gas_prices
 async fn __send_messages(
     contact: &Contact,
     cosmos_key: CosmosPrivateKey,
