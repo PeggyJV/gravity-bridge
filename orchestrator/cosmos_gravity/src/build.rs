@@ -1,4 +1,5 @@
 use clarity::PrivateKey as EthPrivateKey;
+use clarity::Uint256;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::utils::bytes_to_hex_str;
 use deep_space::Contact;
@@ -110,7 +111,7 @@ pub fn ethereum_event_messages(
     erc20_deploys: Vec<Erc20DeployedEvent>,
     logic_calls: Vec<LogicCallExecutedEvent>,
     valsets: Vec<ValsetUpdatedEvent>,
-) -> Vec<Msg> {
+) -> (Vec<Msg>, Uint256) {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
     // This sorts oracle messages by event nonce before submitting them. It's not a pretty implementation because
@@ -198,15 +199,21 @@ pub fn ethereum_event_messages(
         unordered_msgs.insert(valset.event_nonce, msg);
     }
 
+    let mut last_event_nonce: Uint256 = 0u8.into();
+
     let mut keys = Vec::new();
     for (key, _) in unordered_msgs.iter() {
         keys.push(key.clone());
+        if *key > last_event_nonce {
+            last_event_nonce = key.clone();
+        }
     }
     keys.sort();
 
     let mut msgs = Vec::new();
-    for i in keys {
+    for i in keys.iter() {
         msgs.push(unordered_msgs.remove_entry(&i).unwrap().1);
     }
-    msgs
+
+    (msgs, last_event_nonce)
 }

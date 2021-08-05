@@ -2,6 +2,7 @@
 //! that can only be run by a validator. This single binary the 'Orchestrator' runs not only these two rules but also the untrusted role of a relayer, that does not need any permissions and has it's
 //! own crate and binary so that anyone may run it.
 
+use crate::metrics;
 use crate::{
     ethereum_event_watcher::check_for_events, metrics::metrics_main_loop,
     oracle_resync::get_last_checked_block,
@@ -115,6 +116,8 @@ pub async fn eth_oracle_main_loop(
         let latest_cosmos_block = contact.get_chain_status().await;
         match (latest_eth_block, latest_cosmos_block) {
             (Ok(latest_eth_block), Ok(ChainStatus::Moving { block_height })) => {
+                metrics::set_cosmos_block_height(block_height.clone());
+                metrics::set_ethereum_block_height(latest_eth_block.clone());
                 trace!(
                     "Latest Eth block {} Latest Cosmos block {}",
                     latest_eth_block,
@@ -132,16 +135,20 @@ pub async fn eth_oracle_main_loop(
                 continue;
             }
             (Ok(_), Err(_)) => {
+                metrics::increment_cosmos_unavailable();
                 warn!("Could not contact Cosmos grpc, trying again");
                 delay_for(DELAY).await;
                 continue;
             }
             (Err(_), Ok(_)) => {
+                metrics::increment_ethereum_unavailable();
                 warn!("Could not contact Eth node, trying again");
                 delay_for(DELAY).await;
                 continue;
             }
             (Err(_), Err(_)) => {
+                metrics::increment_cosmos_unavailable();
+                metrics::increment_ethereum_unavailable();
                 error!("Could not reach Ethereum or Cosmos rpc!");
                 delay_for(DELAY).await;
                 continue;
@@ -162,10 +169,8 @@ pub async fn eth_oracle_main_loop(
         {
             Ok(new_block) => last_checked_block = new_block,
             Err(e) => {
-                error!(
-                "Failed to get events for block range, Check your Eth node and Cosmos gRPC {:?}",
-                e
-            );
+                metrics::increment_ethereum_event_check_failures();
+                error!("Failed to get events for block range, Check your Eth node and Cosmos gRPC {:?}", e);
                 if let gravity_utils::error::GravityError::CosmosGrpcError(err) = e {
                     if let CosmosGrpcError::TransactionFailed { tx: _, time: _ } = err {
                         delay_for(Duration::from_secs(10)).await;
@@ -215,6 +220,8 @@ pub async fn eth_signer_main_loop(
         let latest_cosmos_block = contact.get_chain_status().await;
         match (latest_eth_block, latest_cosmos_block) {
             (Ok(latest_eth_block), Ok(ChainStatus::Moving { block_height })) => {
+                metrics::set_cosmos_block_height(block_height.clone());
+                metrics::set_ethereum_block_height(latest_eth_block.clone());
                 trace!(
                     "Latest Eth block {} Latest Cosmos block {}",
                     latest_eth_block,
@@ -232,16 +239,20 @@ pub async fn eth_signer_main_loop(
                 continue;
             }
             (Ok(_), Err(_)) => {
+                metrics::increment_cosmos_unavailable();
                 warn!("Could not contact Cosmos grpc, trying again");
                 delay_for(DELAY).await;
                 continue;
             }
             (Err(_), Ok(_)) => {
+                metrics::increment_ethereum_unavailable();
                 warn!("Could not contact Eth node, trying again");
                 delay_for(DELAY).await;
                 continue;
             }
             (Err(_), Err(_)) => {
+                metrics::increment_cosmos_unavailable();
+                metrics::increment_ethereum_unavailable();
                 error!("Could not reach Ethereum or Cosmos rpc!");
                 delay_for(DELAY).await;
                 continue;
@@ -272,10 +283,13 @@ pub async fn eth_signer_main_loop(
                         .expect("Could not send messages");
                 }
             }
-            Err(e) => trace!(
-                "Failed to get unsigned valsets, check your Cosmos gRPC {:?}",
-                e
-            ),
+            Err(e) => {
+                metrics::increment_unsigned_valset_failures();
+                info!(
+                    "Failed to get unsigned valsets, check your Cosmos gRPC {:?}",
+                    e
+                );
+            }
         }
 
         // sign the last unsigned batch, TODO check if we already have signed this
@@ -302,10 +316,13 @@ pub async fn eth_signer_main_loop(
                     .expect("Could not send messages");
             }
             Ok(None) => info!("No unsigned batches! Everything good!"),
-            Err(e) => info!(
-                "Failed to get unsigned Batches, check your Cosmos gRPC {:?}",
-                e
-            ),
+            Err(e) => {
+                metrics::increment_unsigned_batch_failures();
+                info!(
+                    "Failed to get unsigned Batches, check your Cosmos gRPC {:?}",
+                    e
+                );
+            }
         }
 
         let logic_calls =
@@ -331,10 +348,11 @@ pub async fn eth_signer_main_loop(
                     .expect("Could not send messages");
             }
         } else if let Err(e) = logic_calls {
+            metrics::increment_unsigned_logic_call_failures();
             info!(
                 "Failed to get unsigned Logic Calls, check your Cosmos gRPC {:?}",
                 e
-            )
+            );
         }
 
         // a bit of logic that tires to keep things running every LOOP_SPEED seconds exactly

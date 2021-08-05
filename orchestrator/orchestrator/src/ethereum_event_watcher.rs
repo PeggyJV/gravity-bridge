@@ -3,6 +3,7 @@
 
 use crate::get_with_retry::get_block_number_with_retry;
 use crate::get_with_retry::get_net_version_with_retry;
+use crate::metrics;
 use clarity::{utils::bytes_to_hex_str, Address as EthAddress, Uint256};
 use cosmos_gravity::build;
 use cosmos_gravity::query::get_last_event_nonce;
@@ -34,6 +35,9 @@ pub async fn check_for_events(
     let our_cosmos_address = cosmos_key.to_address(&prefix).unwrap();
     let latest_block = get_block_number_with_retry(web3).await;
     let latest_block = latest_block - get_block_delay(web3).await;
+
+    metrics::set_ethereum_check_for_events_starting_block(starting_block.clone());
+    metrics::set_ethereum_check_for_events_end_block(latest_block.clone());
 
     let deposits = web3
         .check_for_events(
@@ -109,6 +113,7 @@ pub async fn check_for_events(
         // multi event block again. In theory we only send all events for every block and that will pass of fail
         // atomicly but lets not take that risk.
         let last_event_nonce = get_last_event_nonce(grpc_client, our_cosmos_address).await?;
+        metrics::set_cosmos_last_event_nonce(last_event_nonce);
 
         let deposits = SendToCosmosEvent::filter_by_event_nonce(last_event_nonce, &deposits);
         let batches =
@@ -162,7 +167,7 @@ pub async fn check_for_events(
             || !erc20_deploys.is_empty()
             || !logic_calls.is_empty()
         {
-            let messages = build::ethereum_event_messages(
+            let (messages, last_ethereum_event_nonce) = build::ethereum_event_messages(
                 contact,
                 cosmos_key,
                 deposits,
@@ -171,6 +176,9 @@ pub async fn check_for_events(
                 logic_calls,
                 valsets,
             );
+
+            metrics::set_ethereum_last_event_nonce(last_ethereum_event_nonce);
+
             msg_sender
                 .send(messages)
                 .await

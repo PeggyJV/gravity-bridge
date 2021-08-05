@@ -16,7 +16,7 @@ use self::{
     tests::TestsCmd, tx::TxCmd, version::VersionCmd,
 };
 use crate::config::GorcConfig;
-use abscissa_core::{status_err, Command, Configurable, Help, Options, Runnable};
+use abscissa_core::{Command, Configurable, Help, Options, Runnable};
 use std::path::PathBuf;
 
 /// Gorc Configuration Filename
@@ -25,9 +25,6 @@ pub const CONFIG_FILE: &str = "gorc.toml";
 /// Gorc Subcommands
 #[derive(Command, Debug, Options, Runnable)]
 pub enum GorcCmd {
-    #[options(help = "this should not get merged :)")]
-    Debug(DebugCmd),
-
     #[options(help = "get usage information")]
     Help(Help<Self>),
 
@@ -70,24 +67,5 @@ impl Configurable<GorcConfig> for GorcCmd {
         } else {
             None
         }
-    }
-}
-
-// TODO(Levi) Delete this command before merging into main
-#[derive(Command, Debug, Default, Options)]
-pub struct DebugCmd {}
-
-impl Runnable for DebugCmd {
-    fn run(&self) {
-        use crate::{application::APP, prelude::*};
-        use ::orchestrator::metrics::metrics_main_loop;
-
-        abscissa_tokio::run_with_actix(&APP, async {
-            metrics_main_loop().await;
-        })
-        .unwrap_or_else(|e| {
-            status_err!("executor exited with error: {}", e);
-            std::process::exit(1);
-        });
     }
 }
