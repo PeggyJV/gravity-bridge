@@ -80,7 +80,7 @@ pub struct DebugCmd {}
 impl Runnable for DebugCmd {
     fn run(&self) {
         use crate::{application::APP, prelude::*};
-        use ::orchestrator::main_loop::metrics_main_loop;
+        use ::orchestrator::metrics::metrics_main_loop;
 
         abscissa_tokio::run_with_actix(&APP, async {
             metrics_main_loop().await;
