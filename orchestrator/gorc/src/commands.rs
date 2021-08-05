@@ -4,19 +4,19 @@
 mod deploy;
 mod keys;
 mod orchestrator;
+mod print_config;
 mod query;
 mod sign_delegate_keys;
 mod tests;
 mod tx;
 mod version;
-mod print_config;
 
 use self::{
-    keys::KeysCmd, orchestrator::OrchestratorCmd, query::QueryCmd, tests::TestsCmd, tx::TxCmd,
-    version::VersionCmd,print_config::PrintConfigCmd,
+    keys::KeysCmd, orchestrator::OrchestratorCmd, print_config::PrintConfigCmd, query::QueryCmd,
+    tests::TestsCmd, tx::TxCmd, version::VersionCmd,
 };
 use crate::config::GorcConfig;
-use abscissa_core::{Command, Configurable, Help, Options, Runnable};
+use abscissa_core::{status_err, Command, Configurable, Help, Options, Runnable};
 use std::path::PathBuf;
 
 /// Gorc Configuration Filename
@@ -25,6 +25,9 @@ pub const CONFIG_FILE: &str = "gorc.toml";
 /// Gorc Subcommands
 #[derive(Command, Debug, Options, Runnable)]
 pub enum GorcCmd {
+    #[options(help = "this should not get merged :)")]
+    Debug(DebugCmd),
+
     #[options(help = "get usage information")]
     Help(Help<Self>),
 
@@ -33,6 +36,9 @@ pub enum GorcCmd {
 
     #[options(help = "orchestrator")]
     Orchestrator(OrchestratorCmd),
+
+    #[options(help = "print config file template")]
+    PrintConfig(PrintConfigCmd),
 
     #[options(help = "query state on either ethereum or cosmos chains")]
     Query(QueryCmd),
@@ -48,9 +54,6 @@ pub enum GorcCmd {
 
     #[options(help = "display version information")]
     Version(VersionCmd),
-
-    #[options(help = "print config file template")]
-    PrintConfig(PrintConfigCmd),
 }
 
 /// This trait allows you to define how application configuration is loaded.
@@ -67,5 +70,24 @@ impl Configurable<GorcConfig> for GorcCmd {
         } else {
             None
         }
+    }
+}
+
+// TODO(Levi) Delete this command before merging into main
+#[derive(Command, Debug, Default, Options)]
+pub struct DebugCmd {}
+
+impl Runnable for DebugCmd {
+    fn run(&self) {
+        use crate::{application::APP, prelude::*};
+        use ::orchestrator::main_loop::metrics_main_loop;
+
+        abscissa_tokio::run_with_actix(&APP, async {
+            metrics_main_loop().await;
+        })
+        .unwrap_or_else(|e| {
+            status_err!("executor exited with error: {}", e);
+            std::process::exit(1);
+        });
     }
 }

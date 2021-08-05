@@ -76,7 +76,9 @@ pub async fn orchestrator_main_loop(
         gravity_contract_address,
     );
 
-    futures::future::join4(a, b, c, d).await;
+    let e = metrics_main_loop();
+
+    futures::future::join5(a, b, c, d, e).await;
 }
 
 const DELAY: Duration = Duration::from_secs(5);
@@ -340,4 +342,18 @@ pub async fn eth_signer_main_loop(
             delay_for(ETH_SIGNER_LOOP_SPEED - elapsed).await;
         }
     }
+}
+
+pub async fn metrics_main_loop() {
+    use axum::prelude::*;
+    use hyper::Server;
+
+    let app = route("/", get(|| async { "Hello, World!\n" }));
+
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 3000));
+    info!("metrics listening on {}", addr);
+    Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
 }
