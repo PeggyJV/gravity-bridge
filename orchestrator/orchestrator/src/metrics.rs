@@ -1,11 +1,11 @@
-use std::convert::TryInto;
+use std::{convert::TryInto, net};
 
 use axum::prelude::*;
 use hyper::Server;
 use lazy_static::lazy_static;
 use prometheus::*;
 
-pub async fn metrics_main_loop() {
+pub async fn metrics_main_loop(ip: net::IpAddr, port: u16) {
     let get_metrics = || async {
         let mut buffer = Vec::new();
         let encoder = TextEncoder::new();
@@ -16,8 +16,7 @@ pub async fn metrics_main_loop() {
 
     let app = route("/", get(get_metrics));
 
-    // TODO(Levi) accept config for SocketAddr
-    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = net::SocketAddr::new(ip, port);
     info!("metrics listening on {}", addr);
     Server::bind(&addr)
         .serve(app.into_make_service())
