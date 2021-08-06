@@ -135,20 +135,20 @@ pub async fn eth_oracle_main_loop(
                 continue;
             }
             (Ok(_), Err(_)) => {
-                metrics::increment_cosmos_unavailable();
+                metrics::COSMOS_UNAVAILABLE.inc();
                 warn!("Could not contact Cosmos grpc, trying again");
                 delay_for(DELAY).await;
                 continue;
             }
             (Err(_), Ok(_)) => {
-                metrics::increment_ethereum_unavailable();
+                metrics::ETHEREUM_UNAVAILABLE.inc();
                 warn!("Could not contact Eth node, trying again");
                 delay_for(DELAY).await;
                 continue;
             }
             (Err(_), Err(_)) => {
-                metrics::increment_cosmos_unavailable();
-                metrics::increment_ethereum_unavailable();
+                metrics::COSMOS_UNAVAILABLE.inc();
+                metrics::ETHEREUM_UNAVAILABLE.inc();
                 error!("Could not reach Ethereum or Cosmos rpc!");
                 delay_for(DELAY).await;
                 continue;
@@ -169,7 +169,7 @@ pub async fn eth_oracle_main_loop(
         {
             Ok(new_block) => last_checked_block = new_block,
             Err(e) => {
-                metrics::increment_ethereum_event_check_failures();
+                metrics::ETHEREUM_EVENT_CHECK_FAILURES.inc();
                 error!("Failed to get events for block range, Check your Eth node and Cosmos gRPC {:?}", e);
                 if let gravity_utils::error::GravityError::CosmosGrpcError(err) = e {
                     if let CosmosGrpcError::TransactionFailed { tx: _, time: _ } = err {
@@ -239,20 +239,20 @@ pub async fn eth_signer_main_loop(
                 continue;
             }
             (Ok(_), Err(_)) => {
-                metrics::increment_cosmos_unavailable();
+                metrics::COSMOS_UNAVAILABLE.inc();
                 warn!("Could not contact Cosmos grpc, trying again");
                 delay_for(DELAY).await;
                 continue;
             }
             (Err(_), Ok(_)) => {
-                metrics::increment_ethereum_unavailable();
+                metrics::ETHEREUM_UNAVAILABLE.inc();
                 warn!("Could not contact Eth node, trying again");
                 delay_for(DELAY).await;
                 continue;
             }
             (Err(_), Err(_)) => {
-                metrics::increment_cosmos_unavailable();
-                metrics::increment_ethereum_unavailable();
+                metrics::COSMOS_UNAVAILABLE.inc();
+                metrics::ETHEREUM_UNAVAILABLE.inc();
                 error!("Could not reach Ethereum or Cosmos rpc!");
                 delay_for(DELAY).await;
                 continue;
@@ -284,7 +284,7 @@ pub async fn eth_signer_main_loop(
                 }
             }
             Err(e) => {
-                metrics::increment_unsigned_valset_failures();
+                metrics::UNSIGNED_VALSET_FAILURES.inc();
                 info!(
                     "Failed to get unsigned valsets, check your Cosmos gRPC {:?}",
                     e
@@ -317,7 +317,7 @@ pub async fn eth_signer_main_loop(
             }
             Ok(None) => info!("No unsigned batches! Everything good!"),
             Err(e) => {
-                metrics::increment_unsigned_batch_failures();
+                metrics::UNSIGNED_BATCH_FAILURES.inc();
                 info!(
                     "Failed to get unsigned Batches, check your Cosmos gRPC {:?}",
                     e
@@ -348,7 +348,7 @@ pub async fn eth_signer_main_loop(
                     .expect("Could not send messages");
             }
         } else if let Err(e) = logic_calls {
-            metrics::increment_unsigned_logic_call_failures();
+            metrics::UNSIGNED_LOGIC_CALL_FAILURES.inc();
             info!(
                 "Failed to get unsigned Logic Calls, check your Cosmos gRPC {:?}",
                 e

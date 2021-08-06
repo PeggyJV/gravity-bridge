@@ -429,7 +429,7 @@ async fn submit_duplicate_erc20_send(
     for k in keys.iter() {
         let cosmos_key = k.validator_key;
 
-        let (messages, _) = build::ethereum_event_messages(
+        let messages = build::ethereum_event_messages(
             contact,
             cosmos_key,
             vec![event.clone()],

@@ -167,17 +167,40 @@ pub async fn check_for_events(
             || !erc20_deploys.is_empty()
             || !logic_calls.is_empty()
         {
-            let (messages, last_ethereum_event_nonce) = build::ethereum_event_messages(
+            let messages = build::ethereum_event_messages(
                 contact,
                 cosmos_key,
-                deposits,
-                batches,
-                erc20_deploys,
-                logic_calls,
-                valsets,
+                deposits.to_owned(),
+                batches.to_owned(),
+                erc20_deploys.to_owned(),
+                logic_calls.to_owned(),
+                valsets.to_owned(),
             );
 
-            metrics::set_ethereum_last_event_nonce(last_ethereum_event_nonce);
+            if let Some(deposit) = deposits.last() {
+                metrics::set_ethereum_last_deposit_event(deposit.event_nonce.clone());
+                metrics::set_ethereum_last_deposit_block(deposit.block_height.clone());
+            }
+
+            if let Some(batch) = batches.last() {
+                metrics::set_ethereum_last_batch_event(batch.event_nonce.clone());
+                metrics::set_ethereum_last_batch_nonce(batch.batch_nonce.clone());
+            }
+
+            if let Some(valset) = valsets.last() {
+                metrics::set_ethereum_last_valset_event(valset.event_nonce.clone());
+                metrics::set_ethereum_last_valset_nonce(valset.valset_nonce.clone());
+            }
+
+            if let Some(erc20_deploy) = erc20_deploys.last() {
+                metrics::set_ethereum_last_erc20_event(erc20_deploy.event_nonce.clone());
+                metrics::set_ethereum_last_erc20_block(erc20_deploy.block_height.clone());
+            }
+
+            if let Some(logic_call) = logic_calls.last() {
+                metrics::set_ethereum_last_logic_call_event(logic_call.event_nonce.clone());
+                metrics::set_ethereum_last_logic_call_nonce(logic_call.invalidation_nonce.clone());
+            }
 
             msg_sender
                 .send(messages)
