@@ -2,7 +2,7 @@ use crate::application::APP;
 use abscissa_core::{Application, Command, Options, Runnable, status_err};
 use clarity::Address as EthAddress;
 use clarity::Uint256;
-use cosmos_gravity::send::{send_request_batch, send_to_eth};
+use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
 use deep_space::{coin::Coin, private_key::PrivateKey as CosmosPrivateKey};
 use gravity_utils::connection_prep::{check_for_fee_denom, create_rpc_connections};
 use gravity_proto::gravity::DenomToErc20Request;
@@ -167,7 +167,7 @@ impl Runnable for CosmosToEthCmd {
 
         if !self.flag_no_batch {
             println!("Requesting a batch to push transaction along immediately");
-            send_request_batch(cosmos_key, gravity_denom, bridge_fee, &contact)
+            send_request_batch_tx(cosmos_key, gravity_denom, bridge_fee, &contact)
                 .await
                 .expect("Failed to request batch");
         } else {
