@@ -44,7 +44,7 @@ pub fn fraction_to_exponent(num: f64, exponent: u8) -> Uint256 {
 pub struct EthToCosmosCmd {
     #[options(
         free,
-        help = "eth-to-cosmos [gravity_denom] [flag_amount] [cosmos_phrase] [eth_dest] [times]"
+        help = "eth-to-cosmos [erc20_address] [ethereum_key] [contract_address] [cosmos_dest] [amount] [times]"
     )]
     pub args: Vec<String>,
 }
@@ -90,7 +90,7 @@ impl Runnable for EthToCosmosCmd {
                 .await
                 .expect("Failed to get balance, check ERC20 contract address");
 
-            let times = self.args.get(4).expect("times is required");
+            let times = self.args.get(5).expect("times is required");
             let times = times.parse::<usize>().expect("cannot parse times");
 
             if erc20_balance == 0u8.into() {
