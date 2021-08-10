@@ -1,7 +1,6 @@
 use crate::application::APP;
 use abscissa_core::{status_err, Application, Command, Options, Runnable};
 use clarity::Address as EthAddress;
-use clarity::PrivateKey as EthPrivateKey;
 use clarity::Uint256;
 use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
@@ -26,12 +25,14 @@ impl Runnable for EthToCosmosCmd {
         let erc20_address: EthAddress = erc20_address
             .parse()
             .expect("Invalid ERC20 contract address!");
+
         let ethereum_key = self.args.get(1).expect("key is required");
-        let ethereum_key: EthPrivateKey =
-            ethereum_key.parse().expect("Invalid Ethereum private key!");
+        let ethereum_key = config.load_clarity_key(ethereum_key.clone());
+
         let contract_address = self.args.get(2).expect("contract address is required");
         let contract_address: EthAddress =
             contract_address.parse().expect("Invalid contract address!");
+
         let cosmos_prefix = config.cosmos.prefix.trim();
         let eth_rpc = config.ethereum.rpc.trim();
         abscissa_tokio::run_with_actix(&APP, async {
