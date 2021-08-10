@@ -67,7 +67,7 @@ impl Runnable for CosmosToEthCmd {
                 .expect("Failed to parse cosmos key phrase, does it have a password?");
         let cosmos_prefix = config.cosmos.prefix.trim();
         let cosmos_address = cosmos_key.to_address(&cosmos_prefix).unwrap();
-        let cosmos_grpc = config.cosmos.prefix.trim();
+        let cosmos_grpc = config.cosmos.grpc.trim();
         println!("Sending from Cosmos address {}", cosmos_address);
         abscissa_tokio::run_with_actix(&APP, async {
         let connections = create_rpc_connections(

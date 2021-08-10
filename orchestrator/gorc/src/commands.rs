@@ -10,6 +10,7 @@ mod tests;
 mod tx;
 mod version;
 mod cosmos_to_eth;
+mod eth_to_cosmos;
 
 use self::{
     keys::KeysCmd, orchestrator::OrchestratorCmd, query::QueryCmd, tests::TestsCmd, tx::TxCmd,
@@ -51,6 +52,9 @@ pub enum GorcCmd {
 
     #[options(help = "Send Cosmos to Ethereum")]
     CosmosToEth(cosmos_to_eth::CosmosToEthCmd),
+
+    #[options(help = "Send ETH to Cosmos")]
+    EthToCosmosCmd(eth_to_cosmos::EthToCosmosCmd)
 }
 
 /// This trait allows you to define how application configuration is loaded.
