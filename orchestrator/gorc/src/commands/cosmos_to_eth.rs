@@ -14,7 +14,7 @@ const TIMEOUT: Duration = Duration::from_secs(60);
 pub struct CosmosToEthCmd {
     #[options(
         free,
-        help = "cosmos-to-eth [gravity_denom] [amount] [cosmos_phrase] [eth_dest] [times]"
+        help = "cosmos-to-eth [gravity_denom] [amount] [cosmos_key] [eth_dest] [times]"
     )]
     pub args: Vec<String>,
     pub flag_no_batch: bool,
@@ -50,9 +50,9 @@ impl Runnable for CosmosToEthCmd {
         let amount = self.args.get(1).expect("amount is required");
         let amount: Uint256 = amount.parse().expect("cannot parse amount");
 
-        let cosmos_phrase = self.args.get(2).expect("name is required");
-        let cosmos_key = CosmosPrivateKey::from_phrase(&cosmos_phrase, "")
-            .expect("Failed to parse cosmos key phrase, does it have a password?");
+        let cosmos_key = self.args.get(2).expect("name is required");
+        let cosmos_key = config.load_clarity_key(cosmos_key);
+
         let cosmos_prefix = config.cosmos.prefix.trim();
         let cosmos_address = cosmos_key.to_address(&cosmos_prefix).unwrap();
         let cosmos_grpc = config.cosmos.prefix.trim();
