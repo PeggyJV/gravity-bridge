@@ -3,7 +3,7 @@ use abscissa_core::{status_err, Application, Command, Options, Runnable};
 use clarity::Address as EthAddress;
 use clarity::Uint256;
 use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
-use deep_space::{coin::Coin, private_key::PrivateKey as CosmosPrivateKey};
+use deep_space::coin::Coin;
 use gravity_proto::gravity::DenomToErc20Request;
 use gravity_utils::connection_prep::{check_for_fee_denom, create_rpc_connections};
 use std::{process::exit, time::Duration};
@@ -51,7 +51,7 @@ impl Runnable for CosmosToEthCmd {
         let amount: Uint256 = amount.parse().expect("cannot parse amount");
 
         let cosmos_key = self.args.get(2).expect("name is required");
-        let cosmos_key = config.load_clarity_key(cosmos_key);
+        let cosmos_key = config.load_deep_space_key(cosmos_key.to_string());
 
         let cosmos_prefix = config.cosmos.prefix.trim();
         let cosmos_address = cosmos_key.to_address(&cosmos_prefix).unwrap();
