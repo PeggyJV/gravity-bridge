@@ -33,7 +33,7 @@ func TestCurrentValsetNormalization(t *testing.T) {
 		t.Run(msg, func(t *testing.T) {
 			operators := make([]MockStakingValidatorData, len(spec.srcPowers))
 			for i, v := range spec.srcPowers {
-				cAddr := bytes.Repeat([]byte{byte(i)}, sdk.AddrLen)
+				cAddr := bytes.Repeat([]byte{byte(i)}, 20)
 				operators[i] = MockStakingValidatorData{
 					// any unique addr
 					Operator: cAddr,
@@ -43,7 +43,7 @@ func TestCurrentValsetNormalization(t *testing.T) {
 			}
 			input.GravityKeeper.StakingKeeper = NewStakingKeeperWeightedMock(operators...)
 			r := input.GravityKeeper.CreateSignerSetTx(ctx)
-			assert.Equal(t, spec.expPowers, types.EthereumSigners(r.Signers).GetPowers())
+			assert.Equal(t, spec.expPowers, r.Signers.GetPowers())
 		})
 	}
 }
@@ -78,7 +78,7 @@ func TestAttestationIterator(t *testing.T) {
 	input.GravityKeeper.setEthereumEventVoteRecord(ctx, dep1.EventNonce, dep1.Hash(), att1)
 	input.GravityKeeper.setEthereumEventVoteRecord(ctx, dep2.EventNonce, dep2.Hash(), att2)
 
-	atts := []*types.EthereumEventVoteRecord{}
+	var atts []*types.EthereumEventVoteRecord
 	input.GravityKeeper.iterateEthereumEventVoteRecords(ctx, func(_ []byte, att *types.EthereumEventVoteRecord) bool {
 		atts = append(atts, att)
 		return false
@@ -158,7 +158,7 @@ func TestStoreEventVoteRecord(t *testing.T) {
 
 	cctxe := &types.ContractCallExecutedEvent{
 		EventNonce:        2,
-		InvalidationId:    []byte{0x1, 0x2},
+		InvalidationScope:    []byte{0x1, 0x2},
 		InvalidationNonce: 1,
 		EthereumHeight:    11,
 	}

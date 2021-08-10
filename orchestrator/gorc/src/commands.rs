@@ -36,6 +36,9 @@ pub enum GorcCmd {
     #[options(help = "print config file template")]
     PrintConfigCmd(print_config::PrintConfigCmd),
 
+    #[options(help = "print config file template")]
+    PrintConfig(print_config::PrintConfigCmd),
+
     #[options(help = "query state on either ethereum or cosmos chains")]
     Query(query::QueryCmd),
 

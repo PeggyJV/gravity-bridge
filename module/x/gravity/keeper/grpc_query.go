@@ -34,7 +34,7 @@ func (k Keeper) LatestSignerSetTx(c context.Context, req *types.LatestSignerSetT
 	}
 
 	var any cdctypes.Any
-	k.cdc.MustUnmarshalBinaryBare(iter.Value(), &any)
+	k.cdc.MustUnmarshal(iter.Value(), &any)
 
 	var otx types.OutgoingTx
 	if err := k.cdc.UnpackAny(&any, &otx); err != nil {
@@ -317,7 +317,7 @@ func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20Par
 	}
 
 	// use metadata, if we can find it
-	if md := k.bankKeeper.GetDenomMetaData(ctx, req.Denom); md.Base != "" {
+	if md, ok := k.bankKeeper.GetDenomMetaData(ctx, req.Denom); ok && md.Base != "" {
 		var erc20Decimals uint64
 		for _, denomUnit := range md.DenomUnits {
 			if denomUnit.Denom == md.Display {
@@ -325,16 +325,21 @@ func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20Par
 				break
 			}
 		}
-		res := &types.DenomToERC20ParamsResponse{
+
+		return &types.DenomToERC20ParamsResponse{
 			BaseDenom:     md.Base,
 			Erc20Name:     md.Display,
 			Erc20Symbol:   md.Display,
 			Erc20Decimals: erc20Decimals,
-		}
-		return res, nil
+		}, nil
 	}
 
-	// TODO: verify req.Denom exists (meaning an account holds it) after we upgrade to 0.4.3
+	if supply := k.bankKeeper.GetSupply(ctx, req.Denom); supply.IsZero() {
+		return nil, sdkerrors.Wrapf(
+			types.ErrInvalidERC20Event,
+			"no supply exists for token %s without metadata", req.Denom,
+		)
+	}
 
 	// no metadata, go with a zero decimal, no symbol erc-20
 	res := &types.DenomToERC20ParamsResponse{
@@ -343,6 +348,7 @@ func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20Par
 		Erc20Symbol:   "",
 		Erc20Decimals: 0,
 	}
+
 	return res, nil
 }
 
@@ -384,7 +390,7 @@ func (k Keeper) UnbatchedSendToEthereums(c context.Context, req *types.Unbatched
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEthereumKey})
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var ste types.SendToEthereum
-		k.cdc.MustUnmarshalBinaryBare(value, &ste)
+		k.cdc.MustUnmarshal(value, &ste)
 		if ste.Sender == req.SenderAddress {
 			res.SendToEthereums = append(res.SendToEthereums, &ste)
 			return true, nil
