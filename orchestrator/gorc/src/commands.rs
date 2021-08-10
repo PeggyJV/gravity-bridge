@@ -9,7 +9,6 @@ mod sign_delegate_keys;
 mod tests;
 mod tx;
 mod version;
-mod cosmos_to_eth;
 mod eth_to_cosmos;
 
 use self::{
@@ -49,9 +48,6 @@ pub enum GorcCmd {
 
     #[options(help = "display version information")]
     Version(VersionCmd),
-
-    #[options(help = "Send Cosmos to Ethereum")]
-    CosmosToEth(cosmos_to_eth::CosmosToEthCmd),
 
     #[options(help = "Send ETH to Cosmos")]
     EthToCosmosCmd(eth_to_cosmos::EthToCosmosCmd)
