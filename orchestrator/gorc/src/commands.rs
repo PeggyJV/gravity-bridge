@@ -4,12 +4,13 @@
 mod deploy;
 mod keys;
 mod orchestrator;
-mod print_config;
 mod query;
 mod sign_delegate_keys;
 mod tests;
 mod tx;
 mod version;
+mod cosmos_to_eth;
+mod print_config;
 
 use crate::config::GorcConfig;
 use abscissa_core::{Command, Configurable, Help, Options, Runnable};
@@ -21,6 +22,10 @@ pub const CONFIG_FILE: &str = "gorc.toml";
 /// Gorc Subcommands
 #[derive(Command, Debug, Options, Runnable)]
 pub enum GorcCmd {
+  
+    #[options(help = "Send Cosmos to Ethereum")]
+    CosmosToEth(cosmos_to_eth::CosmosToEthCmd),
+  
     #[options(help = "tools for contract deployment")]
     Deploy(deploy::DeployCmd),
 
@@ -32,9 +37,6 @@ pub enum GorcCmd {
 
     #[options(help = "orchestrator management commands")]
     Orchestrator(orchestrator::OrchestratorCmd),
-
-    #[options(help = "print config file template")]
-    PrintConfigCmd(print_config::PrintConfigCmd),
 
     #[options(help = "print config file template")]
     PrintConfig(print_config::PrintConfigCmd),
