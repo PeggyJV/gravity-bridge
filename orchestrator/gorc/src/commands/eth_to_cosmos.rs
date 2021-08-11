@@ -1,44 +1,13 @@
 use crate::application::APP;
 use abscissa_core::{status_err, Application, Command, Options, Runnable};
 use clarity::Address as EthAddress;
-use clarity::PrivateKey as EthPrivateKey;
 use clarity::Uint256;
 use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
 use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
-use std::{time::Duration, u128};
-use web30::{client::Web3, jsonrpc::error::Web3Error};
+use std::time::Duration;
+
 const TIMEOUT: Duration = Duration::from_secs(60);
-
-pub async fn get_erc20_decimals(
-    web3: &Web3,
-    erc20: EthAddress,
-    caller_address: EthAddress,
-) -> Result<Uint256, Web3Error> {
-    let decimals = web3
-        .contract_call(erc20, "decimals()", &[], caller_address, None)
-        .await?;
-
-    Ok(Uint256::from_bytes_be(match decimals.get(0..32) {
-        Some(val) => val,
-        None => {
-            return Err(Web3Error::ContractCallError(
-                "Bad response from ERC20 decimals".to_string(),
-            ))
-        }
-    }))
-}
-
-pub fn fraction_to_exponent(num: f64, exponent: u8) -> Uint256 {
-    let mut res = num;
-    // in order to avoid floating point rounding issues we
-    // multiply only by 10 each time. this reduces the rounding
-    // errors enough to be ignored
-    for _ in 0..exponent {
-        res *= 10f64
-    }
-    (res as u128).into()
-}
 
 #[derive(Command, Debug, Default, Options)]
 pub struct EthToCosmosCmd {
@@ -56,12 +25,14 @@ impl Runnable for EthToCosmosCmd {
         let erc20_address: EthAddress = erc20_address
             .parse()
             .expect("Invalid ERC20 contract address!");
+
         let ethereum_key = self.args.get(1).expect("key is required");
-        let ethereum_key: EthPrivateKey =
-            ethereum_key.parse().expect("Invalid Ethereum private key!");
+        let ethereum_key = config.load_clarity_key(ethereum_key.clone());
+
         let contract_address = self.args.get(2).expect("contract address is required");
         let contract_address: EthAddress =
             contract_address.parse().expect("Invalid contract address!");
+
         let cosmos_prefix = config.cosmos.prefix.trim();
         let eth_rpc = config.ethereum.rpc.trim();
         abscissa_tokio::run_with_actix(&APP, async {
@@ -78,12 +49,8 @@ impl Runnable for EthToCosmosCmd {
             let ethereum_public_key = ethereum_key.to_public_key().unwrap();
             check_for_eth(ethereum_public_key, &web3).await;
 
-            let res = get_erc20_decimals(&web3, erc20_address, ethereum_public_key)
-                .await
-                .expect("Failed to query ERC20 contract");
-            let decimals: u8 = res.to_string().parse().unwrap();
             let init_amount = self.args.get(4).expect("amount is required");
-            let amount = fraction_to_exponent(init_amount.parse().unwrap(), decimals);
+            let amount: Uint256 = init_amount.parse().unwrap();
 
             let erc20_balance = web3
                 .get_erc20_balance(erc20_address, ethereum_public_key)
