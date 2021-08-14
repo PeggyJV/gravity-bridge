@@ -9,7 +9,6 @@ members = [
 	"test_runner",
 	"gravity_proto",
 	"relayer",
-	"client",
 	"register_delegate_keys",
 	"gorc",
 ]
