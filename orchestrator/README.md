@@ -1,12 +1,5 @@
 # Orchestrator folder
 
-### client/
-
-This folder builds a binary that is a client application for the gravity system. It contains the following commands:
-- `cosmos-to-eth`
-- `eth-to-cosmos`
-- `deploy-erc20-representation`
-
 ### cosmos_gravity/
 
 This is a library for interacting with the cosmos chain both queries and transactions. It substantally wraps `gravity_proto`.
