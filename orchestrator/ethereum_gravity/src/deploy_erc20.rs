@@ -7,7 +7,7 @@ use clarity::{
     Uint256,
 };
 use clarity::{Address, PrivateKey};
-use gravity_utils::error::GravityError;
+use somm_gravity_utils::error::GravityError;
 use std::time::Duration;
 use web30::{client::Web3, types::SendTxOption};
 

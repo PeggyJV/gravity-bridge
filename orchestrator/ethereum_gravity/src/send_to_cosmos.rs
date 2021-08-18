@@ -6,7 +6,7 @@ use clarity::abi::{encode_call, Token};
 use clarity::PrivateKey as EthPrivateKey;
 use clarity::{Address, Uint256};
 use deep_space::address::Address as CosmosAddress;
-use gravity_utils::error::GravityError;
+use somm_gravity_utils::error::GravityError;
 use web30::client::Web3;
 use web30::types::SendTxOption;
 

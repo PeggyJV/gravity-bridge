@@ -1,8 +1,8 @@
 use clarity::abi::Token;
 use clarity::Uint256;
 use clarity::{abi::encode_tokens, Address as EthAddress};
-use gravity_utils::error::GravityError;
-use gravity_utils::types::*;
+use somm_gravity_utils::error::GravityError;
+use somm_gravity_utils::types::*;
 use sha3::{Digest, Keccak256};
 use std::u128::MAX as U128MAX;
 use std::u64::MAX as U64MAX;
