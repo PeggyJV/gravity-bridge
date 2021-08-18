@@ -16,7 +16,7 @@ pub struct BatchTransaction {
 }
 
 impl BatchTransaction {
-    pub fn from_proto(input: gravity_proto::gravity::SendToEthereum) -> Result<Self, GravityError> {
+    pub fn from_proto(input: somm_gravity_proto::gravity::SendToEthereum) -> Result<Self, GravityError> {
         if input.erc20_fee.is_none() || input.erc20_token.is_none() {
             return Err(GravityError::InvalidBridgeStateError(
                 "Can not have tx with null erc20_token!".to_string(),
@@ -63,7 +63,7 @@ impl TransactionBatch {
         )
     }
 
-    pub fn from_proto(input: gravity_proto::gravity::BatchTx) -> Result<Self, GravityError> {
+    pub fn from_proto(input: somm_gravity_proto::gravity::BatchTx) -> Result<Self, GravityError> {
         let mut transactions = Vec::new();
         let mut running_total_fee: Option<Erc20Token> = None;
         for tx in input.transactions {
@@ -105,7 +105,7 @@ pub struct BatchConfirmResponse {
 
 impl BatchConfirmResponse {
     pub fn from_proto(
-        input: gravity_proto::gravity::BatchTxConfirmation,
+        input: somm_gravity_proto::gravity::BatchTxConfirmation,
     ) -> Result<Self, GravityError> {
         Ok(BatchConfirmResponse {
             nonce: input.batch_nonce,
