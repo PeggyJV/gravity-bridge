@@ -10,7 +10,6 @@ license = "Apache-2.0"
 
 [dependencies]
 somm_gravity_utils = {version = "0.1.0", path = "../gravity_utils"}
-
 deep_space = {version = "2.4.3", git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
 clarity = "0.4.11"
 web30 = "0.14.4"
