@@ -11,7 +11,7 @@ gravity_utils = {path = "../gravity_utils"}
 ethereum_gravity = {path = "../ethereum_gravity"}
 gravity_proto = {path = "../gravity_proto/"}
 
-deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="master"}
+deep_space = "2.4.4"
 clarity = "0.4.11"
 serde = "1.0"
 num256 = "0.3"
@@ -29,3 +29,6 @@ bytes = "1"
 env_logger = "0.8"
 rand = "0.8"
 actix = "0.11"
+
+[features]
+ethermint = []

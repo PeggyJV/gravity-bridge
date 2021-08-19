@@ -39,3 +39,6 @@ client = { path = "./client" }
 register_delegate_keys = { path = "./register_delegate_keys" }
 gorc = { path = "./gorc" }
 relayer = { path = "./relayer" }
+
+[patch.crates-io]
+deep_space = { git = "https://github.com/crypto-org-chain/deep_space/", branch = "ethermint" }

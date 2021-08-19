@@ -8,11 +8,11 @@ use crate::OPERATION_TIMEOUT;
 use crate::TOTAL_TIMEOUT;
 use clarity::PrivateKey as EthPrivateKey;
 use clarity::{Address as EthAddress, Uint256};
+use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
 use cosmos_gravity::{build, query::get_oldest_unsigned_transaction_batch, send};
 use deep_space::address::Address as CosmosAddress;
 use deep_space::coin::Coin;
-use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
 use ethereum_gravity::utils::get_valset_nonce;
 use ethereum_gravity::{send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce};
@@ -180,7 +180,7 @@ pub async fn test_valset_update(
                 delegate_address.parse().unwrap(),
                 amount.clone(),
                 get_fee(),
-                keys_to_change.orch_key,
+                keys_to_change.orch_key.into(),
                 Some(OPERATION_TIMEOUT),
             )
             .await;

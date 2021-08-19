@@ -1,7 +1,7 @@
 use crate::utils::ValidatorKeys;
 use clarity::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
-use deep_space::private_key::PrivateKey as CosmosPrivateKey;
+use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 

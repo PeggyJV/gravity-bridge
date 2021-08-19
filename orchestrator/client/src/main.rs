@@ -17,12 +17,13 @@ use clarity::PrivateKey as EthPrivateKey;
 use clarity::Uint256;
 use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
 use deep_space::address::Address as CosmosAddress;
-use deep_space::{coin::Coin, private_key::PrivateKey as CosmosPrivateKey};
+use deep_space::coin::Coin;
 use docopt::Docopt;
 use env_logger::Env;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
 use gravity_proto::gravity::DenomToErc20Request;
 use gravity_utils::connection_prep::{check_for_eth, check_for_fee_denom, create_rpc_connections};
+use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use std::{process::exit, time::Duration};
 
 const TIMEOUT: Duration = Duration::from_secs(60);

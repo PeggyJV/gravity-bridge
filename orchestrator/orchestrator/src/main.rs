@@ -25,7 +25,7 @@ mod oracle_resync;
 use crate::main_loop::orchestrator_main_loop;
 use clarity::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
-use deep_space::private_key::PrivateKey as CosmosPrivateKey;
+use cosmos_gravity::crypto::{PrivateKey as CosmosPrivateKey, DEFAULT_HD_PATH};
 use docopt::Docopt;
 use env_logger::Env;
 use gravity_utils::connection_prep::{
@@ -82,8 +82,9 @@ async fn main() {
     let args: Args = Docopt::new(USAGE.as_str())
         .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
-    let cosmos_key = CosmosPrivateKey::from_phrase(&args.flag_cosmos_phrase, "")
-        .expect("Invalid Private Cosmos Key!");
+    let cosmos_key =
+        CosmosPrivateKey::from_hd_wallet_path(DEFAULT_HD_PATH, &args.flag_cosmos_phrase, "")
+            .expect("Invalid Private Cosmos Key!");
     let ethereum_key: EthPrivateKey = args
         .flag_ethereum_key
         .parse()

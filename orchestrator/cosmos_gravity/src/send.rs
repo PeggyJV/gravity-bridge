@@ -4,7 +4,6 @@ use clarity::PrivateKey as EthPrivateKey;
 use deep_space::address::Address;
 use deep_space::coin::Coin;
 use deep_space::error::CosmosGrpcError;
-use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
 use deep_space::Fee;
 use deep_space::Msg;
@@ -13,6 +12,8 @@ use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use gravity_proto::gravity as proto;
 use prost::Message;
 use std::time::Duration;
+
+use crate::crypto::PrivateKey as CosmosPrivateKey;
 
 pub const MEMO: &str = "Sent using Althea Orchestrator";
 pub const TIMEOUT: Duration = Duration::from_secs(60);

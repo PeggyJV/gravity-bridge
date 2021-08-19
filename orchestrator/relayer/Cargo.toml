@@ -18,7 +18,7 @@ cosmos_gravity = { path = "../cosmos_gravity" }
 gravity_utils = { path = "../gravity_utils" }
 gravity_proto = { path = "../gravity_proto" }
 
-deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="master"}
+deep_space = "2.4.4"
 serde_derive = "1.0"
 clarity = "0.4.11"
 docopt = "1"
@@ -33,6 +33,8 @@ tokio = "1.4"
 tonic = "0.4"
 openssl-probe = "0.1"
 
-
 [dev-dependencies]
 actix = "0.11"
+
+[features]
+ethermint = ["cosmos_gravity/ethermint"]

@@ -3,10 +3,11 @@
 use crate::{application::APP, prelude::*, utils::*};
 use abscissa_core::{Command, Options, Runnable};
 use clarity::{Address as EthAddress, Uint256};
-use cosmos_gravity::send::{send_to_eth};
-use deep_space::{coin::Coin, private_key::PrivateKey as CosmosPrivateKey};
+use cosmos_gravity::send::send_to_eth;
+use deep_space::coin::Coin;
 use gravity_proto::gravity::DenomToErc20Request;
 use gravity_utils::connection_prep::{check_for_fee_denom, create_rpc_connections};
+use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use regex::Regex;
 use std::process::exit;
 

@@ -111,7 +111,7 @@ pub async fn happy_path_test_v2(
             send_to_user_coin.clone(),
             Some(get_fee()),
             user.cosmos_address,
-            keys[0].validator_key,
+            keys[0].validator_key.into(),
             Some(TOTAL_TIMEOUT),
         )
         .await
