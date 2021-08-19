@@ -8,9 +8,9 @@ use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
 use deep_space::Fee;
 use deep_space::Msg;
-use gravity_proto::cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
-use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
-use gravity_proto::gravity as proto;
+use somm_gravity_proto::cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
+use somm_gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
+use somm_gravity_proto::gravity as proto;
 use prost::Message;
 use std::time::Duration;
 

@@ -3,13 +3,13 @@ use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::utils::bytes_to_hex_str;
 use deep_space::Contact;
 use deep_space::Msg;
-use ethereum_gravity::utils::downcast_uint256;
-use gravity_proto::gravity as proto;
-use gravity_proto::ToAny;
-use gravity_utils::message_signatures::{
+use somm_ethereum_gravity::utils::downcast_uint256;
+use somm_gravity_proto::gravity as proto;
+use somm_gravity_proto::ToAny;
+use somm_gravity_utils::message_signatures::{
     encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
 };
-use gravity_utils::types::*;
+use somm_gravity_utils::types::*;
 
 pub fn signer_set_tx_confirmation_messages(
     contact: &Contact,
