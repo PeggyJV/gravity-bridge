@@ -46,14 +46,16 @@ struct Args {
     flag_contract_address: String,
     flag_fees: String,
     flag_metrics_listen: String,
+    flag_hd_wallet_path: Option<String>,
 }
 
 lazy_static! {
     pub static ref USAGE: String = format!(
-    "Usage: {} --cosmos-phrase=<key> --ethereum-key=<key> --cosmos-grpc=<url> --address-prefix=<prefix> --ethereum-rpc=<url> --fees=<denom> --contract-address=<addr> --metrics-listen=<addr>
+    "Usage: {} --cosmos-phrase=<key> --ethereum-key=<key> --cosmos-grpc=<url> --address-prefix=<prefix> --ethereum-rpc=<url> --fees=<denom> --contract-address=<addr> --metrics-listen=<addr> --hd-wallet-path=<hdpath>
         Options:
             -h --help                    Show this screen.
             --cosmos-phrase=<ckey>       The mnenmonic of the Cosmos account key of the validator
+            --hd-wallet-path=<hdpath>    The hd wallet derivation path [default: \"m/44'/118'/0'/0/0\"].
             --ethereum-key=<ekey>        The Ethereum private key of the validator
             --cosmos-grpc=<gurl>         The Cosmos gRPC url, usually the validator
             --address-prefix=<prefix>    The prefix for addresses on this Cosmos chain
@@ -82,7 +84,11 @@ async fn main() {
     let args: Args = Docopt::new(USAGE.as_str())
         .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
-    let cosmos_key = CosmosPrivateKey::from_phrase(&args.flag_cosmos_phrase, "")
+    let hd_path = args
+        .flag_hd_wallet_path
+        .as_deref()
+        .unwrap_or("m/44'/118'/0'/0/0");
+    let cosmos_key = CosmosPrivateKey::from_hd_wallet_path(hd_path, &args.flag_cosmos_phrase, "")
         .expect("Invalid Private Cosmos Key!");
     let ethereum_key: EthPrivateKey = args
         .flag_ethereum_key

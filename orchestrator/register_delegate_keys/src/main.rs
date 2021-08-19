@@ -20,6 +20,7 @@ use std::time::Duration;
 struct Args {
     flag_validator_phrase: String,
     flag_cosmos_phrase: Option<String>,
+    flag_hd_wallet_path: Option<String>,
     flag_ethereum_key: Option<String>,
     flag_address_prefix: String,
     flag_cosmos_grpc: String,
@@ -32,6 +33,7 @@ lazy_static! {
         Options:
             -h --help                 Show this screen.
             --validator-phrase=<vkey> The Cosmos private key of the validator. Must be saved when you generate your key
+            --hd-wallet-path=<hdpath> The hd wallet derivation path [default: \"m/44'/118'/0'/0/0\"].
             --ethereum-key=<ekey>     (Optional) The Ethereum private key to register, will be generated if not provided
             --cosmos-phrase=<ckey>    (Optional) The phrase for the Cosmos key to register, will be generated if not provided.
             --address-prefix=<prefix> The prefix for Addresses on this chain (eg 'cosmos')
@@ -79,16 +81,22 @@ async fn main() {
     let contact = connections.contact.unwrap();
     wait_for_cosmos_node_ready(&contact).await;
 
-    let validator_key = CosmosPrivateKey::from_phrase(&args.flag_validator_phrase, "")
-        .expect("Failed to parse validator key");
+    let hd_path = args
+        .flag_hd_wallet_path
+        .as_deref()
+        .unwrap_or("m/44'/118'/0'/0/0");
+    let validator_key =
+        CosmosPrivateKey::from_hd_wallet_path(hd_path, &args.flag_validator_phrase, "")
+            .expect("Failed to parse validator key");
     let validator_addr = validator_key.to_address(&contact.get_prefix()).unwrap();
     check_for_fee_denom(&fee_denom, validator_addr, &contact).await;
 
     let cosmos_key = if let Some(cosmos_phrase) = args.flag_cosmos_phrase {
-        CosmosPrivateKey::from_phrase(&cosmos_phrase, "").expect("Failed to parse cosmos key")
+        CosmosPrivateKey::from_hd_wallet_path(hd_path, &cosmos_phrase, "")
+            .expect("Failed to parse cosmos key")
     } else {
         let new_phrase = Mnemonic::generate(24).unwrap();
-        let key = CosmosPrivateKey::from_phrase(new_phrase.as_str(), "").unwrap();
+        let key = CosmosPrivateKey::from_hd_wallet_path(hd_path, new_phrase.as_str(), "").unwrap();
         println!(
             "No Cosmos key provided, your generated key is\n {} -> {}",
             new_phrase.as_str(),
@@ -112,7 +120,7 @@ async fn main() {
 
     let ethereum_address = ethereum_key.to_public_key().unwrap();
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let res =update_gravity_delegate_addresses(
+    let res = update_gravity_delegate_addresses(
         &contact,
         ethereum_address,
         cosmos_address,

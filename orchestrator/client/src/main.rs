@@ -50,6 +50,7 @@ pub fn print_atom(input: Uint256) -> String {
 #[derive(Debug, Deserialize)]
 struct Args {
     flag_cosmos_phrase: String,
+    flag_hd_wallet_path: Option<String>,
     flag_ethereum_key: String,
     flag_cosmos_grpc: String,
     flag_ethereum_rpc: String,
@@ -74,6 +75,7 @@ lazy_static! {
         Options:
             -h --help                   Show this screen.
             --cosmos-phrase=<ckey>      The mnenmonic of the Cosmos account key of the validator
+            --hd-wallet-path=<hdpath>   The hd wallet derivation path [default: \"m/44'/118'/0'/0/0\"].
             --ethereum-key=<ekey>       The Ethereum private key of the sender
             --cosmos-legacy-rpc=<curl>  The Cosmos Legacy RPC url, this will need to be manually enabled
             --cosmos-grpc=<curl>        The Cosmos gRPC url
@@ -123,8 +125,13 @@ async fn main() {
         // todo actually query metadata for this
         let is_cosmos_originated = !gravity_denom.starts_with("gravity");
         let amount = args.flag_amount.unwrap().parse().unwrap();
-        let cosmos_key = CosmosPrivateKey::from_phrase(&args.flag_cosmos_phrase, "")
-            .expect("Failed to parse cosmos key phrase, does it have a password?");
+        let hd_path = args
+            .flag_hd_wallet_path
+            .as_deref()
+            .unwrap_or("m/44'/118'/0'/0/0");
+        let cosmos_key =
+            CosmosPrivateKey::from_hd_wallet_path(hd_path, &args.flag_cosmos_phrase, "")
+                .expect("Failed to parse cosmos key phrase, does it have a password?");
         let cosmos_address = cosmos_key.to_address(&args.flag_cosmos_prefix).unwrap();
 
         println!("Sending from Cosmos address {}", cosmos_address);
