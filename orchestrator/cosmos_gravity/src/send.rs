@@ -2,7 +2,6 @@ use bytes::BytesMut;
 use deep_space::address::Address;
 use deep_space::coin::Coin;
 use deep_space::error::CosmosGrpcError;
-use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
 use deep_space::Fee;
 use deep_space::Msg;
@@ -18,6 +17,8 @@ use prost::Message;
 use std::cmp;
 use std::collections::HashSet;
 use std::{result::Result, time::Duration};
+
+use crate::crypto::PrivateKey as CosmosPrivateKey;
 
 pub const MEMO: &str = "Sent using Gravity Bridge Orchestrator";
 pub const TIMEOUT: Duration = Duration::from_secs(60);
