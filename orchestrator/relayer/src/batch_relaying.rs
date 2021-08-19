@@ -55,7 +55,6 @@ pub async fn relay_batches(
     .await;
 }
 
-
 /// This function retrieves the latest batches from the Cosmos module and then
 /// iterates through the signatures for each batch, determining if they are ready
 /// to submit. It is possible for a batch to not have valid signatures for two reasons
@@ -112,7 +111,6 @@ async fn get_batches_and_signatures(
     }
     return possible_batches;
 }
-
 
 /// Attempts to submit batches with valid signatures, checking the state
 /// of the Ethereum chain to ensure that it is valid to submit a given batch

@@ -153,6 +153,7 @@ async fn main() {
         (1f64, fee_denom.to_owned()),
         IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
         3000u16,
+        false,
     )
     .await;
 }

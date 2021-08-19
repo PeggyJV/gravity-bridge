@@ -18,6 +18,9 @@ pub struct StartCommand {
 
     #[options(help = "ethereum key name")]
     ethereum_key: String,
+
+    #[options(help = "run the oracle and signer without the relayer to Ethereum.")]
+    orchestrator_only: bool,
 }
 
 impl Runnable for StartCommand {
@@ -95,6 +98,7 @@ impl Runnable for StartCommand {
                     .parse()
                     .expect("Could not parse metrics.listen_addr"),
                 config.metrics.listen_port,
+                self.orchestrator_only,
             )
             .await;
         })
