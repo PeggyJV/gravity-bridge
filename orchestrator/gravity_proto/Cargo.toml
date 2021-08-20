@@ -1,6 +1,6 @@
 [package]
 name = "somm_gravity_proto"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["PeggyJV <info@peggy.cool>, Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
 description = "A prost generated bindings for working with the gravity protobuf objects"
@@ -12,5 +12,5 @@ license = "Apache-2.0"
 prost = "0.7"
 prost-types = "0.7"
 bytes = "1"
-cosmos-sdk-proto = "0.6.0"
+cosmos-sdk-proto = "0.6.1"
 tonic = "0.4"
