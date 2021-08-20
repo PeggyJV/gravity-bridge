@@ -11,7 +11,7 @@ license = "Apache-2.0"
 [dependencies]
 somm_gravity_utils = {version = "0.1.0", path = "../gravity_utils"}
 somm_ethereum_gravity = {version = "0.1.0", path = "../ethereum_gravity"}
-somm_gravity_proto = {version = "0.1.2", path = "../gravity_proto/"}
+somm_gravity_proto = {path = "../gravity_proto/"}
 
 deep_space ={version = "2.4.3", git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
 clarity = "0.4.11"
@@ -22,7 +22,7 @@ sha3 = "0.9"
 tokio = "1.4"
 web30 = "0.14.4"
 tonic = "0.4"
-cosmos-sdk-proto = "0.5.0"
+cosmos-sdk-proto = "0.6.1"
 prost = "0.7"
 prost-types = "0.7"
 bytes = "1"
