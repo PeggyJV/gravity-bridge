@@ -3,7 +3,7 @@ name = "somm_gorc"
 authors = ["PeggyJV <info@peggy.cool>"]
 version = "0.1.0"
 edition = "2018"
-description = "This is crate contains gorc, the cosmos-ethereum bridge"
+description = "This crate contains gorc, the cosmos-ethereum bridge"
 license = "Apache-2.0"
 
 [dependencies]
