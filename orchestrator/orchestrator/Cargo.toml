@@ -16,7 +16,7 @@ path = "src/main.rs"
 
 [dependencies]
 somm_ethereum_gravity = {version = "0.1.0", path = "../ethereum_gravity"}
-somm_relayer = { version = "0.1.0", path = "../relayer" }
+somm_relayer = { version = "0.1.1", path = "../relayer" }
 somm_cosmos_gravity = { version = "0.1.0", path = "../cosmos_gravity" }
 somm_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
 somm_gravity_proto = {version = "0.1.2", path = "../gravity_proto/"}
