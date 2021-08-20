@@ -1,19 +1,21 @@
 [package]
-name = "register_delegate_keys"
+name = "somm_register_delegate_keys"
 version = "0.4.1"
-authors = ["Justin Kilpatrick <justin@althea.net>"]
+authors = ["PeggyJV <info@peggy.cool>, Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
+description = "This is a binary for running a command to register delegate keys for a validatore"
+license = "Apache-2.0"
 
 [[bin]]
-name = "register-delegate-keys"
+name = "somm_register-delegate-keys"
 path = "src/main.rs"
 
 [dependencies]
-relayer = {path = "../relayer/"}
-ethereum_gravity = {path = "../ethereum_gravity"}
-cosmos_gravity = {path = "../cosmos_gravity"}
-gravity_utils = {path = "../gravity_utils"}
-gravity_proto = {path = "../gravity_proto/"}
+somm_relayer = { version = "0.1.1", path = "../relayer" }
+somm_ethereum_gravity = {version = "0.1.0", path = "../ethereum_gravity"}
+somm_cosmos_gravity = { version = "0.1.0", path = "../cosmos_gravity" }
+somm_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
+somm_gravity_proto = {version = "0.1.2", path = "../gravity_proto/"}
 
 deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
 contact = "0.4"

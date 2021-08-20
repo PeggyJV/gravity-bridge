@@ -8,11 +8,11 @@ extern crate lazy_static;
 use log::error;
 
 use clarity::PrivateKey as EthPrivateKey;
-use cosmos_gravity::send::update_gravity_delegate_addresses;
+use somm_cosmos_gravity::send::update_gravity_delegate_addresses;
 use deep_space::{coin::Coin, mnemonic::Mnemonic, private_key::PrivateKey as CosmosPrivateKey};
 use docopt::Docopt;
-use gravity_utils::connection_prep::check_for_fee_denom;
-use gravity_utils::connection_prep::{create_rpc_connections, wait_for_cosmos_node_ready};
+use somm_gravity_utils::connection_prep::check_for_fee_denom;
+use somm_gravity_utils::connection_prep::{create_rpc_connections, wait_for_cosmos_node_ready};
 use rand::{thread_rng, Rng};
 use std::time::Duration;
 
