@@ -23,7 +23,7 @@ use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::{Contact, Msg};
 use somm_ethereum_gravity::utils::get_gravity_id;
 use somm_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use somm_relayer::main_loop::relayer_main_loop;
+use relayer::main_loop::relayer_main_loop;
 use std::{
     net,
     time::{Duration, Instant},
