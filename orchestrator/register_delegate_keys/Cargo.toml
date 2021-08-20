@@ -17,7 +17,7 @@ somm_cosmos_gravity = { version = "0.1.0", path = "../cosmos_gravity" }
 somm_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
 somm_gravity_proto = {version = "0.1.2", path = "../gravity_proto/"}
 
-deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
+deep_space ={version = "2.4.3", git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
 contact = "0.4"
 serde_derive = "1.0"
 clarity = "0.4.11"
