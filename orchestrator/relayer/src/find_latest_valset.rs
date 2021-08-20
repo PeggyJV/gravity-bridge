@@ -1,8 +1,8 @@
 use clarity::{Address, Uint256};
-use ethereum_gravity::utils::downcast_uint256;
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::types::ValsetUpdatedEvent;
-use gravity_utils::{error::GravityError, types::Valset};
+use somm_ethereum_gravity::utils::downcast_uint256;
+use somm_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use somm_gravity_utils::types::ValsetUpdatedEvent;
+use somm_gravity_utils::{error::GravityError, types::Valset};
 use tonic::transport::Channel;
 use web30::client::Web3;
 
@@ -53,7 +53,7 @@ pub async fn find_latest_valset(
                         members: event.members,
                     };
                     let cosmos_chain_valset =
-                        cosmos_gravity::query::get_valset(grpc_client, latest_eth_valset.nonce)
+                        somm_cosmos_gravity::query::get_valset(grpc_client, latest_eth_valset.nonce)
                             .await?;
                     check_if_valsets_differ(cosmos_chain_valset, &&latest_eth_valset);
                     return Ok(latest_eth_valset);

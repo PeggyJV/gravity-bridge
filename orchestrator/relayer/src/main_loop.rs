@@ -4,8 +4,8 @@ use crate::{
 };
 use clarity::address::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
-use ethereum_gravity::utils::get_gravity_id;
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use somm_ethereum_gravity::utils::get_gravity_id;
+use somm_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use std::time::{Duration, Instant};
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;

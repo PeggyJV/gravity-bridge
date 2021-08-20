@@ -6,11 +6,11 @@ use std::time::Duration;
 use clarity::address::Address as EthAddress;
 use clarity::utils::bytes_to_hex_str;
 use clarity::PrivateKey as EthPrivateKey;
-use cosmos_gravity::query::get_latest_valset;
-use cosmos_gravity::query::{get_all_valset_confirms, get_valset};
-use ethereum_gravity::{one_eth, utils::downcast_to_u128, valset_update::send_eth_valset_update};
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::{message_signatures::encode_valset_confirm_hashed, types::Valset};
+use somm_cosmos_gravity::query::get_latest_valset;
+use somm_cosmos_gravity::query::{get_all_valset_confirms, get_valset};
+use somm_ethereum_gravity::{one_eth, utils::downcast_to_u128, valset_update::send_eth_valset_update};
+use somm_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use somm_gravity_utils::{message_signatures::encode_valset_confirm_hashed, types::Valset};
 use tonic::transport::Channel;
 use web30::client::Web3;
 
@@ -133,7 +133,7 @@ pub async fn relay_valsets(
     );
 
     if should_relay {
-        let cost = ethereum_gravity::valset_update::estimate_valset_cost(
+        let cost = somm_ethereum_gravity::valset_update::estimate_valset_cost(
             &latest_cosmos_valset,
             &current_eth_valset,
             &latest_cosmos_confirmed,

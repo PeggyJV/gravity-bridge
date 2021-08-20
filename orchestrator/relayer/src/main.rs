@@ -4,7 +4,7 @@ use clarity::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
 use docopt::Docopt;
 use env_logger::Env;
-use gravity_utils::connection_prep::{
+use somm_gravity_utils::connection_prep::{
     check_for_eth, create_rpc_connections, wait_for_cosmos_node_ready,
 };
 

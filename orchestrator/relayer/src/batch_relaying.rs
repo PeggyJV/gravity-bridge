@@ -2,14 +2,14 @@ use clarity::address::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
 use clarity::Uint256;
 
-use cosmos_gravity::query::get_latest_transaction_batches;
-use cosmos_gravity::query::get_transaction_batch_signatures;
-use ethereum_gravity::utils::{downcast_to_u128, get_tx_batch_nonce};
-use ethereum_gravity::{one_eth, submit_batch::send_eth_transaction_batch};
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
-use gravity_utils::types::Valset;
-use gravity_utils::types::{BatchConfirmResponse, TransactionBatch};
+use somm_cosmos_gravity::query::get_latest_transaction_batches;
+use somm_cosmos_gravity::query::get_transaction_batch_signatures;
+use somm_ethereum_gravity::utils::{downcast_to_u128, get_tx_batch_nonce};
+use somm_ethereum_gravity::{one_eth, submit_batch::send_eth_transaction_batch};
+use somm_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use somm_gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
+use somm_gravity_utils::types::Valset;
+use somm_gravity_utils::types::{BatchConfirmResponse, TransactionBatch};
 use std::collections::HashMap;
 use std::time::Duration;
 use tonic::transport::Channel;
@@ -180,7 +180,7 @@ async fn submit_batches(
 
             let latest_cosmos_batch_nonce = oldest_signed_batch.clone().nonce;
             if latest_cosmos_batch_nonce > latest_ethereum_batch {
-                let cost = ethereum_gravity::submit_batch::estimate_tx_batch_cost(
+                let cost = somm_ethereum_gravity::submit_batch::estimate_tx_batch_cost(
                     current_valset.clone(),
                     oldest_signed_batch.clone(),
                     &oldest_signatures,
