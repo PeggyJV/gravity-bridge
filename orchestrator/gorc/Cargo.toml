@@ -1,8 +1,10 @@
 [package]
-name = "gorc"
-authors = []
+name = "somm_gorc"
+authors = ["PeggyJV <info@peggy.cool>"]
 version = "0.1.0"
 edition = "2018"
+description = "This is crate contains gorc, the cosmos-ethereum bridge"
+license = "Apache-2.0"
 
 [dependencies]
 gumdrop = "0.7"
@@ -10,14 +12,14 @@ serde = { version = "1", features = ["serde_derive"] }
 thiserror = "1"
 regex = "1.5.4"
 
-cosmos_gravity = { path = "../cosmos_gravity" }
-ethereum_gravity = { path = "../ethereum_gravity" }
-gravity_proto = { path = "../gravity_proto" }
-gravity_utils = { path = "../gravity_utils" }
-orchestrator = { path = "../orchestrator" }
-relayer = { path = "../relayer" }
+somm_cosmos_gravity = { version = "0.1.0", path = "../cosmos_gravity" }
+somm_ethereum_gravity = {version = "0.1.0", path = "../ethereum_gravity"}
+somm_gravity_proto = {version = "0.1.2", path = "../gravity_proto/"}
+somm_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
+somm_orchestrator = {  version = "0.1.0", path = "../orchestrator" }
+somm_relayer = { version = "0.1.1", path = "../relayer" }
 
-deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
+deep_space ={version = "2.4.3", git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
 clarity = "0.4.12"
 actix-rt = "2.2"
 rpassword = "5"

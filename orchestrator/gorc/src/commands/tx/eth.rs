@@ -5,8 +5,8 @@ use abscissa_core::{Command, Options, Runnable};
 use clarity::Address as EthAddress;
 use clarity::{PrivateKey as EthPrivateKey, Uint256};
 use deep_space::address::Address as CosmosAddress;
-use ethereum_gravity::send_to_cosmos::send_to_cosmos;
-use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
+use somm_ethereum_gravity::send_to_cosmos::send_to_cosmos;
+use somm_gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
 
 #[derive(Command, Debug, Options)]
 pub enum Eth {
