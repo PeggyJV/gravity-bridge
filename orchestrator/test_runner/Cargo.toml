@@ -1,8 +1,10 @@
 [package]
-name = "test_runner"
+name = "somm_test_runner"
 version = "0.1.0"
-authors = ["Justin Kilpatrick <justin@althea.net>"]
+authors = ["PeggyJV <info@peggy.cool>, Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
+description = "This is a binary which runs tests against a cosmos chain"
+license = "Apache-2.0"
 
 # only becuase I like - more in names
 # [[bin]]
@@ -10,13 +12,13 @@ edition = "2018"
 # path = "src/main.rs"
 
 [dependencies]
-ethereum_gravity = {path = "../ethereum_gravity"}
-cosmos_gravity = {path = "../cosmos_gravity"}
-gravity_utils = {path = "../gravity_utils"}
-gravity_proto = {path = "../gravity_proto/"}
-orchestrator = {path = "../orchestrator/"}
+somm_ethereum_gravity = {version = "0.1.0", path = "../ethereum_gravity"}
+somm_cosmos_gravity = { version = "0.1.0", path = "../cosmos_gravity" }
+somm_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
+somm_gravity_proto = {version = "0.1.2", path = "../gravity_proto/"}
+somm_orchestrator = {  version = "0.1.0", path = "../orchestrator" }
 
-deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
+deep_space ={version = "2.4.3", git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
 serde_derive = "1.0"
 clarity = "0.4.11"
 docopt = "1"

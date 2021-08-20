@@ -3,7 +3,7 @@
 
 use crate::TOTAL_TIMEOUT;
 use deep_space::Contact;
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use somm_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 use web30::client::Web3;

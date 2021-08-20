@@ -4,11 +4,11 @@ use crate::get_fee;
 use crate::utils::ValidatorKeys;
 use clarity::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
-use cosmos_gravity::send::update_gravity_delegate_addresses;
+use somm_cosmos_gravity::send::update_gravity_delegate_addresses;
 use deep_space::address::Address as CosmosAddress;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
-use gravity_proto::gravity::{
+use somm_gravity_proto::gravity::{
     query_client::QueryClient as GravityQueryClient, DelegateKeysByEthereumSignerRequest,
     DelegateKeysByOrchestratorRequest,
 };

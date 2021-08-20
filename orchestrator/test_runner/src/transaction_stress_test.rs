@@ -1,9 +1,9 @@
 use crate::{get_fee, one_eth, one_hundred_eth, utils::*, TOTAL_TIMEOUT};
 use clarity::Address as EthAddress;
-use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
+use somm_cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
 use deep_space::coin::Coin;
 use deep_space::Contact;
-use ethereum_gravity::{send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce};
+use somm_ethereum_gravity::{send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce};
 use futures::future::join_all;
 use std::{
     collections::HashSet,
