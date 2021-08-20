@@ -9,8 +9,8 @@ use crate::{
 };
 use clarity::{address::Address as EthAddress, Uint256};
 use clarity::{utils::bytes_to_hex_str, PrivateKey as EthPrivateKey};
-use cosmos_gravity::send::send_main_loop;
-use cosmos_gravity::{
+use somm_cosmos_gravity::send::send_main_loop;
+use somm_cosmos_gravity::{
     build,
     query::{
         get_oldest_unsigned_logic_call, get_oldest_unsigned_transaction_batch,
@@ -21,9 +21,9 @@ use deep_space::client::ChainStatus;
 use deep_space::error::CosmosGrpcError;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::{Contact, Msg};
-use ethereum_gravity::utils::get_gravity_id;
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use relayer::main_loop::relayer_main_loop;
+use somm_ethereum_gravity::utils::get_gravity_id;
+use somm_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use somm_relayer::main_loop::relayer_main_loop;
 use std::{
     net,
     time::{Duration, Instant},
@@ -175,7 +175,7 @@ pub async fn eth_oracle_main_loop(
             Err(e) => {
                 metrics::ETHEREUM_EVENT_CHECK_FAILURES.inc();
                 error!("Failed to get events for block range, Check your Eth node and Cosmos gRPC {:?}", e);
-                if let gravity_utils::error::GravityError::CosmosGrpcError(err) = e {
+                if let somm_gravity_utils::error::GravityError::CosmosGrpcError(err) = e {
                     if let CosmosGrpcError::TransactionFailed { tx: _, time: _ } = err {
                         delay_for(Duration::from_secs(10)).await;
                     }

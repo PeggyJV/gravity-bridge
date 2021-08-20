@@ -5,12 +5,12 @@ use crate::get_with_retry::get_block_number_with_retry;
 use crate::get_with_retry::get_net_version_with_retry;
 use crate::metrics;
 use clarity::{utils::bytes_to_hex_str, Address as EthAddress, Uint256};
-use cosmos_gravity::build;
-use cosmos_gravity::query::get_last_event_nonce;
+use somm_cosmos_gravity::build;
+use somm_cosmos_gravity::query::get_last_event_nonce;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::{Contact, Msg};
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::{
+use somm_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use somm_gravity_utils::{
     error::GravityError,
     types::{
         Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent,

@@ -1,8 +1,10 @@
 [package]
-name = "orchestrator"
-version = "0.4.1"
-authors = ["Justin Kilpatrick <justin@althea.net>"]
+name = "somm_orchestrator"
+version = "0.1.0"
+authors = ["PeggyJV <info@peggy.cool>, Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
+description = "This is a package to build the orchestartor binary"
+license = "Apache-2.0"
 
 [lib]
 name = "orchestrator"
@@ -13,13 +15,13 @@ name = "orchestrator"
 path = "src/main.rs"
 
 [dependencies]
-relayer = { path = "../relayer" }
-ethereum_gravity = { path = "../ethereum_gravity" }
-cosmos_gravity = { path = "../cosmos_gravity" }
-gravity_utils = { path = "../gravity_utils" }
-gravity_proto = { path = "../gravity_proto" }
+somm_relayer = { version = "0.1.0", path = "../relayer" }
+somm_ethereum_gravity = {version = "0.1.0", path = "../ethereum_gravity"}
+somm_cosmos_gravity = { version = "0.1.0", path = "../cosmos_gravity" }
+somm_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
+somm_gravity_proto = {version = "0.1.2", path = "../gravity_proto/"}
 
-deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "zaki/tendermint_0_21" }
+deep_space ={version = "2.4.3", git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
 serde_derive = "1.0"
 clarity = "0.4.11"
 docopt = "1"

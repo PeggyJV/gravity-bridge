@@ -1,7 +1,7 @@
 use clarity::{Address, Uint256};
 use deep_space::address::Address as CosmosAddress;
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::types::{
+use somm_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use somm_gravity_utils::types::{
     Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent, TransactionBatchExecutedEvent,
     ValsetUpdatedEvent,
 };
