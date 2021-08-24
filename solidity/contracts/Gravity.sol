@@ -61,6 +61,14 @@ contract Gravity is ReentrancyGuard {
 		uint256 _amount,
 		uint256 _eventNonce
 	);
+	event SendToIBCEvent(
+		address indexed _tokenContract,
+		address indexed _sender,
+		bytes32 indexed _destination,
+		string  indexed _channel,
+		uint256 _amount,
+		uint256 _eventNonce
+	);
 	event ERC20DeployedEvent(
 		// FYI: Can't index on a string without doing a bunch of weird stuff
 		string _cosmosDenom,
@@ -532,6 +540,24 @@ contract Gravity is ReentrancyGuard {
 			_tokenContract,
 			msg.sender,
 			_destination,
+			_amount,
+			state_lastEventNonce
+		);
+	}
+
+	function sendToIBC(
+		address _tokenContract,
+		bytes32 _destination,
+		uint256 _amount
+		string  _channel,
+	) public nonReentrant {
+		IERC20(_tokenContract).safeTransferFrom(msg.sender, address(this), _amount);
+		state_lastEventNonce = state_lastEventNonce.add(1);
+		emit SendtoIBCEvent(
+			_tokenContract,
+			msg.sender,
+			_destination,
+			_channel,
 			_amount,
 			state_lastEventNonce
 		);
