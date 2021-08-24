@@ -18,6 +18,7 @@ var (
 	_ EthereumEvent = &ContractCallExecutedEvent{}
 	_ EthereumEvent = &ERC20DeployedEvent{}
 	_ EthereumEvent = &SignerSetTxExecutedEvent{}
+	_ EthereumEvent = &SendToIBCEvent{}
 )
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -38,6 +39,24 @@ func (stce *SendToCosmosEvent) Hash() tmbytes.HexBytes {
 			common.HexToAddress(stce.TokenContract).Bytes(),
 			stce.Amount.BigInt().Bytes(),
 			common.Hex2Bytes(stce.EthereumSender),
+			rcv.Bytes(),
+			sdk.Uint64ToBigEndian(stce.EthereumHeight),
+		},
+		[]byte{},
+	)
+	hash := sha256.Sum256([]byte(path))
+	return hash[:]
+}
+
+func (stce *SendToIBCEvent) Hash() tmbytes.HexBytes {
+	rcv, _ := sdk.AccAddressFromBech32(stce.CosmosReceiver)
+	path := bytes.Join(
+		[][]byte{
+			sdk.Uint64ToBigEndian(stce.EventNonce),
+			common.HexToAddress(stce.TokenContract).Bytes(),
+			stce.Amount.BigInt().Bytes(),
+			common.Hex2Bytes(stce.EthereumSender),
+			[]byte(stce.Channel),
 			rcv.Bytes(),
 			sdk.Uint64ToBigEndian(stce.EthereumHeight),
 		},
@@ -125,6 +144,28 @@ func (stce *SendToCosmosEvent) Validate() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(stce.CosmosReceiver); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, stce.CosmosReceiver)
+	}
+	return nil
+}
+
+func (stce *SendToIBCEvent) Validate() error {
+	if stce.EventNonce == 0 {
+		return fmt.Errorf("event nonce cannot be 0")
+	}
+	if !common.IsHexAddress(stce.TokenContract) {
+		return sdkerrors.Wrap(ErrInvalid, "ethereum contract address")
+	}
+	if stce.Amount.IsNegative() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "amount must be positive")
+	}
+	if !common.IsHexAddress(stce.EthereumSender) {
+		return sdkerrors.Wrap(ErrInvalid, "ethereum sender")
+	}
+	if _, err := sdk.AccAddressFromBech32(stce.CosmosReceiver); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, stce.CosmosReceiver)
+	}
+	if stce.Channel == "" {
+		return sdkerrors.Wrap(ErrInvalid, "invalid channel")
 	}
 	return nil
 }

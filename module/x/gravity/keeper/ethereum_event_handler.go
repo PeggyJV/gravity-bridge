@@ -82,7 +82,28 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 		})
 		a.keeper.AfterSignerSetExecutedEvent(ctx, *event)
 		return nil
+	case *types.SendToIBCEvent:
+		// Check if coin is Cosmos-originated asset and get denom
+		isCosmosOriginated, denom := a.keeper.ERC20ToDenomLookup(ctx, event.TokenContract)
+		// addr, _ := sdk.AccAddressFromBech32(event.CosmosReceiver)
+		coins := sdk.Coins{sdk.NewCoin(denom, event.Amount)}
 
+		if !isCosmosOriginated {
+			if err := a.DetectMaliciousSupply(ctx, denom, event.Amount); err != nil {
+				return err
+			}
+
+			// if it is not cosmos originated, mint the coins (aka vouchers)
+			if err := a.bankKeeper.MintCoins(ctx, types.ModuleName, coins); err != nil {
+				return sdkerrors.Wrapf(err, "mint vouchers coins: %s", coins)
+			}
+		}
+
+		// TODO: Add IBC keeper here
+		// TODO: create an outgoing IBC packet in the channel specified by the event
+		// TODO: ensure that address has the proper encoding
+		// TODO: error handling for IBC packets here?
+		return nil
 	default:
 		return sdkerrors.Wrapf(types.ErrInvalid, "event type: %T", event)
 	}

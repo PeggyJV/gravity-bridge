@@ -160,6 +160,24 @@ message SendToCosmosEvent {
   uint64 ethereum_height = 6;
 }
 
+// SendToIBCEvent is submitted when the SendToIBCEvent is emitted by they
+// gravity contract. ERC20 representation coins are minted to the cosmosreceiver
+// address.
+message SendToIBCEvent {
+  option (gogoproto.equal) = true;
+
+  uint64 event_nonce = 1;
+  string token_contract = 2;
+  string amount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  string channel = 4;
+  string ethereum_sender = 5;
+  string cosmos_receiver = 6;
+  uint64 ethereum_height = 7;
+}
+
 // BatchExecutedEvent claims that a batch of BatchTxExecutedal operations on the
 // bridge contract was executed successfully on ETH
 message BatchExecutedEvent {
