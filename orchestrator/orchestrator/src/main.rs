@@ -39,7 +39,6 @@ use std::{
     cmp::min,
     net::{IpAddr, Ipv4Addr},
 };
-sudo tlp start
 
 #[derive(Debug, Deserialize)]
 struct Args {
