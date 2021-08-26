@@ -7,11 +7,11 @@ description = "This is a package to build the orchestartor binary"
 license = "Apache-2.0"
 
 [lib]
-name = "somm_orchestrator"
+name = "orchestrator"
 path = "src/lib.rs"
 
 [[bin]]
-name = "somm_orchestrator"
+name = "orchestrator"
 path = "src/main.rs"
 
 [dependencies]

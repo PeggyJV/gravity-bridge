@@ -5,7 +5,7 @@ use somm_gravity_utils::connection_prep::{
     check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
     wait_for_cosmos_node_ready,
 };
-use somm_orchestrator::main_loop::{
+use orchestrator::main_loop::{
     orchestrator_main_loop, ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED,
 };
 use somm_relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
