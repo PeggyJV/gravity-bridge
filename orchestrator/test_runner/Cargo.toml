@@ -8,7 +8,7 @@ license = "Apache-2.0"
 
 # only becuase I like - more in names
 # [[bin]]
-# name = "test-runner"
+# name = "test_runner"
 # path = "src/main.rs"
 
 [dependencies]
