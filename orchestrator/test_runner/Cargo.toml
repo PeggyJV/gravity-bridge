@@ -7,9 +7,9 @@ description = "This is a binary which runs tests against a cosmos chain"
 license = "Apache-2.0"
 
 # only becuase I like - more in names
-# [[bin]]
-# name = "test_runner"
-# path = "src/main.rs"
+[[bin]]
+name = "test_runner"
+path = "src/main.rs"
 
 [dependencies]
 somm_ethereum_gravity = {version = "0.1.0", path = "../ethereum_gravity"}
