@@ -7,11 +7,11 @@ description = "This is to build the relayer logic (i.e. cosmos to ethereum) as a
 license = "Apache-2.0"
 
 [lib]
-name = "somm_relayer"
+name = "relayer"
 path = "src/lib.rs"
 
 [[bin]]
-name = "somm_relayer"
+name = "relayer"
 path = "src/main.rs"
 
 [dependencies]
