@@ -34,7 +34,7 @@ use somm_gravity_utils::connection_prep::{
 use somm_gravity_utils::connection_prep::{check_for_fee_denom, create_rpc_connections};
 use main_loop::{ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED};
 
-use somm_relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
+use relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
 use std::{
     cmp::min,
     net::{IpAddr, Ipv4Addr},
