@@ -266,21 +266,21 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-solidity
       - name: pull gravity image
-        run: docker pull ${{ steps.meta-gravity.outputs.tags }}
+        run: docker pull ${{ steps.meta-gravity.outputs.tags[0] }}
       - name: rename gravity image
-        run: docker tag ${{ steps.meta-gravity.outputs.tags }} gravity:prebuilt
+        run: docker tag ${{ steps.meta-gravity.outputs.tags[0] }} gravity:prebuilt
       - name: pull orchestrator image
-        run: docker pull ${{ steps.meta-orchestrator.outputs.tags }}
+        run: docker pull ${{ steps.meta-orchestrator.outputs.tags[0] }}
       - name: rename orchestrator image
-        run: docker tag ${{ steps.meta-gravity.outputs.tags }} orchestrator:prebuilt
+        run: docker tag ${{ steps.meta-gravity.outputs.tags[0] }} orchestrator:prebuilt
       - name: pull test-runner image
-        run: docker pull ${{ steps.meta-test-runner.outputs.tags }}
+        run: docker pull ${{ steps.meta-test-runner.outputs.tags[0] }}
       - name: rename test-runner image
-        run: docker tag ${{ steps.meta-test-runner.outputs.tags }} test-runner:prebuilt
+        run: docker tag ${{ steps.meta-test-runner.outputs.tags[0] }} test-runner:prebuilt
       - name: pull contract deployer image
-        run: docker pull ${{ steps.meta-solidity.outputs.tags }}
+        run: docker pull ${{ steps.meta-solidity.outputs.tags[0] }}
       - name: rename contract deployer image
-        run: docker tag ${{ steps.meta-solidity.outputs.tags }} solidity:prebuilt
+        run: docker tag ${{ steps.meta-solidity.outputs.tags[0] }} solidity:prebuilt
       - name: build go test binary
         run: cd testnet && go test -c
       - name: Run all up ci test
