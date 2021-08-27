@@ -1,9 +1,9 @@
 use clarity::Address as EthAddress;
+use cosmos_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use cosmos_gravity_proto::gravity::*;
+use cosmos_gravity_utils::error::GravityError;
+use cosmos_gravity_utils::types::*;
 use deep_space::address::Address;
-use somm_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use somm_gravity_proto::gravity::*;
-use somm_gravity_utils::error::GravityError;
-use somm_gravity_utils::types::*;
 use tonic::transport::Channel;
 
 /// get the valset for a given nonce (block) height

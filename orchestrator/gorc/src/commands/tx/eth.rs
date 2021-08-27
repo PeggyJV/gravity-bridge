@@ -4,9 +4,9 @@ use crate::{application::APP, prelude::*, utils::*};
 use abscissa_core::{Command, Options, Runnable};
 use clarity::Address as EthAddress;
 use clarity::{PrivateKey as EthPrivateKey, Uint256};
+use cosmos_ethereum_gravity::send_to_cosmos::send_to_cosmos;
+use cosmos_gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
 use deep_space::address::Address as CosmosAddress;
-use somm_ethereum_gravity::send_to_cosmos::send_to_cosmos;
-use somm_gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
 
 #[derive(Command, Debug, Options)]
 pub enum Eth {

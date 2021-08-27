@@ -5,8 +5,8 @@ use std::time::Duration;
 use clarity::abi::{encode_call, Token};
 use clarity::PrivateKey as EthPrivateKey;
 use clarity::{Address, Uint256};
+use cosmos_gravity_utils::error::GravityError;
 use deep_space::address::Address as CosmosAddress;
-use somm_gravity_utils::error::GravityError;
 use web30::client::Web3;
 use web30::types::SendTxOption;
 

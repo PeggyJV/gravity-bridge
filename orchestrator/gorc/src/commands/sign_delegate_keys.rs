@@ -1,6 +1,6 @@
 use crate::{application::APP, prelude::*};
 use abscissa_core::{Application, Command, Options, Runnable};
-use somm_gravity_proto::gravity as proto;
+use cosmos_gravity_proto::gravity as proto;
 use std::time::Duration;
 
 #[derive(Command, Debug, Default, Options)]

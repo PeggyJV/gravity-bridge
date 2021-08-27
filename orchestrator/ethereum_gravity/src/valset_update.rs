@@ -1,8 +1,8 @@
 use crate::utils::{get_valset_nonce, GasCost};
 use clarity::PrivateKey as EthPrivateKey;
 use clarity::{Address as EthAddress, Uint256};
-use somm_gravity_utils::types::*;
-use somm_gravity_utils::{error::GravityError, message_signatures::encode_valset_confirm_hashed};
+use cosmos_gravity_utils::types::*;
+use cosmos_gravity_utils::{error::GravityError, message_signatures::encode_valset_confirm_hashed};
 use std::{cmp::min, time::Duration};
 use web30::{client::Web3, types::TransactionRequest};
 

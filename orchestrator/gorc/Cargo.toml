@@ -1,5 +1,5 @@
 [package]
-name = "somm_gorc"
+name = "gorc"
 authors = ["PeggyJV <info@peggy.cool>"]
 version = "0.1.1"
 edition = "2018"
@@ -12,14 +12,14 @@ serde = { version = "1", features = ["serde_derive"] }
 thiserror = "1"
 regex = "1.5.4"
 
-somm_cosmos_gravity = { version = "0.1.0", path = "../cosmos_gravity" }
-somm_ethereum_gravity = {version = "0.1.0", path = "../ethereum_gravity"}
-somm_gravity_proto = {version = "0.1.2", path = "../gravity_proto/"}
-somm_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
-somm_orchestrator = {  version = "0.1.1", path = "../orchestrator" }
-somm_relayer = { version = "0.1.2", path = "../relayer" }
+cosmos_gravity = { version = "0.1.0", path = "../cosmos_gravity" }
+cosmos_ethereum_gravity = { version = "0.1.0", path = "../ethereum_gravity" }
+cosmos_gravity_proto = { version = "0.1.2", path = "../gravity_proto/" }
+cosmos_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
+cosmos_orchestrator = { version = "0.1.1", path = "../orchestrator" }
+cosmos_relayer = { version = "0.1.2", path = "../relayer" }
 
-deep_space ={version = "2.4.3", git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
+deep_space = { version = "2.4.3", git = "https://github.com/iqlusioninc/deep_space/", branch = "zaki/tendermint_0_21" }
 clarity = "0.4.12"
 actix-rt = "2.2"
 rpassword = "5"

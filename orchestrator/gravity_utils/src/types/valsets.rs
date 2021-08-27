@@ -61,7 +61,7 @@ pub struct ValsetConfirmResponse {
 
 impl ValsetConfirmResponse {
     pub fn from_proto(
-        input: somm_gravity_proto::gravity::SignerSetTxConfirmation,
+        input: cosmos_gravity_proto::gravity::SignerSetTxConfirmation,
     ) -> Result<Self, GravityError> {
         Ok(ValsetConfirmResponse {
             eth_signer: input.ethereum_signer.parse()?,
@@ -324,8 +324,8 @@ impl Valset {
     }
 }
 
-impl From<somm_gravity_proto::gravity::SignerSetTxResponse> for Valset {
-    fn from(input: somm_gravity_proto::gravity::SignerSetTxResponse) -> Self {
+impl From<cosmos_gravity_proto::gravity::SignerSetTxResponse> for Valset {
+    fn from(input: cosmos_gravity_proto::gravity::SignerSetTxResponse) -> Self {
         Valset {
             nonce: input.signer_set.clone().unwrap().nonce,
             members: input
@@ -339,8 +339,8 @@ impl From<somm_gravity_proto::gravity::SignerSetTxResponse> for Valset {
     }
 }
 
-impl From<somm_gravity_proto::gravity::SignerSetTx> for Valset {
-    fn from(input: somm_gravity_proto::gravity::SignerSetTx) -> Self {
+impl From<cosmos_gravity_proto::gravity::SignerSetTx> for Valset {
+    fn from(input: cosmos_gravity_proto::gravity::SignerSetTx) -> Self {
         Valset {
             nonce: input.clone().nonce,
             members: input.signers.iter().map(|i| i.into()).collect(),
@@ -348,8 +348,8 @@ impl From<somm_gravity_proto::gravity::SignerSetTx> for Valset {
     }
 }
 
-impl From<&somm_gravity_proto::gravity::SignerSetTxResponse> for Valset {
-    fn from(input: &somm_gravity_proto::gravity::SignerSetTxResponse) -> Self {
+impl From<&cosmos_gravity_proto::gravity::SignerSetTxResponse> for Valset {
+    fn from(input: &cosmos_gravity_proto::gravity::SignerSetTxResponse) -> Self {
         Valset {
             nonce: input.signer_set.clone().unwrap().nonce,
             members: input
@@ -415,8 +415,8 @@ impl fmt::Display for ValsetMember {
     }
 }
 
-impl From<somm_gravity_proto::gravity::EthereumSigner> for ValsetMember {
-    fn from(input: somm_gravity_proto::gravity::EthereumSigner) -> Self {
+impl From<cosmos_gravity_proto::gravity::EthereumSigner> for ValsetMember {
+    fn from(input: cosmos_gravity_proto::gravity::EthereumSigner) -> Self {
         let eth_address = match input.ethereum_address.parse() {
             Ok(e) => Some(e),
             Err(_) => None,
@@ -428,8 +428,8 @@ impl From<somm_gravity_proto::gravity::EthereumSigner> for ValsetMember {
     }
 }
 
-impl From<&somm_gravity_proto::gravity::EthereumSigner> for ValsetMember {
-    fn from(input: &somm_gravity_proto::gravity::EthereumSigner) -> Self {
+impl From<&cosmos_gravity_proto::gravity::EthereumSigner> for ValsetMember {
+    fn from(input: &cosmos_gravity_proto::gravity::EthereumSigner) -> Self {
         let eth_address = match input.ethereum_address.parse() {
             Ok(e) => Some(e),
             Err(_) => None,
@@ -441,13 +441,13 @@ impl From<&somm_gravity_proto::gravity::EthereumSigner> for ValsetMember {
     }
 }
 
-impl From<&ValsetMember> for somm_gravity_proto::gravity::EthereumSigner {
-    fn from(input: &ValsetMember) -> somm_gravity_proto::gravity::EthereumSigner {
+impl From<&ValsetMember> for cosmos_gravity_proto::gravity::EthereumSigner {
+    fn from(input: &ValsetMember) -> cosmos_gravity_proto::gravity::EthereumSigner {
         let ethereum_address = match input.eth_address {
             Some(e) => e.to_string(),
             None => String::new(),
         };
-        somm_gravity_proto::gravity::EthereumSigner {
+        cosmos_gravity_proto::gravity::EthereumSigner {
             power: input.power,
             ethereum_address,
         }

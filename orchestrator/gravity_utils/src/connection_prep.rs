@@ -3,12 +3,12 @@
 //! by trying more than one thing to handle potentially misconfigured inputs.
 
 use clarity::Address as EthAddress;
+use cosmos_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use cosmos_gravity_proto::gravity::DelegateKeysByEthereumSignerRequest;
+use cosmos_gravity_proto::gravity::DelegateKeysByOrchestratorRequest;
 use deep_space::client::ChainStatus;
 use deep_space::Address as CosmosAddress;
 use deep_space::Contact;
-use somm_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use somm_gravity_proto::gravity::DelegateKeysByEthereumSignerRequest;
-use somm_gravity_proto::gravity::DelegateKeysByOrchestratorRequest;
 use std::process::exit;
 use std::time::Duration;
 use tokio::time::sleep as delay_for;

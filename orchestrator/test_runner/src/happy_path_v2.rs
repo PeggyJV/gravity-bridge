@@ -8,13 +8,13 @@ use crate::TOTAL_TIMEOUT;
 use crate::{get_fee, utils::ValidatorKeys};
 use clarity::Address as EthAddress;
 use clarity::Uint256;
-use somm_cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
-use deep_space::coin::Coin;
-use deep_space::Contact;
-use somm_ethereum_gravity::{deploy_erc20::deploy_erc20, utils::get_event_nonce};
-use somm_gravity_proto::gravity::{
+use cosmos_ethereum_gravity::{deploy_erc20::deploy_erc20, utils::get_event_nonce};
+use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
+use cosmos_gravity_proto::gravity::{
     query_client::QueryClient as GravityQueryClient, DenomToErc20Request,
 };
+use deep_space::coin::Coin;
+use deep_space::Contact;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 use web30::client::Web3;
