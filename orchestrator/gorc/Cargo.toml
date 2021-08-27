@@ -1,7 +1,7 @@
 [package]
 name = "somm_gorc"
 authors = ["PeggyJV <info@peggy.cool>"]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2018"
 description = "This crate contains gorc, the cosmos-ethereum bridge"
 license = "Apache-2.0"
