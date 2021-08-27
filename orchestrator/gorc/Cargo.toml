@@ -16,8 +16,8 @@ somm_cosmos_gravity = { version = "0.1.0", path = "../cosmos_gravity" }
 somm_ethereum_gravity = {version = "0.1.0", path = "../ethereum_gravity"}
 somm_gravity_proto = {version = "0.1.2", path = "../gravity_proto/"}
 somm_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
-somm_orchestrator = {  version = "0.1.0", path = "../orchestrator" }
-somm_relayer = { version = "0.1.1", path = "../relayer" }
+somm_orchestrator = {  version = "0.1.1", path = "../orchestrator" }
+somm_relayer = { version = "0.1.2", path = "../relayer" }
 
 deep_space ={version = "2.4.3", git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
 clarity = "0.4.12"
