@@ -2,10 +2,13 @@ package keeper
 
 import (
 	"math/big"
+	"strings"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	clienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
@@ -13,8 +16,9 @@ import (
 
 // EthereumEventProcessor processes `accepted` EthereumEvents
 type EthereumEventProcessor struct {
-	keeper     Keeper
-	bankKeeper types.BankKeeper
+	keeper         Keeper
+	bankKeeper     types.BankKeeper
+	transferKeeper types.TransferKeeper
 }
 
 func (a EthereumEventProcessor) DetectMaliciousSupply(ctx sdk.Context, denom string, amount sdk.Int) (err error) {
@@ -85,8 +89,9 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 	case *types.SendToIBCEvent:
 		// Check if coin is Cosmos-originated asset and get denom
 		isCosmosOriginated, denom := a.keeper.ERC20ToDenomLookup(ctx, event.TokenContract)
-		// addr, _ := sdk.AccAddressFromBech32(event.CosmosReceiver)
-		coins := sdk.Coins{sdk.NewCoin(denom, event.Amount)}
+		addr := sdk.AccAddress(event.CosmosReceiver)
+		coin := sdk.NewCoin(denom, event.Amount)
+		coins := sdk.Coins{coin}
 
 		if !isCosmosOriginated {
 			if err := a.DetectMaliciousSupply(ctx, denom, event.Amount); err != nil {
@@ -99,10 +104,18 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 			}
 		}
 
-		// TODO: Add IBC keeper here
-		// TODO: create an outgoing IBC packet in the channel specified by the event
-		// TODO: ensure that address has the proper encoding
-		// TODO: error handling for IBC packets here?
+		if err := a.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
+			return err
+		}
+
+		// format of this could be {port}/{channel}
+		chanport := strings.Split(event.Channel, "/")
+
+		// TODO: here we use addr.String() we need to be able to use the acc address here as the
+		if err := a.transferKeeper.SendTransfer(ctx, chanport[0], chanport[1], coin, addr, addr.String(), clienttypes.NewHeight(0, 0), uint64(time.Second*100)); err != nil {
+			return err
+		}
+
 		return nil
 	default:
 		return sdkerrors.Wrapf(types.ErrInvalid, "event type: %T", event)

@@ -7,6 +7,7 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	clienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
 )
 
 // StakingKeeper defines the expected staking keeper methods
@@ -46,4 +47,17 @@ type SlashingKeeper interface {
 // functionality.
 type AccountKeeper interface {
 	GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, error)
+}
+
+type TransferKeeper interface {
+	SendTransfer(
+		ctx sdk.Context,
+		sourcePort,
+		sourceChannel string,
+		token sdk.Coin,
+		sender sdk.AccAddress,
+		receiver string,
+		timeoutHeight clienttypes.Height,
+		timeoutTimestamp uint64,
+	) error
 }
