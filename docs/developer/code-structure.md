@@ -101,4 +101,10 @@ Picking back up at the [AttestationHandler](/module/x/gravity/keeper/attestation
 
 ## ERC20 representation deployment
 
+Assets that orginate on the Cosmos chain can be transfered to the Ethereum by instatiating an ERC-20 respresentation of the asset where the ERC20 contract is controlled by the bridge.
+
+The [gravity.sol](/solidity/contracts/Gravity.sol)  function must invoked by some user ahead of sending a Cosmos originated token. 
+
+Calling this function will emit a `ERC20DeployedEvent` which will be picked up by each validator's orchestrator. Each of these orachestors will send a `MsgSubmitEthereumEvent` with `ERC20DeployedEvent` payload to the Cosmos chain. Once 2/3+1 of the voting power has recognized submitted the event. The [EthereumEventProcessor](/module/x/gravity/keeper/ethereum_event_handler) calls `verifyERC20DeployedEvent` and verifes that the deployed erc20 contract matches the onchain metadata of an existing asset on chain and then registers the deployed contract from future SendToEthereum calls for that asset.
+
 
