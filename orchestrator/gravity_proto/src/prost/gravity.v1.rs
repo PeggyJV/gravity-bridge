@@ -72,7 +72,7 @@ pub struct SendToEthereum {
     #[prost(message, optional, tag = "5")]
     pub erc20_fee: ::core::option::Option<Erc20Token>,
 }
-/// ContractCallTx represents an individual arbitratry logic call transaction
+/// ContractCallTx represents an individual arbitrary logic call transaction
 /// from Cosmos to Ethereum.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ContractCallTx {
@@ -206,6 +206,38 @@ pub struct MsgSubmitEthereumEvent {
     #[prost(string, tag = "2")]
     pub signer: ::prost::alloc::string::String,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MsgSubmitEthereumEventResponse {}
+/// MsgDelegateKey allows validators to delegate their voting responsibilities
+/// to a given orchestrator address. This key is then used as an optional
+/// authentication method for attesting events from Ethereum.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MsgDelegateKeys {
+    #[prost(string, tag = "1")]
+    pub validator_address: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub orchestrator_address: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub ethereum_address: ::prost::alloc::string::String,
+    #[prost(bytes = "vec", tag = "4")]
+    pub eth_signature: ::prost::alloc::vec::Vec<u8>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MsgDelegateKeysResponse {}
+/// DelegateKeysSignMsg defines the message structure an operator is expected to
+/// sign when submitting a MsgDelegateKeys message. The resulting signature should
+/// populate the eth_signature field.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct DelegateKeysSignMsg {
+    #[prost(string, tag = "1")]
+    pub validator_address: ::prost::alloc::string::String,
+    #[prost(uint64, tag = "2")]
+    pub nonce: u64,
+}
+////////////
+// Events //
+////////////
+
 /// SendToCosmosEvent is submitted when the SendToCosmosEvent is emitted by they
 /// gravity contract. ERC20 representation coins are minted to the cosmosreceiver
 /// address.
@@ -222,6 +254,30 @@ pub struct SendToCosmosEvent {
     #[prost(string, tag = "5")]
     pub cosmos_receiver: ::prost::alloc::string::String,
     #[prost(uint64, tag = "6")]
+    pub ethereum_height: u64,
+}
+/// SendToIBCEvent is submitted when the SendToIBCEvent is emitted by they
+/// gravity contract. ERC20 representation coins are minted to the cosmosreceiver
+/// address.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SendToIbcEvent {
+    #[prost(uint64, tag = "1")]
+    pub event_nonce: u64,
+    #[prost(string, tag = "2")]
+    pub token_contract: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub amount: ::prost::alloc::string::String,
+    #[prost(string, tag = "4")]
+    pub channel: ::prost::alloc::string::String,
+    #[prost(string, tag = "5")]
+    pub ethereum_sender: ::prost::alloc::string::String,
+    /// this is the bech32 encoding for the gravity chain
+    #[prost(string, tag = "6")]
+    pub cosmos_receiver: ::prost::alloc::string::String,
+    /// this is the bech32 encoding for the destination chain
+    #[prost(string, tag = "7")]
+    pub forward_address: ::prost::alloc::string::String,
+    #[prost(uint64, tag = "8")]
     pub ethereum_height: u64,
 }
 /// BatchExecutedEvent claims that a batch of BatchTxExecutedal operations on the
@@ -247,7 +303,7 @@ pub struct ContractCallExecutedEvent {
     #[prost(uint64, tag = "1")]
     pub event_nonce: u64,
     #[prost(bytes = "vec", tag = "2")]
-    pub invalidation_id: ::prost::alloc::vec::Vec<u8>,
+    pub invalidation_scope: ::prost::alloc::vec::Vec<u8>,
     #[prost(uint64, tag = "3")]
     pub invalidation_nonce: u64,
     #[prost(uint64, tag = "4")]
@@ -284,34 +340,6 @@ pub struct SignerSetTxExecutedEvent {
     pub ethereum_height: u64,
     #[prost(message, repeated, tag = "4")]
     pub members: ::prost::alloc::vec::Vec<EthereumSigner>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct MsgSubmitEthereumEventResponse {}
-/// MsgDelegateKey allows validators to delegate their voting responsibilities
-/// to a given orchestrator address. This key is then used as an optional
-/// authentication method for attesting events from Ethereum.
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct MsgDelegateKeys {
-    #[prost(string, tag = "1")]
-    pub validator_address: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub orchestrator_address: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub ethereum_address: ::prost::alloc::string::String,
-    #[prost(bytes = "vec", tag = "4")]
-    pub eth_signature: ::prost::alloc::vec::Vec<u8>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct MsgDelegateKeysResponse {}
-/// DelegateKeysSignMsg defines the message structure an operator is expected to
-/// sign when submitting a MsgDelegateKeys message. The resulting signature should
-/// populate the eth_signature field.
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct DelegateKeysSignMsg {
-    #[prost(string, tag = "1")]
-    pub validator_address: ::prost::alloc::string::String,
-    #[prost(uint64, tag = "2")]
-    pub nonce: u64,
 }
 #[doc = r" Generated client implementations."]
 pub mod msg_client {
@@ -488,17 +516,17 @@ pub mod msg_client {
 /// when the attestation is created, but only allows for slashing once the event
 /// has passed
 ///
-/// target_batch_timeout:
+/// target_eth_tx_timeout:
 ///
-/// This is the 'target' value for when batches time out, this is a target
-/// because Ethereum is a probabalistic chain and you can't say for sure what the
+/// This is the 'target' value for when ethereum transactions time out, this is a target
+/// because Ethereum is a probabilistic chain and you can't say for sure what the
 /// block frequency is ahead of time.
 ///
 /// average_block_time
 /// average_ethereum_block_time
 ///
 /// These values are the average Cosmos block time and Ethereum block time
-/// repsectively and they are used to copute what the target batch timeout is. It
+/// respectively and they are used to compute what the target batch timeout is. It
 /// is important that governance updates these in case of any major, prolonged
 /// change in the time it takes to produce a block
 ///
@@ -527,7 +555,7 @@ pub struct Params {
     #[prost(uint64, tag = "8")]
     pub ethereum_signatures_window: u64,
     #[prost(uint64, tag = "10")]
-    pub target_batch_timeout: u64,
+    pub target_eth_tx_timeout: u64,
     #[prost(uint64, tag = "11")]
     pub average_block_time: u64,
     #[prost(uint64, tag = "12")]
@@ -1163,7 +1191,8 @@ pub mod query_client {
             let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/ERC20ToDenom");
             self.inner.unary(request.into_request(), path, codec).await
         }
-        #[doc = " Query for how gravity expects an erc-20 to be created"]
+        #[doc = " DenomToERC20Params implements a query that allows ERC-20 parameter information"]
+        #[doc = " to be retrieved by a Cosmos base denomination."]
         pub async fn denom_to_erc20_params(
             &mut self,
             request: impl tonic::IntoRequest<super::DenomToErc20ParamsRequest>,

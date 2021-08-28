@@ -227,6 +227,81 @@ impl TransactionBatchExecutedEvent {
     }
 }
 
+/// A parsed struct representing the Ethereum event fired when someone sends deposit over IBC
+/// on the Gravity contract
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
+pub struct SendToIBCEvent {
+    /// The token contract address for the deposit
+    pub erc20: EthAddress,
+    /// The Ethereum Sender
+    pub sender: EthAddress,
+    // IBC channel id
+    pub channel: String,
+    /// this is the bech32 encoding for the gravity chain
+    pub cosmos_destination: CosmosAddress,
+    /// this is the bech32 encoding for the destination chain
+    pub forwarding_destination: CosmosAddress,
+    /// The amount of the erc20 token that is being sent
+    pub amount: Uint256,
+
+    /// The transaction's nonce, used to make sure there can be no accidental duplication
+    pub event_nonce: Uint256,
+    /// The block height this event occurred at
+    pub block_height: Uint256,
+}
+
+impl SendToIBCEvent {
+    pub fn from_log(input: &Log, prefix:String) -> Result<SendToIBCEvent, GravityError> {
+        let topics = (
+            input.topics.get(1),
+            input.topics.get(2),
+            input.topics.get(3),
+            input.topics.get(4),
+        );
+
+        if let (Some(erc20_data), Some(sender_data), Some(destination_data),Some(channeL_data)) = topics {
+            let erc20 = EthAddress::from_slice(&erc20_data[12..32])?;
+            let sender = EthAddress::from_slice(&sender_data[12..32])?;
+            let channel = String::from_utf8(Vec::from(&channeL_data[12..])).map_err(|_| {GravityError::InvalidEventLogError("Non UTF-8 channelID".to_string())})?;
+            // this is required because deep_space requires a fixed length slice to
+            // create an address from bytes.
+            let mut c_address_bytes: [u8; 20] = [0; 20];
+            c_address_bytes.copy_from_slice(&destination_data[12..32]);
+            let destination = CosmosAddress::from_bytes(c_address_bytes, prefix).unwrap();
+            let amount = Uint256::from_bytes_be(&input.data[..32]);
+            let event_nonce = Uint256::from_bytes_be(&input.data[32..]);
+            let block_height = if let Some(bn) = input.block_number.clone() {
+                bn
+            } else {
+                return Err(GravityError::InvalidEventLogError(
+                    "Log does not have block number, we only search logs already in blocks?"
+                        .to_string(),
+                ));
+            };
+            if event_nonce > u64::MAX.into() || block_height > u64::MAX.into() {
+                Err(GravityError::InvalidEventLogError(
+                    "Event nonce overflow, probably incorrect parsing".to_string(),
+                ))
+            } else {
+                Ok(SendToIBCEvent {
+                    erc20,
+                    sender,
+                    amount,
+                    event_nonce,
+                    block_height,
+                    channel: channel,
+                    cosmos_destination: destination,
+                    forwarding_destination: destination,
+                })
+            }
+        } else {
+            Err(GravityError::InvalidEventLogError(
+                "Too few topics".to_string(),
+            ))
+        }
+    }
+}
+
 /// A parsed struct representing the Ethereum event fired when someone makes a deposit
 /// on the Gravity contract
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
@@ -290,10 +365,7 @@ impl SendToCosmosEvent {
             ))
         }
     }
-    pub fn from_logs(
-        input: &[Log],
-        prefix: &str,
-    ) -> Result<Vec<SendToCosmosEvent>, GravityError> {
+    pub fn from_logs(input: &[Log], prefix: &str) -> Result<Vec<SendToCosmosEvent>, GravityError> {
         let mut res = Vec::new();
         for item in input {
             res.push(Self::from_log(item, prefix)?);
