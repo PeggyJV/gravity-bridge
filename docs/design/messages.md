@@ -53,7 +53,6 @@ Event representing a `SendToCosmosEvent` from [Gravity.sol](/solidity/contracts/
 
 Event representing a `TransactionBatchExecutedEvent` from [Gravity.sol](/solidity/contracts/Gravity.sol). When this passes the oracle vote the batch in state is cleaned up and tokens are burned/locked.
 
-
 #### ContractCallExecuteEvent
 
 Event representing a `LogicCallEvent` from [Gravity.sol](/solidity/contracts/Gravity.sol). When this passes the oracle vote the logic call in state is cleaned up and tokens are burned/locked.
@@ -69,11 +68,7 @@ for further reference on this process see the [design overview](/docs/design/ove
 
 The Ethereum signer watches several [query endpoints](/module/proto/gravity/v1/query.proto) and it's only job is to submit a signature for anything that appears on those endpoints. For this reason the validator must provide a secure RPC to a Cosmos node following chain consensus. Or they risk being tricked into signing the wrong thing.
 
-
-
 ### SubmitEthereumTxConfirmation
-
-
 
 #### ContractCallTxConfirmation
 
@@ -82,7 +77,6 @@ Submits an Ethereum signature over a batche appearing in the `LastPendingBatchRe
 #### BatchTxConfirmation
 
 #### SignerSetTxConfirmation
-
 
 ### ConfirmLogicCall
 
