@@ -111,7 +111,9 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 		// format of this could be {port}/{channel}
 		chanport := strings.Split(event.Channel, "/")
 
-		// TODO: here we use addr.String() we need to be able to use the acc address here as the
+		// TODO: here we use addr.String() we need to be able to use the acc address here encoded in the recieving chain
+		// bech32 format. We can get around this in 2 ways: one is sending it over from ETH, other is figuring out how to encode
+		// the bytes with a custom prefix which seems like it should be easy.
 		if err := a.transferKeeper.SendTransfer(ctx, chanport[0], chanport[1], coin, addr, addr.String(), clienttypes.NewHeight(0, 0), uint64(time.Second*100)); err != nil {
 			return err
 		}
