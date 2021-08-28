@@ -3053,7 +3053,7 @@ dependencies = [
 
 [[package]]
 name = "somm_gorc"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "abscissa_core",
  "abscissa_tokio",
@@ -3189,7 +3189,7 @@ dependencies = [
 
 [[package]]
 name = "somm_relayer"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "actix",
  "actix-rt 2.2.0",

@@ -1,3 +1,15 @@
+[package]
+name = "cosmos_gravity"
+version = "0.1.0"
+authors = ["PeggyJV <info@peggy.cool>"]
+license = "Apache-2.0"
+edition = "2018"
+readme = "./README.md"
+repository = "https://github.com/PeggyJV/gravity-bridge"
+description = """
+Cosmos <-> Ethereum bridge designed to run on the Cosmos Hub focused on maximum design simplicity and efficiency.
+"""
+
 [workspace]
 default-members = ["gorc", "orchestrator", "test_runner"]
 members = [
