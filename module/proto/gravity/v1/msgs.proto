@@ -174,8 +174,9 @@ message SendToIBCEvent {
   ];
   string channel = 4;
   string ethereum_sender = 5;
-  string cosmos_receiver = 6;
-  uint64 ethereum_height = 7;
+  string cosmos_receiver = 6; // this is the bech32 encoding for the gravity chain
+  string forward_address = 7; // this is the bech32 encoding for the destination chain
+  uint64 ethereum_height = 8;
 }
 
 // BatchExecutedEvent claims that a batch of BatchTxExecutedal operations on the

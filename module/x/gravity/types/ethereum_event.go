@@ -56,6 +56,7 @@ func (stce *SendToIBCEvent) Hash() tmbytes.HexBytes {
 			common.HexToAddress(stce.TokenContract).Bytes(),
 			stce.Amount.BigInt().Bytes(),
 			common.Hex2Bytes(stce.EthereumSender),
+			[]byte(stce.ForwardAddress),
 			[]byte(stce.Channel),
 			rcv.Bytes(),
 			sdk.Uint64ToBigEndian(stce.EthereumHeight),
@@ -166,6 +167,10 @@ func (stce *SendToIBCEvent) Validate() error {
 	}
 	if stce.Channel == "" {
 		return sdkerrors.Wrap(ErrInvalid, "invalid channel")
+	}
+	if stce.ForwardAddress == "" {
+		// TODO: would be nice to check that forward address and cosmos reciever are same same
+		return sdkerrors.Wrap(ErrInvalid, "invalid forward address")
 	}
 	return nil
 }

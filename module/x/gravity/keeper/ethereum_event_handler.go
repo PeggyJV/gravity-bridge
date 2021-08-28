@@ -89,7 +89,7 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 	case *types.SendToIBCEvent:
 		// Check if coin is Cosmos-originated asset and get denom
 		isCosmosOriginated, denom := a.keeper.ERC20ToDenomLookup(ctx, event.TokenContract)
-		addr := sdk.AccAddress(event.CosmosReceiver)
+		addr, _ := sdk.AccAddressFromBech32(event.CosmosReceiver)
 		coin := sdk.NewCoin(denom, event.Amount)
 		coins := sdk.Coins{coin}
 
@@ -110,11 +110,7 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 
 		// format of this could be {port}/{channel}
 		chanport := strings.Split(event.Channel, "/")
-
-		// TODO: here we use addr.String() we need to be able to use the acc address here encoded in the recieving chain
-		// bech32 format. We can get around this in 2 ways: one is sending it over from ETH, other is figuring out how to encode
-		// the bytes with a custom prefix which seems like it should be easy.
-		if err := a.transferKeeper.SendTransfer(ctx, chanport[0], chanport[1], coin, addr, addr.String(), clienttypes.NewHeight(0, 0), uint64(time.Second*100)); err != nil {
+		if err := a.transferKeeper.SendTransfer(ctx, chanport[0], chanport[1], coin, addr, event.ForwardAddress, clienttypes.NewHeight(0, 0), uint64(time.Second*100)); err != nil {
 			return err
 		}
 
