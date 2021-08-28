@@ -547,7 +547,7 @@ contract Gravity is ReentrancyGuard {
 
 	function sendToIBC(
 		address _tokenContract,
-		bytes32 _destination,
+		bytes32 _destination, // NOTE: this destination is the bech32 encoding for the final destination
 		uint256 _amount
 		bytes32 _channel,
 	) public nonReentrant {
