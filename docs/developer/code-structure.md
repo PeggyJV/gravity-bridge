@@ -34,7 +34,7 @@ Here we determine if the deposited coin is Cosmos Originated, at which point we 
 
 This covers the complete flow, including code links, for a withdraw. This is covered conceptually in [minting and locking](/docs/design/mint-lock.md), [Ethereum signing](/docs/design/ethereum-signing.md), and [batch creation spec](/spec/batch-creation-spec.md) which you should read first.
 
-First a user on the Cosmos chain calls [MsgSendToEth](/module/proto/gravity/v1/msgs.proto). This message will contain two fees. One fee for the Cosmos transaction, and another fee for the bridge.
+First a user on the Cosmos chain calls [MsgSendToEthereum](/module/proto/gravity/v1/msgs.proto). This message will contain two fees. One fee for the Cosmos transaction, and another fee for the bridge. The `DenomToERC20Lookup` function ensures that asset has a registered Erc20 contract either from previously going through the deploy to Erc20 contract flow or because the asset originated on the Ethereum chain.
 
 By the time we handle the send in [msg_server.go](/module/x/gravity/keeper/msg_server.go) the Cosmos chain tx fee has already been handled. [ValidateBasic](/module/x/gravity/types/msgs.go) verifies that the bridge fee is the same as the bridge asset being sent to Ethereum. As covered in [minting and locking](/docs/design/mint-lock.md) this is so that the relayers can be rewarded on the Ethereum side of the bridge.
 
