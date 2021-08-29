@@ -104,6 +104,11 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 			}
 		}
 
+		feetake := a.keeper.GetParams(ctx).BridgeForwardFee
+		// fp := k.distrKeeper.GetFeePool(ctx)
+		// fp.CommunityPool.Add(sdk.NewDecCoinFromDec(voucher.Denom, fee))
+		// k.distrKeeper.SetFeePool(ctx, fp)
+
 		if err := a.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
 			return err
 		}

@@ -65,6 +65,9 @@ var (
 	//  ParamStoreUnbondSlashingSignerSetTxsWindow stores unbond slashing valset window
 	ParamStoreUnbondSlashingSignerSetTxsWindow = []byte("UnbondSlashingSignerSetTxsWindow")
 
+	//  ParamStoreBridgeForwardFee stores unbond slashing valset window
+	ParamStoreBridgeForwardFee = []byte("BridgeForwardFee")
+
 	// Ensure that params implements the proper interface
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -127,6 +130,7 @@ func DefaultParams() *Params {
 		SlashFractionEthereumSignature:            sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		SlashFractionConflictingEthereumSignature: sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		UnbondSlashingSignerSetTxsWindow:          10000,
+		BridgeForwardFee:                          sdk.NewDec(1).Quo(sdk.NewDec(10000)),
 	}
 }
 
@@ -177,6 +181,9 @@ func (p Params) ValidateBasic() error {
 	if err := validateUnbondSlashingSignerSetTxsWindow(p.UnbondSlashingSignerSetTxsWindow); err != nil {
 		return sdkerrors.Wrap(err, "unbond slashing signersettx window")
 	}
+	if err := validateBridgeForwardFee(p.BridgeForwardFee); err != nil {
+		return sdkerrors.Wrap(err, "bridge forward fee")
+	}
 
 	return nil
 }
@@ -205,6 +212,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionEthereumSignature, &p.SlashFractionEthereumSignature, validateSlashFractionEthereumSignature),
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionConflictingEthereumSignature, &p.SlashFractionConflictingEthereumSignature, validateSlashFractionConflictingEthereumSignature),
 		paramtypes.NewParamSetPair(ParamStoreUnbondSlashingSignerSetTxsWindow, &p.UnbondSlashingSignerSetTxsWindow, validateUnbondSlashingSignerSetTxsWindow),
+		paramtypes.NewParamSetPair(ParamStoreBridgeForwardFee, &p.BridgeForParamStoreBridgeForwardFee, validateBridgeForParamStoreBridgeForwardFee),
 	}
 }
 
@@ -330,15 +338,38 @@ func validateEthereumSignaturesWindow(i interface{}) error {
 }
 
 func validateSlashFractionBatch(i interface{}) error {
-	// TODO: do we want to set some bounds on this value?
 	if _, ok := i.(sdk.Dec); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("min signed per window cannot be negative: %s", v)
+	}
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("min signed per window too large: %s", v)
+	}
+	return nil
+}
+
+func validateBridgeForwardFee(i interface{}) error {
+	if _, ok := i.(sdk.Dec); !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("min signed per window cannot be negative: %s", v)
+	}
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("min signed per window too large: %s", v)
 	}
 	return nil
 }
 
 func validateSlashFractionEthereumSignature(i interface{}) error {
-	// TODO: do we want to set some bounds on this value?
+	if v.IsNegative() {
+		return fmt.Errorf("min signed per window cannot be negative: %s", v)
+	}
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("min signed per window too large: %s", v)
+	}
 	if _, ok := i.(sdk.Dec); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -346,7 +377,12 @@ func validateSlashFractionEthereumSignature(i interface{}) error {
 }
 
 func validateSlashFractionConflictingEthereumSignature(i interface{}) error {
-	// TODO: do we want to set some bounds on this value?
+	if v.IsNegative() {
+		return fmt.Errorf("min signed per window cannot be negative: %s", v)
+	}
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("min signed per window too large: %s", v)
+	}
 	if _, ok := i.(sdk.Dec); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -360,7 +396,7 @@ func strToFixByteArray(s string) ([32]byte, error) {
 	}
 	copy(out[:], s)
 	return out, nil
-}
+}å
 
 func byteArrayToFixByteArray(b []byte) (out [32]byte, err error) {
 	if len(b) > 32 {

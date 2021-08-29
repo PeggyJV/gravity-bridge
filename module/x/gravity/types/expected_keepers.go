@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	clienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
@@ -60,4 +61,9 @@ type TransferKeeper interface {
 		timeoutHeight clienttypes.Height,
 		timeoutTimestamp uint64,
 	) error
+}
+
+type DistributionKeeper interface {
+	SetFeePool(ctx sdk.Context, pool distrtypes.FeePool)
+	GetFeePool(ctx sdk.Context) distrtypes.FeePool
 }
