@@ -90,6 +90,6 @@ Submits an Ethereum signature over a batche appearing in the `LastPendingValsetR
 
 These are messages sent directly using the validators message key.
 
-### SetOrchestratorAddress
+### MsgDelegateKeys
 
 This message sets the Orchestrator delegate keys described in the [design overview](/docs/design/overview.md)
