@@ -12,5 +12,5 @@ license = "Apache-2.0"
 prost = "0.7"
 prost-types = "0.7"
 bytes = "1"
-cosmos-sdk-proto = { version="0.6.3", git="http://github.com/cosmos/cosmos-rust", branch="main"}
+cosmos-sdk-proto = {version = "0.6.3", git="http://github.com/cosmos/cosmos-rust", branch="main"}
 tonic = "0.4"
