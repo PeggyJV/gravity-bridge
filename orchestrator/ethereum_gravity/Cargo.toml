@@ -1,5 +1,5 @@
 [package]
-name = "somm_ethereum_gravity"
+name = "cosmos_ethereum_gravity"
 version = "0.1.0"
 authors = ["PeggyJV <info@peggy.cool>, Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
@@ -9,8 +9,8 @@ license = "Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-somm_gravity_utils = {version = "0.1.0", path = "../gravity_utils"}
-deep_space = {version = "2.4.3", git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
+cosmos_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
+deep_space = { version = "2.4.3", git = "https://github.com/iqlusioninc/deep_space/", branch = "zaki/tendermint_0_21" }
 clarity = "0.4.11"
 web30 = "0.14.4"
 num256 = "0.3"

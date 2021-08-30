@@ -962,6 +962,200 @@ dependencies = [
 ]
 
 [[package]]
+name = "cosmos_ethereum_gravity"
+version = "0.1.0"
+dependencies = [
+ "clarity",
+ "cosmos_gravity_utils",
+ "deep_space 2.4.3",
+ "log",
+ "num256",
+ "sha3",
+ "web30",
+]
+
+[[package]]
+name = "cosmos_gravity"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "bytes 1.0.1",
+ "clarity",
+ "cosmos-sdk-proto 0.6.1",
+ "cosmos_ethereum_gravity",
+ "cosmos_gravity_proto",
+ "cosmos_gravity_utils",
+ "deep_space 2.4.3",
+ "env_logger",
+ "log",
+ "num256",
+ "prost",
+ "prost-types",
+ "rand 0.8.3",
+ "serde",
+ "sha3",
+ "tokio 1.5.0",
+ "tonic",
+ "web30",
+]
+
+[[package]]
+name = "cosmos_gravity_proto"
+version = "0.1.2"
+dependencies = [
+ "bytes 1.0.1",
+ "cosmos-sdk-proto 0.5.0",
+ "prost",
+ "prost-types",
+ "tonic",
+]
+
+[[package]]
+name = "cosmos_gravity_test_runner"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "actix-rt 2.2.0",
+ "actix-web",
+ "clarity",
+ "cosmos_ethereum_gravity",
+ "cosmos_gravity",
+ "cosmos_gravity_proto",
+ "cosmos_gravity_utils",
+ "cosmos_orchestrator",
+ "deep_space 2.4.3",
+ "docopt",
+ "env_logger",
+ "futures",
+ "lazy_static",
+ "log",
+ "num256",
+ "rand 0.8.3",
+ "serde",
+ "serde_derive",
+ "tokio 1.5.0",
+ "tonic",
+ "url",
+ "web30",
+]
+
+[[package]]
+name = "cosmos_gravity_utils"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "clarity",
+ "cosmos-sdk-proto 0.6.1",
+ "cosmos_gravity_proto",
+ "deep_space 2.4.3",
+ "log",
+ "num-bigint 0.4.0",
+ "num256",
+ "rand 0.8.3",
+ "serde",
+ "serde_derive",
+ "sha3",
+ "tokio 1.5.0",
+ "tonic",
+ "url",
+ "web30",
+]
+
+[[package]]
+name = "cosmos_orchestrator"
+version = "0.1.1"
+dependencies = [
+ "actix-rt 2.2.0",
+ "axum",
+ "clarity",
+ "cosmos_ethereum_gravity",
+ "cosmos_gravity",
+ "cosmos_gravity_proto",
+ "cosmos_gravity_utils",
+ "cosmos_relayer",
+ "deep_space 2.4.3",
+ "docopt",
+ "env_logger",
+ "futures",
+ "hyper",
+ "lazy_static",
+ "log",
+ "num256",
+ "openssl",
+ "openssl-probe",
+ "prometheus",
+ "rand 0.8.3",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "tokio 1.5.0",
+ "tonic",
+ "web30",
+]
+
+[[package]]
+name = "cosmos_proto_build"
+version = "0.1.0"
+dependencies = [
+ "prost",
+ "prost-build",
+ "regex",
+ "tempdir",
+ "tonic",
+ "tonic-build",
+ "walkdir",
+]
+
+[[package]]
+name = "cosmos_register_delegate_keys"
+version = "0.1.0"
+dependencies = [
+ "actix-rt 2.2.0",
+ "clarity",
+ "contact",
+ "cosmos_ethereum_gravity",
+ "cosmos_gravity",
+ "cosmos_gravity_proto",
+ "cosmos_gravity_utils",
+ "cosmos_relayer",
+ "deep_space 2.4.3",
+ "docopt",
+ "env_logger",
+ "lazy_static",
+ "log",
+ "openssl-probe",
+ "rand 0.8.3",
+ "serde",
+ "serde_derive",
+ "web30",
+]
+
+[[package]]
+name = "cosmos_relayer"
+version = "0.1.2"
+dependencies = [
+ "actix",
+ "actix-rt 2.2.0",
+ "clarity",
+ "cosmos_ethereum_gravity",
+ "cosmos_gravity",
+ "cosmos_gravity_proto",
+ "cosmos_gravity_utils",
+ "deep_space 2.4.3",
+ "docopt",
+ "env_logger",
+ "lazy_static",
+ "log",
+ "num256",
+ "openssl-probe",
+ "serde",
+ "serde_derive",
+ "tokio 1.5.0",
+ "tonic",
+ "web30",
+]
+
+[[package]]
 name = "cpuid-bool"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1479,6 +1673,40 @@ name = "gimli"
 version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6503fe142514ca4799d4c26297c4248239fe8838d827db6bd6065c6ed29a6ce"
+
+[[package]]
+name = "gorc"
+version = "0.1.1"
+dependencies = [
+ "abscissa_core",
+ "abscissa_tokio",
+ "actix-rt 2.2.0",
+ "bip32",
+ "bytes 1.0.1",
+ "clarity",
+ "cosmos_ethereum_gravity",
+ "cosmos_gravity",
+ "cosmos_gravity_proto",
+ "cosmos_gravity_utils",
+ "cosmos_orchestrator",
+ "cosmos_relayer",
+ "deep_space 2.4.3",
+ "gumdrop",
+ "k256",
+ "once_cell",
+ "pkcs8",
+ "prost",
+ "rand_core 0.6.2",
+ "regex",
+ "rpassword",
+ "serde",
+ "signatory",
+ "thiserror",
+ "tokio 1.5.0",
+ "toml",
+ "tonic",
+ "web30",
+]
 
 [[package]]
 name = "group"
@@ -3011,234 +3239,6 @@ checksum = "9e3dfc207c526015c632472a77be09cf1b6e46866581aecae5cc38fb4235dea2"
 dependencies = [
  "libc",
  "winapi 0.3.9",
-]
-
-[[package]]
-name = "somm_cosmos_gravity"
-version = "0.1.0"
-dependencies = [
- "actix",
- "bytes 1.0.1",
- "clarity",
- "cosmos-sdk-proto 0.6.1",
- "deep_space 2.4.3",
- "env_logger",
- "log",
- "num256",
- "prost",
- "prost-types",
- "rand 0.8.3",
- "serde",
- "sha3",
- "somm_ethereum_gravity",
- "somm_gravity_proto",
- "somm_gravity_utils",
- "tokio 1.5.0",
- "tonic",
- "web30",
-]
-
-[[package]]
-name = "somm_ethereum_gravity"
-version = "0.1.0"
-dependencies = [
- "clarity",
- "deep_space 2.4.3",
- "log",
- "num256",
- "sha3",
- "somm_gravity_utils",
- "web30",
-]
-
-[[package]]
-name = "somm_gorc"
-version = "0.1.0"
-dependencies = [
- "abscissa_core",
- "abscissa_tokio",
- "actix-rt 2.2.0",
- "bip32",
- "bytes 1.0.1",
- "clarity",
- "deep_space 2.4.3",
- "gumdrop",
- "k256",
- "once_cell",
- "pkcs8",
- "prost",
- "rand_core 0.6.2",
- "regex",
- "rpassword",
- "serde",
- "signatory",
- "somm_cosmos_gravity",
- "somm_ethereum_gravity",
- "somm_gravity_proto",
- "somm_gravity_utils",
- "somm_orchestrator",
- "somm_relayer",
- "thiserror",
- "tokio 1.5.0",
- "toml",
- "tonic",
- "web30",
-]
-
-[[package]]
-name = "somm_gravity_proto"
-version = "0.1.2"
-dependencies = [
- "bytes 1.0.1",
- "cosmos-sdk-proto 0.5.0",
- "prost",
- "prost-types",
- "tonic",
-]
-
-[[package]]
-name = "somm_gravity_utils"
-version = "0.1.0"
-dependencies = [
- "actix",
- "clarity",
- "cosmos-sdk-proto 0.6.1",
- "deep_space 2.4.3",
- "log",
- "num-bigint 0.4.0",
- "num256",
- "rand 0.8.3",
- "serde",
- "serde_derive",
- "sha3",
- "somm_gravity_proto",
- "tokio 1.5.0",
- "tonic",
- "url",
- "web30",
-]
-
-[[package]]
-name = "somm_orchestrator"
-version = "0.1.1"
-dependencies = [
- "actix-rt 2.2.0",
- "axum",
- "clarity",
- "deep_space 2.4.3",
- "docopt",
- "env_logger",
- "futures",
- "hyper",
- "lazy_static",
- "log",
- "num256",
- "openssl",
- "openssl-probe",
- "prometheus",
- "rand 0.8.3",
- "serde",
- "serde_derive",
- "serde_json",
- "somm_cosmos_gravity",
- "somm_ethereum_gravity",
- "somm_gravity_proto",
- "somm_gravity_utils",
- "somm_relayer",
- "tokio 1.5.0",
- "tonic",
- "web30",
-]
-
-[[package]]
-name = "somm_proto_build"
-version = "0.1.0"
-dependencies = [
- "prost",
- "prost-build",
- "regex",
- "tempdir",
- "tonic",
- "tonic-build",
- "walkdir",
-]
-
-[[package]]
-name = "somm_register_delegate_keys"
-version = "0.1.0"
-dependencies = [
- "actix-rt 2.2.0",
- "clarity",
- "contact",
- "deep_space 2.4.3",
- "docopt",
- "env_logger",
- "lazy_static",
- "log",
- "openssl-probe",
- "rand 0.8.3",
- "serde",
- "serde_derive",
- "somm_cosmos_gravity",
- "somm_ethereum_gravity",
- "somm_gravity_proto",
- "somm_gravity_utils",
- "somm_relayer",
- "web30",
-]
-
-[[package]]
-name = "somm_relayer"
-version = "0.1.1"
-dependencies = [
- "actix",
- "actix-rt 2.2.0",
- "clarity",
- "deep_space 2.4.3",
- "docopt",
- "env_logger",
- "lazy_static",
- "log",
- "num256",
- "openssl-probe",
- "serde",
- "serde_derive",
- "somm_cosmos_gravity",
- "somm_ethereum_gravity",
- "somm_gravity_proto",
- "somm_gravity_utils",
- "tokio 1.5.0",
- "tonic",
- "web30",
-]
-
-[[package]]
-name = "somm_test_runner"
-version = "0.1.0"
-dependencies = [
- "actix",
- "actix-rt 2.2.0",
- "actix-web",
- "clarity",
- "deep_space 2.4.3",
- "docopt",
- "env_logger",
- "futures",
- "lazy_static",
- "log",
- "num256",
- "rand 0.8.3",
- "serde",
- "serde_derive",
- "somm_cosmos_gravity",
- "somm_ethereum_gravity",
- "somm_gravity_proto",
- "somm_gravity_utils",
- "somm_orchestrator",
- "tokio 1.5.0",
- "tonic",
- "url",
- "web30",
 ]
 
 [[package]]

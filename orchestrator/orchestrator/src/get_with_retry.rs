@@ -1,8 +1,8 @@
 //! Basic utility functions to stubbornly get data
 use clarity::Uint256;
-use somm_cosmos_gravity::query::get_last_event_nonce;
+use cosmos_gravity::query::get_last_event_nonce;
+use cosmos_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use deep_space::address::Address as CosmosAddress;
-use somm_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use std::time::Duration;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;

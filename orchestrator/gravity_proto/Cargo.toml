@@ -1,5 +1,5 @@
 [package]
-name = "somm_gravity_proto"
+name = "cosmos_gravity_proto"
 version = "0.1.2"
 authors = ["PeggyJV <info@peggy.cool>, Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
