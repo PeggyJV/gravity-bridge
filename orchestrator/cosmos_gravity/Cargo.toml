@@ -11,7 +11,7 @@ license = "Apache-2.0"
 [dependencies]
 cosmos_gravity_utils = {version = "0.1.0", path = "../gravity_utils"}
 cosmos_ethereum_gravity = {version = "0.1.0", path = "../ethereum_gravity"}
-cosmos_gravity_proto = {path = "../gravity_proto/"}
+cosmos_gravity_proto = {version = "0.1.0", path = "../gravity_proto/"}
 
 deep_space ={version = "2.4.3", git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
 clarity = "0.4.11"
