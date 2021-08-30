@@ -36,6 +36,8 @@ use main_loop::{ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED};
 use relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
 use std::cmp::min;
 
+const DEFAULT_HD_PATH: &str = "m/44'/118'/0'/0/0";
+
 #[derive(Debug, Deserialize)]
 struct Args {
     flag_cosmos_phrase: String,
@@ -55,7 +57,7 @@ lazy_static! {
         Options:
             -h --help                    Show this screen.
             --cosmos-phrase=<ckey>       The mnenmonic of the Cosmos account key of the validator
-            --hd-wallet-path=<hdpath>    The hd wallet derivation path [default: \"m/44'/118'/0'/0/0\"].
+            --hd-wallet-path=<hdpath>    The hd wallet derivation path [default: \"{}\"].
             --ethereum-key=<ekey>        The Ethereum private key of the validator
             --cosmos-grpc=<gurl>         The Cosmos gRPC url, usually the validator
             --address-prefix=<prefix>    The prefix for addresses on this Cosmos chain
@@ -69,6 +71,7 @@ lazy_static! {
             Written By: {}
             Version {}",
             env!("CARGO_PKG_NAME"),
+            DEFAULT_HD_PATH,
             env!("CARGO_PKG_AUTHORS"),
             env!("CARGO_PKG_VERSION"),
         );
@@ -87,7 +90,7 @@ async fn main() {
     let hd_path = args
         .flag_hd_wallet_path
         .as_deref()
-        .unwrap_or("m/44'/118'/0'/0/0");
+        .unwrap_or(DEFAULT_HD_PATH);
     let cosmos_key = CosmosPrivateKey::from_hd_wallet_path(hd_path, &args.flag_cosmos_phrase, "")
         .expect("Invalid Private Cosmos Key!");
     let ethereum_key: EthPrivateKey = args
