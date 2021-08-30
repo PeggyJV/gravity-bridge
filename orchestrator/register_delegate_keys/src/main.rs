@@ -9,6 +9,7 @@ use log::error;
 
 use clarity::PrivateKey as EthPrivateKey;
 use cosmos_gravity::send::update_gravity_delegate_addresses;
+use cosmos_gravity::DEFAULT_HD_PATH;
 use deep_space::{coin::Coin, mnemonic::Mnemonic, private_key::PrivateKey as CosmosPrivateKey};
 use docopt::Docopt;
 use gravity_utils::connection_prep::check_for_fee_denom;
@@ -33,7 +34,7 @@ lazy_static! {
         Options:
             -h --help                 Show this screen.
             --validator-phrase=<vkey> The Cosmos private key of the validator. Must be saved when you generate your key
-            --hd-wallet-path=<hdpath> The hd wallet derivation path [default: \"m/44'/118'/0'/0/0\"].
+            --hd-wallet-path=<hdpath> The hd wallet derivation path [default: \"{}\"].
             --ethereum-key=<ekey>     (Optional) The Ethereum private key to register, will be generated if not provided
             --cosmos-phrase=<ckey>    (Optional) The phrase for the Cosmos key to register, will be generated if not provided.
             --address-prefix=<prefix> The prefix for Addresses on this chain (eg 'cosmos')
@@ -47,6 +48,7 @@ lazy_static! {
             Written By: {}
             Version {}",
         env!("CARGO_PKG_NAME"),
+        DEFAULT_HD_PATH,
         env!("CARGO_PKG_AUTHORS"),
         env!("CARGO_PKG_VERSION"),
     );
@@ -84,7 +86,7 @@ async fn main() {
     let hd_path = args
         .flag_hd_wallet_path
         .as_deref()
-        .unwrap_or("m/44'/118'/0'/0/0");
+        .unwrap_or(DEFAULT_HD_PATH);
     let validator_key =
         CosmosPrivateKey::from_hd_wallet_path(hd_path, &args.flag_validator_phrase, "")
             .expect("Failed to parse validator key");

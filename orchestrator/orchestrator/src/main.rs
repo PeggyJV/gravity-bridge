@@ -25,6 +25,7 @@ mod oracle_resync;
 use crate::main_loop::orchestrator_main_loop;
 use clarity::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
+use cosmos_gravity::DEFAULT_HD_PATH;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use docopt::Docopt;
 use env_logger::Env;
@@ -35,8 +36,6 @@ use gravity_utils::connection_prep::{check_for_fee_denom, create_rpc_connections
 use main_loop::{ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED};
 use relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
 use std::cmp::min;
-
-const DEFAULT_HD_PATH: &str = "m/44'/118'/0'/0/0";
 
 #[derive(Debug, Deserialize)]
 struct Args {

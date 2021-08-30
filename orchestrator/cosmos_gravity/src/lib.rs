@@ -6,6 +6,8 @@
 #[macro_use]
 extern crate log;
 
+pub const DEFAULT_HD_PATH: &str = "m/44'/118'/0'/0/0";
+
 pub mod build;
 pub mod query;
 pub mod send;
