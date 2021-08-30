@@ -1,7 +1,7 @@
 use crate::{application::APP, prelude::*};
 use abscissa_core::{Command, Options, Runnable};
 use clarity::address::Address as EthAddress;
-use somm_gravity_utils::connection_prep::{
+use cosmos_gravity_utils::connection_prep::{
     check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
     wait_for_cosmos_node_ready,
 };

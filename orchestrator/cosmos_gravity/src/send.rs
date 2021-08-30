@@ -1,6 +1,9 @@
 use bytes::BytesMut;
 use clarity::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
+use cosmos_gravity_proto::cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
+use cosmos_gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
+use cosmos_gravity_proto::gravity as proto;
 use deep_space::address::Address;
 use deep_space::coin::Coin;
 use deep_space::error::CosmosGrpcError;
@@ -8,9 +11,6 @@ use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
 use deep_space::Fee;
 use deep_space::Msg;
-use somm_gravity_proto::cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
-use somm_gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
-use somm_gravity_proto::gravity as proto;
 use prost::Message;
 use std::time::Duration;
 

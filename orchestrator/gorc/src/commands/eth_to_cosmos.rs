@@ -2,9 +2,9 @@ use crate::application::APP;
 use abscissa_core::{status_err, Application, Command, Options, Runnable};
 use clarity::Address as EthAddress;
 use clarity::Uint256;
+use cosmos_ethereum_gravity::send_to_cosmos::send_to_cosmos;
+use cosmos_gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
 use deep_space::address::Address as CosmosAddress;
-use somm_ethereum_gravity::send_to_cosmos::send_to_cosmos;
-use somm_gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
 use std::time::Duration;
 
 const TIMEOUT: Duration = Duration::from_secs(60);

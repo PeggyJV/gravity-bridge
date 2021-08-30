@@ -1,14 +1,16 @@
 use clarity::PrivateKey as EthPrivateKey;
 use clarity::{address::Address as EthAddress, utils::bytes_to_hex_str};
-use somm_cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
-use somm_ethereum_gravity::one_eth;
-use somm_ethereum_gravity::{
+use cosmos_ethereum_gravity::one_eth;
+use cosmos_ethereum_gravity::{
     logic_call::send_eth_logic_call,
     utils::{downcast_to_u128, get_logic_call_nonce},
 };
-use somm_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use somm_gravity_utils::types::{LogicCallConfirmResponse, Valset};
-use somm_gravity_utils::{message_signatures::encode_logic_call_confirm_hashed, types::LogicCall};
+use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
+use cosmos_gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use cosmos_gravity_utils::types::{LogicCallConfirmResponse, Valset};
+use cosmos_gravity_utils::{
+    message_signatures::encode_logic_call_confirm_hashed, types::LogicCall,
+};
 use std::time::Duration;
 use tonic::transport::Channel;
 use web30::client::Web3;
@@ -87,7 +89,7 @@ pub async fn relay_logic_calls(
     let latest_ethereum_call = latest_ethereum_call.unwrap();
     let latest_cosmos_call_nonce = oldest_signed_call.clone().invalidation_nonce;
     if latest_cosmos_call_nonce > latest_ethereum_call {
-        let cost = somm_ethereum_gravity::logic_call::estimate_logic_call_cost(
+        let cost = cosmos_ethereum_gravity::logic_call::estimate_logic_call_cost(
             current_valset.clone(),
             oldest_signed_call.clone(),
             &oldest_signatures,

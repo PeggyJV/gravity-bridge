@@ -1,6 +1,6 @@
 [package]
-name = "somm_relayer"
-version = "0.1.2"
+name = "cosmos_relayer"
+version = "0.1.0"
 authors = ["PeggyJV <info@peggy.cool>, Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
 description = "This is to build the relayer logic (i.e. cosmos to ethereum) as a seperate binary. It also contains the library for the relayer."
@@ -15,12 +15,12 @@ name = "relayer"
 path = "src/main.rs"
 
 [dependencies]
-somm_ethereum_gravity = {version = "0.1.0", path = "../ethereum_gravity"}
-somm_cosmos_gravity = { version = "0.1.0", path = "../cosmos_gravity" }
-somm_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
-somm_gravity_proto = {version = "0.1.2", path = "../gravity_proto/"}
+cosmos_ethereum_gravity = { version = "0.1.0", path = "../ethereum_gravity" }
+cosmos_gravity = { version = "0.1.0", path = "../cosmos_gravity" }
+cosmos_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
+cosmos_gravity_proto = { version = "0.1.0", path = "../gravity_proto/" }
 
-deep_space ={version = "2.4.3", git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
+deep_space = { version = "2.4.3", git = "https://github.com/iqlusioninc/deep_space/", branch = "zaki/tendermint_0_21" }
 serde_derive = "1.0"
 clarity = "0.4.11"
 docopt = "1"

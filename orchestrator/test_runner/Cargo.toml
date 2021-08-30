@@ -1,5 +1,5 @@
 [package]
-name = "somm_test_runner"
+name = "cosmos_gravity_test_runner"
 version = "0.1.0"
 authors = ["PeggyJV <info@peggy.cool>, Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
@@ -12,19 +12,19 @@ name = "test_runner"
 path = "src/main.rs"
 
 [dependencies]
-somm_ethereum_gravity = {version = "0.1.0", path = "../ethereum_gravity"}
-somm_cosmos_gravity = { version = "0.1.0", path = "../cosmos_gravity" }
-somm_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
-somm_gravity_proto = {version = "0.1.2", path = "../gravity_proto/"}
-somm_orchestrator = {  version = "0.1.0", path = "../orchestrator" }
+cosmos_ethereum_gravity = { version = "0.1.0", path = "../ethereum_gravity" }
+cosmos_gravity = { version = "0.1.0", path = "../cosmos_gravity" }
+cosmos_gravity_utils = { version = "0.1.0", path = "../gravity_utils" }
+cosmos_gravity_proto = { version = "0.1.0", path = "../gravity_proto/" }
+cosmos_orchestrator = { version = "0.1.0", path = "../orchestrator" }
 
-deep_space ={version = "2.4.3", git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
+deep_space = { version = "2.4.3", git = "https://github.com/iqlusioninc/deep_space/", branch = "zaki/tendermint_0_21" }
 serde_derive = "1.0"
 clarity = "0.4.11"
 docopt = "1"
 serde = "1.0"
 actix = "0.11"
-actix-web = {version = "3", features=["openssl"]}
+actix-web = { version = "3", features = ["openssl"] }
 actix-rt = "2.2"
 lazy_static = "1"
 url = "2"

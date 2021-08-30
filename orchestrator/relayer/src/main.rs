@@ -2,11 +2,11 @@ use crate::main_loop::relayer_main_loop;
 use crate::main_loop::LOOP_SPEED;
 use clarity::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
-use docopt::Docopt;
-use env_logger::Env;
-use somm_gravity_utils::connection_prep::{
+use cosmos_gravity_utils::connection_prep::{
     check_for_eth, create_rpc_connections, wait_for_cosmos_node_ready,
 };
+use docopt::Docopt;
+use env_logger::Env;
 
 pub mod batch_relaying;
 pub mod find_latest_valset;

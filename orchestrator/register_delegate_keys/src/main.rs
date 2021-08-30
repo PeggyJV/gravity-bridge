@@ -8,11 +8,11 @@ extern crate lazy_static;
 use log::error;
 
 use clarity::PrivateKey as EthPrivateKey;
-use somm_cosmos_gravity::send::update_gravity_delegate_addresses;
+use cosmos_gravity::send::update_gravity_delegate_addresses;
+use cosmos_gravity_utils::connection_prep::check_for_fee_denom;
+use cosmos_gravity_utils::connection_prep::{create_rpc_connections, wait_for_cosmos_node_ready};
 use deep_space::{coin::Coin, mnemonic::Mnemonic, private_key::PrivateKey as CosmosPrivateKey};
 use docopt::Docopt;
-use somm_gravity_utils::connection_prep::check_for_fee_denom;
-use somm_gravity_utils::connection_prep::{create_rpc_connections, wait_for_cosmos_node_ready};
 use rand::{thread_rng, Rng};
 use std::time::Duration;
 
@@ -112,7 +112,7 @@ async fn main() {
 
     let ethereum_address = ethereum_key.to_public_key().unwrap();
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let res =update_gravity_delegate_addresses(
+    let res = update_gravity_delegate_addresses(
         &contact,
         ethereum_address,
         cosmos_address,

@@ -1,5 +1,5 @@
 [package]
-name = "somm_proto_build"
+name = "cosmos_proto_build"
 version = "0.1.0"
 authors = ["PeggyJV <info@peggy.cool>, Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"

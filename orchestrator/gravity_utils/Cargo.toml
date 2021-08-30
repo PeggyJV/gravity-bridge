@@ -1,5 +1,5 @@
 [package]
-name = "somm_gravity_utils"
+name = "cosmos_gravity_utils"
 version = "0.1.0"
 authors = ["PeggyJV <info@peggy.cool>, Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
@@ -9,7 +9,7 @@ license = "Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-somm_gravity_proto = {version = "0.1.0", path = "../gravity_proto/"}
+cosmos_gravity_proto = {version = "0.1.0", path = "../gravity_proto/"}
 cosmos-sdk-proto = "0.6.0"
 deep_space ={version = "2.4.3", git="https://github.com/iqlusioninc/deep_space/", branch="zaki/tendermint_0_21"}
 web30 = "0.14.4"
