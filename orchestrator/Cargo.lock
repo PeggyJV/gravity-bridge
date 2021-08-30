@@ -941,13 +941,25 @@ checksum = "a2df960f5d869b2dd8532793fde43eb5427cceb126c929747a26823ab0eeb536"
 
 [[package]]
 name = "cosmos-sdk-proto"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78f4841c74e806ccb9198968db8312355830751a3e9849789c328692a65e4c6a"
+dependencies = [
+ "prost",
+ "prost-types",
+ "tendermint-proto 0.19.0",
+ "tonic",
+]
+
+[[package]]
+name = "cosmos-sdk-proto"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7115eae4b8518967b8e737a3ef76025f2d007de7906d88c18f00b8bbfc70f51e"
 dependencies = [
  "prost",
  "prost-types",
- "tendermint-proto",
+ "tendermint-proto 0.21.0",
  "tonic",
 ]
 
@@ -958,7 +970,7 @@ source = "git+http://github.com/cosmos/cosmos-rust?branch=main#f32e051c84b0c9f4f
 dependencies = [
  "prost",
  "prost-types",
- "tendermint-proto",
+ "tendermint-proto 0.21.0",
  "tonic",
 ]
 
@@ -982,7 +994,7 @@ dependencies = [
  "actix",
  "bytes 1.1.0",
  "clarity",
- "cosmos-sdk-proto 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cosmos-sdk-proto 0.5.0",
  "cosmos_ethereum_gravity",
  "cosmos_gravity_proto",
  "cosmos_gravity_utils",
@@ -1005,7 +1017,7 @@ name = "cosmos_gravity_proto"
 version = "0.1.0"
 dependencies = [
  "bytes 1.1.0",
- "cosmos-sdk-proto 0.6.3 (git+http://github.com/cosmos/cosmos-rust?branch=main)",
+ "cosmos-sdk-proto 0.5.0",
  "prost",
  "prost-types",
  "tonic",
@@ -1309,7 +1321,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "sha2",
- "tendermint-proto",
+ "tendermint-proto 0.21.0",
  "tokio 1.10.1",
  "tonic",
  "unicode-normalization",
@@ -3433,6 +3445,25 @@ dependencies = [
  "redox_syscall",
  "remove_dir_all",
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "tendermint-proto"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32bbc1bc55f09de4d00b5d69aa6b60392ba37c5e4761d869f76065d352bd3360"
+dependencies = [
+ "anomaly",
+ "bytes 1.1.0",
+ "chrono",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-types",
+ "serde",
+ "serde_bytes",
+ "subtle-encoding",
+ "thiserror",
 ]
 
 [[package]]
