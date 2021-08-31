@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	clienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -92,6 +93,10 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 		addr, _ := sdk.AccAddressFromBech32(event.CosmosReceiver)
 		coin := sdk.NewCoin(denom, event.Amount)
 		coins := sdk.Coins{coin}
+		feeAmount := event.Amount.ToDec().Mul(a.keeper.GetParams(ctx).BridgeForwardFee).RoundInt()
+		packetAmount := event.Amount.Sub(feeAmount)
+		feeCoins := sdk.Coins{sdk.NewCoin(denom, feeAmount)}
+		packetCoin := sdk.NewCoin(denom, packetAmount)
 
 		if !isCosmosOriginated {
 			if err := a.DetectMaliciousSupply(ctx, denom, event.Amount); err != nil {
@@ -104,18 +109,20 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 			}
 		}
 
-		feetake := a.keeper.GetParams(ctx).BridgeForwardFee
-		// fp := k.distrKeeper.GetFeePool(ctx)
-		// fp.CommunityPool.Add(sdk.NewDecCoinFromDec(voucher.Denom, fee))
-		// k.distrKeeper.SetFeePool(ctx, fp)
-
 		if err := a.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
 			return err
 		}
 
+		// pay fees
+		if feeAmount.IsPositive() {
+			if err := a.bankKeeper.SendCoinsFromAccountToModule(ctx, addr, authtypes.FeeCollectorName, feeCoins); err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			}
+		}
+
 		// format of this could be {port}/{channel}
 		chanport := strings.Split(event.Channel, "/")
-		if err := a.transferKeeper.SendTransfer(ctx, chanport[0], chanport[1], coin, addr, event.ForwardAddress, clienttypes.NewHeight(0, 0), uint64(time.Second*100)); err != nil {
+		if err := a.transferKeeper.SendTransfer(ctx, chanport[0], chanport[1], packetCoin, addr, event.ForwardAddress, clienttypes.NewHeight(0, 0), uint64(time.Second*100)); err != nil {
 			return err
 		}
 

@@ -212,7 +212,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionEthereumSignature, &p.SlashFractionEthereumSignature, validateSlashFractionEthereumSignature),
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionConflictingEthereumSignature, &p.SlashFractionConflictingEthereumSignature, validateSlashFractionConflictingEthereumSignature),
 		paramtypes.NewParamSetPair(ParamStoreUnbondSlashingSignerSetTxsWindow, &p.UnbondSlashingSignerSetTxsWindow, validateUnbondSlashingSignerSetTxsWindow),
-		paramtypes.NewParamSetPair(ParamStoreBridgeForwardFee, &p.BridgeForParamStoreBridgeForwardFee, validateBridgeForParamStoreBridgeForwardFee),
+		paramtypes.NewParamSetPair(ParamStoreBridgeForwardFee, &p.BridgeForwardFee, validateBridgeForwardFee),
 	}
 }
 
@@ -338,7 +338,8 @@ func validateEthereumSignaturesWindow(i interface{}) error {
 }
 
 func validateSlashFractionBatch(i interface{}) error {
-	if _, ok := i.(sdk.Dec); !ok {
+	v, ok := i.(sdk.Dec)
+	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	if v.IsNegative() {
@@ -351,7 +352,8 @@ func validateSlashFractionBatch(i interface{}) error {
 }
 
 func validateBridgeForwardFee(i interface{}) error {
-	if _, ok := i.(sdk.Dec); !ok {
+	v, ok := i.(sdk.Dec)
+	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	if v.IsNegative() {
@@ -364,27 +366,29 @@ func validateBridgeForwardFee(i interface{}) error {
 }
 
 func validateSlashFractionEthereumSignature(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("min signed per window cannot be negative: %s", v)
 	}
 	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("min signed per window too large: %s", v)
-	}
-	if _, ok := i.(sdk.Dec); !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
 }
 
 func validateSlashFractionConflictingEthereumSignature(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("min signed per window cannot be negative: %s", v)
 	}
 	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("min signed per window too large: %s", v)
-	}
-	if _, ok := i.(sdk.Dec); !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
 }
@@ -396,7 +400,7 @@ func strToFixByteArray(s string) ([32]byte, error) {
 	}
 	copy(out[:], s)
 	return out, nil
-}å
+}
 
 func byteArrayToFixByteArray(b []byte) (out [32]byte, err error) {
 	if len(b) > 32 {

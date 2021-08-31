@@ -406,7 +406,6 @@ func NewGravityApp(
 		keys[gravitytypes.StoreKey],
 		app.GetSubspace(gravitytypes.ModuleName),
 		app.accountKeeper,
-		app.distrKeeper,
 		stakingKeeper,
 		app.bankKeeper,
 		app.slashingKeeper,

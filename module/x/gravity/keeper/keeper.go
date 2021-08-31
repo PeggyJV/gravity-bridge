@@ -35,7 +35,6 @@ type Keeper struct {
 	cdc            codec.Codec
 	accountKeeper  types.AccountKeeper
 	bankKeeper     types.BankKeeper
-	distrkeeper    types.DistributionKeeper
 	SlashingKeeper types.SlashingKeeper
 	PowerReduction sdk.Int
 	hooks          types.GravityHooks
@@ -47,7 +46,6 @@ func NewKeeper(
 	storeKey sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
 	accKeeper types.AccountKeeper,
-	distrKeeper types.DistributionKeeper,
 	stakingKeeper types.StakingKeeper,
 	bankKeeper types.BankKeeper,
 	slashingKeeper types.SlashingKeeper,
