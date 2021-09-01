@@ -1,17 +1,17 @@
 //! Gorc Subcommands
 //! This is where you specify the subcommands of your application.
 
-mod cosmos_to_eth;
-mod deploy;
-mod eth_to_cosmos;
-mod keys;
+pub mod cosmos_to_eth;
+pub mod deploy;
+pub mod eth_to_cosmos;
+pub mod keys;
 pub mod orchestrator;
-mod print_config;
-mod query;
-mod sign_delegate_keys;
-mod tests;
-mod tx;
-mod version;
+pub mod print_config;
+pub mod query;
+pub mod sign_delegate_keys;
+pub mod tests;
+pub mod tx;
+pub mod version;
 
 use crate::config::GorcConfig;
 use abscissa_core::{Command, Configurable, Help, Options, Runnable};
