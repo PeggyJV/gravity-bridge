@@ -5,7 +5,7 @@ mod cosmos_to_eth;
 mod deploy;
 mod eth_to_cosmos;
 mod keys;
-mod orchestrator;
+pub mod orchestrator;
 mod print_config;
 mod query;
 mod sign_delegate_keys;
