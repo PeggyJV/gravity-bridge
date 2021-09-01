@@ -152,7 +152,6 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 			// validate orchestrator account in genesis and warn if not found
 			if err = validateAccountPresentInGenesis(genesisState, genAccountIterator, orchAddress, coins, cdc); err != nil {
 				cmd.PrintErrf("orchestrator address not found in genesis file: %s\n", orchAddress)
-				return nil
 			}
 
 			txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
