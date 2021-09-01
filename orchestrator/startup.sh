@@ -5,7 +5,7 @@ rpc="http://$validator_address:1317"
 grpc="http://$validator_address:9090"
 ethrpc="http://$(getent hosts ethereum | awk '{ print $1 }'):8545"
 
-echo orchestrator \
+echo gorc \
     --address-prefix=cosmos \
     --contract-address="${CONTRACT_ADDR}" \
     --cosmos-grpc="$grpc" \
@@ -14,7 +14,7 @@ echo orchestrator \
     --ethereum-rpc="$ethrpc" \
     --fees="${DENOM}"
 
-orchestrator \
+gorc \
     --address-prefix=cosmos \
     --contract-address="${CONTRACT_ADDR}" \
     --cosmos-grpc="$grpc" \
