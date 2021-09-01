@@ -1,3 +1,10 @@
+[package]
+name = "bridge"
+version = "0.1.0"
+authors = ["PeggyJV"]
+license = "Apache-2.0"
+edition = "2018"
+
 [workspace]
 default-members = ["gorc", "orchestrator", "test_runner"]
 members = [
@@ -13,3 +20,8 @@ members = [
 	"register_delegate_keys",
 	"gorc",
 ]
+
+[dependencies]
+gorc = { path = "./gorc" }
+orchestrator = { path = "./orchestrator"}
+test_runner = { path = "./test_runner" }
