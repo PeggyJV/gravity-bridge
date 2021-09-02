@@ -362,6 +362,7 @@ prefix = "gravity"
 			filepath.Join("./", "gorc_test_bootstrap.sh"),
 			filepath.Join(gorcConfigPath, "gorc_test_bootstrap.sh"),
 		)
+		require.NoError(t, err, "error copying bootstrap file")
 
 		env := []string{
 			fmt.Sprintf("ORCH_MNEMONIC=%s", orchestrator.Mnemonic),
