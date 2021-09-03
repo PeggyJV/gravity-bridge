@@ -26,10 +26,12 @@ type KeyOutput struct {
 func TestKeyGen(t *testing.T) {
 	mnemonic := "weasel lunch attack blossom tone drum unfair worry risk level negative height sight nation inside task oyster client shiver aware neck mansion gun dune"
 
+	input := strings.NewReader(mnemonic + "\n")
 	initClientCtx := client.Context{}.
 		WithHomeDir("/foo/bar").
 		WithChainID("test-chain").
-		WithKeyringDir("/foo/bar")
+		WithKeyringDir("/foo/bar").
+		WithInput(input)
 
 	// generate key from binary
 	keyCmd := keys.AddKeyCommand()
@@ -44,7 +46,7 @@ func TestKeyGen(t *testing.T) {
 	keyCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 		return 	client.SetCmdClientContextHandler(initClientCtx, keyCmd)
 	}
-	keyCmd.SetIn(strings.NewReader(mnemonic + "\n"))
+	keyCmd.SetIn(input)
 
 	buf := bytes.NewBuffer(nil)
 	keyCmd.SetOut(buf)
