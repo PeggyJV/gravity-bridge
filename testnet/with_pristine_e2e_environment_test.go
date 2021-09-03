@@ -353,7 +353,7 @@ prefix = "gravity"
 			"stake",
 			)
 
-		gorcConfigPath := filepath.Join(chain.DataDir, chain.ID, orchestrator.instanceName(), "gorc")
+		gorcConfigPath := filepath.Join(wd, chain.DataDir, chain.ID, orchestrator.instanceName(), "gorc")
 		err = os.MkdirAll(gorcConfigPath, 0755)
 		require.NoError(t, err, "error creating gorc config dir")
 		filePath := path.Join(gorcConfigPath, "config.toml")
