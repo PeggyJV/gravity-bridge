@@ -359,7 +359,7 @@ prefix = "gravity"
 		filePath := path.Join(gorcConfigPath, "config.toml")
 		writeFile(t, filePath, []byte(gorcConfig))
 		_, err := copyFile(
-			filepath.Join("testnet", "gorc_test_bootstrap.sh"),
+			filepath.Join("./", "testnet", "gorc_test_bootstrap.sh"),
 			filepath.Join(gorcConfigPath, "gorc_test_bootstrap.sh"),
 		)
 		require.NoError(t, err, "error copying bootstrap file")
