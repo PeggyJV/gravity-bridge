@@ -6,10 +6,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/cli"
 )
@@ -24,6 +26,11 @@ type KeyOutput struct {
 func TestKeyGen(t *testing.T) {
 	mnemonic := "weasel lunch attack blossom tone drum unfair worry risk level negative height sight nation inside task oyster client shiver aware neck mansion gun dune"
 
+	initClientCtx := client.Context{}.
+		WithHomeDir("/foo/bar").
+		WithChainID("test-chain").
+		WithKeyringDir("/foo/bar")
+
 	// generate key from binary
 	keyCmd := keys.AddKeyCommand()
 	keyCmd.Flags().String(cli.OutputFlag, "json", "output flag")
@@ -34,6 +41,9 @@ func TestKeyGen(t *testing.T) {
 		"--recover=true",
 		"orch",
 	})
+	keyCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		return 	client.SetCmdClientContextHandler(initClientCtx, keyCmd)
+	}
 	keyCmd.SetIn(strings.NewReader(mnemonic + "\n"))
 
 	buf := bytes.NewBuffer(nil)
