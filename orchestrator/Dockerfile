@@ -27,6 +27,5 @@ RUN cargo build --release --bin gorc
 
 FROM cargo-chef-rust as runtime
 WORKDIR app
-COPY startup.sh startup.sh
 COPY --from=builder /app/target/release/gorc /usr/local/bin
 CMD gorc
