@@ -118,7 +118,7 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.Ether
 func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent) {
 	// then execute in a new Tx so that we can store state on failure
 	xCtx, commit := ctx.CacheContext()
-	if err := k.EthereumEventProcessor.Handle(xCtx, event); err != nil { // execute with a transient storage
+	if err := k.Handle(xCtx, event); err != nil { // execute with a transient storage
 		// If the attestation fails, something has gone wrong and we can't recover it. Log and move on
 		// The attestation will still be marked "Observed", and validators can still be slashed for not
 		// having voted for it.
