@@ -8,7 +8,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/peggyjv/gravity-bridge/module/x/gravity/types";
+option go_package = "github.com/cosmos/gravity-bridge/module/x/gravity/types";
 
 // Msg defines the state transitions possible within gravity
 service Msg {
@@ -32,6 +32,9 @@ service Msg {
   }
   rpc SetDelegateKeys(MsgDelegateKeys) returns (MsgDelegateKeysResponse) {
     // option (google.api.http).post = "/gravity/v1/delegate_keys";
+  }
+    rpc SubmitBadSignatureEvidence(MsgSubmitBadSignatureEvidence) returns (MsgSubmitBadSignatureEvidenceResponse) {
+    // option (google.api.http).post = "/gravity/v1/submit_bad_signature_evidence";
   }
 }
 
@@ -204,3 +207,13 @@ message SignerSetTxExecutedEvent {
   repeated EthereumSigner members = 4;
 }
 
+// This call allows anyone to submit evidence that a
+// validator has signed a valset, batch, or logic call that never
+// existed. Subject contains the batch, valset, or logic call.
+message MsgSubmitBadSignatureEvidence {
+  google.protobuf.Any subject   = 1;
+  string              signature = 2;
+  string              sender    = 3;
+}
+
+message MsgSubmitBadSignatureEvidenceResponse {}

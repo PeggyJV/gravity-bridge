@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/cosmos/gravity-bridge/module/x/gravity/types"
 )
 
 // TODO: should we make this a parameter or a a call arg?
@@ -44,6 +44,10 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, contractAddress common.Address, ma
 		Height:        uint64(ctx.BlockHeight()),
 	}
 	k.SetOutgoingTx(ctx, batch)
+
+	// Store checkpoint to prove that this logic call actually happened
+	checkpoint := batch.GetCheckpoint(k.GetGravityID(ctx))
+	k.setPastEthSignatureCheckpoint(ctx, checkpoint)
 
 	ctx.EventManager().EmitEvent(sdk.NewEvent(
 		types.EventTypeOutgoingBatch,
