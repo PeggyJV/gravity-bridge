@@ -242,10 +242,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 				panic(fmt.Sprintf("failed to bech32 decode validator address: %s", err))
 			}
 
-			validator, ok := k.StakingKeeper.GetValidator(ctx, addr)
-			if ok {
-				panic(fmt.Sprintf("expected validator %s to exist", valAddr))
-			}
+			validator, _ := k.StakingKeeper.GetValidator(ctx, addr)
 
 			valConsAddr, err := validator.GetConsAddr()
 			if err != nil {
