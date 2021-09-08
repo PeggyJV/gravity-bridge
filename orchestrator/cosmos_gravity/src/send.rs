@@ -158,6 +158,7 @@ pub async fn send_messages(
             payer: None,
         }
     };
+    dbg!(&fee);
 
     let args = contact.get_message_args(cosmos_address, fee).await?;
 
