@@ -90,6 +90,7 @@ impl Runnable for StartCommand {
                 contract_address,
                 gas_price,
                 &config.metrics.listen_addr,
+                config.ethereum.blocks_to_search,
             )
             .await;
         })

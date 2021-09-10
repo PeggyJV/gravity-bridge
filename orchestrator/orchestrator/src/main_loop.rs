@@ -52,6 +52,7 @@ pub async fn orchestrator_main_loop(
     gravity_contract_address: EthAddress,
     gas_price: (f64, String),
     metrics_listen: &net::SocketAddr,
+    blocks_to_search: u128,
 ) {
     let (tx, rx) = tokio::sync::mpsc::channel(1);
 
@@ -81,6 +82,7 @@ pub async fn orchestrator_main_loop(
         web3,
         grpc_client.clone(),
         gravity_contract_address,
+        blocks_to_search,
     );
 
     let e = metrics_main_loop(metrics_listen);

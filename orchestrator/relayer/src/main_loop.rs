@@ -20,6 +20,7 @@ pub async fn relayer_main_loop(
     web3: Web3,
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
+    blocks_to_search:u128,
 ) {
     let mut grpc_client = grpc_client;
     loop {
@@ -27,7 +28,7 @@ pub async fn relayer_main_loop(
 
         let our_ethereum_address = ethereum_key.to_public_key().unwrap();
         let current_eth_valset =
-            find_latest_valset(&mut grpc_client, gravity_contract_address, &web3).await;
+            find_latest_valset(&mut grpc_client, gravity_contract_address, &web3,blocks_to_search).await;
         if current_eth_valset.is_err() {
             error!("Could not get current valset! {:?}", current_eth_valset);
             continue;

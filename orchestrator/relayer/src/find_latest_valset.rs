@@ -15,8 +15,8 @@ pub async fn find_latest_valset(
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: Address,
     web3: &Web3,
+    blocks_to_search:u128,
 ) -> Result<Valset, GravityError> {
-    const BLOCKS_TO_SEARCH: u128 = 5_000u128;
     let latest_block = web3.eth_block_number().await?;
     let mut current_block: Uint256 = latest_block.clone();
 
@@ -25,10 +25,10 @@ pub async fn find_latest_valset(
             "About to submit a Valset or Batch looking back into the history to find the last Valset Update, on block {}",
             current_block
         );
-        let end_search = if current_block.clone() < BLOCKS_TO_SEARCH.into() {
+        let end_search = if current_block.clone() < blocks_to_search.into() {
             0u8.into()
         } else {
-            current_block.clone() - BLOCKS_TO_SEARCH.into()
+            current_block.clone() - blocks_to_search.into()
         };
         let mut all_valset_events = web3
             .check_for_events(
