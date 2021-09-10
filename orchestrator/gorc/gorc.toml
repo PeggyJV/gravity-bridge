@@ -7,6 +7,7 @@ fees_denom = "stake"
 [ethereum]
 key_derivation_path = "m/44'/60'/0'/0/0"
 rpc = "http://localhost:8545"
+blocks_to_search = 5000
 
 [cosmos]
 gas_price = { amount = 0.001, denom = "stake" }
