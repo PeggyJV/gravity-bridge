@@ -47,8 +47,9 @@ contract Gravity is ReentrancyGuard {
 	uint256 public state_lastEventNonce = 1;
 
 	// These are set once at initialization
-	bytes32 public state_gravityId;
 	uint256 public state_powerThreshold;
+	// This is set once at initialization
+	bytes32 public immutable state_gravityId;
 
 	// TransactionBatchExecutedEvent and SendToCosmosEvent both include the field _eventNonce.
 	// This is incremented every time one of these events is emitted. It is checked by the
