@@ -93,13 +93,8 @@ contract Gravity is ReentrancyGuard {
 
 	// TEST FIXTURES
 	// These are here to make it easier to measure gas usage. They should be removed before production
-	function testMakeCheckpoint(
-		address[] memory _validators,
-		uint256[] memory _powers,
-		uint256 _valsetNonce,
-		bytes32 _gravityId
-	) public pure {
-		makeCheckpoint(_validators, _powers, _valsetNonce, _gravityId);
+	function testMakeCheckpoint(ValsetArgs memory _valsetArgs, bytes32 _gravityId) external pure {
+		makeCheckpoint(_valsetArgs, _gravityId);
 	}
 
 	function testCheckValidatorSignatures(
@@ -108,7 +103,7 @@ contract Gravity is ReentrancyGuard {
 		Signature[] memory _sigs,
 		bytes32 _theHash,
 		uint256 _powerThreshold
-	) public pure {
+	) external pure {
 		checkValidatorSignatures(
 			_currentValidators,
 			_currentPowers,
@@ -120,11 +115,11 @@ contract Gravity is ReentrancyGuard {
 
 	// END TEST FIXTURES
 
-	function lastBatchNonce(address _erc20Address) public view returns (uint256) {
+	function lastBatchNonce(address _erc20Address) external view returns (uint256) {
 		return state_lastBatchNonces[_erc20Address];
 	}
 
-	function lastLogicCallNonce(bytes32 _invalidation_id) public view returns (uint256) {
+	function lastLogicCallNonce(bytes32 _invalidation_id) external view returns (uint256) {
 		return state_invalidationMapping[_invalidation_id];
 	}
 
@@ -221,7 +216,7 @@ contract Gravity is ReentrancyGuard {
 		uint256 _currentValsetNonce,
 		// These are arrays of the parts of the current validator's signatures
 		Signature[] memory _sigs
-	) public nonReentrant {
+	) external nonReentrant {
 		// CHECKS
 
 		// Check that the valset nonce is greater than the old one
@@ -317,7 +312,7 @@ contract Gravity is ReentrancyGuard {
 		// a block height beyond which this batch is not valid
 		// used to provide a fee-free timeout
 		uint256 _batchTimeout
-	) public nonReentrant {
+	) external nonReentrant {
 		// CHECKS scoped to reduce stack depth
 		{
 			// Check that the batch nonce is higher than the last nonce for this token
@@ -428,7 +423,7 @@ contract Gravity is ReentrancyGuard {
 		// These are arrays of the parts of the validators signatures
 		Signature[] memory _sigs,
 		LogicCallArgs memory _args
-	) public nonReentrant {
+	) external nonReentrant {
 		// CHECKS scoped to reduce stack depth
 		{
 			// Check that the call has not timed out
@@ -474,24 +469,22 @@ contract Gravity is ReentrancyGuard {
 				"Malformed list of fees"
 			);
 		}
-
-		bytes32 argsHash =
-			keccak256(
-				abi.encode(
-					state_gravityId,
-					// bytes32 encoding of "logicCall"
-					0x6c6f67696343616c6c0000000000000000000000000000000000000000000000,
-					_args.transferAmounts,
-					_args.transferTokenContracts,
-					_args.feeAmounts,
-					_args.feeTokenContracts,
-					_args.logicContractAddress,
-					_args.payload,
-					_args.timeOut,
-					_args.invalidationId,
-					_args.invalidationNonce
-				)
-			);
+		bytes32 argsHash = keccak256(
+			abi.encode(
+				state_gravityId,
+				// bytes32 encoding of "logicCall"
+				0x6c6f67696343616c6c0000000000000000000000000000000000000000000000,
+				_args.transferAmounts,
+				_args.transferTokenContracts,
+				_args.feeAmounts,
+				_args.feeTokenContracts,
+				_args.logicContractAddress,
+				_args.payload,
+				_args.timeOut,
+				_args.invalidationId,
+				_args.invalidationNonce
+			)
+		);
 
 		{
 			// Check that enough current validators have signed off on the transaction batch and valset
@@ -542,7 +535,7 @@ contract Gravity is ReentrancyGuard {
 		address _tokenContract,
 		bytes32 _destination,
 		uint256 _amount
-	) public nonReentrant {
+	) external nonReentrant {
 		IERC20(_tokenContract).safeTransferFrom(msg.sender, address(this), _amount);
 		state_lastEventNonce = state_lastEventNonce.add(1);
 		emit SendToCosmosEvent(
@@ -555,11 +548,11 @@ contract Gravity is ReentrancyGuard {
 	}
 
 	function deployERC20(
-		string memory _cosmosDenom,
-		string memory _name,
-		string memory _symbol,
+		string calldata _cosmosDenom,
+		string calldata _name,
+		string calldata _symbol,
 		uint8 _decimals
-	) public {
+	) external {
 		// Deploy an ERC20 with entire supply granted to Gravity.sol
 		CosmosERC20 erc20 = new CosmosERC20(address(this), _name, _symbol, _decimals);
 
