@@ -228,13 +228,13 @@ async function runTest(opts: {
 describe("submitLogicCall tests", function () {
   it("throws on malformed current valset", async function () {
     await expect(runTest({ malformedCurrentValset: true })).to.be.revertedWith(
-      "Malformed current validator set"
+      "MalformedCurrentValidatorSet()"
     );
   });
 
   it("throws on invalidation nonce not incremented", async function () {
     await expect(runTest({ invalidationNonceNotHigher: true })).to.be.revertedWith(
-      "New invalidation nonce must be greater than the current nonce"
+      "InvalidLogicCallNonce(0, 0)"
     );
   });
 
@@ -242,14 +242,14 @@ describe("submitLogicCall tests", function () {
     await expect(
       runTest({ nonMatchingCurrentValset: true })
     ).to.be.revertedWith(
-      "Supplied current validators and powers do not match checkpoint"
+      "IncorrectCheckpoint()"
     );
   });
 
 
   it("throws on bad validator sig", async function () {
     await expect(runTest({ badValidatorSig: true })).to.be.revertedWith(
-      "Validator signature does not match"
+      "InvalidSignature()"
     );
   });
 
@@ -259,7 +259,7 @@ describe("submitLogicCall tests", function () {
 
   it("throws on not enough signatures", async function () {
     await expect(runTest({ notEnoughPower: true })).to.be.revertedWith(
-      "Submitted validator set signatures do not have enough power"
+      "InsufficientPower(2807621889, 2863311530)"
     );
   });
 
@@ -269,7 +269,7 @@ describe("submitLogicCall tests", function () {
 
   it("throws on timeout", async function () {
     await expect(runTest({ timedOut: true })).to.be.revertedWith(
-      "Timed out"
+      "LogicCallTimedOut()"
     );
   });
 
