@@ -1,5 +1,5 @@
-use abscissa_core::{Application, Command, Options, Runnable};
 use crate::application::APP;
+use abscissa_core::{Application, Command, Options, Runnable};
 use std::path;
 
 #[derive(Command, Debug, Default, Options)]

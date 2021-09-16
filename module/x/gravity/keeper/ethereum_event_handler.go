@@ -2,10 +2,14 @@ package keeper
 
 import (
 	"math/big"
+	"strings"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	clienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
@@ -13,8 +17,9 @@ import (
 
 // EthereumEventProcessor processes `accepted` EthereumEvents
 type EthereumEventProcessor struct {
-	keeper     Keeper
-	bankKeeper types.BankKeeper
+	keeper         Keeper
+	bankKeeper     types.BankKeeper
+	transferKeeper types.TransferKeeper
 }
 
 func (a EthereumEventProcessor) DetectMaliciousSupply(ctx sdk.Context, denom string, amount sdk.Int) (err error) {
@@ -82,7 +87,46 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 		})
 		a.keeper.AfterSignerSetExecutedEvent(ctx, *event)
 		return nil
+	case *types.SendToIBCEvent:
+		// Check if coin is Cosmos-originated asset and get denom
+		isCosmosOriginated, denom := a.keeper.ERC20ToDenomLookup(ctx, event.TokenContract)
+		addr, _ := sdk.AccAddressFromBech32(event.CosmosReceiver)
+		coin := sdk.NewCoin(denom, event.Amount)
+		coins := sdk.Coins{coin}
+		feeAmount := event.Amount.ToDec().Mul(a.keeper.GetParams(ctx).BridgeForwardFee).RoundInt()
+		packetAmount := event.Amount.Sub(feeAmount)
+		feeCoins := sdk.Coins{sdk.NewCoin(denom, feeAmount)}
+		packetCoin := sdk.NewCoin(denom, packetAmount)
 
+		if !isCosmosOriginated {
+			if err := a.DetectMaliciousSupply(ctx, denom, event.Amount); err != nil {
+				return err
+			}
+
+			// if it is not cosmos originated, mint the coins (aka vouchers)
+			if err := a.bankKeeper.MintCoins(ctx, types.ModuleName, coins); err != nil {
+				return sdkerrors.Wrapf(err, "mint vouchers coins: %s", coins)
+			}
+		}
+
+		if err := a.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
+			return err
+		}
+
+		// pay fees
+		if feeAmount.IsPositive() {
+			if err := a.bankKeeper.SendCoinsFromAccountToModule(ctx, addr, authtypes.FeeCollectorName, feeCoins); err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			}
+		}
+
+		// format of this could be {port}/{channel}
+		chanport := strings.Split(event.Channel, "/")
+		if err := a.transferKeeper.SendTransfer(ctx, chanport[0], chanport[1], packetCoin, addr, event.ForwardAddress, clienttypes.NewHeight(0, 0), uint64(time.Second*100)); err != nil {
+			return err
+		}
+
+		return nil
 	default:
 		return sdkerrors.Wrapf(types.ErrInvalid, "event type: %T", event)
 	}
