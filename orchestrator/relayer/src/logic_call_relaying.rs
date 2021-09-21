@@ -24,6 +24,7 @@ pub async fn relay_logic_calls(
     gravity_id: String,
     timeout: Duration,
     gas_multiplier: f32,
+
 ) {
     let our_ethereum_address = ethereum_key.to_public_key().unwrap();
 
