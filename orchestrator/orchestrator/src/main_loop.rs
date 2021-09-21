@@ -338,34 +338,36 @@ pub async fn eth_signer_main_loop(
             }
         }
 
-        let logic_calls =
-            get_oldest_unsigned_logic_call(&mut grpc_client, our_cosmos_address).await;
-        if let Ok(logic_calls) = logic_calls {
-            for logic_call in logic_calls {
-                info!(
-                    "Sending Logic call confirm for {}:{}",
-                    bytes_to_hex_str(&logic_call.invalidation_id),
-                    logic_call.invalidation_nonce
-                );
-                let logic_calls = vec![logic_call];
-                let messages = build::contract_call_tx_confirmation_messages(
-                    &contact,
-                    ethereum_key,
-                    logic_calls,
-                    cosmos_key,
-                    gravity_id.clone(),
-                );
-                msg_sender
-                    .send(messages)
-                    .await
-                    .expect("Could not send messages");
+        match get_oldest_unsigned_logic_call(&mut grpc_client, our_cosmos_address).await {
+            Ok(Some(logic_calls)) => {
+                for logic_call in logic_calls {
+                    info!(
+                        "Sending Logic call confirm for {}:{}",
+                        bytes_to_hex_str(&logic_call.invalidation_id),
+                        logic_call.invalidation_nonce
+                    );
+                    let logic_calls = vec![logic_call];
+                    let messages = build::contract_call_tx_confirmation_messages(
+                        &contact,
+                        ethereum_key,
+                        logic_calls,
+                        cosmos_key,
+                        gravity_id.clone(),
+                    );
+                    msg_sender
+                        .send(messages)
+                        .await
+                        .expect("Could not send messages");
+                }
             }
-        } else if let Err(e) = logic_calls {
-            metrics::UNSIGNED_LOGIC_CALL_FAILURES.inc();
-            info!(
-                "Failed to get unsigned Logic Calls, check your Cosmos gRPC {:?}",
-                e
-            );
+            Ok(None) => info!("No unsigned batches! Everything good!"),
+            Err(e) => {
+                metrics::UNSIGNED_LOGIC_CALL_FAILURES.inc();
+                info!(
+                    "Failed to get unsigned Logic Calls, check your Cosmos gRPC {:?}",
+                    e
+                );
+            }
         }
 
         // a bit of logic that tires to keep things running every LOOP_SPEED seconds exactly
