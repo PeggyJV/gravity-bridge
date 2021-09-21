@@ -16,6 +16,7 @@ use clarity::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
 use clarity::Uint256;
 use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
+use cosmos_gravity::DEFAULT_HD_PATH;
 use deep_space::address::Address as CosmosAddress;
 use deep_space::{coin::Coin, private_key::PrivateKey as CosmosPrivateKey};
 use docopt::Docopt;
@@ -50,6 +51,7 @@ pub fn print_atom(input: Uint256) -> String {
 #[derive(Debug, Deserialize)]
 struct Args {
     flag_cosmos_phrase: String,
+    flag_hd_wallet_path: Option<String>,
     flag_ethereum_key: String,
     flag_cosmos_grpc: String,
     flag_ethereum_rpc: String,
@@ -74,6 +76,7 @@ lazy_static! {
         Options:
             -h --help                   Show this screen.
             --cosmos-phrase=<ckey>      The mnenmonic of the Cosmos account key of the validator
+            --hd-wallet-path=<hdpath>   The hd wallet derivation path [default: \"{}\"].
             --ethereum-key=<ekey>       The Ethereum private key of the sender
             --cosmos-legacy-rpc=<curl>  The Cosmos Legacy RPC url, this will need to be manually enabled
             --cosmos-grpc=<curl>        The Cosmos gRPC url
@@ -96,6 +99,7 @@ lazy_static! {
             Written By: {}
             Version {}",
             env!("CARGO_PKG_NAME"),
+            DEFAULT_HD_PATH,
             env!("CARGO_PKG_NAME"),
             env!("CARGO_PKG_AUTHORS"),
             env!("CARGO_PKG_VERSION"),
@@ -123,8 +127,13 @@ async fn main() {
         // todo actually query metadata for this
         let is_cosmos_originated = !gravity_denom.starts_with("gravity");
         let amount = args.flag_amount.unwrap().parse().unwrap();
-        let cosmos_key = CosmosPrivateKey::from_phrase(&args.flag_cosmos_phrase, "")
-            .expect("Failed to parse cosmos key phrase, does it have a password?");
+        let hd_path = args
+            .flag_hd_wallet_path
+            .as_deref()
+            .unwrap_or(DEFAULT_HD_PATH);
+        let cosmos_key =
+            CosmosPrivateKey::from_hd_wallet_path(hd_path, &args.flag_cosmos_phrase, "")
+                .expect("Failed to parse cosmos key phrase, does it have a password?");
         let cosmos_address = cosmos_key.to_address(&args.flag_cosmos_prefix).unwrap();
 
         println!("Sending from Cosmos address {}", cosmos_address);
