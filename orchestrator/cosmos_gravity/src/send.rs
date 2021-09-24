@@ -40,7 +40,8 @@ pub async fn update_gravity_delegate_addresses(
     let nonce = contact
         .get_account_info(cosmos_key.to_address(&contact.get_prefix()).unwrap())
         .await?
-        .sequence;
+        .get_sequence().unwrap_or( 0 );
+    
 
     let eth_sign_msg = proto::DelegateKeysSignMsg {
         validator_address: our_valoper_address.clone(),
@@ -108,7 +109,7 @@ async fn __send_messages(
 
     let fee = Fee {
         amount: vec![fee],
-        gas_limit: 500_000_000u64 * (messages.len() as u64),
+        gas_limit: 500_000u64 * (messages.len() as u64),
         granter: None,
         payer: None,
     };
@@ -132,22 +133,31 @@ pub async fn send_messages(
 ) -> Result<TxResponse, CosmosGrpcError> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
-    let gas_limit = 500_000_000 * messages.len();
+    let gas_limit = 500_000 * messages.len() as u64;
 
     let fee_amount: f64 = (gas_limit as f64) * gas_price.0;
     let fee_amount: u64 = fee_amount.abs().ceil() as u64;
 
-    let fee_amount = Coin {
-        denom: gas_price.1,
-        amount: fee_amount.into(),
-    };
+    let fee = if fee_amount > 0 {
+        let fee_amount = Coin {
+            denom: gas_price.1,
+            amount: fee_amount.into(),
+        };
 
-    let gas_limit = gas_limit as u64;
-    let fee = Fee {
-        amount: vec![fee_amount],
-        gas_limit,
-        granter: None,
-        payer: None,
+        let gas_limit = gas_limit as u64;
+        Fee {
+            amount: vec![fee_amount],
+            gas_limit,
+            granter: None,
+            payer: None,
+        }
+    } else {
+        Fee {
+            amount: Vec::new(),
+            gas_limit,
+            granter: None,
+            payer: None,
+        }
     };
 
     let args = contact.get_message_args(cosmos_address, fee).await?;

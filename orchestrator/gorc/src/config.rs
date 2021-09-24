@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use signatory::FsKeyStore;
+use std::net::SocketAddr;
 use std::path::Path;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -66,6 +67,8 @@ impl Default for GravitySection {
 pub struct EthereumSection {
     pub key_derivation_path: String,
     pub rpc: String,
+    pub gas_price_multiplier: f32,
+    pub blocks_to_search:u64,
 }
 
 impl Default for EthereumSection {
@@ -73,6 +76,8 @@ impl Default for EthereumSection {
         Self {
             key_derivation_path: "m/44'/60'/0'/0/0".to_owned(),
             rpc: "http://localhost:8545".to_owned(),
+            gas_price_multiplier: 1.0f32,
+            blocks_to_search: 5000,
         }
     }
 }
@@ -122,15 +127,13 @@ impl GasPrice {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct MetricsSection {
-    pub listen_addr: String,
-    pub listen_port: u16,
+    pub listen_addr: SocketAddr,
 }
 
 impl Default for MetricsSection {
     fn default() -> Self {
         Self {
-            listen_addr: "127.0.0.1".to_owned(),
-            listen_port: 3000u16,
+            listen_addr: "127.0.0.1:3000".parse().unwrap(),
         }
     }
 }
