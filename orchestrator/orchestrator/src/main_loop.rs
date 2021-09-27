@@ -82,6 +82,7 @@ pub async fn orchestrator_main_loop(
         gravity_contract_address,
         tx.clone(),
     );
+    //TODO:Ugochi why is d and f metrics main_loop and why is it taking in ip and ports instead of metrics_listen
     let d = metrics_main_loop(ip, port);
 
     if !relayer_opt_out {
@@ -90,6 +91,7 @@ pub async fn orchestrator_main_loop(
             web3,
             grpc_client.clone(),
             gravity_contract_address,
+            eth_gas_multiplier,
         );
         futures::future::join5(a, b, c, d, e).await;
     } else {

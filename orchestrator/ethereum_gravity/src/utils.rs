@@ -147,8 +147,6 @@ pub async fn get_tx_batch_nonce(
     let val = web3
         .simulate_transaction(
             gravity_contract_address,
-            "lastBatchNonce(address)",
-            &[erc20_contract_address.into()],
             0u8.into(),
             payload,
             caller_address,
@@ -179,8 +177,6 @@ pub async fn get_logic_call_nonce(
     let val = web3
         .simulate_transaction(
             gravity_contract_address,
-            "lastLogicCallNonce(bytes32)",
-            &[Token::Bytes(invalidation_id)],
             0u8.into(),
             payload,
             caller_address,
@@ -206,8 +202,6 @@ pub async fn get_event_nonce(
     let val = web3
         .simulate_transaction(
             gravity_contract_address,
-            "state_lastEventNonce()",
-            &[],
             0u8.into(),
             payload,
             caller_address,

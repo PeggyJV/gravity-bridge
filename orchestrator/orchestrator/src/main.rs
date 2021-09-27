@@ -36,6 +36,8 @@ use main_loop::{ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED};
 use relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
 use std::cmp::min;
 
+use std::net::{IpAddr, Ipv4Addr};
+
 #[derive(Debug, Deserialize)]
 struct Args {
     flag_cosmos_phrase: String,
