@@ -75,10 +75,7 @@ pub async fn relay_valsets(
                 // there are two possible encoding problems that could cause the very rare sig failure bug,
                 // one of them is that the hash is incorrect, that's not probable considering that
                 // both Geth and Clarity agree on it. but this lets us check
-                info!(
-                    "New valset hash {} new valset data {:?} old valset data {:?}",
-                    bytes_to_hex_str(&hash),
-                );
+                info!("New valset hash {}", bytes_to_hex_str(&hash),);
 
                 // order valset sigs prepares signatures for submission, notice we compare
                 // them to the 'current' set in the bridge, this confirms for us that the validator set
