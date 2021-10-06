@@ -78,8 +78,6 @@ pub async fn relay_valsets(
                 info!(
                     "New valset hash {} new valset data {:?} old valset data {:?}",
                     bytes_to_hex_str(&hash),
-                    latest_cosmos_valset,
-                    current_eth_valset,
                 );
 
                 // order valset sigs prepares signatures for submission, notice we compare
@@ -105,8 +103,8 @@ pub async fn relay_valsets(
     }
     // TODO(levi) this is ignoring/swallowing errors
 
-    info!("Relaying latest_confirmed {:?}", latest_confirmed);
-    info!("Relaying latest_cosmos_valset {:?}", latest_cosmos_valset);
+    debug!("Relaying latest_confirmed {:?}", latest_confirmed);
+    debug!("Relaying latest_cosmos_valset {:?}", latest_cosmos_valset);
 
     if latest_confirmed.is_none() {
         error!("We don't have a latest confirmed valset?");
