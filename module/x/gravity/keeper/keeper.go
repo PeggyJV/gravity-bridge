@@ -426,6 +426,7 @@ func (k Keeper) GetOutgoingTx(ctx sdk.Context, storeIndex []byte) (out types.Out
 func (k Keeper) SetOutgoingTx(ctx sdk.Context, outgoing types.OutgoingTx) {
 	any, err := types.PackOutgoingTx(outgoing)
 	if err != nil {
+		println("error packing outgoing tx %v %e", outgoing, err)
 		panic(err)
 	}
 	ctx.KVStore(k.storeKey).Set(
