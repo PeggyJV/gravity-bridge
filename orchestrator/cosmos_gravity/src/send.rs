@@ -151,7 +151,7 @@ async fn __send_messages(
     let response = contact
         .send_transaction(msg_bytes, BroadcastMode::Sync)
         .await?;
-
+    dbg!(&response);
     contact.wait_for_tx(response, TIMEOUT).await
 }
 
@@ -199,6 +199,7 @@ pub async fn send_messages(
     let response = contact
         .send_transaction(msg_bytes, BroadcastMode::Sync)
         .await?;
+    dbg!(&response);
 
     contact.wait_for_tx(response, TIMEOUT).await
 }
