@@ -142,6 +142,8 @@ async fn __send_messages(
         denom: gas_price.1,
         amount: fee_amount.into(),
     };
+    dbg!(&fee_amount);
+
     args.fee.amount = vec![fee_amount];
 
 
@@ -190,6 +192,7 @@ pub async fn send_messages(
         denom: gas_price.1,
         amount: fee_amount.into(),
     };
+    dbg!(&fee_amount);
     args.fee.amount = vec![fee_amount];
 
     let msg_bytes = cosmos_key.sign_std_msg(&messages, args, MEMO)?;
