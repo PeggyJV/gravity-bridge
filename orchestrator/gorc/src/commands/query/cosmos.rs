@@ -1,7 +1,7 @@
 //! `cosmos subcommands` subcommand
 
 use crate::{application::APP, prelude::*};
-use abscissa_core::{Command, Clap, Runnable};
+use abscissa_core::{Clap, Command, Runnable};
 
 /// Query cosmos chain
 #[derive(Command, Debug, Clap)]

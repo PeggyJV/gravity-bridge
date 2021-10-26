@@ -3,8 +3,8 @@ use clarity::{abi::Token, utils::bytes_to_hex_str, PrivateKey as EthPrivateKey};
 use clarity::{Address as EthAddress, Uint256};
 use gravity_utils::types::*;
 use gravity_utils::{error::GravityError, message_signatures::encode_logic_call_confirm_hashed};
-use web30::types::SendTxOption;
 use std::{cmp::min, time::Duration};
+use web30::types::SendTxOption;
 use web30::{client::Web3, types::TransactionRequest};
 
 /// this function generates an appropriate Ethereum transaction
@@ -19,7 +19,7 @@ pub async fn send_eth_logic_call(
     gravity_contract_address: EthAddress,
     gravity_id: String,
     our_eth_key: EthPrivateKey,
-    options:  Vec<SendTxOption>,
+    options: Vec<SendTxOption>,
 ) -> Result<(), GravityError> {
     let new_call_nonce = call.invalidation_nonce;
     let eth_address = our_eth_key.to_public_key().unwrap();
@@ -34,7 +34,7 @@ pub async fn send_eth_logic_call(
         gravity_contract_address,
         call.invalidation_id.clone(),
         eth_address,
-        &web3,
+        web3,
     )
     .await?;
     let current_block_height = web3.eth_block_number().await?;
@@ -72,7 +72,7 @@ pub async fn send_eth_logic_call(
         gravity_contract_address,
         call.invalidation_id,
         eth_address,
-        &web3,
+        web3,
     )
     .await?;
     if last_nonce != new_call_nonce {

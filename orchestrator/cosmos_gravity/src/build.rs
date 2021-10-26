@@ -206,7 +206,7 @@ pub fn ethereum_event_messages(
 
     let mut msgs = Vec::new();
     for i in keys.iter() {
-        msgs.push(unordered_msgs.remove_entry(&i).unwrap().1);
+        msgs.push(unordered_msgs.remove_entry(i).unwrap().1);
     }
 
     msgs

@@ -1,6 +1,6 @@
 use super::show::ShowEthKeyCmd;
 use crate::application::APP;
-use abscissa_core::{Application, Command, Clap, Runnable};
+use abscissa_core::{Application, Clap, Command, Runnable};
 use std::path;
 
 /// List all Eth Keys

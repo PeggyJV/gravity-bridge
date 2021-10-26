@@ -20,7 +20,7 @@ pub async fn get_last_checked_block(
     our_cosmos_address: CosmosAddress,
     gravity_contract_address: Address,
     web3: &Web3,
-    blocks_to_search:u128,
+    blocks_to_search: u128,
 ) -> Uint256 {
     let mut grpc_client = grpc_client;
 

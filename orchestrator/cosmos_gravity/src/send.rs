@@ -144,7 +144,6 @@ async fn __send_messages(
     };
     args.fee.amount = vec![fee_amount];
 
-
     let msg_bytes = cosmos_key.sign_std_msg(&messages, args, MEMO)?;
     let response = contact
         .send_transaction(msg_bytes, BroadcastMode::Sync)

@@ -10,11 +10,11 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
 use gravity_utils::types::Valset;
 use gravity_utils::types::{BatchConfirmResponse, TransactionBatch};
-use web30::types::SendTxOption;
 use std::collections::HashMap;
 use std::time::Duration;
 use tonic::transport::Channel;
 use web30::client::Web3;
+use web30::types::SendTxOption;
 
 #[derive(Debug, Clone)]
 struct SubmittableBatch {
@@ -29,6 +29,7 @@ struct SubmittableBatch {
 /// valid to submit given the current chain state. From there we simulate a submission
 /// and if that succeeds and we like the gas cost we complete the relaying process and
 /// actually submit the data to Ethereum
+#[allow(clippy::too_many_arguments)]
 pub async fn relay_batches(
     // the validator set currently in the contract on Ethereum
     current_valset: Valset,
@@ -45,7 +46,6 @@ pub async fn relay_batches(
 
     trace!("possible batches {:?}", possible_batches);
 
-
     submit_batches(
         current_valset,
         ethereum_key,
@@ -58,7 +58,6 @@ pub async fn relay_batches(
     )
     .await;
 }
-
 
 /// This function retrieves the latest batches from the Cosmos module and then
 /// iterates through the signatures for each batch, determining if they are ready
@@ -114,9 +113,8 @@ async fn get_batches_and_signatures(
     for (_key, value) in possible_batches.iter_mut() {
         value.reverse();
     }
-    return possible_batches;
+    possible_batches
 }
-
 
 /// Attempts to submit batches with valid signatures, checking the state
 /// of the Ethereum chain to ensure that it is valid to submit a given batch
@@ -130,6 +128,7 @@ async fn get_batches_and_signatures(
 /// Keep in mind that many other relayers are making this same computation and some may have
 /// different standards for their profit margin, therefore there may be a race not only to
 /// submit individual batches but also batches in different orders
+#[allow(clippy::too_many_arguments)]
 async fn submit_batches(
     current_valset: Valset,
     ethereum_key: EthPrivateKey,
@@ -208,8 +207,7 @@ async fn submit_batches(
                 downcast_to_u128(cost.get_total()).unwrap() as f32
                     / downcast_to_u128(one_eth()).unwrap() as f32
             );
-            let tx_options  = vec![SendTxOption::GasPriceMultiplier(gas_multiplier)];
-
+                let tx_options = vec![SendTxOption::GasPriceMultiplier(gas_multiplier)];
 
                 let res = send_eth_transaction_batch(
                     current_valset.clone(),

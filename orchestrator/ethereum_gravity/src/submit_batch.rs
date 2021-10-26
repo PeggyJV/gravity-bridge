@@ -4,8 +4,8 @@ use clarity::{Address as EthAddress, Uint256};
 use gravity_utils::error::GravityError;
 use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
 use gravity_utils::types::*;
-use web30::types::SendTxOption;
 use std::{cmp::min, time::Duration};
+use web30::types::SendTxOption;
 use web30::{client::Web3, types::TransactionRequest};
 
 /// this function generates an appropriate Ethereum transaction
@@ -20,7 +20,7 @@ pub async fn send_eth_transaction_batch(
     gravity_contract_address: EthAddress,
     gravity_id: String,
     our_eth_key: EthPrivateKey,
-    options:Vec<SendTxOption>,
+    options: Vec<SendTxOption>,
 ) -> Result<(), GravityError> {
     let new_batch_nonce = batch.nonce;
     let eth_address = our_eth_key.to_public_key().unwrap();
@@ -34,7 +34,7 @@ pub async fn send_eth_transaction_batch(
         gravity_contract_address,
         batch.token_contract,
         eth_address,
-        &web3,
+        web3,
     )
     .await?;
     let current_block_height = web3.eth_block_number().await?;
@@ -72,7 +72,7 @@ pub async fn send_eth_transaction_batch(
         gravity_contract_address,
         batch.token_contract,
         eth_address,
-        &web3,
+        web3,
     )
     .await?;
     if last_nonce != new_batch_nonce {
@@ -162,7 +162,7 @@ fn encode_batch_payload(
         amounts,
         destinations,
         fees,
-        new_batch_nonce.clone().into(),
+        new_batch_nonce.into(),
         batch.token_contract.into(),
         batch.batch_timeout.into(),
     ];
