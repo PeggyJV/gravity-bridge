@@ -155,6 +155,11 @@ async fn main() {
         contract_address,
         (1f64, fee_denom.to_owned()),
         &metrics_listen,
+        1f32,
+        5000u128,
+        1.0f64,
+        false,
+        5,
     )
     .await;
 }

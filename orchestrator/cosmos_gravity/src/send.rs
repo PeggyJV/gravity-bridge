@@ -12,6 +12,7 @@ use gravity_proto::cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
 use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use gravity_proto::gravity as proto;
 use prost::Message;
+use std::cmp;
 use std::time::Duration;
 
 pub const MEMO: &str = "Sent using Althea Orchestrator";
@@ -25,7 +26,8 @@ pub async fn update_gravity_delegate_addresses(
     delegate_cosmos_address: Address,
     cosmos_key: CosmosPrivateKey,
     etheruem_key: EthPrivateKey,
-    fee: Coin,
+    gas_price: (f64, String),
+    gas_adjustment: f64,
 ) -> Result<TxResponse, CosmosGrpcError> {
     let our_valoper_address = cosmos_key
         .to_address(&contact.get_prefix())
@@ -58,7 +60,8 @@ pub async fn update_gravity_delegate_addresses(
         eth_signature,
     };
     let msg = Msg::new("/gravity.v1.MsgDelegateKeys", msg);
-    __send_messages(contact, cosmos_key, fee, vec![msg]).await
+
+    __send_messages(contact, cosmos_key, gas_price, vec![msg], gas_adjustment).await
 }
 
 /// Sends tokens from Cosmos to Ethereum. These tokens will not be sent immediately instead
@@ -67,8 +70,10 @@ pub async fn send_to_eth(
     cosmos_key: CosmosPrivateKey,
     destination: EthAddress,
     amount: Coin,
-    fee: Coin,
+    bridge_fee: Coin,
+    gas_price: (f64, String),
     contact: &Contact,
+    gas_adjustment: f64,
 ) -> Result<TxResponse, CosmosGrpcError> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
@@ -76,17 +81,18 @@ pub async fn send_to_eth(
         sender: cosmos_address.to_string(),
         ethereum_recipient: destination.to_string(),
         amount: Some(amount.into()),
-        bridge_fee: Some(fee.clone().into()),
+        bridge_fee: Some(bridge_fee.clone().into()),
     };
     let msg = Msg::new("/gravity.v1.MsgSendToEthereum", msg);
-    __send_messages(contact, cosmos_key, fee, vec![msg]).await
+    __send_messages(contact, cosmos_key, gas_price, vec![msg], gas_adjustment).await
 }
 
 pub async fn send_request_batch_tx(
     cosmos_key: CosmosPrivateKey,
     denom: String,
-    fee: Coin,
+    gas_price: (f64, String),
     contact: &Contact,
+    gas_adjustment: f64,
 ) -> Result<TxResponse, CosmosGrpcError> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let msg_request_batch = proto::MsgRequestBatchTx {
@@ -94,29 +100,52 @@ pub async fn send_request_batch_tx(
         denom,
     };
     let msg = Msg::new("/gravity.v1.MsgRequestBatchTx", msg_request_batch);
-    __send_messages(contact, cosmos_key, fee, vec![msg]).await
+    __send_messages(contact, cosmos_key, gas_price, vec![msg], gas_adjustment).await
 }
 
 // TODO(Levi) teach this branch to accept gas_prices
 async fn __send_messages(
     contact: &Contact,
     cosmos_key: CosmosPrivateKey,
-    fee: Coin,
+    gas_price: (f64, String),
     messages: Vec<Msg>,
+    gas_adjustment: f64,
 ) -> Result<TxResponse, CosmosGrpcError> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
+    let fee_amount = Coin {
+        denom: gas_price.1.clone(),
+        amount: 0u32.into(),
+    };
+
     let fee = Fee {
-        amount: vec![fee],
-        gas_limit: 500_000_000u64 * (messages.len() as u64),
+        amount: vec![fee_amount],
+        gas_limit: 0,
         granter: None,
         payer: None,
     };
 
-    let args = contact.get_message_args(cosmos_address, fee).await?;
+    let mut args = contact.get_message_args(cosmos_address, fee).await?;
+
+    let tx_parts = cosmos_key.build_tx(&messages, args.clone(), MEMO)?;
+    let gas = contact.simulate_tx(tx_parts).await?;
+
+    // multiply the estimated gas by the configured gas adjustment
+    let gas_limit: f64 = (gas.gas_used as f64) * gas_adjustment;
+    args.fee.gas_limit = cmp::max(gas_limit as u64, 500000 * messages.len() as u64);
+
+    // compute the fee as fee=ceil(gas_limit * gas_price)
+
+    let fee_amount: f64 = args.fee.gas_limit as f64 * gas_price.0;
+    let fee_amount: u64 = fee_amount.abs().ceil() as u64;
+    let fee_amount = Coin {
+        denom: gas_price.1,
+        amount: fee_amount.into(),
+    };
+    args.fee.amount = vec![fee_amount];
+
 
     let msg_bytes = cosmos_key.sign_std_msg(&messages, args, MEMO)?;
-
     let response = contact
         .send_transaction(msg_bytes, BroadcastMode::Sync)
         .await?;
@@ -129,31 +158,41 @@ pub async fn send_messages(
     cosmos_key: CosmosPrivateKey,
     gas_price: (f64, String),
     messages: Vec<Msg>,
+    gas_adjustment: f64,
 ) -> Result<TxResponse, CosmosGrpcError> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
-    let gas_limit = 500_000_000 * messages.len();
-
-    let fee_amount: f64 = (gas_limit as f64) * gas_price.0;
-    let fee_amount: u64 = fee_amount.abs().ceil() as u64;
-
     let fee_amount = Coin {
-        denom: gas_price.1,
-        amount: fee_amount.into(),
+        denom: gas_price.1.clone(),
+        amount: 0u32.into(),
     };
 
-    let gas_limit = gas_limit as u64;
     let fee = Fee {
         amount: vec![fee_amount],
-        gas_limit,
+        gas_limit: 0,
         granter: None,
         payer: None,
     };
 
-    let args = contact.get_message_args(cosmos_address, fee).await?;
+    let mut args = contact.get_message_args(cosmos_address, fee).await?;
+
+    let tx_parts = cosmos_key.build_tx(&messages, args.clone(), MEMO)?;
+    let gas = contact.simulate_tx(tx_parts).await?;
+
+    // multiply the estimated gas by the configured gas adjustment
+    let gas_limit: f64 = (gas.gas_used as f64) * gas_adjustment;
+    args.fee.gas_limit = cmp::max(gas_limit as u64, 500000 * messages.len() as u64);
+
+    // compute the fee as fee=ceil(gas_limit * gas_price)
+    let fee_amount: f64 = args.fee.gas_limit as f64 * gas_price.0;
+    let fee_amount: u64 = fee_amount.abs().ceil() as u64;
+    let fee_amount = Coin {
+        denom: gas_price.1,
+        amount: fee_amount.into(),
+    };
+    args.fee.amount = vec![fee_amount];
 
     let msg_bytes = cosmos_key.sign_std_msg(&messages, args, MEMO)?;
-
     let response = contact
         .send_transaction(msg_bytes, BroadcastMode::Sync)
         .await?;
@@ -166,11 +205,23 @@ pub async fn send_main_loop(
     cosmos_key: CosmosPrivateKey,
     gas_price: (f64, String),
     mut rx: tokio::sync::mpsc::Receiver<Vec<Msg>>,
+    gas_adjustment: f64,
+    msg_batch_size: usize,
 ) {
     while let Some(messages) = rx.recv().await {
-        match send_messages(contact, cosmos_key, gas_price.to_owned(), messages).await {
-            Ok(res) => trace!("okay: {:?}", res),
-            Err(err) => error!("fail: {}", err),
+        for msg_chunk in messages.chunks(msg_batch_size) {
+            match send_messages(
+                contact,
+                cosmos_key,
+                gas_price.to_owned(),
+                msg_chunk.to_vec(),
+                gas_adjustment,
+            )
+            .await
+            {
+                Ok(res) => trace!("okay: {:?}", res),
+                Err(err) => error!("fail: {}", err),
+            }
         }
     }
 }

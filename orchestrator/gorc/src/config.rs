@@ -67,6 +67,8 @@ impl Default for GravitySection {
 pub struct EthereumSection {
     pub key_derivation_path: String,
     pub rpc: String,
+    pub gas_price_multiplier: f32,
+    pub blocks_to_search: u64,
 }
 
 impl Default for EthereumSection {
@@ -74,6 +76,8 @@ impl Default for EthereumSection {
         Self {
             key_derivation_path: "m/44'/60'/0'/0/0".to_owned(),
             rpc: "http://localhost:8545".to_owned(),
+            gas_price_multiplier: 1.0f32,
+            blocks_to_search: 5000,
         }
     }
 }
@@ -84,6 +88,8 @@ pub struct CosmosSection {
     pub key_derivation_path: String,
     pub grpc: String,
     pub prefix: String,
+    pub gas_adjustment: f64,
+    pub msg_batch_size: u32,
     pub gas_price: GasPrice,
 }
 
@@ -94,6 +100,8 @@ impl Default for CosmosSection {
             grpc: "http://localhost:9090".to_owned(),
             prefix: "cosmos".to_owned(),
             gas_price: GasPrice::default(),
+            gas_adjustment: 1.0f64,
+            msg_batch_size: 5,
         }
     }
 }

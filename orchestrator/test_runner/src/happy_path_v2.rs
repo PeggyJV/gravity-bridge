@@ -145,7 +145,9 @@ pub async fn happy_path_test_v2(
         user.eth_address,
         send_to_eth_coin,
         get_fee(),
+        (10f64,"footoken".to_string()),
         contact,
+        1.0,
     )
     .await
     .unwrap();
@@ -158,8 +160,9 @@ pub async fn happy_path_test_v2(
     let res = send_request_batch_tx(
         keys[0].validator_key,
         token_to_send_to_eth.clone(),
-        get_fee(),
+        (10f64,"footoken".to_string()),
         contact,
+        1.0,
     )
     .await
     .unwrap();

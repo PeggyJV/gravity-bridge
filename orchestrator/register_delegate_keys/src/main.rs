@@ -112,13 +112,14 @@ async fn main() {
 
     let ethereum_address = ethereum_key.to_public_key().unwrap();
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let res =update_gravity_delegate_addresses(
+    let res = update_gravity_delegate_addresses(
         &contact,
         ethereum_address,
         cosmos_address,
         validator_key,
         ethereum_key,
-        fee.clone(),
+        (0f64,"".to_string()),
+        1.0f64,
     )
     .await
     .expect("Failed to update Eth address");
