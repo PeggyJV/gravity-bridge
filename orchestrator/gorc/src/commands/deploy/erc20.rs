@@ -1,5 +1,5 @@
 use crate::{application::APP, prelude::*};
-use abscissa_core::{Command, Clap, Runnable};
+use abscissa_core::{Clap, Command, Runnable};
 use ethereum_gravity::deploy_erc20::deploy_erc20;
 use gravity_proto::gravity::{DenomToErc20ParamsRequest, DenomToErc20Request};
 use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
@@ -7,6 +7,8 @@ use std::convert::TryFrom;
 use std::process::exit;
 use std::time::{Duration, Instant};
 use tokio::time::sleep as delay_for;
+
+const TIMEOUT: u64 = 500;
 
 /// Deploy Erc20
 #[derive(Command, Debug, Clap)]
@@ -84,31 +86,29 @@ impl Erc20 {
         .expect("Could not deploy ERC20");
 
         println!("We have deployed ERC20 contract {:#066x}, waiting to see if the Cosmos chain choses to adopt it", res);
+        match tokio::time::timeout(std::time::Duration::from_micros(TIMEOUT), async {
+            loop {
+                let req = DenomToErc20Request {
+                    denom: denom.clone(),
+                };
 
-        let start = Instant::now();
-        loop {
-            let req = DenomToErc20Request {
-                denom: denom.clone(),
-            };
+                let res = grpc.denom_to_erc20(req).await;
 
-            let res = grpc.denom_to_erc20(req).await;
-
-            if let Ok(val) = res {
-                let val = val.into_inner();
-                println!(
-                    "Asset {} has accepted new ERC20 representation {}",
-                    denom, val.erc20
-                );
-                exit(0);
+                if let Ok(val) = res {
+                    let val = val.into_inner();
+                    println!(
+                        "Asset {} has accepted new ERC20 representation {}",
+                        denom, val.erc20
+                    );
+                }
             }
-
-            if Instant::now() - start > Duration::from_secs(100) {
-                println!(
-                    "Your ERC20 contract was not adopted, double check the metadata and try again"
-                );
-                exit(1);
-            }
-            delay_for(Duration::from_secs(1)).await;
+        })
+        .await
+        {
+            Ok(_) => println!(
+                "Your ERC20 contract was not adopted, double check the metadata and try again"
+            ),
+            Err(_) => exit(0),
         }
     }
 }
