@@ -121,7 +121,7 @@ pub async fn eth_oracle_main_loop(
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let long_timeout_web30 = Web3::new(&web3.get_url(), Duration::from_secs(120));
+    let long_timeout_web30 = Web3::new(&web3.get_url(), Duration::from_secs(300));
     let mut last_checked_block: Uint256 = get_last_checked_block(
         grpc_client.clone(),
         our_cosmos_address,
@@ -164,9 +164,9 @@ pub async fn eth_oracle_main_loop(
                 delay_for(DELAY).await;
                 continue;
             }
-            (Err(_), Ok(_)) => {
+            (Err(e), Ok(_)) => {
                 metrics::ETHEREUM_UNAVAILABLE.inc();
-                warn!("Could not contact Eth node, trying again");
+                warn!("Could not contact Eth node, trying again. error {}", e);
                 delay_for(DELAY).await;
                 continue;
             }

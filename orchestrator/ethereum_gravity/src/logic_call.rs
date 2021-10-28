@@ -6,6 +6,7 @@ use gravity_utils::{error::GravityError, message_signatures::encode_logic_call_c
 use web30::types::{SendTxOption};
 use std::{cmp::min, time::Duration};
 use web30::{client::Web3, types::TransactionRequest};
+use gravity_utils::error::GravityError::EthereumRestError;
 
 /// this function generates an appropriate Ethereum transaction
 /// to submit the provided logic call
@@ -66,7 +67,16 @@ pub async fn send_eth_logic_call(
         .await?;
     info!("Sent batch update with txid {:#066x}", tx);
 
-    web3.wait_for_transaction(tx.clone(), timeout, None).await?;
+    let response = web3.wait_for_transaction(tx.clone(), timeout, None).await;
+    match response {
+        Ok(res) => {
+            info!("transaction response {:?}", res);
+        }
+        Err(e) => {
+            error!("web3 error {}", e);
+            return Err(EthereumRestError(e));
+        }
+    }
 
     let last_nonce = get_logic_call_nonce(
         gravity_contract_address,
