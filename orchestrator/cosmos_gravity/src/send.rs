@@ -220,7 +220,21 @@ pub async fn send_main_loop(
             .await
             {
                 Ok(res) => trace!("okay: {:?}", res),
-                Err(err) => error!("fail: {}", err),
+                Err(err) => {
+                    let mut msg_types = msg_chunk
+                        .iter()
+                        .map(|msg| prost_types::Any::from(msg.clone()).type_url)
+                        .collect::<Vec<String>>();
+
+                    msg_types.dedup();
+
+                    error!(
+                        "Error during gRPC call to Cosmos containing {} messages of types {:?}: {:?}",
+                        msg_chunk.len(),
+                        msg_types,
+                        err
+                    );
+                }
             }
         }
     }
