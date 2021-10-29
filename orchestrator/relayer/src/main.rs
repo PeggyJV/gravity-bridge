@@ -53,7 +53,7 @@ lazy_static! {
         );
 }
 
-#[actix_rt::main]
+#[tokio::main]
 async fn main() {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     // On Linux static builds we need to probe ssl certs path to be able to

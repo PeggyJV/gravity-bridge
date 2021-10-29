@@ -1543,7 +1543,6 @@ version = "0.2.23"
 dependencies = [
  "abscissa_core",
  "abscissa_tokio",
- "actix-rt 2.2.0",
  "bip32",
  "bytes 1.0.1",
  "clap",
@@ -2366,7 +2365,6 @@ dependencies = [
 name = "orchestrator"
 version = "0.4.1"
 dependencies = [
- "actix-rt 2.2.0",
  "axum",
  "clarity",
  "cosmos_gravity",
@@ -2896,7 +2894,6 @@ checksum = "f497285884f3fcff424ffc933e56d7cbca511def0c9831a7f9b5f6153e3cc89b"
 name = "register_delegate_keys"
 version = "0.4.1"
 dependencies = [
- "actix-rt 2.2.0",
  "clarity",
  "contact",
  "cosmos_gravity",
@@ -2913,6 +2910,7 @@ dependencies = [
  "relayer",
  "serde",
  "serde_derive",
+ "tokio 1.5.0",
  "web30",
 ]
 
@@ -2921,7 +2919,6 @@ name = "relayer"
 version = "0.4.1"
 dependencies = [
  "actix",
- "actix-rt 2.2.0",
  "clarity",
  "cosmos_gravity",
  "deep_space 2.4.7",
