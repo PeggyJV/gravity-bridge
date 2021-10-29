@@ -13,6 +13,7 @@ use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use gravity_proto::gravity as proto;
 use prost::Message;
 use std::cmp;
+use std::collections::HashSet;
 use std::time::Duration;
 
 pub const MEMO: &str = "Sent using Althea Orchestrator";
@@ -144,7 +145,6 @@ async fn __send_messages(
     };
     args.fee.amount = vec![fee_amount];
 
-
     let msg_bytes = cosmos_key.sign_std_msg(&messages, args, MEMO)?;
     let response = contact
         .send_transaction(msg_bytes, BroadcastMode::Sync)
@@ -221,12 +221,10 @@ pub async fn send_main_loop(
             {
                 Ok(res) => trace!("okay: {:?}", res),
                 Err(err) => {
-                    let mut msg_types = msg_chunk
+                    let msg_types = msg_chunk
                         .iter()
                         .map(|msg| prost_types::Any::from(msg.clone()).type_url)
-                        .collect::<Vec<String>>();
-
-                    msg_types.dedup();
+                        .collect::<HashSet<String>>();
 
                     error!(
                         "Error during gRPC call to Cosmos containing {} messages of types {:?}: {:?}",
