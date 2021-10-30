@@ -2,7 +2,8 @@
 name = "gorc"
 authors = []
 version = "0.2.23"
-edition = "2018"
+edition = "2021"
+rust-version = "1.56"
 
 [dependencies]
 clap = "3.0.0-beta.5"
@@ -47,5 +48,5 @@ version = "0.6.0-beta.1"
 # features = ["gimli-backtrace"]
 
 [dev-dependencies]
-abscissa_core = "0.6.0-beta.1"
-once_cell = "1.4"
+abscissa_core = { version = "0.6.0-beta.1", features = ["testing"] }
+once_cell = "1.2"
