@@ -24,66 +24,60 @@ pub async fn relayer_main_loop(
 ) {
     let mut grpc_client = grpc_client;
     loop {
-        let loop_start = Instant::now();
+        let (async_resp, _) = tokio::join!(
+            async {
+                let our_ethereum_address = ethereum_key.to_public_key().unwrap();
+                let current_eth_valset =
+                    find_latest_valset(&mut grpc_client, gravity_contract_address, &web3).await;
+                if current_eth_valset.is_err() {
+                    error!("Could not get current valset! {:?}", current_eth_valset);
+                }
+                let current_eth_valset = current_eth_valset.unwrap();
 
-        let our_ethereum_address = ethereum_key.to_public_key().unwrap();
-        let current_eth_valset =
-            find_latest_valset(&mut grpc_client, gravity_contract_address, &web3).await;
-        if current_eth_valset.is_err() {
-            error!("Could not get current valset! {:?}", current_eth_valset);
-            continue;
-        }
-        let current_eth_valset = current_eth_valset.unwrap();
+                let gravity_id =
+                    get_gravity_id(gravity_contract_address, our_ethereum_address, &web3).await;
+                if gravity_id.is_err() {
+                    error!("Failed to get GravityID, check your Eth node");
+                    return;
+                }
+                let gravity_id = gravity_id.unwrap();
 
-        let gravity_id =
-            get_gravity_id(gravity_contract_address, our_ethereum_address, &web3).await;
-        if gravity_id.is_err() {
-            error!("Failed to get GravityID, check your Eth node");
-            return;
-        }
-        let gravity_id = gravity_id.unwrap();
+                relay_valsets(
+                    current_eth_valset.clone(),
+                    ethereum_key,
+                    &web3,
+                    &mut grpc_client,
+                    gravity_contract_address,
+                    gravity_id.clone(),
+                    LOOP_SPEED,
+                )
+                .await;
 
-        relay_valsets(
-            current_eth_valset.clone(),
-            ethereum_key,
-            &web3,
-            &mut grpc_client,
-            gravity_contract_address,
-            gravity_id.clone(),
-            LOOP_SPEED,
-        )
-        .await;
+                relay_batches(
+                    current_eth_valset.clone(),
+                    ethereum_key,
+                    &web3,
+                    &mut grpc_client,
+                    gravity_contract_address,
+                    gravity_id.clone(),
+                    LOOP_SPEED,
+                    gas_multiplier,
+                )
+                .await;
 
-        relay_batches(
-            current_eth_valset.clone(),
-            ethereum_key,
-            &web3,
-            &mut grpc_client,
-            gravity_contract_address,
-            gravity_id.clone(),
-            LOOP_SPEED,
-            gas_multiplier,
-        )
-        .await;
-
-        relay_logic_calls(
-            current_eth_valset,
-            ethereum_key,
-            &web3,
-            &mut grpc_client,
-            gravity_contract_address,
-            gravity_id.clone(),
-            LOOP_SPEED,
-            gas_multiplier
-        )
-        .await;
-
-        // a bit of logic that tires to keep things running every 5 seconds exactly
-        // this is not required for any specific reason. In fact we expect and plan for
-        // the timing being off significantly
-        let elapsed = Instant::now() - loop_start;
-        if elapsed < LOOP_SPEED {
-            delay_for(LOOP_SPEED - elapsed).await;
-        }
+                relay_logic_calls(
+                    current_eth_valset,
+                    ethereum_key,
+                    &web3,
+                    &mut grpc_client,
+                    gravity_contract_address,
+                    gravity_id.clone(),
+                    LOOP_SPEED,
+                    gas_multiplier,
+                )
+                .await;
+            },
+            tokio::time::sleep(LOOP_SPEED)
+        );
     }
 }

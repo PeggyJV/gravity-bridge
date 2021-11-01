@@ -198,7 +198,7 @@ pub async fn eth_oracle_main_loop(
                     }
                 }
             },
-            tokio::time::sleep(std::time::Duration::from_secs(13))
+            tokio::time::sleep(ETH_ORACLE_LOOP_SPEED)
         );
     }
 }
@@ -365,7 +365,7 @@ pub async fn eth_signer_main_loop(
                     );
                 }
             },
-            tokio::time::sleep(std::time::Duration::from_secs(11))
+            tokio::time::sleep(ETH_SIGNER_LOOP_SPEED)
         );
     }
 }
