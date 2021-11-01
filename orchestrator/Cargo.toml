@@ -5,8 +5,7 @@ name = "gravity_bridge"
 version = "0.1.0"
 authors = ["PeggyJV"]
 license = "Apache-2.0"
-edition = "2021"
-rust-version = "1.56"
+edition = "2018"
 readme = "README.md"
 description = """
 
