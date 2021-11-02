@@ -8,10 +8,6 @@ edition = "2018"
 name = "orchestrator"
 path = "src/lib.rs"
 
-[[bin]]
-name = "orchestrator"
-path = "src/main.rs"
-
 [dependencies]
 relayer = { path = "../relayer" }
 ethereum_gravity = { path = "../ethereum_gravity" }
