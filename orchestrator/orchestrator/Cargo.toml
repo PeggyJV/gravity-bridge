@@ -20,6 +20,7 @@ gravity_utils = { path = "../gravity_utils" }
 gravity_proto = { path = "../gravity_proto" }
 
 deep_space={git="https://github.com/iqlusioninc/deep_space/", branch = "master" }
+ethers = { version = "0.5.4", features=["abigen"] }
 serde_derive = "1.0"
 clarity = "0.4.11"
 docopt = "1"
