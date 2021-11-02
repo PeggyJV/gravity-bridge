@@ -13,10 +13,10 @@ jobs:
   rust-test:
     runs-on: ubuntu-latest
     strategy:
-    matrix:
-    rust:
-    - stable
-    - 1.56
+      matrix:
+        rust:
+        - stable
+        - 1.56
     steps:
       - name: Checkout branch
         uses: actions/checkout@v2
