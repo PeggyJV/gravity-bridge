@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v2
+        with: 
+          toolchain: ${{ matrix.rust }}
       - name: Set up Rust caches
         uses: actions/cache@v2
         id: rust-cache
