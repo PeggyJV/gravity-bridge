@@ -218,15 +218,15 @@ jobs:
         test_type: [
           # working tests
             "OrchestratorKeys",
-            "ArbitraryLogic",
-
+            "ArbitraryLogic"
+        ]
           # non-working tests
 #            "ValidatorOut",
 #            "BatchStress",
 #            "ValsetStress",
 #            "HappyPath",
 #            "V2HappyPath",
-        ]
+
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v2
