@@ -1,9 +1,12 @@
+use std::sync::Arc;
+
 use crate::main_loop::relayer_main_loop;
 use crate::main_loop::LOOP_SPEED;
-use clarity::Address as EthAddress;
-use clarity::PrivateKey as EthPrivateKey;
 use docopt::Docopt;
 use env_logger::Env;
+use ethers::prelude::*;
+use ethers::signers::LocalWallet as EthWallet;
+use ethers::types::Address as EthAddress;
 use gravity_utils::connection_prep::{
     check_for_eth, create_rpc_connections, wait_for_cosmos_node_ready,
 };
@@ -63,7 +66,7 @@ async fn main() {
     let args: Args = Docopt::new(USAGE.as_str())
         .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
-    let ethereum_key: EthPrivateKey = args
+    let ethereum_wallet: EthWallet = args
         .flag_ethereum_key
         .parse()
         .expect("Invalid Ethereum private key!");
@@ -79,25 +82,23 @@ async fn main() {
         LOOP_SPEED,
     )
     .await;
+    let eth_client = SignerMiddleware::new(connections.eth_provider.clone().unwrap(), ethereum_wallet.clone());
+    let eth_client = Arc::new(eth_client);
 
-    let public_eth_key = ethereum_key
-        .to_public_key()
-        .expect("Invalid Ethereum Private Key!");
+    let public_eth_key = eth_client.address();
     info!("Starting Gravity Relayer");
     info!("Ethereum Address: {}", public_eth_key);
 
     let contact = connections.contact.clone().unwrap();
-    let web3 = connections.web3.clone().unwrap();
 
     // check if the cosmos node is syncing, if so wait for it
     // we can't move any steps above this because they may fail on an incorrect
     // historic chain state while syncing occurs
     wait_for_cosmos_node_ready(&contact).await;
-    check_for_eth(public_eth_key, &web3).await;
+    check_for_eth(public_eth_key, &eth_client.provider()).await;
 
     relayer_main_loop(
-        ethereum_key,
-        connections.web3.unwrap(),
+        eth_client,
         connections.grpc.unwrap(),
         gravity_contract_address,
         1f32,

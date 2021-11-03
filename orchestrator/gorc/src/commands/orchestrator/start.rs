@@ -1,6 +1,6 @@
 use crate::{application::APP, prelude::*};
 use abscissa_core::{Clap, Command, Runnable};
-use clarity::address::Address as EthAddress;
+use ethers::{prelude::*, types::Address as EthAddress};
 use gravity_utils::connection_prep::{
     check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
     wait_for_cosmos_node_ready,
@@ -9,7 +9,7 @@ use orchestrator::main_loop::{
     orchestrator_main_loop, ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED,
 };
 use relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
-use std::cmp::min;
+use std::{cmp::min, sync::Arc};
 
 /// Start the Orchestrator
 #[derive(Command, Debug, Clap)]
@@ -34,8 +34,8 @@ impl Runnable for StartCommand {
         let cosmos_key = config.load_deep_space_key(self.cosmos_key.clone());
         let cosmos_address = cosmos_key.to_address(&cosmos_prefix).unwrap();
 
-        let ethereum_key = config.load_clarity_key(self.ethereum_key.clone());
-        let ethereum_address = ethereum_key.to_public_key().unwrap();
+        let ethereum_wallet = config.load_ethers_wallet(self.ethereum_key.clone());
+        let ethereum_address = ethereum_wallet.address();
 
         let contract_address: EthAddress = config
             .gravity
@@ -61,7 +61,8 @@ impl Runnable for StartCommand {
 
             let mut grpc = connections.grpc.clone().unwrap();
             let contact = connections.contact.clone().unwrap();
-            let web3 = connections.web3.clone().unwrap();
+            let eth_client = SignerMiddleware::new(connections.eth_provider.clone().unwrap(), ethereum_wallet.clone());
+            let eth_client = Arc::new(eth_client);
 
             info!("Starting Relayer + Oracle + Ethereum Signer");
             info!("Ethereum Address: {}", ethereum_address);
@@ -83,15 +84,14 @@ impl Runnable for StartCommand {
 
             // check if we actually have the promised balance of tokens to pay fees
             check_for_fee_denom(&fees_denom, cosmos_address, &contact).await;
-            check_for_eth(ethereum_address, &web3).await;
+            check_for_eth(ethereum_address, &eth_client.provider()).await;
 
             let gas_price = config.cosmos.gas_price.as_tuple();
 
             orchestrator_main_loop(
                 cosmos_key,
-                ethereum_key,
-                web3,
                 contact,
+                eth_client,
                 grpc,
                 contract_address,
                 gas_price,

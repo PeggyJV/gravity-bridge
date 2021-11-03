@@ -6,12 +6,12 @@
 
 use super::ValsetMember;
 use crate::error::GravityError;
-use clarity::Address as EthAddress;
 use deep_space::utils::bytes_to_hex_str;
 use deep_space::Address as CosmosAddress;
+use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
 use num256::Uint256;
 use std::unimplemented;
-use web30::types::Log;
 
 /// A parsed struct representing the Ethereum event fired by the Gravity contract
 /// when the validator set is updated.

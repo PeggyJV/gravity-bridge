@@ -7,7 +7,7 @@ use crate::{
     ethereum_event_watcher::check_for_events, metrics::metrics_main_loop,
     oracle_resync::get_last_checked_block,
 };
-use clarity::{address::Address as EthAddress, Uint256};
+use clarity::Uint256;
 use clarity::{utils::bytes_to_hex_str, PrivateKey as EthPrivateKey};
 use cosmos_gravity::send::send_main_loop;
 use cosmos_gravity::{
@@ -22,9 +22,11 @@ use deep_space::error::CosmosGrpcError;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::{Contact, Msg};
 use ethereum_gravity::utils::get_gravity_id;
+use ethers::{prelude::*, types::Address as EthAddress};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use relayer::main_loop::relayer_main_loop;
 use std::convert::TryInto;
+use std::sync::Arc;
 use std::{
     net,
     time::{Duration, Instant},
@@ -33,6 +35,8 @@ use tokio::join;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 use web30::client::Web3;
+
+pub type EthClient = Arc<SignerMiddleware<Provider<Http>, LocalWallet>>;
 
 /// The execution speed governing all loops in this file
 /// which is to say all loops started by Orchestrator main
@@ -47,9 +51,8 @@ pub const ETH_ORACLE_LOOP_SPEED: Duration = Duration::from_secs(13);
 /// of all execution time sleeping this shouldn't be an issue at all.
 pub async fn orchestrator_main_loop(
     cosmos_key: CosmosPrivateKey,
-    ethereum_key: EthPrivateKey,
-    web3: Web3,
     contact: Contact,
+    eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     gas_price: (f64, String),
@@ -73,8 +76,8 @@ pub async fn orchestrator_main_loop(
 
     let b = eth_oracle_main_loop(
         cosmos_key,
-        web3.clone(),
         contact.clone(),
+        eth_client.clone(),
         grpc_client.clone(),
         gravity_contract_address,
         blocks_to_search,
@@ -83,9 +86,8 @@ pub async fn orchestrator_main_loop(
 
     let c = eth_signer_main_loop(
         cosmos_key,
-        ethereum_key,
-        web3.clone(),
         contact.clone(),
+        eth_client.clone(),
         grpc_client.clone(),
         gravity_contract_address,
         tx.clone(),
@@ -95,8 +97,7 @@ pub async fn orchestrator_main_loop(
 
     if !relayer_opt_out {
         let e = relayer_main_loop(
-            ethereum_key,
-            web3,
+            eth_client.clone(),
             grpc_client.clone(),
             gravity_contract_address,
             eth_gas_multiplier,
@@ -113,8 +114,8 @@ const DELAY: Duration = Duration::from_secs(5);
 /// and ferried over to Cosmos where they will be used to issue tokens or process batches.
 pub async fn eth_oracle_main_loop(
     cosmos_key: CosmosPrivateKey,
-    web3: Web3,
     contact: Contact,
+    eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     blocks_to_search: u128,
@@ -218,9 +219,8 @@ pub async fn eth_oracle_main_loop(
 /// valid and signed off on.
 pub async fn eth_signer_main_loop(
     cosmos_key: CosmosPrivateKey,
-    ethereum_key: EthPrivateKey,
-    web3: Web3,
     contact: Contact,
+    eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
     contract_address: EthAddress,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
@@ -388,8 +388,8 @@ pub async fn eth_signer_main_loop(
     }
 }
 
-pub async fn check_for_eth(orchestrator_address: EthAddress, web3: Web3) {
-    let balance = web3.eth_get_balance(orchestrator_address).await.unwrap();
+pub async fn check_for_eth(orchestrator_address: EthAddress, eth_client: EthClient) {
+    let balance = eth_client.get_balance(orchestrator_address, None).await.unwrap();
     if balance == 0u8.into() {
         warn!("You don't have any Ethereum! You will need to send some to {} for this program to work. Dust will do for basic operations, more info about average relaying costs will be presented as the program runs", orchestrator_address);
     }

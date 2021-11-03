@@ -4,11 +4,14 @@
 use clarity::Error as ClarityError;
 use deep_space::error::AddressError as CosmosAddressError;
 use deep_space::error::CosmosGrpcError;
+use ethers::prelude::*;
+use ethers::prelude::signer::SignerMiddlewareError;
 use num_bigint::ParseBigIntError;
 use std::fmt::{self, Debug};
 use tokio::time::error::Elapsed;
 use tonic::Status;
-use web30::jsonrpc::error::Web3Error;
+
+pub type EthClientError = SignerMiddlewareError<Provider<Http>, LocalWallet>;
 
 #[derive(Debug)]
 #[allow(clippy::large_enum_variant)]
@@ -16,7 +19,7 @@ pub enum GravityError {
     InvalidBigInt(ParseBigIntError),
     CosmosGrpcError(CosmosGrpcError),
     CosmosAddressError(CosmosAddressError),
-    EthereumRestError(Web3Error),
+    EthereumRestError(EthClientError),
     InvalidBridgeStateError(String),
     FailedToUpdateValset,
     EthereumContractError(String),
@@ -80,8 +83,8 @@ impl From<ClarityError> for GravityError {
     }
 }
 
-impl From<Web3Error> for GravityError {
-    fn from(error: Web3Error) -> Self {
+impl From<EthClientError> for GravityError {
+    fn from(error: EthClientError) -> Self {
         GravityError::EthereumRestError(error)
     }
 }

@@ -1,3 +1,4 @@
+use ethers::signers::LocalWallet as EthWallet;
 use serde::{Deserialize, Serialize};
 use signatory::FsKeyStore;
 use std::net::SocketAddr;
@@ -25,6 +26,10 @@ impl GorcConfig {
     pub fn load_clarity_key(&self, name: String) -> clarity::PrivateKey {
         let key = self.load_secret_key(name).to_bytes();
         return clarity::PrivateKey::from_slice(&key).expect("Could not convert key");
+    }
+
+    pub fn load_ethers_wallet(&self, name: String) -> EthWallet {
+        EthWallet::from(self.load_secret_key(name))
     }
 
     pub fn load_deep_space_key(&self, name: String) -> deep_space::private_key::PrivateKey {

@@ -1,10 +1,11 @@
+use crate::main_loop::EthClient;
 use clarity::{Address, Uint256};
 use ethereum_gravity::utils::downcast_uint256;
+use ethers::prelude::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::types::ValsetUpdatedEvent;
 use gravity_utils::{error::GravityError, types::Valset};
 use tonic::transport::Channel;
-use web30::client::Web3;
 
 /// This function finds the latest valset on the Gravity contract by looking back through the event
 /// history and finding the most recent ValsetUpdatedEvent. Most of the time this will be very fast
@@ -14,11 +15,11 @@ use web30::client::Web3;
 pub async fn find_latest_valset(
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: Address,
-    web3: &Web3,
+    eth_client: EthClient,
 ) -> Result<Valset, GravityError> {
-    const BLOCKS_TO_SEARCH: u128 = 5_000u128;
-    let latest_block = web3.eth_block_number().await?;
-    let mut current_block: Uint256 = latest_block.clone();
+    const BLOCKS_TO_SEARCH: u64 = 5_000u64;
+    let latest_block = eth_client.get_block_number().await?;
+    let mut current_block = latest_block.clone();
 
     while current_block.clone() > 0u8.into() {
         trace!(
@@ -30,14 +31,14 @@ pub async fn find_latest_valset(
         } else {
             current_block.clone() - BLOCKS_TO_SEARCH.into()
         };
-        let mut all_valset_events = web3
-            .check_for_events(
-                end_search.clone(),
-                Some(current_block.clone()),
-                vec![gravity_contract_address],
-                vec!["ValsetUpdatedEvent(uint256,uint256,address[],uint256[])"],
-            )
-            .await?;
+
+        let filter = Filter::new()
+            .select(end_block..current_block)
+            .address(gravity_contract_address)
+            .event("ValsetUpdatedEvent(uint256,uint256,address[],uint256[])");
+
+        let mut all_valset_events = eth_client.get_logs(&filter).await?;
+
         // by default the lowest found valset goes first, we want the highest.
         all_valset_events.reverse();
 
