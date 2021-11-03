@@ -2146,6 +2146,7 @@ dependencies = [
  "deep_space 2.4.7",
  "env_logger",
  "ethereum_gravity",
+ "ethers",
  "gravity_proto",
  "gravity_utils",
  "k256",
