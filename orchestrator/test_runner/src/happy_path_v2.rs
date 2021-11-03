@@ -64,34 +64,42 @@ pub async fn happy_path_test_v2(
         "Successfully deployed new ERC20 representing FooToken on Cosmos with event nonce {}",
         ending_event_nonce
     );
-
-    let start = Instant::now();
     // the erc20 representing the cosmos asset on Ethereum
     let mut erc20_contract = None;
-    while Instant::now() - start < TOTAL_TIMEOUT {
-        let res = grpc_client
-            .denom_to_erc20(DenomToErc20Request {
-                denom: token_to_send_to_eth.clone(),
-            })
-            .await;
-        if let Ok(res) = res {
-            let erc20 = res.into_inner().erc20;
-            info!(
-                "Successfully adopted {} token contract of {}",
-                token_to_send_to_eth, erc20
-            );
-            erc20_contract = Some(erc20);
-            break;
+    match tokio::time::timeout(TOTAL_TIMEOUT, async {
+        loop {
+            let res = grpc_client
+                .denom_to_erc20(DenomToErc20Request {
+                    denom: token_to_send_to_eth.clone(),
+                })
+                .await;
+
+            if let Ok(res) = res {
+                let erc20 = res.into_inner().erc20;
+                erc20_contract = Some(erc20);
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         }
-        delay_for(Duration::from_secs(1)).await;
+        
+    }).await {
+        Ok(_) => {
+            info!(
+                "Successfully adopted {} token contract",
+                token_to_send_to_eth
+            );
+        },
+        Err(_) => {
+            panic!(
+                "Cosmos did not adopt the ERC20 contract for {} it must be invalid in some way",
+                token_to_send_to_eth
+            );
+        },
     }
-    if erc20_contract.is_none() {
-        panic!(
-            "Cosmos did not adopt the ERC20 contract for {} it must be invalid in some way",
-            token_to_send_to_eth
-        );
-    }
+
+
     let erc20_contract: EthAddress = erc20_contract.unwrap().parse().unwrap();
+    
 
     // one foo token
     let amount_to_bridge: Uint256 = 1_000_000u64.into();
@@ -170,9 +178,10 @@ pub async fn happy_path_test_v2(
     info!("Sent batch request to move things along");
 
     info!("Waiting for batch to be signed and relayed to Ethereum");
-    let start = Instant::now();
-    while Instant::now() - start < TOTAL_TIMEOUT {
-        let balance = web30
+
+    match tokio::time::timeout(TOTAL_TIMEOUT, async {
+        loop {
+            let balance = web30
             .get_erc20_balance(erc20_contract, user.eth_address)
             .await;
         if balance.is_err() {
@@ -180,10 +189,6 @@ pub async fn happy_path_test_v2(
         }
         let balance = balance.unwrap();
         if balance == amount_to_bridge {
-            info!(
-                "Successfully bridged {} Cosmos asset {} to Ethereum!",
-                amount_to_bridge, token_to_send_to_eth
-            );
             break;
         } else if balance != 0u8.into() {
             panic!(
@@ -191,6 +196,19 @@ pub async fn happy_path_test_v2(
                 amount_to_bridge, token_to_send_to_eth, balance
             );
         }
-        delay_for(Duration::from_secs(1)).await;
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        }
+    }).await {
+        Ok(_) => {
+            info!(
+                "Successfully bridged {} Cosmos asset {} to Ethereum!",
+                amount_to_bridge, token_to_send_to_eth
+            );
+        },
+        Err(_) => {
+            panic!(
+                "An error occured",
+            );
+        },
     }
 }
