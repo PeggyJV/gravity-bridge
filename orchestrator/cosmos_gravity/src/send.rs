@@ -13,6 +13,7 @@ use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use gravity_proto::gravity as proto;
 use prost::Message;
 use std::cmp;
+use std::collections::HashSet;
 use std::time::Duration;
 
 pub const MEMO: &str = "Sent using Althea Orchestrator";
@@ -75,6 +76,13 @@ pub async fn send_to_eth(
     contact: &Contact,
     gas_adjustment: f64,
 ) -> Result<TxResponse, CosmosGrpcError> {
+    if amount.denom != bridge_fee.denom {
+        return Err(CosmosGrpcError::BadInput(format!(
+            "The amount ({}) and bridge_fee ({}) denominations do not match.",
+            amount.denom, bridge_fee.denom,
+        )))
+    }
+
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
     let msg = proto::MsgSendToEthereum {
@@ -143,7 +151,6 @@ async fn __send_messages(
         amount: fee_amount.into(),
     };
     args.fee.amount = vec![fee_amount];
-
 
     let msg_bytes = cosmos_key.sign_std_msg(&messages, args, MEMO)?;
     let response = contact
@@ -220,7 +227,19 @@ pub async fn send_main_loop(
             .await
             {
                 Ok(res) => trace!("okay: {:?}", res),
-                Err(err) => error!("fail: {}", err),
+                Err(err) => {
+                    let msg_types = msg_chunk
+                        .iter()
+                        .map(|msg| prost_types::Any::from(msg.clone()).type_url)
+                        .collect::<HashSet<String>>();
+
+                    error!(
+                        "Error during gRPC call to Cosmos containing {} messages of types {:?}: {:?}",
+                        msg_chunk.len(),
+                        msg_types,
+                        err
+                    );
+                }
             }
         }
     }

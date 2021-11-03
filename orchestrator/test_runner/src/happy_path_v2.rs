@@ -97,7 +97,6 @@ pub async fn happy_path_test_v2(
         },
     }
 
-
     let erc20_contract: EthAddress = erc20_contract.unwrap().parse().unwrap();
     
 
