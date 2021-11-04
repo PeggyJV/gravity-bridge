@@ -1,6 +1,7 @@
-//! This file contains the main loops for two distinct functions that just happen to reside int his same binary for ease of use. The Ethereum Signer and the Ethereum Oracle are both roles in Gravity
-//! that can only be run by a validator. This single binary the 'Orchestrator' runs not only these two rules but also the untrusted role of a relayer, that does not need any permissions and has it's
-//! own crate and binary so that anyone may run it.
+//! This file contains the main loops for two distinct functions that just happen to reside in this same binary for ease of use.
+//! The Ethereum Signer and the Ethereum Oracle are both roles in Gravity that can only be run by a validator. This single binary
+//! the 'Orchestrator' runs not only these two roles but also the untrusted role of a relayer, that does not need any permissions
+//! and has its own crate and binary so that anyone may run it.
 
 use crate::metrics;
 use crate::{
