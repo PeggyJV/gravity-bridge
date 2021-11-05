@@ -37,12 +37,13 @@ pub async fn find_latest_valset(
         if logged_event.is_some() {
             trace!("Found event {:?}", logged_event);
 
-            match ValsetUpdatedEvent::from_log(logged_event.unwrap()) {
+            let valset_updated_event = ValsetUpdatedEvent::from_log(logged_event.unwrap());
+            if let Result()
+             {
                 Ok(valset_updated_event) => {
-                    let downcast_nonce = panic::catch_unwind(|| valset_updated_event.event_nonce.as_u64());
-                    if let Err(_) = downcast_nonce {
-                        error!("ValsetUpdatedEvent contained nonce larger than u64: {:?}", valset_updated_event);
-                        continue;
+                    let downcast_nonce = downcast_to_u64(valset_updated_event.valset_nonce);
+                    if downcast_nonce.is_none() {
+                        error!("ValsetUpdatedEvent has nonce larger than u64: {:?}", valset_updated_event);
                     }
 
                     let latest_eth_valset = Valset {
@@ -53,6 +54,7 @@ pub async fn find_latest_valset(
                         cosmos_gravity::query::get_valset(grpc_client, latest_eth_valset.nonce)
                             .await?;
                     check_if_valsets_differ(cosmos_chain_valset, &latest_eth_valset);
+
                     return Ok(latest_eth_valset);
                 }
                 Err(e) => error!("Got valset event that we can't parse {}", e),

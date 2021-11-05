@@ -1,28 +1,12 @@
 use clarity::abi::{Token, encode_call};
 use clarity::Uint256;
 use clarity::{abi::encode_tokens, Address as EthAddress};
+use ethers::prelude::*;
 use gravity_utils::error::GravityError;
 use gravity_utils::types::*;
 use sha3::{Digest, Keccak256};
-use std::u128::MAX as U128MAX;
-use std::u64::MAX as U64MAX;
+use std::panic;
 use web30::{client::Web3, jsonrpc::error::Web3Error};
-
-// pub fn get_correct_sig_for_address(
-//     address: CosmosAddress,
-//     confirms: &[ValsetConfirmResponse],
-// ) -> (Uint256, Uint256, Uint256) {
-//     for sig in confirms {
-//         if sig.eth_signer == address {
-//             return (
-//                 sig.eth_signature.v.clone(),
-//                 sig.eth_signature.r.clone(),
-//                 sig.eth_signature.s.clone(),
-//             );
-//         }
-//     }
-//     panic!("Could not find that address!");
-// }
 
 pub fn get_checkpoint_abi_encode(
     valset: &Valset,
@@ -44,19 +28,17 @@ pub fn get_checkpoint_hash(valset: &Valset, gravity_id: &str) -> Result<Vec<u8>,
     Ok(locally_computed_digest.to_vec())
 }
 
-pub fn downcast_to_u128(input: Uint256) -> Option<u128> {
-    if input >= U128MAX.into() {
-        None
-    } else {
-        let mut val = input.to_bytes_be();
-        // pad to 8 bytes
-        while val.len() < 16 {
-            val.insert(0, 0);
-        }
-        let mut lower_bytes: [u8; 16] = [0; 16];
-        // get the 'lowest' 16 bytes from a 256 bit integer
-        lower_bytes.copy_from_slice(&val[0..val.len()]);
-        Some(u128::from_be_bytes(lower_bytes))
+pub fn downcast_to_u64(input: U256) -> Option<u64> {
+    match panic::catch_unwind(|| input.as_u64()) {
+        Ok(downcasted) => Some(downcasted),
+        Err(_) => None,
+    }
+}
+
+pub fn downcast_to_u128(input: U256) -> Option<u128> {
+    match panic::catch_unwind(|| input.as_u128()) {
+        Ok(downcasted) => Some(downcasted),
+        Err(_) => None,
     }
 }
 
@@ -64,14 +46,14 @@ pub fn downcast_to_u128(input: Uint256) -> Option<u128> {
 fn test_downcast_nonce() {
     let mut i = 0u64;
     while i < 100_000 {
-        assert_eq!(i, downcast_uint256(i.into()).unwrap());
+        assert_eq!(i, downcast_to_u64(i.into()).unwrap());
         i += 1
     }
     let mut i: u64 = std::u32::MAX.into();
     i -= 100;
     let end = i + 100_000;
     while i < end {
-        assert_eq!(i, downcast_uint256(i.into()).unwrap());
+        assert_eq!(i, downcast_to_u64(i.into()).unwrap());
         i += 1
     }
 }
@@ -110,7 +92,7 @@ pub async fn get_valset_nonce(
     // worth of transactions. But we properly check and
     // handle that case here.
     let real_num = Uint256::from_bytes_be(&val);
-    Ok(downcast_uint256(real_num).expect("Valset nonce overflow! Bridge Halt!"))
+    Ok(downcast_to_u64(real_num).expect("Valset nonce overflow! Bridge Halt!"))
 }
 
 /// Gets the latest transaction batch nonce
@@ -136,7 +118,7 @@ pub async fn get_tx_batch_nonce(
     // worth of transactions. But we properly check and
     // handle that case here.
     let real_num = Uint256::from_bytes_be(&val);
-    Ok(downcast_uint256(real_num).expect("TxBatch nonce overflow! Bridge Halt!"))
+    Ok(downcast_to_u64(real_num).expect("TxBatch nonce overflow! Bridge Halt!"))
 }
 
 /// Gets the latest transaction batch nonce
@@ -166,7 +148,7 @@ pub async fn get_logic_call_nonce(
     // worth of transactions. But we properly check and
     // handle that case here.
     let real_num = Uint256::from_bytes_be(&val);
-    Ok(downcast_uint256(real_num).expect("LogicCall nonce overflow! Bridge Halt!"))
+    Ok(downcast_to_u64(real_num).expect("LogicCall nonce overflow! Bridge Halt!"))
 }
 
 /// Gets the latest transaction batch nonce
@@ -191,7 +173,7 @@ pub async fn get_event_nonce(
     // worth of transactions. But we properly check and
     // handle that case here.
     let real_num = Uint256::from_bytes_be(&val);
-    Ok(downcast_uint256(real_num).expect("EventNonce nonce overflow! Bridge Halt!"))
+    Ok(downcast_to_u64(real_num).expect("EventNonce nonce overflow! Bridge Halt!"))
 }
 
 /// Gets the gravityID
