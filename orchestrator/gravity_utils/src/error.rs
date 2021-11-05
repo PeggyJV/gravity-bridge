@@ -11,15 +11,13 @@ use std::fmt::{self, Debug};
 use tokio::time::error::Elapsed;
 use tonic::Status;
 
-pub type EthClientError = SignerMiddlewareError<Provider<Http>, LocalWallet>;
-
 #[derive(Debug)]
 #[allow(clippy::large_enum_variant)]
 pub enum GravityError {
     InvalidBigInt(ParseBigIntError),
     CosmosGrpcError(CosmosGrpcError),
     CosmosAddressError(CosmosAddressError),
-    EthereumRestError(EthClientError),
+    EthereumRestError(SignerMiddlewareError<Provider<Http>, LocalWallet>),
     InvalidBridgeStateError(String),
     FailedToUpdateValset,
     EthereumContractError(String),
@@ -83,8 +81,8 @@ impl From<ClarityError> for GravityError {
     }
 }
 
-impl From<EthClientError> for GravityError {
-    fn from(error: EthClientError) -> Self {
+impl From<SignerMiddlewareError<Provider<Http>, LocalWallet>> for GravityError {
+    fn from(error: SignerMiddlewareError<Provider<Http>, LocalWallet>) -> Self {
         GravityError::EthereumRestError(error)
     }
 }
