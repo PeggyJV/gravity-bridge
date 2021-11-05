@@ -13,6 +13,12 @@ use ethers::types::Address as EthAddress;
 use num256::Uint256;
 use std::unimplemented;
 
+pub const ERC20_DEPLOYED_EVENT_STR: &'static str = "ERC20DeployedEvent(string,address,string,string,uint8,uint256)";
+pub const LOGIC_CALL_EVENT_STR: &'static str = "LogicCallEvent(bytes32,uint256,bytes,uint256)";
+pub const SEND_TO_COSMOS_EVENT_STR: &'static str = "SendToCosmosEvent(address,address,bytes32,uint256,uint256)";
+pub const TRANSACTION_BATCH_EXECUTED_EVENT_STR: &'static str = "TransactionBatchExecutedEvent(uint256,address,uint256)";
+pub const VALSET_UPDATED_EVENT_STR: &'static str = "ValsetUpdatedEvent(uint256,uint256,address[],uint256[])";
+
 /// A parsed struct representing the Ethereum event fired by the Gravity contract
 /// when the validator set is updated.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, Eq, PartialEq, Hash)]

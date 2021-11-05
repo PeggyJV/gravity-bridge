@@ -1,13 +1,12 @@
 use crate::main_loop::EthClient;
 use clarity::{Address, Uint256};
+use ethereum_gravity::utils::downcast_to_u64;
 use ethers::prelude::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::types::ValsetUpdatedEvent;
+use gravity_utils::types::{VALSET_UPDATED_EVENT_STR, ValsetUpdatedEvent};
 use gravity_utils::{error::GravityError, types::Valset};
 use std::panic;
 use tonic::transport::Channel;
-
-pub const VALSET_UPDATED_EVENT_STRING: str = "ValsetUpdatedEvent(uint256,uint256,address[],uint256[])";
 
 /// This function finds the latest valset on the Gravity contract by looking back through the event
 /// history and finding the most recent ValsetUpdatedEvent. Most of the time this will be very fast
@@ -24,7 +23,7 @@ pub async fn find_latest_valset(
 
     let mut filter = Filter::new()
         .address(gravity_contract_address)
-        .event(&VALSET_UPDATED_EVENT_STRING);
+        .event(&VALSET_UPDATED_EVENT_STR);
     let mut end_filter_block = eth_client.get_block_number().await?;
 
     while end_filter_block > ZERO {

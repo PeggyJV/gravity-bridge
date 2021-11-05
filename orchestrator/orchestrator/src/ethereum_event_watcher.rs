@@ -13,6 +13,8 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::{
     error::GravityError,
     types::{
+        ERC20_DEPLOYED_EVENT_STR, LOGIC_CALL_EVENT_STR, SEND_TO_COSMOS_EVENT_STR,
+        TRANSACTION_BATCH_EXECUTED_EVENT_STR, VALSET_UPDATED_EVENT_STR,
         Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent,
         TransactionBatchExecutedEvent, ValsetUpdatedEvent,
     },
@@ -44,7 +46,7 @@ pub async fn check_for_events(
             starting_block.clone(),
             Some(latest_block.clone()),
             vec![gravity_contract_address],
-            vec!["SendToCosmosEvent(address,address,bytes32,uint256,uint256)"],
+            vec![SEND_TO_COSMOS_EVENT_STR],
         )
         .await;
     debug!("Deposit events detected {:?}", deposits);
@@ -54,7 +56,7 @@ pub async fn check_for_events(
             starting_block.clone(),
             Some(latest_block.clone()),
             vec![gravity_contract_address],
-            vec!["TransactionBatchExecutedEvent(uint256,address,uint256)"],
+            vec![TRANSACTION_BATCH_EXECUTED_EVENT_STR],
         )
         .await;
     debug!("Batche events detected {:?}", batches);
@@ -64,7 +66,7 @@ pub async fn check_for_events(
             starting_block.clone(),
             Some(latest_block.clone()),
             vec![gravity_contract_address],
-            vec!["ValsetUpdatedEvent(uint256,uint256,address[],uint256[])"],
+            vec![VALSET_UPDATED_EVENT_STR],
         )
         .await;
     debug!("Valset events detected {:?}", valsets);
@@ -74,7 +76,7 @@ pub async fn check_for_events(
             starting_block.clone(),
             Some(latest_block.clone()),
             vec![gravity_contract_address],
-            vec!["ERC20DeployedEvent(string,address,string,string,uint8,uint256)"],
+            vec![ERC20_DEPLOYED_EVENT_STR],
         )
         .await;
     debug!("ERC20 events detected {:?}", erc20_deployed);
@@ -84,7 +86,7 @@ pub async fn check_for_events(
             starting_block.clone(),
             Some(latest_block.clone()),
             vec![gravity_contract_address],
-            vec!["LogicCallEvent(bytes32,uint256,bytes,uint256)"],
+            vec![LOGIC_CALL_EVENT_STR],
         )
         .await;
     debug!("Logic call events detected {:?}", logic_calls);

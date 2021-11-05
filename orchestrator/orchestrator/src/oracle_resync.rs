@@ -2,8 +2,10 @@ use clarity::{Address, Uint256};
 use deep_space::address::Address as CosmosAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::types::{
-    Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent, TransactionBatchExecutedEvent,
-    ValsetUpdatedEvent,
+    ERC20_DEPLOYED_EVENT_STR, LOGIC_CALL_EVENT_STR, SEND_TO_COSMOS_EVENT_STR,
+    TRANSACTION_BATCH_EXECUTED_EVENT_STR, VALSET_UPDATED_EVENT_STR,
+    Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent,
+    TransactionBatchExecutedEvent, ValsetUpdatedEvent,
 };
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
@@ -54,7 +56,7 @@ pub async fn get_last_checked_block(
                 end_search.clone(),
                 Some(current_block.clone()),
                 vec![gravity_contract_address],
-                vec!["TransactionBatchExecutedEvent(uint256,address,uint256)"],
+                vec![TRANSACTION_BATCH_EXECUTED_EVENT_STR],
             )
             .await;
         let send_to_cosmos_events = web3
@@ -62,7 +64,7 @@ pub async fn get_last_checked_block(
                 end_search.clone(),
                 Some(current_block.clone()),
                 vec![gravity_contract_address],
-                vec!["SendToCosmosEvent(address,address,bytes32,uint256,uint256)"],
+                vec![SEND_TO_COSMOS_EVENT_STR],
             )
             .await;
         let erc20_deployed_events = web3
@@ -70,7 +72,7 @@ pub async fn get_last_checked_block(
                 end_search.clone(),
                 Some(current_block.clone()),
                 vec![gravity_contract_address],
-                vec!["ERC20DeployedEvent(string,address,string,string,uint8,uint256)"],
+                vec![ERC20_DEPLOYED_EVENT_STR],
             )
             .await;
         let logic_call_executed_events = web3
@@ -78,7 +80,7 @@ pub async fn get_last_checked_block(
                 end_search.clone(),
                 Some(current_block.clone()),
                 vec![gravity_contract_address],
-                vec!["LogicCallEvent(bytes32,uint256,bytes,uint256)"],
+                vec![LOGIC_CALL_EVENT_STR],
             )
             .await;
 
@@ -92,7 +94,7 @@ pub async fn get_last_checked_block(
                 end_search.clone(),
                 Some(current_block.clone()),
                 vec![gravity_contract_address],
-                vec!["ValsetUpdatedEvent(uint256,uint256,address[],uint256[])"],
+                vec![VALSET_UPDATED_EVENT_STR],
             )
             .await;
         if batch_events.is_err()
