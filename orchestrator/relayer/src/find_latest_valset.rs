@@ -32,18 +32,21 @@ pub async fn find_latest_valset(
         let start_filter_block = end_filter_block.saturating_sub(BLOCKS_TO_SEARCH);
         filter.select(start_filter_block..end_filter_block);
 
-        let logged_event = eth_client.get_logs(&filter).await?.last(); // we only need the most recent (last) one
+        let mut filtered_logged_events = eth_client.get_logs(&filter).await?;
+        filtered_logged_events.reverse(); // we'll process these in reverse order to start from the most recent and work backwards
 
-        if logged_event.is_some() {
+        // TODO(bolten): the original logic only checked one valset event, even if there may have been multiple within the
+        // filtered blockspace...need more clarity on how severe an error it is if one of these events is malformed, and if
+        // we should return early with an error or just log it the way the previous version did
+        for logged_event in filtered_logged_events {
             trace!("Found event {:?}", logged_event);
 
-            let valset_updated_event = ValsetUpdatedEvent::from_log(logged_event.unwrap());
-            if let Result()
-             {
+            match ValsetUpdatedEvent::from_log(logged_event.unwrap()) {
                 Ok(valset_updated_event) => {
                     let downcast_nonce = downcast_to_u64(valset_updated_event.valset_nonce);
                     if downcast_nonce.is_none() {
                         error!("ValsetUpdatedEvent has nonce larger than u64: {:?}", valset_updated_event);
+                        continue;
                     }
 
                     let latest_eth_valset = Valset {
@@ -60,6 +63,7 @@ pub async fn find_latest_valset(
                 Err(e) => error!("Got valset event that we can't parse {}", e),
             }
         }
+
         end_filter_block = start_filter_block.saturating_sub(1); // filter ranges are inclusive, avoid searching same block
     }
 
