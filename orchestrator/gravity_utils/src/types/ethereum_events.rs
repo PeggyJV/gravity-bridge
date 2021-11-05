@@ -17,9 +17,9 @@ use std::unimplemented;
 /// when the validator set is updated.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, Eq, PartialEq, Hash)]
 pub struct ValsetUpdatedEvent {
-    pub valset_nonce: Uint256,
-    pub event_nonce: Uint256,
-    pub block_height: Uint256,
+    pub valset_nonce: U256,
+    pub event_nonce: U256,
+    pub block_height: U256,
     pub members: Vec<ValsetMember>,
 }
 

@@ -1,11 +1,13 @@
 use crate::main_loop::EthClient;
 use clarity::{Address, Uint256};
-use ethereum_gravity::utils::downcast_uint256;
 use ethers::prelude::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::types::ValsetUpdatedEvent;
 use gravity_utils::{error::GravityError, types::Valset};
+use std::panic;
 use tonic::transport::Channel;
+
+pub const VALSET_UPDATED_EVENT_STRING: str = "ValsetUpdatedEvent(uint256,uint256,address[],uint256[])";
 
 /// This function finds the latest valset on the Gravity contract by looking back through the event
 /// history and finding the most recent ValsetUpdatedEvent. Most of the time this will be very fast
@@ -18,51 +20,46 @@ pub async fn find_latest_valset(
     eth_client: EthClient,
 ) -> Result<Valset, GravityError> {
     const BLOCKS_TO_SEARCH: u64 = 5_000u64;
-    let latest_block = eth_client.get_block_number().await?;
-    let mut current_block = latest_block.clone();
+    const ZERO: u64 = 0u64;
 
-    while current_block.clone() > 0u8.into() {
-        trace!(
-            "About to submit a Valset or Batch looking back into the history to find the last Valset Update, on block {}",
-            current_block
-        );
-        let end_search = if current_block.clone() < BLOCKS_TO_SEARCH.into() {
-            0u8.into()
-        } else {
-            current_block.clone() - BLOCKS_TO_SEARCH.into()
-        };
+    let mut filter = Filter::new()
+        .address(gravity_contract_address)
+        .event(&VALSET_UPDATED_EVENT_STRING);
+    let mut end_filter_block = eth_client.get_block_number().await?;
 
-        let filter = Filter::new()
-            .select(end_block..current_block)
-            .address(gravity_contract_address)
-            .event("ValsetUpdatedEvent(uint256,uint256,address[],uint256[])");
+    while end_filter_block > ZERO {
+        trace!("About to submit a Valset or Batch, looking back into the history to find the last Valset Update, on block {}", end_filter_block);
 
-        let mut all_valset_events = eth_client.get_logs(&filter).await?;
+        let start_filter_block = end_filter_block.saturating_sub(BLOCKS_TO_SEARCH);
+        filter.select(start_filter_block..end_filter_block);
 
-        // by default the lowest found valset goes first, we want the highest.
-        all_valset_events.reverse();
+        let logged_event = eth_client.get_logs(&filter).await?.last(); // we only need the most recent (last) one
 
-        trace!("Found events {:?}", all_valset_events);
+        if logged_event.is_some() {
+            trace!("Found event {:?}", logged_event);
 
-        // we take only the first event if we find any at all.
-        if !all_valset_events.is_empty() {
-            let event = &all_valset_events[0];
-            match ValsetUpdatedEvent::from_log(event) {
-                Ok(event) => {
+            match ValsetUpdatedEvent::from_log(logged_event.unwrap()) {
+                Ok(valset_updated_event) => {
+                    let downcast_nonce = panic::catch_unwind(|| valset_updated_event.event_nonce.as_u64());
+                    if let Err(_) = downcast_nonce {
+                        error!("ValsetUpdatedEvent contained nonce larger than u64: {:?}", valset_updated_event);
+                        continue;
+                    }
+
                     let latest_eth_valset = Valset {
-                        nonce: downcast_uint256(event.valset_nonce.clone()).unwrap(),
+                        nonce: downcast_nonce.unwrap(),
                         members: event.members,
                     };
                     let cosmos_chain_valset =
                         cosmos_gravity::query::get_valset(grpc_client, latest_eth_valset.nonce)
                             .await?;
-                    check_if_valsets_differ(cosmos_chain_valset, &&latest_eth_valset);
+                    check_if_valsets_differ(cosmos_chain_valset, &latest_eth_valset);
                     return Ok(latest_eth_valset);
                 }
                 Err(e) => error!("Got valset event that we can't parse {}", e),
             }
         }
-        current_block = end_search;
+        end_filter_block = start_filter_block.saturating_sub(1); // filter ranges are inclusive, avoid searching same block
     }
 
     panic!("Could not find the last validator set for contract {}, probably not a valid Gravity contract!", gravity_contract_address)
@@ -96,12 +93,12 @@ fn check_if_valsets_differ(cosmos_valset: Option<Valset>, ethereum_valset: &Vals
         c_valset.sort();
         e_valset.sort();
         if c_valset == e_valset {
-            info!(
+            warn!(
                 "Sorting disagreement between Cosmos and Ethereum on Valset nonce {}",
                 ethereum_valset.nonce
             );
         } else {
-            info!("Validator sets for nonce {} Cosmos and Ethereum differ. Possible bridge highjacking!", ethereum_valset.nonce)
+            error!("Validator sets for nonce {} Cosmos and Ethereum differ. Possible bridge highjacking!", ethereum_valset.nonce)
         }
     }
 }

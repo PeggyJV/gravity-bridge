@@ -44,22 +44,6 @@ pub fn get_checkpoint_hash(valset: &Valset, gravity_id: &str) -> Result<Vec<u8>,
     Ok(locally_computed_digest.to_vec())
 }
 
-pub fn downcast_uint256(input: Uint256) -> Option<u64> {
-    if input >= U64MAX.into() {
-        None
-    } else {
-        let mut val = input.to_bytes_be();
-        // pad to 8 bytes
-        while val.len() < 8 {
-            val.insert(0, 0);
-        }
-        let mut lower_bytes: [u8; 8] = [0; 8];
-        // get the 'lowest' 8 bytes from a 256 bit integer
-        lower_bytes.copy_from_slice(&val[0..val.len()]);
-        Some(u64::from_be_bytes(lower_bytes))
-    }
-}
-
 pub fn downcast_to_u128(input: Uint256) -> Option<u128> {
     if input >= U128MAX.into() {
         None
