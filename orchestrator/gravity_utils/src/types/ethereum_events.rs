@@ -10,7 +10,6 @@ use deep_space::utils::bytes_to_hex_str;
 use deep_space::Address as CosmosAddress;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
-use num256::Uint256;
 use std::unimplemented;
 
 pub const ERC20_DEPLOYED_EVENT_STR: &'static str = "ERC20DeployedEvent(string,address,string,string,uint8,uint256)";
@@ -18,6 +17,8 @@ pub const LOGIC_CALL_EVENT_STR: &'static str = "LogicCallEvent(bytes32,uint256,b
 pub const SEND_TO_COSMOS_EVENT_STR: &'static str = "SendToCosmosEvent(address,address,bytes32,uint256,uint256)";
 pub const TRANSACTION_BATCH_EXECUTED_EVENT_STR: &'static str = "TransactionBatchExecutedEvent(uint256,address,uint256)";
 pub const VALSET_UPDATED_EVENT_STR: &'static str = "ValsetUpdatedEvent(uint256,uint256,address[],uint256[])";
+
+// TODO(bolten): can we replace a bunch of this functionality using ethers abigen?
 
 /// A parsed struct representing the Ethereum event fired by the Gravity contract
 /// when the validator set is updated.
