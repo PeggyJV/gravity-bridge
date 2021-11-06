@@ -116,8 +116,11 @@ pub async fn create_rpc_connections(
             .unwrap_or_else(|_| panic!("Invalid Ethereum RPC url {}", eth_rpc_url));
         check_scheme(&url, &eth_rpc_url);
         let eth_url = eth_rpc_url.trim_end_matches('/');
-        let base_eth_provider = EthProvider::<Http>::try_from(eth_url)
-            .unwrap_or_else(|_| panic!("Could not instantiate Ethereum HTTP provider: {}", eth_url));
+        // TODO(bolten): should probably set a non-default interval, but what is the appropriate
+        // value?
+        let base_eth_provider = EthProvider::<Http>::try_from(eth_url).unwrap_or_else(|_| {
+            panic!("Could not instantiate Ethereum HTTP provider: {}", eth_url)
+        });
         let try_base = base_eth_provider.get_block_number().await;
         match try_base {
             // it worked, lets go!
@@ -135,9 +138,19 @@ pub async fn create_rpc_connections(
                     let ipv6_url = format!("{}://::1:{}", prefix, port);
                     let ipv4_url = format!("{}://127.0.0.1:{}", prefix, port);
                     let ipv6_eth_provider = EthProvider::<Http>::try_from(ipv6_url.as_str())
-                        .unwrap_or_else(|_| panic!("Could not instantiate Ethereum HTTP provider: {}", &ipv6_url));
+                        .unwrap_or_else(|_| {
+                            panic!(
+                                "Could not instantiate Ethereum HTTP provider: {}",
+                                &ipv6_url
+                            )
+                        });
                     let ipv4_eth_provider = EthProvider::<Http>::try_from(ipv4_url.as_str())
-                        .unwrap_or_else(|_| panic!("Could not instantiate Ethereum HTTP provider: {}", &ipv4_url));
+                        .unwrap_or_else(|_| {
+                            panic!(
+                                "Could not instantiate Ethereum HTTP provider: {}",
+                                &ipv4_url
+                            )
+                        });
                     let ipv6_test = ipv6_eth_provider.get_block_number().await;
                     let ipv4_test = ipv4_eth_provider.get_block_number().await;
                     warn!("Trying fallback urls {} {}", ipv6_url, ipv4_url);
@@ -160,10 +173,24 @@ pub async fn create_rpc_connections(
                     // transparently upgrade to https if available, we can't transparently downgrade for obvious security reasons
                     let https_on_80_url = format!("https://{}:80", body);
                     let https_on_443_url = format!("https://{}:443", body);
-                    let https_on_80_eth_provider = EthProvider::<Http>::try_from(https_on_80_url.as_str())
-                        .unwrap_or_else(|_| panic!("Could not instantiate Ethereum HTTP provider: {}", &https_on_80_url));
-                    let https_on_443_eth_provider = EthProvider::<Http>::try_from(https_on_443_url.as_str())
-                        .unwrap_or_else(|_| panic!("Could not instantiate Ethereum HTTP provider: {}", &https_on_443_url));
+                    let https_on_80_eth_provider = EthProvider::<Http>::try_from(
+                        https_on_80_url.as_str(),
+                    )
+                    .unwrap_or_else(|_| {
+                        panic!(
+                            "Could not instantiate Ethereum HTTP provider: {}",
+                            &https_on_80_url
+                        )
+                    });
+                    let https_on_443_eth_provider = EthProvider::<Http>::try_from(
+                        https_on_443_url.as_str(),
+                    )
+                    .unwrap_or_else(|_| {
+                        panic!(
+                            "Could not instantiate Ethereum HTTP provider: {}",
+                            &https_on_443_url
+                        )
+                    });
                     let https_on_80_test = https_on_80_eth_provider.get_block_number().await;
                     let https_on_443_test = https_on_443_eth_provider.get_block_number().await;
                     warn!(
