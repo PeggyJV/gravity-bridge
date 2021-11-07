@@ -203,7 +203,10 @@ pub async fn happy_path_test_v2(
             );
         }
         Err(_) => {
-            panic!("An error occured",);
+            panic!(
+                "An error occured while bridging {} Cosmos asset {} to Ethereum!",
+                amount_to_bridge, token_to_send_to_eth
+            );
         }
     }
 }
