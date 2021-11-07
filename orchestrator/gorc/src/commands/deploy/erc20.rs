@@ -5,7 +5,7 @@ use gravity_proto::gravity::{DenomToErc20ParamsRequest, DenomToErc20Request};
 use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
 use std::convert::TryFrom;
 use std::process::exit;
-use std::time::{Duration, Instant};
+use std::time::{Duration};
 use tokio::time::sleep as delay_for;
 
 /// Deploy Erc20
@@ -85,7 +85,7 @@ impl Erc20 {
 
         println!("We have deployed ERC20 contract {:#066x}, waiting to see if the Cosmos chain choses to adopt it", res);
 
-        match tokio::time::timeout(std::time::Duration::from_secs(100), async {
+        match tokio::time::timeout(Duration::from_secs(100), async {
             loop {
                 let req = DenomToErc20Request {
                     denom: denom.clone(),
@@ -96,7 +96,7 @@ impl Erc20 {
                 if let Ok(val) = res {
                     break val;
                 }
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                delay_for(Duration::from_secs(1)).await;
             } 
         }).await
         {
