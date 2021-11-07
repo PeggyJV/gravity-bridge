@@ -198,9 +198,6 @@ pub async fn transaction_stress_test(
                     if bal != send_amount.clone() {
                         good = false;
                     }
-                    if good {
-                        break;
-                    }
                 }
             }
             tokio::time::sleep(Duration::from_secs(5)).await;
