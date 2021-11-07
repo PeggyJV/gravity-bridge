@@ -71,16 +71,16 @@ pub async fn happy_path_test_v2(
                 .await;
 
             if let Ok(res) = res {
-                let erc20 = res.into_inner().erc20;
-                erc20_contract = Some(erc20);
-                break;
+                break res;
             }
             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         }
     })
     .await
     {
-        Ok(_) => {
+        Ok(res) => {
+            let erc20 = res.into_inner().erc20;
+            erc20_contract = Some(erc20);
             info!(
                 "Successfully adopted {} token contract",
                 token_to_send_to_eth
