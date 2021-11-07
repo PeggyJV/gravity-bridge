@@ -7,9 +7,8 @@ use ethereum_gravity::{send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce
 use futures::future::join_all;
 use std::{
     collections::HashSet,
-    time::{Duration, Instant},
+    time::{Duration},
 };
-use tokio::time::sleep as delay_for;
 use web30::client::Web3;
 
 const TIMEOUT: Duration = Duration::from_secs(120);
@@ -91,26 +90,25 @@ pub async fn transaction_stress_test(
     let mut good = true;
     match tokio::time::timeout(TOTAL_TIMEOUT, async {
         good = true;
-        for keys in user_keys.iter() {
-            let c_addr = keys.cosmos_address;
-            let balances = contact.get_balances(c_addr).await.unwrap();
-            for token in erc20_addresses.iter() {
-                let mut found = false;
-                for balance in balances.iter() {
-                    if balance.denom.contains(&token.to_string())
-                        && balance.amount == one_hundred_eth()
-                    {
-                        found = true;
+        loop {
+            for keys in user_keys.iter() {
+                let c_addr = keys.cosmos_address;
+                let balances = contact.get_balances(c_addr).await.unwrap();
+                for token in erc20_addresses.iter() {
+                    let mut found = false;
+                    for balance in balances.iter() {
+                        if balance.denom.contains(&token.to_string())
+                            && balance.amount == one_hundred_eth()
+                        {
+                            found = true;
+                        }
+                    }
+                    if !found {
+                        good = false;
                     }
                 }
-                if !found {
-                    good = false;
-                }
-                if good {
-                    break;
-                }
+                tokio::time::sleep(Duration::from_secs(5)).await;
             }
-            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
         }
     })
     .await
@@ -205,7 +203,7 @@ pub async fn transaction_stress_test(
                     }
                 }
             }
-            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            tokio::time::sleep(Duration::from_secs(5)).await;
         }
     })
     .await
