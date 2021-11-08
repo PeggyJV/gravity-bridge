@@ -1,10 +1,9 @@
 use crate::main_loop::EthClient;
 use clarity::{Address, Uint256};
-use ethereum_gravity::utils::downcast_to_u64;
 use ethers::prelude::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::types::{VALSET_UPDATED_EVENT_STR, ValsetUpdatedEvent};
-use gravity_utils::{error::GravityError, types::Valset};
+use gravity_utils::types::{VALSET_UPDATED_EVENT_STR, ValsetUpdatedEvent, ValsetUpdatedEventFilter};
+use gravity_utils::{error::GravityError, ethereum::downcast_to_u64, types::Valset};
 use std::panic;
 use tonic::transport::Channel;
 
@@ -40,7 +39,7 @@ pub async fn find_latest_valset(
         for logged_event in filtered_logged_events {
             trace!("Found event {:?}", logged_event);
 
-            match ValsetUpdatedEvent::from_log(logged_event.unwrap()) {
+            match ValsetUpdatedEvent::from_log(&logged_event) {
                 Ok(valset_updated_event) => {
                     let downcast_nonce = downcast_to_u64(valset_updated_event.valset_nonce);
                     if downcast_nonce.is_none() {

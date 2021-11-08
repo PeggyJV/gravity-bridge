@@ -1,6 +1,6 @@
 use super::*;
 use crate::error::GravityError;
-use clarity::Address as EthAddress;
+use ethers::types::Address as EthAddress;
 use clarity::Signature as EthSignature;
 use deep_space::error::CosmosGrpcError;
 use std::fmt::Debug;

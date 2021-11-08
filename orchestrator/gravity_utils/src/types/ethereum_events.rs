@@ -6,8 +6,10 @@
 
 use super::ValsetMember;
 use crate::error::GravityError;
+use crate::ethereum::downcast_to_u64;
 use deep_space::utils::bytes_to_hex_str;
 use deep_space::Address as CosmosAddress;
+use ethers::abi::RawLog;
 use ethers::contract::abigen;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -25,6 +27,13 @@ abigen!(
     event_derives(serde::Deserialize, serde::Serialize)
 );
 
+fn log_to_ethers_event<T: EthLogDecode>(log: &Log) -> Result<T, ethers::abi::Error> {
+    T::decode_log(&RawLog {
+        topics: log.topics,
+        data: log.data.to_vec(),
+    }).map_err(From::from)
+}
+
 /// A parsed struct representing the Ethereum event fired by the Gravity contract
 /// when the validator set is updated.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, Eq, PartialEq, Hash)]
@@ -39,85 +48,18 @@ impl ValsetUpdatedEvent {
     /// This function is not an abi compatible bytes parser, but it's actually
     /// not hard at all to extract data like this by hand.
     pub fn from_log(input: &Log) -> Result<ValsetUpdatedEvent, GravityError> {
-        // we have one indexed event so we should fined two indexes, one the event itself
-        // and one the indexed nonce
-        if input.topics.get(1).is_none() {
-            return Err(GravityError::InvalidEventLogError(
-                "Too few topics".to_string(),
-            ));
-        }
-        let valset_nonce_data = &input.topics[1];
-        let valset_nonce = Uint256::from_bytes_be(valset_nonce_data);
-        if valset_nonce > u64::MAX.into() {
-            return Err(GravityError::InvalidEventLogError(
-                "Nonce overflow, probably incorrect parsing".to_string(),
-            ));
-        }
-        let valset_nonce: u64 = valset_nonce.to_string().parse().unwrap();
+        let event: ValsetUpdatedEventFilter = log_to_ethers_event(input)?;
 
-        // first index is the event nonce, following two have event data we don't
-        // care about, fourth index contains the length of the eth address array
-        let index_start = 0;
-        let index_end = index_start + 32;
-        let nonce_data = &input.data[index_start..index_end];
-        let event_nonce = Uint256::from_bytes_be(nonce_data);
-        if event_nonce > u64::MAX.into() {
-            return Err(GravityError::InvalidEventLogError(
-                "Nonce overflow, probably incorrect parsing".to_string(),
-            ));
-        }
-        let event_nonce: u64 = event_nonce.to_string().parse().unwrap();
-        // first index is the event nonce, following two have event data we don't
-        // care about, fourth index contains the length of the eth address array
-        let index_start = 3 * 32;
-        let index_end = index_start + 32;
-        let eth_addresses_offset = index_start + 32;
-        let len_eth_addresses = Uint256::from_bytes_be(&input.data[index_start..index_end]);
-        if len_eth_addresses > usize::MAX.into() {
-            return Err(GravityError::InvalidEventLogError(
-                "Ethereum array len overflow, probably incorrect parsing".to_string(),
-            ));
-        }
-        let len_eth_addresses: usize = len_eth_addresses.to_string().parse().unwrap();
-        let index_start = (4 + len_eth_addresses) * 32;
-        let index_end = index_start + 32;
-        let powers_offset = index_start + 32;
-        let len_powers = Uint256::from_bytes_be(&input.data[index_start..index_end]);
-        if len_powers > usize::MAX.into() {
-            return Err(GravityError::InvalidEventLogError(
-                "Powers array len overflow, probably incorrect parsing".to_string(),
-            ));
-        }
-        let len_powers: usize = len_eth_addresses.to_string().parse().unwrap();
-        if len_powers != len_eth_addresses {
-            return Err(GravityError::InvalidEventLogError(
-                "Array len mismatch, probably incorrect parsing".to_string(),
-            ));
-        }
-
-        let mut validators = Vec::new();
-        for i in 0..len_eth_addresses {
-            let power_start = (i * 32) + powers_offset;
-            let power_end = power_start + 32;
-            let address_start = (i * 32) + eth_addresses_offset;
-            let address_end = address_start + 32;
-            let power = Uint256::from_bytes_be(&input.data[power_start..power_end]);
-            // an eth address at 20 bytes is 12 bytes shorter than the Uint256 it's stored in.
-            let eth_address = EthAddress::from_slice(&input.data[address_start + 12..address_end]);
-            if eth_address.is_err() {
-                return Err(GravityError::InvalidEventLogError(
-                    "Ethereum Address parsing error, probably incorrect parsing".to_string(),
-                ));
-            }
-            let eth_address = Some(eth_address.unwrap());
-            if power > u64::MAX.into() {
-                return Err(GravityError::InvalidEventLogError(
-                    "Power greater than u64::MAX, probably incorrect parsing".to_string(),
-                ));
-            }
-            let power: u64 = power.to_string().parse().unwrap();
-            validators.push(ValsetMember { power, eth_address })
-        }
+        let mut validators: Vec<ValsetMember> = event.powers.iter()
+            .zip(event.validators.iter())
+            .map(|(power, validator)| {
+                ValsetMember {
+                    power: downcast_to_u64(*power).unwrap(),
+                    eth_address: Some(*validator),
+                }
+            })
+            .collect();
+           // validators.push(ValsetMember { power, eth_address })
         let mut check = validators.clone();
         check.sort();
         check.reverse();
@@ -128,6 +70,7 @@ impl ValsetUpdatedEvent {
                 validators, check
             );
         }
+
         let block_height = if let Some(bn) = input.block_number.clone() {
             bn
         } else {
@@ -138,9 +81,9 @@ impl ValsetUpdatedEvent {
         };
 
         Ok(ValsetUpdatedEvent {
-            valset_nonce: valset_nonce.into(),
-            event_nonce: event_nonce.into(),
-            block_height,
+            valset_nonce: event.new_valset_nonce,
+            event_nonce: event.event_nonce,
+            block_height: block_height.into(),
             members: validators,
         })
     }

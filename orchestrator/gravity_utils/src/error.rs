@@ -4,6 +4,7 @@
 use clarity::Error as ClarityError;
 use deep_space::error::AddressError as CosmosAddressError;
 use deep_space::error::CosmosGrpcError;
+use ethers::abi::Error as EthersAbiError;
 use ethers::prelude::*;
 use ethers::prelude::signer::SignerMiddlewareError;
 use num_bigint::ParseBigIntError;
@@ -18,6 +19,7 @@ pub enum GravityError {
     CosmosGrpcError(CosmosGrpcError),
     CosmosAddressError(CosmosAddressError),
     EthereumRestError(SignerMiddlewareError<Provider<Http>, LocalWallet>),
+    EthersAbiError(EthersAbiError),
     InvalidBridgeStateError(String),
     FailedToUpdateValset,
     EthereumContractError(String),
@@ -40,6 +42,7 @@ impl fmt::Display for GravityError {
             }
             GravityError::CosmosAddressError(val) => write!(f, "Cosmos Address error {}", val),
             GravityError::EthereumRestError(val) => write!(f, "Ethereum REST error {}", val),
+            GravityError::EthersAbiError(val) => write!(f, "Ethers ABI error {}", val),
             GravityError::InvalidOptionsError(val) => {
                 write!(f, "Invalid TX options for this call {}", val)
             }
@@ -86,6 +89,13 @@ impl From<SignerMiddlewareError<Provider<Http>, LocalWallet>> for GravityError {
         GravityError::EthereumRestError(error)
     }
 }
+
+impl From<EthersAbiError> for GravityError {
+    fn from(error: EthersAbiError) -> Self {
+        GravityError::EthersAbiError(error)
+    }
+}
+
 impl From<Status> for GravityError {
     fn from(error: Status) -> Self {
         GravityError::GravityGrpcError(error)
