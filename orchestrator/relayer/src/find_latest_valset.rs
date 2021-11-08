@@ -19,14 +19,13 @@ pub async fn find_latest_valset(
     eth_client: EthClient,
 ) -> Result<Valset, GravityError> {
     const BLOCKS_TO_SEARCH: u64 = 5_000u64;
-    const ZERO: u64 = 0u64;
 
     let mut filter = Filter::new()
         .address(gravity_contract_address)
         .event(&VALSET_UPDATED_EVENT_STR);
     let mut end_filter_block = eth_client.get_block_number().await?;
 
-    while end_filter_block > ZERO {
+    while end_filter_block > 0u64 {
         trace!("About to submit a Valset or Batch, looking back into the history to find the last Valset Update, on block {}", end_filter_block);
 
         let start_filter_block = end_filter_block.saturating_sub(BLOCKS_TO_SEARCH);
