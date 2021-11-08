@@ -101,11 +101,13 @@ impl From<Status> for GravityError {
         GravityError::GravityGrpcError(error)
     }
 }
+
 impl From<CosmosAddressError> for GravityError {
     fn from(error: CosmosAddressError) -> Self {
         GravityError::CosmosAddressError(error)
     }
 }
+
 impl From<ParseBigIntError> for GravityError {
     fn from(error: ParseBigIntError) -> Self {
         GravityError::InvalidBigInt(error)

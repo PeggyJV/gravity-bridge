@@ -50,7 +50,7 @@ impl ValsetUpdatedEvent {
     pub fn from_log(input: &Log) -> Result<ValsetUpdatedEvent, GravityError> {
         let event: ValsetUpdatedEventFilter = log_to_ethers_event(input)?;
 
-        let mut validators: Vec<ValsetMember> = event.powers.iter()
+        let validators: Vec<ValsetMember> = event.powers.iter()
             .zip(event.validators.iter())
             .map(|(power, validator)| {
                 ValsetMember {
@@ -59,7 +59,7 @@ impl ValsetUpdatedEvent {
                 }
             })
             .collect();
-           // validators.push(ValsetMember { power, eth_address })
+
         let mut check = validators.clone();
         check.sort();
         check.reverse();
