@@ -8,6 +8,7 @@ use super::ValsetMember;
 use crate::error::GravityError;
 use deep_space::utils::bytes_to_hex_str;
 use deep_space::Address as CosmosAddress;
+use ethers::contract::abigen;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use std::unimplemented;
@@ -18,7 +19,11 @@ pub const SEND_TO_COSMOS_EVENT_STR: &'static str = "SendToCosmosEvent(address,ad
 pub const TRANSACTION_BATCH_EXECUTED_EVENT_STR: &'static str = "TransactionBatchExecutedEvent(uint256,address,uint256)";
 pub const VALSET_UPDATED_EVENT_STR: &'static str = "ValsetUpdatedEvent(uint256,uint256,address[],uint256[])";
 
-// TODO(bolten): can we replace a bunch of this functionality using ethers abigen?
+abigen!(
+    Gravity,
+    "abi/Gravity.json",
+    event_derives(serde::Deserialize, serde::Serialize)
+);
 
 /// A parsed struct representing the Ethereum event fired by the Gravity contract
 /// when the validator set is updated.
