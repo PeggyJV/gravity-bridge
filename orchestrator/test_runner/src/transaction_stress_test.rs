@@ -104,11 +104,11 @@ pub async fn transaction_stress_test(
                         good = false;
                     }
                 }
-                if good {
-                    break;
-                }
-                tokio::time::sleep(Duration::from_secs(5)).await;
             }
+            if good {
+                break;
+            }
+            tokio::time::sleep(Duration::from_secs(5)).await;
         }
     })
     .await
