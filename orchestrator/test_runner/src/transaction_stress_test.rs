@@ -5,10 +5,7 @@ use deep_space::coin::Coin;
 use deep_space::Contact;
 use ethereum_gravity::{send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce};
 use futures::future::join_all;
-use std::{
-    collections::HashSet,
-    time::{Duration},
-};
+use std::{collections::HashSet, time::Duration};
 use web30::client::Web3;
 
 const TIMEOUT: Duration = Duration::from_secs(120);
@@ -95,17 +92,20 @@ pub async fn transaction_stress_test(
                 let c_addr = keys.cosmos_address;
                 let balances = contact.get_balances(c_addr).await.unwrap();
                 for token in erc20_addresses.iter() {
-                    let found = false;
+                    let mut found = false;
                     for balance in balances.iter() {
                         if balance.denom.contains(&token.to_string())
                             && balance.amount == one_hundred_eth()
                         {
-                            break;
+                            found = true;
                         }
                     }
                     if !found {
                         good = false;
                     }
+                }
+                if good {
+                    break;
                 }
                 tokio::time::sleep(Duration::from_secs(5)).await;
             }
@@ -199,6 +199,9 @@ pub async fn transaction_stress_test(
                         good = false;
                     }
                 }
+            }
+            if good {
+                break;
             }
             tokio::time::sleep(Duration::from_secs(5)).await;
         }
