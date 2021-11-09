@@ -80,10 +80,10 @@ pub async fn happy_path_test_v2(
     {
         Ok(res) => {
             let erc20 = res.into_inner().erc20;
-            erc20_contract = Some(erc20);
+            erc20_contract = Some(erc20.clone());
             info!(
-                "Successfully adopted {} token contract",
-                token_to_send_to_eth
+                "Successfully adopted {} token contract of {}",
+                token_to_send_to_eth, erc20
             );
         }
         Err(_) => {
