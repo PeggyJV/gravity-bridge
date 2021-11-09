@@ -62,7 +62,7 @@ impl ValsetUpdatedEvent {
     pub fn from_log(input: &Log) -> Result<ValsetUpdatedEvent, GravityError> {
         let event: ValsetUpdatedEventFilter = log_to_ethers_event(input)?;
 
-        let powers: Vec<u64> = Vec::new();
+        let mut powers: Vec<u64> = Vec::new();
         for power in event.powers {
             if let Some(downcast_power) = downcast_to_u64(power) {
                 powers.push(downcast_power);
@@ -87,6 +87,8 @@ impl ValsetUpdatedEvent {
         check.sort();
         check.reverse();
         // if the validator set is not sorted we're in a bad spot
+        // TODO(bolten): perhaps there is a better way to handle this than logging the event?
+        // what would the downstream effects of not returning a ValsetUpdatedEvent here?
         if validators != check {
             warn!(
                 "Someone submitted an unsorted validator set, this means all updates will fail until someone feeds in this unsorted value by hand {:?} instead of {:?}",
