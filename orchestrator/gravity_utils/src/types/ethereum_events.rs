@@ -61,16 +61,16 @@ impl ValsetUpdatedEvent {
     /// not hard at all to extract data like this by hand.
     pub fn from_log(input: &Log) -> Result<ValsetUpdatedEvent, GravityError> {
         let event: ValsetUpdatedEventFilter = log_to_ethers_event(input)?;
-        let powers: Vec<u64> = event.powers.iter()
-            .map(|power| downcast_to_u64(*power))
-            .filter(|power_result| power_result.is_some())
-            .map(Option::unwrap)
-            .collect();
 
-        if powers.len() < event.powers.len() {
-            return Err(GravityError::InvalidEventLogError(
-                format!("ValsetUpdatedEvent contains powers that cannot be downcast to u64: {:?}", event))
-            )
+        let powers: Vec<u64> = Vec::new();
+        for power in event.powers {
+            if let Some(downcast_power) = downcast_to_u64(power) {
+                powers.push(downcast_power);
+            } else {
+                return Err(GravityError::InvalidEventLogError(
+                    format!("ValsetUpdatedEvent contains powers that cannot be downcast to u64: {:?}", event))
+                )
+            }
         }
 
         let validators: Vec<ValsetMember> = powers.iter()
