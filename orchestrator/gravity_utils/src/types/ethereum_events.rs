@@ -41,7 +41,7 @@ fn block_height_from_log(log: &Log) -> Result<U256, GravityError> {
     match log.block_number.clone() {
         Some(block_height) => Ok(U256::from(block_height.as_u64())),
         None => Err(GravityError::InvalidEventLogError(
-            "Log does not have block number, we only search logs already in blocks?".to_string())
+            format!("Log does not have block number, we only search logs already in blocks? {:?}", log))
         )
     }
 }
@@ -61,12 +61,23 @@ impl ValsetUpdatedEvent {
     /// not hard at all to extract data like this by hand.
     pub fn from_log(input: &Log) -> Result<ValsetUpdatedEvent, GravityError> {
         let event: ValsetUpdatedEventFilter = log_to_ethers_event(input)?;
+        let powers: Vec<u64> = event.powers.iter()
+            .map(|power| downcast_to_u64(*power))
+            .filter(|power_result| power_result.is_some())
+            .map(Option::unwrap)
+            .collect();
 
-        let validators: Vec<ValsetMember> = event.powers.iter()
+        if powers.len() < event.powers.len() {
+            return Err(GravityError::InvalidEventLogError(
+                format!("ValsetUpdatedEvent contains powers that cannot be downcast to u64: {:?}", event))
+            )
+        }
+
+        let validators: Vec<ValsetMember> = powers.iter()
             .zip(event.validators.iter())
             .map(|(power, validator)| {
                 ValsetMember {
-                    power: downcast_to_u64(*power).unwrap(),
+                    power: *power,
                     eth_address: Some(*validator),
                 }
             })
@@ -77,7 +88,7 @@ impl ValsetUpdatedEvent {
         check.reverse();
         // if the validator set is not sorted we're in a bad spot
         if validators != check {
-            trace!(
+            warn!(
                 "Someone submitted an unsorted validator set, this means all updates will fail until someone feeds in this unsorted value by hand {:?} instead of {:?}",
                 validators, check
             );
