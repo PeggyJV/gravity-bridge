@@ -13,7 +13,6 @@ use ethers::abi::RawLog;
 use ethers::contract::abigen;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
-use std::unimplemented;
 
 pub const ERC20_DEPLOYED_EVENT_STR: &'static str = "ERC20DeployedEvent(string,address,string,string,uint8,uint256)";
 pub const LOGIC_CALL_EVENT_STR: &'static str = "LogicCallEvent(bytes32,uint256,bytes,uint256)";
@@ -83,7 +82,7 @@ impl ValsetUpdatedEvent {
         Ok(ValsetUpdatedEvent {
             valset_nonce: event.new_valset_nonce,
             event_nonce: event.event_nonce,
-            block_height: block_height.into(),
+            block_height: U256::from(block_height.as_u64()),
             members: validators,
         })
     }
