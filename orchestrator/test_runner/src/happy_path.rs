@@ -20,7 +20,6 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::types::SendToCosmosEvent;
 use rand::Rng;
 use std::time::Duration;
-use std::time::Instant;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 use web30::client::Web3;
@@ -119,7 +118,7 @@ pub async fn wait_for_nonzero_valset(web30: &Web3, gravity_address: EthAddress) 
             current_eth_valset_nonce = get_valset_nonce(gravity_address, *MINER_ADDRESS, &web30)
                 .await
                 .expect("Failed to get current eth valset");
-            tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+            delay_for(Duration::from_secs(4)).await;
         }
     })
     .await
@@ -220,7 +219,7 @@ pub async fn test_valset_update(
             current_eth_valset_nonce = get_valset_nonce(gravity_address, *MINER_ADDRESS, &web30)
                 .await
                 .expect("Failed to get current eth valset");
-            tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+            delay_for(Duration::from_secs(4)).await;
         }
     })
     .await
@@ -386,7 +385,7 @@ async fn test_batch(
                 get_tx_batch_nonce(gravity_address, erc20_contract, *MINER_ADDRESS, &web30)
                     .await
                     .expect("Failed to get current eth tx batch nonce");
-            tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+            delay_for(Duration::from_secs(4)).await;
         }
     })
     .await
