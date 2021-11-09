@@ -1,0 +1,229 @@
+project_structure:
+    build: build
+    contracts: contracts
+    interfaces: interfaces
+    reports: reports
+    scripts: scripts
+    tests: tests
+
+networks:
+    default: development
+    development:
+        gas_limit: max
+        gas_buffer: 1
+        gas_price: 0
+        max_fee: null
+        priority_fee: null
+        reverting_tx_gas_limit: max
+        default_contract_owner: true
+        cmd_settings:
+            accounts: 1
+            default_balance: 1544266562
+            # unlock:
+            #     - 0xc783df8a850f42e7f7e57013759c285caa701eb6
+            #     - 0xead9c93b79ae7c1591b1fb5323bd777e86e150d4
+            #     - 0xe5904695748fe4a84b40b3fc79de2277660bd1d3
+            #     - 0x92561f28ec438ee9831d00d1d59fbdc981b762b2
+            #     - 0x2ffd013aaa7b5a7da93336c2251075202b33fb2b
+            #     - 0x9fc9c2dfba3b6cf204c37a5f690619772b926e39
+            #     - 0xfbc51a9582d031f2ceaad3959256596c5d3a5468
+            #     - 0x84fae3d3cba24a97817b2a18c2421d462dbbce9f
+            #     - 0xfa3bdc8709226da0da13a4d904c8b66f16c3c8ba
+            #     - 0x6c365935ca8710200c7595f0a72eb6023a7706cd
+            #     - 0xd7de703d9bbc4602242d0f3149e5ffcd30eb3adf
+            #     - 0x532792b73c0c6e7565912e7039c59986f7e1dd1f
+            #     - 0xea960515f8b4c237730f028cbacf0a28e7f45de0
+            #     - 0x3d91185a02774c70287f6c74dd26d13dfb58ff16
+            #     - 0x5585738127d12542a8fd6c71c19d2e4cecdab08a
+            #     - 0x0e0b5a3f244686cf9e7811754379b9114d42f78b
+            #     - 0x704cf59b16fd50efd575342b46ce9c5e07076a4a
+            #     - 0x0a057a7172d0466aef80976d7e8c80647dfd35e3
+            #     - 0x68dfc526037e9030c8f813d014919cc89e7d4d74
+            #     - 0x26c43a1d431a4e5ee86cd55ed7ef9edf3641e901
+            #     - 0xcb9791b433028b8af808afae87a5c462b19bdc5c
+            #     - 0xde7a54a8f8a7b38abd82ea37a0b16a40ccc2a88d
+            #     - 0x387f1112a41afe50f3ce5994aca73d74b955be2d
+            #     - 0x92a1cdddc0318a9b5dcbe461fd8a5db1ac710cee
+            #     - 0x6caf3c6ca0886f2eabbd0db9affb4dffcd13d7c7
+            #     - 0x679a451be81dd0900b67a0cbff83ce916ee225c0
+            #     - 0x8f67cba9fe1963d10292af8a1cb55c2218dd2ee6
+            #     - 0xcc5e7d91cc4ac0c5d2f5faca979d656836addf92
+            #     - 0xb0238677d6943855295bb9b6bf02f3990b8f2691
+            #     - 0x3240a90b048a226e6e9a4be508ccdf1af0093e8f
+            #     - 0x036883cefb101a5b2fb9d04a0f7bd79b30eedecf
+            #     - 0x93850baa3b36c5f38259dbcb1dfe41a51f2220c9
+            #     - 0xca049f8d721e9e7678780de0b9a10bbf35484725
+            #     - 0xd01187d2f34019dd46e620972a7856070e597988
+            #     - 0x79f00c728e2e1b04654d7f29644e0f65c4d4e606
+            #     - 0x58db31c219fb60754106eb39f01113420922b3ee
+            #     - 0xdb199b549f079634353f4ed311fbd618d51f7151
+            #     - 0xa8585cb41afac4acc564b1340cbc056b001a206c
+            #     - 0xaa43af6ec4a697cb9080701b2ecefbe6a55e5c06
+            #     - 0xf0ef51ed1e29ac1b9e9223fb48055d9c4dfb6cc6
+            #     - 0xa577c2e6df1c5ace2f196616b0b4f57a5a5a3020
+            #     - 0xb7b2484267460bfe170e6ea9479e10191563b11c
+            #     - 0x9aed48caadcf32640a97cc6c20429f306086142e
+            #     - 0x543d3c730079576c316558bfce1261e03bca04ba
+            #     - 0x82deef4e2a7eefe4372876681057265a9fec449f
+            #     - 0xa740131837b6d9047b04639ea88b9a7b35e5ed48
+            #     - 0x732f3a6b3ca0f434fb2acda13947ff76a4854245
+            #     - 0x27556e6d4884684bb38d315544625c4a86af599f
+            #     - 0x90f3bd80ccdf4cc8ab6609b20a221374430f90ef
+            #     - 0x8d778b8365cea102ba549d5d7df0841ad7d67d77
+            #     - 0x752940f08d52a4d7d8563ad3b2d8705c1684ac4b
+            #     - 0x302674a7d30fddd4429d5fc0f59a986d08e7a2b9
+            #     - 0xce2fa55f119bfba1930f8a715d9d3e9cba00f97c
+            #     - 0xe3df710194d6a63f3f75122bacb8ea6709b96e79
+            #     - 0x6e26fd8e46d3f74d16ef95ba43bdd556270069eb
+            #     - 0xb65ed96ae0f71d1f1d05d8dc5dc0f9579f2c2d01
+            #     - 0xe2c9a10c28624175c833f51da5e23af6d5f16f79
+            #     - 0xe04c01bf8ab45e7e6bc08bda492bff731cb03cd8
+            #     - 0xb68bd07399080046b3bca6292c509750de2ba363
+            #     - 0xb79d1319fc753aae93a9777303134df617ec49fd
+            #     - 0x6aa97edf1dcb23d50f0443366f4299f887cfae9a
+            #     - 0xca9f8aebac39edde761f5fd369f8ade1c8237f32
+            #     - 0xa1e5f8f420a569b8f522895fed1bd80a4e4b4317
+            #     - 0x3e1fad1561aa55fde0631bdcabb9d318e66dbbf8
+            #     - 0x8cccf9542187d8d01ea8cdd7707e164016bf4659
+            #     - 0x05365245fd9bd47f1219ef8246636b2cc9253f4a
+            #     - 0x2609a961883af111a04378356991f333f76791a6
+            #     - 0xc1144baac2b15745f289ab6eee2f66afd2a47835
+            #     - 0x2a71999f4128bec31853131af1c7046a20797c73
+            #     - 0x3f3c44b845a1e877bedff9c88b6d7128d507d6ae
+            #     - 0x9b79cd118008e3c15c91ef580fb27192abccb163
+            #     - 0x01ec4766fcdd477ddf260171f1f7aab30aaff75a
+            #     - 0x06cfb0368c9b66402174b406aebdbe075f5915c3
+            #     - 0x1f850a925a102f40aba92ad3ee5f30291d5a260b
+            #     - 0xc8b7d081a9d6b7ccbda1af96a3700746f39839ae
+            #     - 0xcc8984a17735454c53c574f9033f7a703f425048
+            #     - 0xad3f4ec8d7dc7cc1a37e049f68b21787f5706a72
+            #     - 0xd5745b8283b47c26aba350c260b1221b62c683df
+            #     - 0xf2f635f34bc373e97f778a4e9f7b082e64ad2f24
+            #     - 0x884b95bcf31ac67fc07a2ca38ac432ac3dd623ec
+            #     - 0xfa2a5fd9ac9c8e6160a84e3b177b378a853396b6
+            #     - 0xa7f68b484c5050f971a8a360b5b44d6453be2c83
+            #     - 0xca4a4009ac47375177cbae20965f5d3eafd7f394
+            #     - 0x610c239140f02a73d92bbec930c58b48359163dc
+            #     - 0x28af19a1a3979182057dc0d5193bd852fd588479
+            #     - 0x4c49672ccae0316b88b2fa5cca8296eda5c6c035
+            #     - 0x279cbbd20a8fd28cba6a7a0e288e44cd67230306
+            #     - 0x91ccc56bc81210c5ae58737377dbf7df61ac62bd
+            #     - 0x8411a933ef1df8bd6b9b4ede1eb313b764bf3069
+            #     - 0xe2b5b093993f05f5def6306a127f07aea15da1e9
+            #     - 0x3bd55f92454ffb7e74064e674e3310849b08022f
+            #     - 0xaa1b1e373eb51b4b46ed0725f951f45a060aa6fa
+            #     - 0x048f831a1d305899696833e43a277fe51ba4c422
+            #     - 0x531ff58c527fa35a3a69ba44e11a56376f1d4e52
+            #     - 0xa68b7db9de29c71d76045ecd1df336d9a18b610d
+            #     - 0x02f232708bae9418fa18406aa896b0d75f8bfeb4
+            #     - 0xd70769cafa4bc86365eee2549d48e9cb21dbbac4
+            #     - 0xba7cfb373b94afa6b1342ceed09dcbe474200231
+            #     - 0xa95ce833e0c71fe1f690a2408866788479d77421
+            #     - 0xa55f348325a9a0eacf71e98aedfcadd4d0afe586
+            #     - 0x6b2a7799bfb2636b3246a79a36300092df6e8a5f
+            #     - 0x8827026627924a8ca5e37d2364f054e0276bddf6
+            #     - 0xeddc8e20b44bc2313117a0befb76086b1159f808
+            #     - 0x830a8f97bba7c7558ae9045414407e00733bb627
+            #     - 0xbfe43ba10f238b6a50923dd7e77114fe820d3eeb
+            #     - 0x4cba62556364705480679aea0f49a3ad5dd14902
+            #     - 0xa5be76c9b8416f93b23251279a34bb1b79adfc03
+            #     - 0xbd5d7df0349ff9671e36ec5545e849cbb93ac7fa
+            #     - 0x1786e3fa4005195cb2e2e7f1e53bb064b22a6f91
+            #     - 0x104f3d52690f941999bf8a2f0e940233a6b08c96
+            #     - 0xf53aed24fbaa33c1c8a7fa06e447ef042bd8cbbd
+            #     - 0xfd012bdc1b9759dfb16ff66db6bce35a03fc1e8b
+            #     - 0x3de084e4dab811bb28772d62a7f01ec075a8f394
+            #     - 0xd5968a370ebf06a953096c2ff8866f2726b89ba3
+            #     - 0x3b7aaf86641c4834fc8356308be56e5760e4adae
+            #     - 0x822dd57f3f921c40d907e14301824055b8b74df6
+            #     - 0x34c0efce1207da82659ce0ce0aaf06946aa7ab2a
+            #     - 0xd75d1629c726756216b663c5507e88d7441a986b
+            #     - 0xb00814592d667c8bf24d47de7d7c013dc83bebfc
+            #     - 0xba4f4ef59261245852fbedda5596775d374495cc
+            #     - 0x85d360f5ea6ec190c623ff522a8c1e48f903a89c
+            #     - 0x3ab0add61c58354c5b111f5ddb2dbce124b15bc3
+            #     - 0x5e1cdd3069dcbaac9ef9047dcbdce5e589c36c1a
+            #     - 0x9b0e45b85167a7fb6b4d53a9f7abaf3d0d2febe7
+            #     - 0x7032521a461954bc6bcadb6948133020032786c3
+            #     - 0x16ea0484a11cf4a691787b3667f93bd6420dd611
+            #     - 0xe50b46f6d3d74c9b59710270bffb25fa99a10ba1
+            #     - 0x49268dcda230d850e3e192677c347af423374a5c
+            #     - 0xc17a98e8e693e3bab054d46f979dd4ba982773f9
+            #     - 0x4251ed140bf791c4112bb61fcb6e72f927e8fef2
+            #     - 0x2afff8b50ed8ce266c0eb6c77c43582191c65857
+            #     - 0xcc3588acadba97cd432bd15d90310a2e1f987718
+            #     - 0x0eecc098b45cac34d9722026c22de9782c38f955
+            #     - 0x9767840f8228b5be676ee215485975c2e7fef78c
+            #     - 0x4f451286ee9a241e3169e0212c6b20936af0cc90
+            #     - 0x7715dd7dee3a681910f8da631c27a3d1ec48d9f5
+            #     - 0x3071546d35afd7f6111fa09dfaac4b6e2bc6f70d
+            #     - 0x6c483c1a825eb23b2a469f706c07d7b2e452cdb2
+            #     - 0x38320d538252355562b290a2623f31b06a660ae3
+            #     - 0x69f8e004ba8d0f5ca80486e2cdacc19b2e314f99
+            #     - 0xa4fdf269a305e3f11bfc17729021f004d93cf03f
+            #     - 0xa7f7731d7f54fc1d99e93382602f12261dc90d49
+            #     - 0xf2e795da2a6c962c1e9b70e60acf56d73c59fbe7
+            #     - 0xee50fbd0e40312c9dd7d1fb67f802cccaa92c6c6
+            #     - 0x1bb9b7bf7a7eb691e3b13056424d660514bb91b9
+            #     - 0xa675ea35f3e411d26fb3c3e5d83f2e0f7e2a3159
+            #     - 0x1b91c129fa9cee54e3decc53bac47e8b2e17e1ab
+            #     - 0xb5f728530fe1477ba8b780823a2d48f367fc9fc2
+            #     - 0x1a16d64311b2d6ef8a774165c554a4f708a74528
+            #     - 0xe0f1d017d198f66400f5cb4c87c64fa81e40650e
+            #     - 0xf0f1239ea9e61a947648e8fc19b0b66dfe2daaaf
+            #     - 0xbd3c7017502b74d91c9af099d1bce3db3d63fd0d
+            #     - 0x55410eaba3930086686a5a56921f6ead7d0ec5bb
+            #     - 0x1f60d27ff37b0c53a6a90c41a5af600a922fab0e
+            #     - 0x2906a9c87e7cd94355a85c91aaab717babe62026
+            #     - 0xccc354584227d923a50bc54a26a0862cd56d27ea
+            #     - 0xbf660843528035a5a4921534e156a27e64b231fe
+    live:
+        gas_limit: auto
+        gas_buffer: 1.1
+        gas_price: auto
+        max_fee: null
+        priority_fee: null
+        reverting_tx_gas_limit: false
+        default_contract_owner: false
+
+compiler:
+    evm_version: null
+    solc:
+        version: 0.6.6
+        optimizer:
+            enabled: true
+            runs: 200
+        remappings:
+            - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@3.1.0"
+            - "@uniswap/v2-periphery=Uniswap/v2-periphery@1.0.0-beta.0"
+            - "@uniswap/v2-core=Uniswap/v2-core@1.0.0"
+    vyper:
+        version: null
+
+console:
+    show_colors: true
+    color_style: monokai
+    auto_suggest: true
+    completions: true
+    editing_mode: emacs
+
+reports:
+    exclude_paths: null
+    exclude_contracts: null
+    only_include_project: true
+
+hypothesis:
+    deadline: null
+    max_examples: 50
+    report_multiple_bugs: False
+    stateful_step_count: 10
+    phases:
+        explicit: true
+        reuse: true
+        generate: true
+        target: true
+        shrink: true
+
+autofetch_sources: false
+dependencies: null
+dev_deployment_artifacts: false
