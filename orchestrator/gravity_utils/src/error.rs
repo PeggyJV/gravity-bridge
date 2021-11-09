@@ -1,6 +1,6 @@
 //! for things that don't belong in the cosmos or ethereum libraries but also don't belong
 //! in a function specific library
-
+use thiserror::Error;
 use clarity::Error as ClarityError;
 use deep_space::error::AddressError as CosmosAddressError;
 use deep_space::error::CosmosGrpcError;
