@@ -391,10 +391,10 @@ async fn test_batch(
     .await
     {
         Ok(_) => {
-            println!("Submitted trtransaction batch set");
+            println!("Submitted transaction batch set");
         }
         Err(_) => {
-            panic!("Failed to submit trtransaction batch set");
+            panic!("Failed to submit transaction batch set");
         }
     }
 
