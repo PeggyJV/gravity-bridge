@@ -95,12 +95,12 @@ pub async fn transaction_stress_test(
                 let c_addr = keys.cosmos_address;
                 let balances = contact.get_balances(c_addr).await.unwrap();
                 for token in erc20_addresses.iter() {
-                    let mut found = false;
+                    let found = false;
                     for balance in balances.iter() {
                         if balance.denom.contains(&token.to_string())
                             && balance.amount == one_hundred_eth()
                         {
-                            found = true;
+                            break;
                         }
                     }
                     if !found {
