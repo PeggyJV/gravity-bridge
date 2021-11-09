@@ -27,9 +27,8 @@ use relayer::main_loop::relayer_main_loop;
 use std::convert::TryInto;
 use std::{
     net,
-    time::{Duration, Instant},
+    time::{Duration},
 };
-use tokio::join;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 use web30::client::Web3;
@@ -198,7 +197,7 @@ pub async fn eth_oracle_main_loop(
                     }
                 }
             },
-            tokio::time::sleep(ETH_ORACLE_LOOP_SPEED)
+            delay_for(ETH_ORACLE_LOOP_SPEED)
         );
     }
 }
@@ -365,7 +364,7 @@ pub async fn eth_signer_main_loop(
                     );
                 }
             },
-            tokio::time::sleep(ETH_SIGNER_LOOP_SPEED)
+            delay_for(ETH_SIGNER_LOOP_SPEED)
         );
     }
 }
