@@ -7,10 +7,10 @@
 use super::{Valset, ValsetMember};
 use crate::error::GravityError;
 use crate::ethereum::downcast_to_u64;
+use crate::gravity::*;
 use deep_space::utils::bytes_to_hex_str;
 use deep_space::Address as CosmosAddress;
 use ethers::abi::RawLog;
-use ethers::contract::abigen;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 
@@ -23,12 +23,6 @@ pub const TRANSACTION_BATCH_EXECUTED_EVENT_STR: &'static str =
     "TransactionBatchExecutedEvent(uint256,address,uint256)";
 pub const VALSET_UPDATED_EVENT_STR: &'static str =
     "ValsetUpdatedEvent(uint256,uint256,address[],uint256[])";
-
-abigen!(
-    Gravity,
-    "abi/Gravity.json",
-    event_derives(serde::Deserialize, serde::Serialize)
-);
 
 // given a Log retrieved by querying the Ethereum chain, decode it into one of
 // the types we are generating using abigen! above for the Gravity contract

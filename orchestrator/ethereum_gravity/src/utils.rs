@@ -3,12 +3,14 @@ use clarity::Uint256;
 use clarity::{abi::encode_tokens, Address as EthAddress};
 use ethers::prelude::*;
 use gravity_utils::error::GravityError;
+use gravity_utils::gravity::*;
 use gravity_utils::types::*;
 use sha3::{Digest, Keccak256};
 use std::panic;
 use web30::{client::Web3, jsonrpc::error::Web3Error};
 
-pub type EthClient = Arc<SignerMiddleware<Provider<Http>, LocalWallet>>;
+pub type EthSignerMiddleware = SignerMiddleware<Provider<Http>, LocalWallet>;
+pub type EthClient = Arc<EthSignerMiddleware>;
 
 pub fn get_checkpoint_abi_encode(
     valset: &Valset,
@@ -145,14 +147,14 @@ pub async fn get_gravity_id(
     let price = latest_block.base_fee_per_gas.ok_or(1u8.into()); // shouldn't happen unless pre-London
     let limit = min(GAS_LIMIT.into(), caller_balance / price.clone());
 
-    let contract = Gravity::new(contract_address, eth_client);
-    let contract_call = contract.state_gravityId()
+    let contract: Gravity<EthSignerMiddleware> = Gravity::new(contract_address, eth_client);
+    let contract_call = contract.state_gravity_id()
         .from(caller_address)
         .gas(limit.into())
         .gas_price(price.into())
         .value(0u8.into());
 
-    String::from_utf8(contract_call.call().await?)
+    String::from_utf8(contract_call.call().await?.to_vec())
 }
 
 /// Gets the ERC20 symbol, should maybe be upstreamed
