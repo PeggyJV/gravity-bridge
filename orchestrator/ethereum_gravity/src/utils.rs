@@ -8,6 +8,8 @@ use sha3::{Digest, Keccak256};
 use std::panic;
 use web30::{client::Web3, jsonrpc::error::Web3Error};
 
+pub type EthClient = Arc<SignerMiddleware<Provider<Http>, LocalWallet>>;
+
 pub fn get_checkpoint_abi_encode(
     valset: &Valset,
     gravity_id: &str,

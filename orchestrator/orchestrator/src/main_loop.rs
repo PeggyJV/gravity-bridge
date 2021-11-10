@@ -22,7 +22,7 @@ use deep_space::client::ChainStatus;
 use deep_space::error::CosmosGrpcError;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::{Contact, Msg};
-use ethereum_gravity::utils::get_gravity_id;
+use ethereum_gravity::utils::{EthClient, get_gravity_id};
 use ethers::{prelude::*, types::Address as EthAddress};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use relayer::main_loop::relayer_main_loop;
@@ -36,8 +36,6 @@ use tokio::join;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 use web30::client::Web3;
-
-pub type EthClient = Arc<SignerMiddleware<Provider<Http>, LocalWallet>>;
 
 /// The execution speed governing all loops in this file
 /// which is to say all loops started by Orchestrator main

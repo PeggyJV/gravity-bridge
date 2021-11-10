@@ -2,14 +2,12 @@ use crate::{
     batch_relaying::relay_batches, find_latest_valset::find_latest_valset,
     logic_call_relaying::relay_logic_calls, valset_relaying::relay_valsets,
 };
-use ethereum_gravity::utils::get_gravity_id;
+use ethereum_gravity::utils::{EthClient, get_gravity_id};
 use ethers::{prelude::*, types::Address as EthAddress};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use std::{sync::Arc, time::{Duration, Instant}};
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
-
-pub type EthClient = Arc<SignerMiddleware<Provider<Http>, LocalWallet>>;
 
 pub const LOOP_SPEED: Duration = Duration::from_secs(17);
 
@@ -27,7 +25,7 @@ pub async fn relayer_main_loop(
 
         let our_ethereum_address = eth_client.address();
         let current_eth_valset =
-            find_latest_valset(&mut grpc_client, gravity_contract_address, &web3).await;
+            find_latest_valset(&mut grpc_client, gravity_contract_address, eth_client.clone()).await;
         if current_eth_valset.is_err() {
             error!("Could not get current valset! {:?}", current_eth_valset);
             continue;
@@ -35,7 +33,7 @@ pub async fn relayer_main_loop(
         let current_eth_valset = current_eth_valset.unwrap();
 
         let gravity_id =
-            get_gravity_id(gravity_contract_address, our_ethereum_address, &web3).await;
+            get_gravity_id(gravity_contract_address, our_ethereum_address, eth_client.clone()).await;
         if gravity_id.is_err() {
             error!("Failed to get GravityID, check your Eth node");
             return;
@@ -44,8 +42,7 @@ pub async fn relayer_main_loop(
 
         relay_valsets(
             current_eth_valset.clone(),
-            ethereum_key,
-            &web3,
+            eth_client.clone(),
             &mut grpc_client,
             gravity_contract_address,
             gravity_id.clone(),
@@ -55,8 +52,7 @@ pub async fn relayer_main_loop(
 
         relay_batches(
             current_eth_valset.clone(),
-            ethereum_key,
-            &web3,
+            eth_client.clone(),
             &mut grpc_client,
             gravity_contract_address,
             gravity_id.clone(),
@@ -67,8 +63,7 @@ pub async fn relayer_main_loop(
 
         relay_logic_calls(
             current_eth_valset,
-            ethereum_key,
-            &web3,
+            eth_client.clone(),
             &mut grpc_client,
             gravity_contract_address,
             gravity_id.clone(),
