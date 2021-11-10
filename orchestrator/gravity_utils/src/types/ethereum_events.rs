@@ -4,7 +4,7 @@
 //! mirror Serde and perhaps even become a serde crate for Ethereum ABI decoding
 //! For now reference the ABI encoding document here https://docs.soliditylang.org/en/v0.8.3/abi-spec.html
 
-use super::ValsetMember;
+use super::{Valset, ValsetMember};
 use crate::error::GravityError;
 use crate::ethereum::downcast_to_u64;
 use deep_space::utils::bytes_to_hex_str;
@@ -14,11 +14,15 @@ use ethers::contract::abigen;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 
-pub const ERC20_DEPLOYED_EVENT_STR: &'static str = "ERC20DeployedEvent(string,address,string,string,uint8,uint256)";
+pub const ERC20_DEPLOYED_EVENT_STR: &'static str =
+    "ERC20DeployedEvent(string,address,string,string,uint8,uint256)";
 pub const LOGIC_CALL_EVENT_STR: &'static str = "LogicCallEvent(bytes32,uint256,bytes,uint256)";
-pub const SEND_TO_COSMOS_EVENT_STR: &'static str = "SendToCosmosEvent(address,address,bytes32,uint256,uint256)";
-pub const TRANSACTION_BATCH_EXECUTED_EVENT_STR: &'static str = "TransactionBatchExecutedEvent(uint256,address,uint256)";
-pub const VALSET_UPDATED_EVENT_STR: &'static str = "ValsetUpdatedEvent(uint256,uint256,address[],uint256[])";
+pub const SEND_TO_COSMOS_EVENT_STR: &'static str =
+    "SendToCosmosEvent(address,address,bytes32,uint256,uint256)";
+pub const TRANSACTION_BATCH_EXECUTED_EVENT_STR: &'static str =
+    "TransactionBatchExecutedEvent(uint256,address,uint256)";
+pub const VALSET_UPDATED_EVENT_STR: &'static str =
+    "ValsetUpdatedEvent(uint256,uint256,address[],uint256[])";
 
 abigen!(
     Gravity,
@@ -32,7 +36,8 @@ fn log_to_ethers_event<T: EthLogDecode>(log: &Log) -> Result<T, ethers::abi::Err
     T::decode_log(&RawLog {
         topics: log.topics,
         data: log.data.to_vec(),
-    }).map_err(From::from)
+    })
+    .map_err(From::from)
 }
 
 // our event model structs use U256 to represent block height, but Logs provide it
@@ -40,9 +45,59 @@ fn log_to_ethers_event<T: EthLogDecode>(log: &Log) -> Result<T, ethers::abi::Err
 fn block_height_from_log(log: &Log) -> Result<U256, GravityError> {
     match log.block_number.clone() {
         Some(block_height) => Ok(U256::from(block_height.as_u64())),
-        None => Err(GravityError::InvalidEventLogError(
-            format!("Log does not have block number, we only search logs already in blocks? {:?}", log))
-        )
+        None => Err(GravityError::InvalidEventLogError(format!(
+            "Log does not have block number, we only search logs already in blocks? {:?}",
+            log
+        ))),
+    }
+}
+
+// some traits to avoid code duplication
+
+pub trait FromLog: Sized {
+    fn from_log(input: &Log) -> Result<Self, GravityError>;
+}
+
+pub trait FromLogWithPrefix: Sized {
+    fn from_log(input: &Log, prefix: &str) -> Result<Self, GravityError>;
+}
+
+pub trait EventNonce {
+    fn get_event_nonce(&self) -> U256;
+}
+
+pub trait FromLogs {
+    fn from_logs<T: FromLog>(input: &[Log]) -> Result<Vec<T>, GravityError> {
+        let mut res = Vec::new();
+        for item in input {
+            res.push(T::from_log(item)?);
+        }
+        Ok(res)
+    }
+}
+
+pub trait FromLogsWithPrefix {
+    fn from_logs<T: FromLogWithPrefix>(
+        input: &[Log],
+        prefix: &str,
+    ) -> Result<Vec<T>, GravityError> {
+        let mut res = Vec::new();
+        for item in input {
+            res.push(T::from_log(item, prefix)?);
+        }
+        Ok(res)
+    }
+}
+
+pub trait EventNonceFilter: Sized {
+    /// returns all values in the array with event nonces greater
+    /// than the provided value
+    fn filter_by_event_nonce<T: EventNonce>(event_nonce: u64, input: &[T]) -> Vec<T> {
+        input
+            .iter()
+            .filter(|item| item.get_event_nonce() > event_nonce.into())
+            .map(|item| *item.clone())
+            .collect()
     }
 }
 
@@ -56,10 +111,10 @@ pub struct ValsetUpdatedEvent {
     pub members: Vec<ValsetMember>,
 }
 
-impl ValsetUpdatedEvent {
+impl FromLog for ValsetUpdatedEvent {
     /// This function is not an abi compatible bytes parser, but it's actually
     /// not hard at all to extract data like this by hand.
-    pub fn from_log(input: &Log) -> Result<ValsetUpdatedEvent, GravityError> {
+    fn from_log(input: &Log) -> Result<ValsetUpdatedEvent, GravityError> {
         let event: ValsetUpdatedEventFilter = log_to_ethers_event(input)?;
 
         let mut powers: Vec<u64> = Vec::new();
@@ -67,19 +122,19 @@ impl ValsetUpdatedEvent {
             if let Some(downcast_power) = downcast_to_u64(power) {
                 powers.push(downcast_power);
             } else {
-                return Err(GravityError::InvalidEventLogError(
-                    format!("ValsetUpdatedEvent contains powers that cannot be downcast to u64: {:?}", event))
-                )
+                return Err(GravityError::InvalidEventLogError(format!(
+                    "ValsetUpdatedEvent contains powers that cannot be downcast to u64: {:?}",
+                    event
+                )));
             }
         }
 
-        let validators: Vec<ValsetMember> = powers.iter()
+        let validators: Vec<ValsetMember> = powers
+            .iter()
             .zip(event.validators.iter())
-            .map(|(power, validator)| {
-                ValsetMember {
-                    power: *power,
-                    eth_address: Some(*validator),
-                }
+            .map(|(power, validator)| ValsetMember {
+                power: *power,
+                eth_address: Some(*validator),
             })
             .collect();
 
@@ -103,24 +158,15 @@ impl ValsetUpdatedEvent {
             members: validators,
         })
     }
+}
 
-    pub fn from_logs(input: &[Log]) -> Result<Vec<ValsetUpdatedEvent>, GravityError> {
-        let mut res = Vec::new();
-        for item in input {
-            res.push(ValsetUpdatedEvent::from_log(item)?);
-        }
-        Ok(res)
-    }
-
-    /// returns all values in the array with event nonces greater
-    /// than the provided value
-    pub fn filter_by_event_nonce(event_nonce: u64, input: &[Self]) -> Vec<Self> {
-        input.iter()
-            .filter(|item| item.event_nonce > event_nonce.into())
-            .map(|item| item.clone())
-            .collect()
+impl FromLogs for ValsetUpdatedEvent {}
+impl EventNonce for ValsetUpdatedEvent {
+    fn get_event_nonce(&self) -> U256 {
+        self.event_nonce
     }
 }
+impl EventNonceFilter for ValsetUpdatedEvent {}
 
 /// A parsed struct representing the Ethereum event fired by the Gravity contract when
 /// a transaction batch is executed.
@@ -151,24 +197,15 @@ impl TransactionBatchExecutedEvent {
             event_nonce: event.event_nonce,
         })
     }
+}
 
-    pub fn from_logs(input: &[Log]) -> Result<Vec<TransactionBatchExecutedEvent>, GravityError> {
-        let mut res = Vec::new();
-        for item in input {
-            res.push(TransactionBatchExecutedEvent::from_log(item)?);
-        }
-        Ok(res)
-    }
-
-    /// returns all values in the array with event nonces greater
-    /// than the provided value
-    pub fn filter_by_event_nonce(event_nonce: u64, input: &[Self]) -> Vec<Self> {
-        input.iter()
-            .filter(|item| item.event_nonce > event_nonce.into())
-            .map(|item| item.clone())
-            .collect()
+impl FromLogs for TransactionBatchExecutedEvent {}
+impl EventNonce for TransactionBatchExecutedEvent {
+    fn get_event_nonce(&self) -> U256 {
+        self.event_nonce
     }
 }
+impl EventNonceFilter for TransactionBatchExecutedEvent {}
 
 /// A parsed struct representing the Ethereum event fired when someone makes a deposit
 /// on the Gravity contract
@@ -188,8 +225,8 @@ pub struct SendToCosmosEvent {
     pub block_height: U256,
 }
 
-impl SendToCosmosEvent {
-    pub fn from_log(input: &Log, prefix: &str) -> Result<SendToCosmosEvent, GravityError> {
+impl FromLogWithPrefix for SendToCosmosEvent {
+    fn from_log(input: &Log, prefix: &str) -> Result<SendToCosmosEvent, GravityError> {
         let event: SendToCosmosEventFilter = log_to_ethers_event(input)?;
 
         // TODO(bolten): verify this method of retrieval for Cosmos addresses works as expected
@@ -202,27 +239,15 @@ impl SendToCosmosEvent {
             block_height: block_height_from_log(&input)?,
         })
     }
+}
 
-    pub fn from_logs(
-        input: &[Log],
-        prefix: &str,
-    ) -> Result<Vec<SendToCosmosEvent>, GravityError> {
-        let mut res = Vec::new();
-        for item in input {
-            res.push(Self::from_log(item, prefix)?);
-        }
-        Ok(res)
-    }
-
-    /// returns all values in the array with event nonces greater
-    /// than the provided value
-    pub fn filter_by_event_nonce(event_nonce: u64, input: &[Self]) -> Vec<Self> {
-        input.iter()
-            .filter(|item| item.event_nonce > event_nonce.into())
-            .map(|item| item.clone())
-            .collect()
+impl FromLogsWithPrefix for SendToCosmosEvent {}
+impl EventNonce for SendToCosmosEvent {
+    fn get_event_nonce(&self) -> U256 {
+        self.event_nonce
     }
 }
+impl EventNonceFilter for SendToCosmosEvent {}
 
 /// A parsed struct representing the Ethereum event fired when someone uses the Gravity
 /// contract to deploy a new ERC20 contract representing a Cosmos asset
@@ -258,24 +283,16 @@ impl Erc20DeployedEvent {
             block_height: block_height_from_log(&input)?,
         })
     }
+}
 
-    pub fn from_logs(input: &[Log]) -> Result<Vec<Erc20DeployedEvent>, GravityError> {
-        let mut res = Vec::new();
-        for item in input {
-            res.push(Erc20DeployedEvent::from_log(item)?);
-        }
-        Ok(res)
-    }
-
-    /// returns all values in the array with event nonces greater
-    /// than the provided value
-    pub fn filter_by_event_nonce(event_nonce: u64, input: &[Self]) -> Vec<Self> {
-        input.iter()
-            .filter(|item| item.event_nonce > event_nonce.into())
-            .map(|item| item.clone())
-            .collect()
+impl FromLogs for Erc20DeployedEvent {}
+impl EventNonce for Erc20DeployedEvent {
+    fn get_event_nonce(&self) -> U256 {
+        self.event_nonce
     }
 }
+impl EventNonceFilter for Erc20DeployedEvent {}
+
 /// A parsed struct representing the Ethereum event fired when someone uses the Gravity
 /// contract to deploy a new ERC20 contract representing a Cosmos asset
 #[derive(Serialize, Deserialize, Debug, Default, Clone, Eq, PartialEq, Hash)]
@@ -299,24 +316,15 @@ impl LogicCallExecutedEvent {
             block_height: block_height_from_log(&input)?,
         })
     }
+}
 
-    pub fn from_logs(input: &[Log]) -> Result<Vec<LogicCallExecutedEvent>, GravityError> {
-        let mut res = Vec::new();
-        for item in input {
-            res.push(LogicCallExecutedEvent::from_log(item)?);
-        }
-        Ok(res)
-    }
-
-    /// returns all values in the array with event nonces greater
-    /// than the provided value
-    pub fn filter_by_event_nonce(event_nonce: u64, input: &[Self]) -> Vec<Self> {
-        input.iter()
-            .filter(|item| item.event_nonce > event_nonce.into())
-            .map(|item| item.clone())
-            .collect()
+impl FromLogs for LogicCallExecutedEvent {}
+impl EventNonce for LogicCallExecutedEvent {
+    fn get_event_nonce(&self) -> U256 {
+        self.event_nonce
     }
 }
+impl EventNonceFilter for LogicCallExecutedEvent {}
 
 /// Function used for debug printing hex dumps
 /// of ethereum events
