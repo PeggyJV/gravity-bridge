@@ -3,14 +3,13 @@
 
 use std::time::Duration;
 
-use clarity::address::Address as EthAddress;
 use clarity::utils::bytes_to_hex_str;
-use clarity::PrivateKey as EthPrivateKey;
 use cosmos_gravity::query::get_latest_valset;
 use cosmos_gravity::query::{get_all_valset_confirms, get_valset};
-use ethereum_gravity::{one_eth, utils::downcast_to_u128, valset_update::send_eth_valset_update};
+use ethereum_gravity::{one_eth, valset_update::send_eth_valset_update};
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::{message_signatures::encode_valset_confirm_hashed, types::Valset};
+use gravity_utils::{ethereum::downcast_to_u128, message_signatures::encode_valset_confirm_hashed, types::Valset};
 use tonic::transport::Channel;
 use web30::client::Web3;
 
@@ -19,8 +18,7 @@ use web30::client::Web3;
 pub async fn relay_valsets(
     // the validator set currently in the contract on Ethereum
     current_eth_valset: Valset,
-    ethereum_key: EthPrivateKey,
-    web3: &Web3,
+    eth_client: EthClient,
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     gravity_id: String,
@@ -132,10 +130,9 @@ pub async fn relay_valsets(
             &latest_cosmos_valset,
             &current_eth_valset,
             &latest_cosmos_confirmed,
-            web3,
+            eth_client.clone(),
             gravity_contract_address,
             gravity_id.clone(),
-            ethereum_key,
         )
         .await;
         if cost.is_err() {

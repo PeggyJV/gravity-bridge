@@ -101,7 +101,7 @@ impl Valset {
                     powers.push(val.power);
                 }
                 None => {
-                    addresses.push(EthAddress::default());
+                    addresses.push(EthAddress::zero());
                     powers.push(val.power);
                 }
             }

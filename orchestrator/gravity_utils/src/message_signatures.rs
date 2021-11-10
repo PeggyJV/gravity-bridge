@@ -1,6 +1,7 @@
 use crate::types::{LogicCall, TransactionBatch, Valset};
-use clarity::abi::{encode_tokens, Token};
 use clarity::utils::get_ethereum_msg_hash;
+use ethers::core::abi::{self, Token};
+use ethers::utils::hash_message;
 
 /// takes the required input data and produces the required signature to confirm a validator
 /// set update on the Gravity Ethereum contract. This value will then be signed before being
@@ -9,18 +10,21 @@ use clarity::utils::get_ethereum_msg_hash;
 /// digest that is normally signed or may be used as a 'hash of the message'
 pub fn encode_valset_confirm(gravity_id: String, valset: Valset) -> Vec<u8> {
     let (eth_addresses, powers) = valset.filter_empty_addresses();
-    encode_tokens(&[
-        Token::FixedString(gravity_id),
-        Token::FixedString("checkpoint".to_string()),
-        valset.nonce.into(),
-        eth_addresses.into(),
-        powers.into(),
+    let eth_addresses = eth_addresses.iter().map (|address| Token::Address(*address)).collect();
+    let powers = powers.iter().map(|power| Token::Uint((*power).into())).collect();
+
+    abi::encode(&[
+        Token::FixedBytes(gravity_id.into_bytes()),
+        Token::FixedBytes("checkpoint".to_string().into_bytes()),
+        Token::Uint(valset.nonce.into()),
+        Token::Array(eth_addresses),
+        Token::Array(powers),
     ])
 }
 
 pub fn encode_valset_confirm_hashed(gravity_id: String, valset: Valset) -> Vec<u8> {
     let digest = encode_valset_confirm(gravity_id, valset);
-    get_ethereum_msg_hash(&digest)
+    hash_message(digest).as_bytes().to_vec()
 }
 
 #[test]

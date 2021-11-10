@@ -1,5 +1,5 @@
-use clarity::Address as EthAddress;
 use deep_space::address::Address;
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_proto::gravity::*;
 use gravity_utils::error::GravityError;

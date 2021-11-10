@@ -72,10 +72,9 @@ pub async fn estimate_valset_cost(
     new_valset: &Valset,
     old_valset: &Valset,
     confirms: &[ValsetConfirmResponse],
-    web3: &Web3,
+    eth_client: EthClient,
     gravity_contract_address: EthAddress,
     gravity_id: String,
-    our_eth_key: EthPrivateKey,
 ) -> Result<GasCost, GravityError> {
     let our_eth_address = our_eth_key.to_public_key().unwrap();
     let our_balance = web3.eth_get_balance(our_eth_address).await?;
