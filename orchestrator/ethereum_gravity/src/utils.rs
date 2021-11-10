@@ -136,17 +136,23 @@ pub async fn get_event_nonce(
 pub async fn get_gravity_id(
     contract_address: EthAddress,
     caller_address: EthAddress,
-    web3: &Web3,
-) -> Result<String, Web3Error> {
-    let payload = encode_call("state_gravityId()", &[]).unwrap();
-    let val = web3
-        .simulate_transaction(contract_address, 0u8.into(), payload, caller_address, None)
-        .await?;
-    let gravity_id = String::from_utf8(val);
-    match gravity_id {
-        Ok(val) => Ok(val),
-        Err(e) => Err(Web3Error::BadResponse(e.to_string())),
-    }
+    eth_client: EthClient,
+) -> Result<String, GravityError> {
+    const GAS_LIMIT: u128 = 12450000; // the most Hardhat will allow, will work on Geth
+
+    let caller_balance = eth_client.get_balance(caller_address, None).await?;
+    let latest_block = eth_client.get_block(BlockNumber::Latest).await?;
+    let price = latest_block.base_fee_per_gas.ok_or(1u8.into()); // shouldn't happen unless pre-London
+    let limit = min(GAS_LIMIT.into(), caller_balance / price.clone());
+
+    let contract = Gravity::new(contract_address, eth_client);
+    let contract_call = contract.state_gravityId()
+        .from(caller_address)
+        .gas(limit.into())
+        .gas_price(price.into())
+        .value(0u8.into());
+
+    String::from_utf8(contract_call.call().await?)
 }
 
 /// Gets the ERC20 symbol, should maybe be upstreamed
