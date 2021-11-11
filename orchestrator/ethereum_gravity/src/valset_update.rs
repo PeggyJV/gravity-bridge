@@ -1,10 +1,9 @@
 use crate::utils::{get_valset_nonce, GasCost};
-use clarity::PrivateKey as EthPrivateKey;
-use clarity::{Address as EthAddress, Uint256};
+use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
 use gravity_utils::types::*;
 use gravity_utils::{error::GravityError, message_signatures::encode_valset_confirm_hashed};
 use std::{cmp::min, time::Duration};
-use web30::{client::Web3, types::TransactionRequest};
 
 /// this function generates an appropriate Ethereum transaction
 /// to submit the provided validator set and signatures.
@@ -13,16 +12,15 @@ pub async fn send_eth_valset_update(
     new_valset: Valset,
     old_valset: Valset,
     confirms: &[ValsetConfirmResponse],
-    web3: &Web3,
     timeout: Duration,
     gravity_contract_address: EthAddress,
     gravity_id: String,
-    our_eth_key: EthPrivateKey,
+    eth_client: EthClient,
 ) -> Result<(), GravityError> {
     let old_nonce = old_valset.nonce;
     let new_nonce = new_valset.nonce;
     assert!(new_nonce > old_nonce);
-    let eth_address = our_eth_key.to_public_key().unwrap();
+    let eth_address = eth_client.address();
     info!(
         "Ordering signatures and submitting validator set {} -> {} update to Ethereum",
         old_nonce, new_nonce

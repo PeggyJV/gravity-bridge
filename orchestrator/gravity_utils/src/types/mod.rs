@@ -6,7 +6,6 @@ mod valsets;
 use crate::error::GravityError;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
-use std::str::FromStr;
 
 pub use batches::*;
 pub use ethereum_events::*;
@@ -25,7 +24,7 @@ impl Erc20Token {
     pub fn from_proto(input: gravity_proto::gravity::Erc20Token) -> Result<Self, GravityError> {
         Ok(Erc20Token {
             amount: U256::from_dec_str(input.amount.as_str())?,
-            token_contract_address: EthAddress::from_str(&input.contract)?,
+            token_contract_address: input.contract.parse()?,
         })
     }
 }
