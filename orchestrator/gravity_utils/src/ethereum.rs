@@ -15,6 +15,13 @@ pub fn downcast_to_u128(input: U256) -> Option<u128> {
     }
 }
 
+pub fn bytes_to_hex_str(bytes: &[u8]) -> String {
+    bytes
+        .iter()
+        .map(|b| format!("{:0>2x?}", b))
+        .fold(String::new(), |acc, x| acc + &x)
+}
+
 #[test]
 fn test_downcast_to_u64() {
     let mut i = 0u64;
@@ -45,4 +52,14 @@ fn test_downcast_to_u128() {
         assert_eq!(i, downcast_to_u128(i.into()).unwrap());
         i += 1
     }
+}
+
+#[test]
+fn encode_bytes() {
+    assert_eq!(bytes_to_hex_str(&[0xf]), "0f".to_owned());
+    assert_eq!(bytes_to_hex_str(&[0xff]), "ff".to_owned());
+    assert_eq!(
+        bytes_to_hex_str(&[0xde, 0xad, 0xbe, 0xef]),
+        "deadbeef".to_owned()
+    );
 }

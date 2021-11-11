@@ -3,13 +3,13 @@
 
 use std::time::Duration;
 
-use clarity::utils::bytes_to_hex_str;
 use cosmos_gravity::query::get_latest_valset;
 use cosmos_gravity::query::{get_all_valset_confirms, get_valset};
 use ethereum_gravity::{one_eth, valset_update::send_eth_valset_update};
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::{ethereum::downcast_to_u128, message_signatures::encode_valset_confirm_hashed, types::Valset};
+use gravity_utils::{ethereum::downcast_to_u128, ethereum::bytes_to_hex_str,
+    message_signatures::encode_valset_confirm_hashed, types::Valset};
 use tonic::transport::Channel;
 use web30::client::Web3;
 
@@ -73,7 +73,7 @@ pub async fn relay_valsets(
                 // there are two possible encoding problems that could cause the very rare sig failure bug,
                 // one of them is that the hash is incorrect, that's not probable considering that
                 // both Geth and Clarity agree on it. but this lets us check
-                info!("New valset hash {}", bytes_to_hex_str(&hash),);
+                info!("New valset hash {}", bytes_to_hex_str(&hash));
 
                 // order valset sigs prepares signatures for submission, notice we compare
                 // them to the 'current' set in the bridge, this confirms for us that the validator set
