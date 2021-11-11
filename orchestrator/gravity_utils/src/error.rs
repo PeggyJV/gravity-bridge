@@ -5,8 +5,10 @@ use clarity::Error as ClarityError;
 use deep_space::error::AddressError as CosmosAddressError;
 use deep_space::error::CosmosGrpcError;
 use ethers::abi::Error as EthersAbiError;
+use ethers::abi::ethereum_types::FromDecStrErr as EthersParseUintError;
 use ethers::prelude::*;
 use ethers::prelude::signer::SignerMiddlewareError;
+use hex::FromHexError;
 use num_bigint::ParseBigIntError;
 use std::fmt::{self, Debug};
 use tokio::time::error::Elapsed;
@@ -20,6 +22,8 @@ pub enum GravityError {
     CosmosAddressError(CosmosAddressError),
     EthereumRestError(SignerMiddlewareError<Provider<Http>, LocalWallet>),
     EthersAbiError(EthersAbiError),
+    EthersParseAddressError(FromHexError),
+    EthersParseUintError(EthersParseUintError),
     InvalidBridgeStateError(String),
     FailedToUpdateValset,
     EthereumContractError(String),
@@ -43,6 +47,8 @@ impl fmt::Display for GravityError {
             GravityError::CosmosAddressError(val) => write!(f, "Cosmos Address error {}", val),
             GravityError::EthereumRestError(val) => write!(f, "Ethereum REST error {}", val),
             GravityError::EthersAbiError(val) => write!(f, "Ethers ABI error {}", val),
+            GravityError::EthersParseAddressError(val) => write!(f, "Ethers H160 address parse error {}", val),
+            GravityError::EthersParseUintError(val) => write!(f, "Ethers U256 parse error {}", val),
             GravityError::InvalidOptionsError(val) => {
                 write!(f, "Invalid TX options for this call {}", val)
             }
@@ -93,6 +99,18 @@ impl From<SignerMiddlewareError<Provider<Http>, LocalWallet>> for GravityError {
 impl From<EthersAbiError> for GravityError {
     fn from(error: EthersAbiError) -> Self {
         GravityError::EthersAbiError(error)
+    }
+}
+
+impl From<EthersParseAddressError> for GravityError {
+    fn from(error: EthersParseAddressError) -> Self {
+        GravityError::EthersParseAddressError(error)
+    }
+}
+
+impl From<EthersParseUintError> for GravityError {
+    fn from(error: EthersParseUintError) -> Self {
+        GravityError::EthersParseUintError(error)
     }
 }
 

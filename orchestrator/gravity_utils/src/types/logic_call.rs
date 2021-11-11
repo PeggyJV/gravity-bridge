@@ -1,6 +1,7 @@
 use super::*;
 use crate::error::GravityError;
-use clarity::{Address as EthAddress, Signature as EthSignature};
+use clarity::Signature as EthSignature;
+use ethers::types::Address as EthAddress;
 
 /// the response we get when querying for a valset confirmation
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]

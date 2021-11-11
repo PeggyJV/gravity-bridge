@@ -2220,6 +2220,7 @@ dependencies = [
  "deep_space 2.4.7",
  "ethers",
  "gravity_proto",
+ "hex",
  "log",
  "num-bigint 0.4.0",
  "num256",

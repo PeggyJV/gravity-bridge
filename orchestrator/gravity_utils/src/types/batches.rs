@@ -1,7 +1,8 @@
 use super::*;
 use crate::error::GravityError;
 use clarity::Signature as EthSignature;
-use clarity::{abi::Token, Address as EthAddress};
+use ethers::core::abi::Token;
+use ethers::types::Address as EthAddress;
 use deep_space::Address as CosmosAddress;
 
 /// This represents an individual transaction being bridged over to Ethereum
@@ -50,16 +51,16 @@ impl TransactionBatch {
         let mut destinations = Vec::new();
         let mut fees = Vec::new();
         for item in self.transactions.iter() {
-            amounts.push(Token::Uint(item.erc20_token.amount.clone()));
-            fees.push(Token::Uint(item.erc20_fee.amount.clone()));
-            destinations.push(item.ethereum_recipient)
+            amounts.push(Token::Uint(item.erc20_token.amount));
+            fees.push(Token::Uint(item.erc20_fee.amount));
+            destinations.push(Token::Address(item.ethereum_recipient))
         }
         assert_eq!(amounts.len(), destinations.len());
         assert_eq!(fees.len(), destinations.len());
         (
-            Token::Dynamic(amounts),
-            destinations.into(),
-            Token::Dynamic(fees),
+            Token::Array(amounts),
+            Token::Array(destinations),
+            Token::Array(fees),
         )
     }
 

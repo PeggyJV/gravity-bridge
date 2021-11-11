@@ -1,5 +1,4 @@
 use crate::types::{LogicCall, TransactionBatch, Valset};
-use clarity::utils::get_ethereum_msg_hash;
 use ethers::core::abi::{self, Token};
 use ethers::utils::hash_message;
 
@@ -113,21 +112,22 @@ fn test_valset_signature() {
 /// digest that is normally signed or may be used as a 'hash of the message'
 pub fn encode_tx_batch_confirm(gravity_id: String, batch: TransactionBatch) -> Vec<u8> {
     let (amounts, destinations, fees) = batch.get_checkpoint_values();
-    encode_tokens(&[
-        Token::FixedString(gravity_id),
-        Token::FixedString("transactionBatch".to_string()),
+
+    abi::encode(&[
+        Token::FixedBytes(gravity_id.into_bytes()),
+        Token::FixedBytes("transactionBatch".to_string().into_bytes()),
         amounts,
         destinations,
         fees,
-        batch.nonce.into(),
-        batch.token_contract.into(),
-        batch.batch_timeout.into(),
+        Token::Uint(batch.nonce.into()),
+        Token::Address(batch.token_contract),
+        Token::Uint(batch.batch_timeout.into()),
     ])
 }
 
 pub fn encode_tx_batch_confirm_hashed(gravity_id: String, batch: TransactionBatch) -> Vec<u8> {
     let digest = encode_tx_batch_confirm(gravity_id, batch);
-    get_ethereum_msg_hash(&digest)
+    hash_message(digest).as_bytes().to_vec()
 }
 
 #[test]
@@ -241,37 +241,33 @@ fn test_specific_batch_signature() {
 /// Note: This is the message, you need to run Keccak256::digest() in order to get the 32byte
 /// digest that is normally signed or may be used as a 'hash of the message'
 pub fn encode_logic_call_confirm(gravity_id: String, call: LogicCall) -> Vec<u8> {
-    let mut transfer_amounts = Vec::new();
-    let mut transfer_token_contracts = Vec::new();
-    let mut fee_amounts = Vec::new();
-    let mut fee_token_contracts = Vec::new();
-    for item in call.transfers.iter() {
-        transfer_amounts.push(Token::Uint(item.amount.clone()));
-        transfer_token_contracts.push(item.token_contract_address);
-    }
-    for item in call.fees.iter() {
-        fee_amounts.push(Token::Uint(item.amount.clone()));
-        fee_token_contracts.push(item.token_contract_address);
-    }
+    let transfer_amounts = call.transfers.iter()
+        .map(|transfer| Token::Uint(transfer.amount)).collect();
+    let transfer_token_contracts = call.transfers.iter()
+        .map(|transfer| Token::Address(transfer.token_contract_address)).collect();
+    let fee_amounts = call.fees.iter()
+        .map(|fee| Token::Uint(fee.amount)).collect();
+    let fee_token_contracts = call.fees.iter()
+        .map(|fee| Token::Address(fee.token_contract_address)).collect();
 
-    encode_tokens(&[
-        Token::FixedString(gravity_id),              // Gravity Instance ID
-        Token::FixedString("logicCall".to_string()), //Function Name
-        Token::Dynamic(transfer_amounts),            //Array of Transfer amounts
-        transfer_token_contracts.into(),             //ERC-20 contract for transfers
-        Token::Dynamic(fee_amounts),                 // Array of Fees
-        fee_token_contracts.into(),                  // ERC-20 contract for fee payments
-        call.logic_contract_address.into(),          // Address of a logic contract
-        Token::UnboundedBytes(call.payload),         // Encoded arguments to logic contract
-        call.timeout.into(),                         // Timeout on batch
-        Token::Bytes(call.invalidation_id),          // Scope of logic batch
-        call.invalidation_nonce.into(),              // Nonce of logic batch. See 2-d nonce scheme.
+    abi::encode(&[
+        Token::FixedBytes(gravity_id.into_bytes()),              // Gravity Instance ID
+        Token::FixedBytes("logicCall".to_string().into_bytes()), // Function Name
+        Token::Array(transfer_amounts),                          // Array of Transfer amounts
+        Token::Array(transfer_token_contracts),                  // ERC-20 contract for transfers
+        Token::Array(fee_amounts),                               // Array of Fees
+        Token::Array(fee_token_contracts),                       // ERC-20 contract for fee payments
+        Token::Address(call.logic_contract_address),             // Address of a logic contract
+        Token::Bytes(call.payload),                              // Encoded arguments to logic contract
+        Token::Uint(call.timeout.into()),                        // Timeout on batch
+        Token::FixedBytes(call.invalidation_id),                 // Scope of logic batch
+        Token::Uint(call.invalidation_nonce.into()),             // Nonce of logic batch. See 2-d nonce scheme.
     ])
 }
 
 pub fn encode_logic_call_confirm_hashed(gravity_id: String, call: LogicCall) -> Vec<u8> {
     let digest = encode_logic_call_confirm(gravity_id, call);
-    get_ethereum_msg_hash(&digest)
+    hash_message(digest).as_bytes().to_vec()
 }
 
 #[test]
