@@ -40,7 +40,7 @@ pub async fn get_valset_nonce(
     caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<u64, EthereumRestError> {
-    let (price, limit) = get_contract_call_gas(eth_client, caller_address).await?;
+    let (price, limit) = get_contract_eth_call_gas(eth_client, caller_address).await?;
     let contract: Gravity<EthSignerMiddleware> = Gravity::new(contract_address, eth_client);
     let contract_call = contract.state_lastValsetNonce()
         .from(caller_address)
@@ -66,7 +66,7 @@ pub async fn get_tx_batch_nonce(
     caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<u64, EthereumRestError> {
-    let (price, limit) = get_contract_call_gas(eth_client, caller_address).await?;
+    let (price, limit) = get_contract_eth_call_gas(eth_client, caller_address).await?;
     let contract: Gravity<EthSignerMiddleware> = Gravity::new(contract_address, eth_client);
     let contract_call = contract.last_batch_nonce(erc20_contract_address)
         .from(caller_address)
@@ -92,7 +92,7 @@ pub async fn get_logic_call_nonce(
     caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<u64, EthereumRestError> {
-    let (price, limit) = get_contract_call_gas(eth_client, caller_address).await?;
+    let (price, limit) = get_contract_eth_call_gas(eth_client, caller_address).await?;
     let contract: Gravity<EthSignerMiddleware> = Gravity::new(contract_address, eth_client);
     let contract_call = contract.last_logic_call_nonce(invalidation_id.as_slice())
         .from(caller_address)
@@ -117,7 +117,7 @@ pub async fn get_event_nonce(
     caller_address: EthAddress,
     web3: &Web3,
 ) -> Result<u64, Web3Error> {
-    let (price, limit) = get_contract_call_gas(eth_client, caller_address).await?;
+    let (price, limit) = get_contract_eth_call_gas(eth_client, caller_address).await?;
     let contract: Gravity<EthSignerMiddleware> = Gravity::new(contract_address, eth_client);
     let contract_call = contract.state_last_event_nonce()
         .from(caller_address)
@@ -142,7 +142,7 @@ pub async fn get_gravity_id(
     caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<String, GravityError> {
-    let (price, limit) = get_contract_call_gas(eth_client, caller_address).await?;
+    let (price, limit) = get_contract_eth_call_gas(eth_client, caller_address).await?;
     let contract: Gravity<EthSignerMiddleware> = Gravity::new(contract_address, eth_client);
     let contract_call = contract.state_gravity_id()
         .from(caller_address)
@@ -153,7 +153,12 @@ pub async fn get_gravity_id(
     String::from_utf8(contract_call.call().await?.to_vec())
 }
 
-pub async fn get_contract_call_gas(
+/// Retrieve gas price and limit in a similar fashion to web30's simulate_transaction.
+/// These values are intended to be used in conjunection with eth_call rather than
+/// eth_sendtransaction. In ethers this is represented by `call()` on a ContractCall rather
+/// than `send()`. Using `call()` will not send a transaction from the caller account or
+/// spend gas.
+pub async fn get_contract_eth_call_gas(
     eth_client: EthClient,
     caller_address: EthAddress
 ) -> Result<(price, limit), GravityError> {
