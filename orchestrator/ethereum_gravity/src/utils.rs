@@ -175,12 +175,12 @@ pub async fn get_contract_eth_call_gas(
 /// Just a helper struct to represent the cost of actions on Ethereum
 #[derive(Debug, Default, Clone)]
 pub struct GasCost {
-    pub gas: Uint256,
-    pub gas_price: Uint256,
+    pub gas: U256,
+    pub gas_price: U256,
 }
 
 impl GasCost {
-    pub fn get_total(&self) -> Uint256 {
-        self.gas.clone() * self.gas_price.clone()
+    pub fn get_total(&self) -> U256 {
+        self.gas * self.gas_price
     }
 }
