@@ -1,15 +1,14 @@
 use super::*;
 use crate::error::GravityError;
-use ethers::types::Address as EthAddress;
-use clarity::Signature as EthSignature;
+use ethers::types::{Address as EthAddress, Signature as EthSignature};
 use deep_space::error::CosmosGrpcError;
+use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::{
     cmp::Ordering,
     collections::{HashMap, HashSet},
     fmt,
     str,
-    // str::FromStr,
 };
 
 /// The total power in the Gravity bridge is normalized to u32 max every
@@ -66,7 +65,7 @@ impl ValsetConfirmResponse {
         Ok(ValsetConfirmResponse {
             eth_signer: input.ethereum_signer.parse()?,
             nonce: input.signer_set_nonce,
-            eth_signature: EthSignature::from_bytes(&input.signature)?,
+            eth_signature: EthSignature::try_from(input.signature.as_slice())?,
         })
     }
 }
@@ -76,7 +75,7 @@ impl Confirm for ValsetConfirmResponse {
         self.eth_signer
     }
     fn get_signature(&self) -> EthSignature {
-        self.eth_signature.clone()
+        self.eth_signature
     }
 }
 
@@ -149,15 +148,14 @@ impl Valset {
             if let Some(eth_address) = member.eth_address {
                 if let Some(sig) = signatures_hashmap.get(&eth_address) {
                     assert_eq!(sig.get_eth_address(), eth_address);
-                    assert!(sig.get_signature().is_valid());
-                    let recover_key = sig.get_signature().recover(signed_message).unwrap();
+                    let recover_key = sig.get_signature().recover(signed_message)?;
                     if recover_key == sig.get_eth_address() {
                         out.push(GravitySignature {
                             power: member.power,
                             eth_address: sig.get_eth_address(),
-                            v: sig.get_signature().v.clone(),
-                            r: sig.get_signature().r.clone(),
-                            s: sig.get_signature().s.clone(),
+                            v: sig.get_signature().v,
+                            r: sig.get_signature().r,
+                            s: sig.get_signature().s,
                         });
                         power_of_good_sigs += member.power;
                     } else {

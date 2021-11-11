@@ -1,7 +1,7 @@
 use super::*;
 use crate::error::GravityError;
-use clarity::Signature as EthSignature;
-use ethers::types::Address as EthAddress;
+use ethers::types::{Address as EthAddress, Signature as EthSignature};
+use std::convert::TryFrom;
 
 /// the response we get when querying for a valset confirmation
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -60,7 +60,7 @@ impl LogicCallConfirmResponse {
             invalidation_id: input.invalidation_scope,
             invalidation_nonce: input.invalidation_nonce,
             ethereum_signer: input.ethereum_signer.parse()?,
-            eth_signature: EthSignature::from_bytes(&input.signature)?,
+            eth_signature: EthSignature::try_from(input.signature.as_slice())?,
         })
     }
 }
@@ -70,6 +70,6 @@ impl Confirm for LogicCallConfirmResponse {
         self.ethereum_signer
     }
     fn get_signature(&self) -> EthSignature {
-        self.eth_signature.clone()
+        self.eth_signature
     }
 }

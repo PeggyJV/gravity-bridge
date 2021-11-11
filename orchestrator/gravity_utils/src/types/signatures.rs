@@ -1,6 +1,6 @@
-use clarity::Signature as EthSignature;
-use clarity::{abi::Token, Address as EthAddress};
-use num256::Uint256;
+use ethers::abi::Token;
+use ethers::prelude::*;
+use ethers::types::{Address as EthAddress, Signature as EthSignature};
 use std::cmp::Ordering;
 
 /// A sortable struct of a validator and it's signatures
@@ -10,9 +10,9 @@ use std::cmp::Ordering;
 pub struct GravitySignature {
     pub power: u64,
     pub eth_address: EthAddress,
-    pub v: Uint256,
-    pub r: Uint256,
-    pub s: Uint256,
+    pub v: u64,
+    pub r: U256,
+    pub s: U256,
 }
 
 impl Ord for GravitySignature {
@@ -53,28 +53,22 @@ pub struct GravitySignatureArrays {
 /// submittable arrays, including the finicky token encoding tricks you need to
 /// perform in order to distinguish between a uint8[] and bytes32[]
 pub fn to_arrays(input: Vec<GravitySignature>) -> GravitySignatureArrays {
-    let mut addresses = Vec::new();
-    let mut powers = Vec::new();
-    let mut v = Vec::new();
-    let mut r = Vec::new();
-    let mut s = Vec::new();
-    for val in input {
-        addresses.push(val.eth_address);
-        powers.push(val.power);
-        v.push(val.v);
-        r.push(val.r);
-        s.push(val.s);
-    }
+    let addresses = input.iter().map(|sig| sig.eth_address).collect();
+    let powers = input.iter().map(|sig| sig.power).collect();
+    let v = input.iter().map(|sig| Token::Uint(sig.v.into())).collect();
+    let r = input.iter().map(|sig| Token::Uint(sig.r)).collect();
+    let s = input.iter().map(|sig| Token::Uint(sig.s)).collect();
+
     GravitySignatureArrays {
         addresses,
         powers,
-        v: v.into(),
-        r: r.into(),
-        s: s.into(),
+        v: Token::Array(v),
+        r: Token::Array(r),
+        s: Token::Array(s),
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct SigWithAddress {
     pub eth_address: EthAddress,
     pub eth_signature: EthSignature,
