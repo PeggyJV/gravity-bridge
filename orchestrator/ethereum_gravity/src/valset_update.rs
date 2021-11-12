@@ -1,8 +1,9 @@
-use crate::utils::{get_valset_nonce, GasCost};
+use crate::utils::{EthSignerMiddleware, get_valset_nonce, GasCost};
+use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_utils::types::*;
-use gravity_utils::{error::GravityError, message_signatures::encode_valset_confirm_hashed};
+use gravity_utils::{error::GravityError, gravity::*, message_signatures::encode_valset_confirm_hashed};
 use std::{cmp::min, time::Duration};
 
 /// this function generates an appropriate Ethereum transaction
@@ -17,40 +18,20 @@ pub async fn send_eth_valset_update(
     gravity_id: String,
     eth_client: EthClient,
 ) -> Result<(), GravityError> {
-    let old_nonce = old_valset.nonce;
-    let new_nonce = new_valset.nonce;
-    assert!(new_nonce > old_nonce);
-    let eth_address = eth_client.address();
-    info!(
-        "Ordering signatures and submitting validator set {} -> {} update to Ethereum",
-        old_nonce, new_nonce
-    );
-    let before_nonce = get_valset_nonce(gravity_contract_address, eth_address, web3).await?;
-    if before_nonce != old_nonce {
-        info!(
-            "Someone else updated the valset to {}, exiting early",
-            before_nonce
-        );
-        return Ok(());
-    }
+    let contract_call = build_valset_update_contract_call(
+        new_valset, old_valset, confirms, gravity_contract_address, gravity_id, eth_client
+    ).await?;
+    let pending_tx = contract_call.send().await?;
+    info!("Sent valset update with txid {:#066x}", pending_tx);
+    // TODO(bolten): ethers interval default is 7s, this mirrors what web30 was doing, should we adjust?
+    // additionally we are mirroring only waiting for 1 confirmation by leaving that as default
+    pending_tx.interval(Duration::from_secs(1));
 
-    let payload = encode_valset_payload(new_valset, old_valset, confirms, gravity_id)?;
+    if let Err(tx_error) = tokio::time::timeout(timeout, async { pending_tx.await? }).await {
+        return Err(tx_error);
+    };
 
-    let tx = web3
-        .send_transaction(
-            gravity_contract_address,
-            payload,
-            0u32.into(),
-            eth_address,
-            our_eth_key,
-            vec![],
-        )
-        .await?;
-    info!("Sent valset update with txid {:#066x}", tx);
-
-    web3.wait_for_transaction(tx, timeout, None).await?;
-
-    let last_nonce = get_valset_nonce(gravity_contract_address, eth_address, web3).await?;
+    let last_nonce = get_valset_nonce(gravity_contract_address, eth_address, eth_client).await?;
     if last_nonce != new_nonce {
         error!(
             "Current nonce is {} expected to update to nonce {}",
@@ -62,6 +43,7 @@ pub async fn send_eth_valset_update(
             last_nonce
         );
     }
+
     Ok(())
 }
 
@@ -74,50 +56,60 @@ pub async fn estimate_valset_cost(
     gravity_contract_address: EthAddress,
     gravity_id: String,
 ) -> Result<GasCost, GravityError> {
-    let our_eth_address = our_eth_key.to_public_key().unwrap();
-    let our_balance = web3.eth_get_balance(our_eth_address).await?;
-    let our_nonce = web3.eth_get_transaction_count(our_eth_address).await?;
-    let gas_limit = min((u64::MAX - 1).into(), our_balance.clone());
-    let gas_price = web3.eth_gas_price().await?;
-    let zero: Uint256 = 0u8.into();
-    let val = web3
-        .eth_estimate_gas(TransactionRequest {
-            from: Some(our_eth_address),
-            to: gravity_contract_address,
-            nonce: Some(our_nonce.clone().into()),
-            gas_price: Some(gas_price.clone().into()),
-            gas: Some(gas_limit.into()),
-            value: Some(zero.into()),
-            data: Some(
-                encode_valset_payload(
-                    new_valset.clone(),
-                    old_valset.clone(),
-                    confirms,
-                    gravity_id,
-                )?
-                .into(),
-            ),
-        })
-        .await?;
+    let our_eth_address = eth_client.address();
+    let our_balance = eth_client.get_balance(our_eth_address, None).await?;
+    let gas_limit = min((u64::MAX - 1).into(), our_balance);
+    let gas_price = eth_client.get_gas_price().await?;
+
+    let contract_call = build_valset_update_contract_call(
+        new_valset, old_valset, confirms, gravity_contract_address, gravity_id, eth_client
+    ).await?;
+    let contract_call = contract_call.gas(gas_limit).gas_price(gas_price);
+
+    // TODO(bolten): estimate gas only takes a transaction request, and doesn't
+    // care if a specific block is passed as a parameter when creating the contract
+    // call...the old code set the nonce manually...I think that the value that
+    // ContractCall will put in the TransactionRequest is by default the next
+    // available nonce, and the only way to change it would be to reach directly into
+    // the object as the ContractCall has no method for setting the nonce...is the
+    // default behavior acceptable?
+    //
+    //let our_nonce = eth_client.get_transaction_count(our_eth_address, None).await?;
+    //contract_call.tx.set_nonce(our_nonce);
 
     Ok(GasCost {
-        gas: val,
-        gas_price,
+        gas: contract_call.estimate_gas().await?,
+        gas_price
     })
 }
 
-/// Encodes the payload bytes for the validator set update call, useful for
-/// estimating the cost of submitting a validator set
-pub fn encode_valset_payload(
+pub async fn build_valset_update_contract_call(
     new_valset: Valset,
     old_valset: Valset,
     confirms: &[ValsetConfirmResponse],
+    gravity_contract_address: EthAddress,
     gravity_id: String,
-) -> Result<Vec<u8>, GravityError> {
-    let (old_addresses, old_powers) = old_valset.filter_empty_addresses();
-    let (new_addresses, new_powers) = new_valset.filter_empty_addresses();
+    eth_client: EthClient,
+) -> Result<ContractCall<EthSignerMiddleware, ()>, GravityError> {
     let old_nonce = old_valset.nonce;
     let new_nonce = new_valset.nonce;
+    assert!(new_nonce > old_nonce);
+    let eth_address = eth_client.address();
+    info!(
+        "Ordering signatures and submitting validator set {} -> {} update to Ethereum",
+        old_nonce, new_nonce
+    );
+    let before_nonce = get_valset_nonce(gravity_contract_address, eth_address, eth_client).await?;
+    if before_nonce != old_nonce {
+        info!(
+            "Someone else updated the valset to {}, exiting early",
+            before_nonce
+        );
+        return Ok(());
+    }
+
+    let (old_addresses, old_powers) = old_valset.filter_empty_addresses();
+    let (new_addresses, new_powers) = new_valset.filter_empty_addresses();
 
     // remember the signatures are over the new valset and therefore this is the value we must encode
     // the old valset exists only as a hash in the ethereum store
@@ -127,36 +119,11 @@ pub fn encode_valset_payload(
     let sig_data = old_valset.order_sigs(&hash, confirms)?;
     let sig_arrays = to_arrays(sig_data);
 
-    // Solidity function signature
-    // function updateValset(
-    // // The new version of the validator set
-    // address[] memory _newValidators,
-    // uint256[] memory _newPowers,
-    // uint256 _newValsetNonce,
-    // // The current validators that approve the change
-    // address[] memory _currentValidators,
-    // uint256[] memory _currentPowers,
-    // uint256 _currentValsetNonce,
-    // // These are arrays of the parts of the current validator's signatures
-    // uint8[] memory _v,
-    // bytes32[] memory _r,
-    // bytes32[] memory _s
-    let tokens = &[
-        new_addresses.into(),
-        new_powers.into(),
-        new_nonce.into(),
-        old_addresses.into(),
-        old_powers.into(),
-        old_nonce.into(),
-        sig_arrays.v,
-        sig_arrays.r,
-        sig_arrays.s,
-    ];
-
-    let payload = clarity::abi::encode_call(
-        "updateValset(address[],uint256[],uint256,address[],uint256[],uint256,uint8[],bytes32[],bytes32[])",
-        tokens,
-    ).unwrap();
-
-    Ok(payload)
+    let contract = Gravity::new(gravity_contract_address, eth_client);
+    Ok(contract.update_valset(
+        new_addresses, new_powers, new_nonce.into(),
+        old_addresses, old_powers, old_nonce.into(),
+        sig_arrays.v, sig_arrays.r, sig_arrays.s)
+        .from(eth_address)
+        .value(0u8.into()))
 }

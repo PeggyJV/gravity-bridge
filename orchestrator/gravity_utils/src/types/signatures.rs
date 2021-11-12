@@ -1,7 +1,7 @@
-use ethers::abi::Token;
 use ethers::prelude::*;
 use ethers::types::{Address as EthAddress, Signature as EthSignature};
 use std::cmp::Ordering;
+use std::convert::TryFrom;
 
 /// A sortable struct of a validator and it's signatures
 /// this can be used for either transaction batch or validator
@@ -44,9 +44,9 @@ impl PartialOrd for GravitySignature {
 pub struct GravitySignatureArrays {
     pub addresses: Vec<EthAddress>,
     pub powers: Vec<u64>,
-    pub v: Token,
-    pub r: Token,
-    pub s: Token,
+    pub v: Vec<u8>,
+    pub r: Vec<[u8; 32]>,
+    pub s: Vec<[u8; 32]>,
 }
 
 /// This function handles converting the GravitySignature type into an Ethereum
@@ -55,16 +55,21 @@ pub struct GravitySignatureArrays {
 pub fn to_arrays(input: Vec<GravitySignature>) -> GravitySignatureArrays {
     let addresses = input.iter().map(|sig| sig.eth_address).collect();
     let powers = input.iter().map(|sig| sig.power).collect();
-    let v = input.iter().map(|sig| Token::Uint(sig.v.into())).collect();
-    let r = input.iter().map(|sig| Token::Uint(sig.r)).collect();
-    let s = input.iter().map(|sig| Token::Uint(sig.s)).collect();
+    // TODO(bolten): we're also throwing panics if we encounter downcast errors in
+    // ethereum_gravity/src/utils.rs, we should consider broadly how to handle
+    // these sorts of error conditions
+    let v = input.iter().map(|sig|
+        u8::try_from(sig.v).expect("Gravity Signature v overflow! Bridge halt!"))
+        .collect();
+    let r = input.iter().map(|sig| sig.r.into()).collect();
+    let s = input.iter().map(|sig| sig.s.into()).collect();
 
     GravitySignatureArrays {
         addresses,
         powers,
-        v: Token::Array(v),
-        r: Token::Array(r),
-        s: Token::Array(s),
+        v,
+        r,
+        s,
     }
 }
 
