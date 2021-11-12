@@ -1,4 +1,4 @@
-use clarity::abi::{Token, encode_call};
+use clarity::abi::{encode_call, Token};
 use clarity::Uint256;
 use clarity::{abi::encode_tokens, Address as EthAddress};
 use gravity_utils::error::GravityError;
@@ -48,14 +48,12 @@ pub fn downcast_uint256(input: Uint256) -> Option<u64> {
     if input >= U64MAX.into() {
         None
     } else {
-        let mut val = input.to_bytes_be();
-        // pad to 8 bytes
-        while val.len() < 8 {
-            val.insert(0, 0);
-        }
+        let val = input.to_bytes_be();
         let mut lower_bytes: [u8; 8] = [0; 8];
+        // get the start index after the trailing zeros
+        let start_index = 8 - val.len();
         // get the 'lowest' 8 bytes from a 256 bit integer
-        lower_bytes.copy_from_slice(&val[0..val.len()]);
+        lower_bytes[start_index..].copy_from_slice(val.as_slice());
         Some(u64::from_be_bytes(lower_bytes))
     }
 }
@@ -64,14 +62,12 @@ pub fn downcast_to_u128(input: Uint256) -> Option<u128> {
     if input >= U128MAX.into() {
         None
     } else {
-        let mut val = input.to_bytes_be();
-        // pad to 8 bytes
-        while val.len() < 16 {
-            val.insert(0, 0);
-        }
+        let val = input.to_bytes_be();
         let mut lower_bytes: [u8; 16] = [0; 16];
+        // get the start index after the trailing zeros
+        let start_index = 16 - val.len();
         // get the 'lowest' 16 bytes from a 256 bit integer
-        lower_bytes.copy_from_slice(&val[0..val.len()]);
+        lower_bytes[start_index..].copy_from_slice(val.as_slice());
         Some(u128::from_be_bytes(lower_bytes))
     }
 }
@@ -114,7 +110,6 @@ pub async fn get_valset_nonce(
     caller_address: EthAddress,
     web3: &Web3,
 ) -> Result<u64, Web3Error> {
-
     let payload = encode_call("state_lastValsetNonce()", &[]).unwrap();
 
     let val = web3
@@ -233,12 +228,11 @@ pub async fn get_erc20_symbol(
     caller_address: EthAddress,
     web3: &Web3,
 ) -> Result<String, GravityError> {
-
     let payload = encode_call("symbol()", &[]).unwrap();
 
     let val_symbol = web3
-    .simulate_transaction(contract_address, 0u8.into(), payload, caller_address, None)
-    .await?;
+        .simulate_transaction(contract_address, 0u8.into(), payload, caller_address, None)
+        .await?;
     // Pardon the unwrap, but this is temporary code, intended only for the tests, to help them
     // deal with a deprecated feature (the symbol), which will be removed soon
     Ok(String::from_utf8(val_symbol).unwrap())
