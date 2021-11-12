@@ -132,28 +132,17 @@ pub async fn get_gravity_id(
 
 /// Since all the contract eth_calls here use the same gas and value settings, use a common
 /// function to append them to the ContractCall builder.
+///
+/// Retrieve gas price and limit in a similar fashion to web30's simulate_transaction.
+/// These values are intended to be used in conjunction with eth_call rather than
+/// eth_sendtransaction. In ethers this is represented by `call()` on a ContractCall rather
+/// than `send()`. Using `call()` will not send a transaction from the caller account or
+/// spend gas.
 pub async fn build_contract_eth_call<T>(
     contract_call: ContractCall<EthSignerMiddleware, T>,
     eth_client: EthClient,
     caller_address: EthAddress,
 ) -> Result<ContractCall<EthSignerMiddleware, T>, GravityError> {
-    let (price, limit) = get_contract_eth_call_gas(eth_client, caller_address).await?;
-
-    Ok(contract_call.from(caller_address)
-        .gas(limit)
-        .gas_price(price)
-        .value(0u8.into()))
-}
-
-/// Retrieve gas price and limit in a similar fashion to web30's simulate_transaction.
-/// These values are intended to be used in conjunection with eth_call rather than
-/// eth_sendtransaction. In ethers this is represented by `call()` on a ContractCall rather
-/// than `send()`. Using `call()` will not send a transaction from the caller account or
-/// spend gas.
-pub async fn get_contract_eth_call_gas(
-    eth_client: EthClient,
-    caller_address: EthAddress
-) -> Result<(price, limit), GravityError> {
     const GAS_LIMIT: u128 = 12450000; // the most Hardhat will allow, will work on Geth
 
     let caller_balance = eth_client.get_balance(caller_address, None).await?;
@@ -161,7 +150,10 @@ pub async fn get_contract_eth_call_gas(
     let price = latest_block.base_fee_per_gas.ok_or(1u8.into()); // shouldn't happen unless pre-London
     let limit = min(GAS_LIMIT.into(), caller_balance / price.clone());
 
-    Ok((price, limit))
+    Ok(contract_call.from(caller_address)
+        .gas(limit)
+        .gas_price(price)
+        .value(0u8.into()))
 }
 
 /// Just a helper struct to represent the cost of actions on Ethereum
