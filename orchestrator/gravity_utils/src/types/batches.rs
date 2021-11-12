@@ -47,21 +47,33 @@ pub struct TransactionBatch {
 impl TransactionBatch {
     /// extracts the amounts, destinations and fees as submitted to the Ethereum contract
     /// and used for signatures
-    pub fn get_checkpoint_values(&self) -> (Token, Token, Token) {
-        let amounts: Vec<Token> =
-            self.transactions.iter().map(|tx| Token::Uint(tx.erc20_token.amount)).collect();
-        let destinations: Vec<Token> =
-            self.transactions.iter().map(|tx| Token::Address(tx.ethereum_recipient)).collect();
-        let fees: Vec<Token> =
-            self.transactions.iter().map(|tx| Token::Uint(tx.erc20_fee.amount)).collect();
+    pub fn get_checkpoint_values(&self) -> (Vec<U256>, Vec<EthAddress>, Vec<U256>) {
+        let amounts: Vec<U256> =
+            self.transactions.iter().map(|tx| tx.erc20_token.amount).collect();
+        let destinations: Vec<EthAddress> =
+            self.transactions.iter().map(|tx| tx.ethereum_recipient).collect();
+        let fees: Vec<U256> =
+            self.transactions.iter().map(|tx| tx.erc20_fee.amount).collect();
 
         assert_eq!(amounts.len(), destinations.len());
         assert_eq!(fees.len(), destinations.len());
 
+        (amounts, destinations, fees)
+    }
+
+    pub fn get_checkpoint_values_tokens(&self) -> (Token, Token, Token) {
+        let (amounts, destinations, fees) = self.get_checkpoint_values();
+        let amounts_tokens =
+            amounts.iter().map(|amount| Token::Uint(*amount)).collect();
+        let destinations_tokens =
+            destinations.iter().map(|destination| Token::Address(*destination)).collect();
+        let fees_tokens =
+            fees.iter().map(|fee| Token::Uint(*fee)).collect();
+
         (
-            Token::Array(amounts),
-            Token::Array(destinations),
-            Token::Array(fees),
+            Token::Array(amounts_tokens),
+            Token::Array(destinations_tokens),
+            Token::Array(fees_tokens),
         )
     }
 

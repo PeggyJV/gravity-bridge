@@ -43,7 +43,7 @@ pub async fn get_valset_nonce(
 ) -> Result<u64, EthereumRestError> {
     let contract_call = Gravity::new(contract_address, eth_client)
         .state_last_valset_nonce();
-    let contract_call = build_contract_eth_call(contract_call, eth_client, caller_address).await?;
+    let contract_call = build_contract_eth_call(contract_call, eth_client).await?;
     let valset_nonce = contract_call.call().await?;
 
     // TODO (bolten): do we actually want to halt the bridge as the original comment implies?
@@ -62,9 +62,9 @@ pub async fn get_tx_batch_nonce(
     caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<u64, EthereumRestError> {
-    let contract_call = Gravity::new(contract_address, eth_client).state_last_batch_nonces(p0)
+    let contract_call = Gravity::new(contract_address, eth_client)
         .last_batch_nonce(erc20_contract_address);
-    let contract_call = build_contract_eth_call(contract_call, eth_client, caller_address).await?;
+    let contract_call = build_contract_eth_call(contract_call, eth_client).await?;
     let tx_batch_nonce = contract_call.call().await?;
 
     // TODO (bolten): do we actually want to halt the bridge as the original comment implies?
@@ -85,7 +85,7 @@ pub async fn get_logic_call_nonce(
 ) -> Result<u64, EthereumRestError> {
     let contract_call = Gravity::new(contract_address, eth_client)
         .last_logic_call_nonce(invalidation_id.as_slice());
-    let contract_call = build_contract_eth_call(contract_call, eth_client, caller_address).await?;
+    let contract_call = build_contract_eth_call(contract_call, eth_client).await?;
     let logic_call_nonce = contract_call.call().await?;
 
     // TODO (bolten): do we actually want to halt the bridge as the original comment implies?
@@ -105,7 +105,7 @@ pub async fn get_event_nonce(
 ) -> Result<u64, Web3Error> {
     let contract_call = Gravity::new(contract_address, eth_client)
         .state_last_event_nonce();
-    let contract_call = build_contract_eth_call(contract_call, eth_client, caller_address).await?;
+    let contract_call = build_contract_eth_call(contract_call, eth_client).await?;
     let event_nonce = contract_call.call().await?;
 
     // TODO (bolten): do we actually want to halt the bridge as the original comment implies?
@@ -125,7 +125,7 @@ pub async fn get_gravity_id(
 ) -> Result<String, GravityError> {
     let contract_call = Gravity::new(contract_address, eth_client)
         .state_gravity_id();
-    let contract_call = build_contract_eth_call(contract_call, eth_client, caller_address).await?;
+    let contract_call = build_contract_eth_call(contract_call, eth_client).await?;
 
     String::from_utf8(contract_call.call().await?.to_vec())
 }
@@ -141,11 +141,10 @@ pub async fn get_gravity_id(
 pub async fn build_contract_eth_call<T>(
     contract_call: ContractCall<EthSignerMiddleware, T>,
     eth_client: EthClient,
-    caller_address: EthAddress,
 ) -> Result<ContractCall<EthSignerMiddleware, T>, GravityError> {
     const GAS_LIMIT: u128 = 12450000; // the most Hardhat will allow, will work on Geth
 
-    let caller_balance = eth_client.get_balance(caller_address, None).await?;
+    let caller_balance = eth_client.get_balance(eth_client.get_address(), None).await?;
     let latest_block = eth_client.get_block(BlockNumber::Latest).await?;
     let price = latest_block.base_fee_per_gas.ok_or(1u8.into()); // shouldn't happen unless pre-London
     let limit = min(GAS_LIMIT.into(), caller_balance / price.clone());
@@ -154,6 +153,19 @@ pub async fn build_contract_eth_call<T>(
         .gas(limit)
         .gas_price(price)
         .value(0u8.into()))
+}
+
+/// Take a ContractCall to be used with eth_estimateGas and set the gas limit and price
+/// based on the caller's state.
+pub async fn set_contract_call_gas_for_estimate<T>(
+    contract_call: ContractCall<EthSignerMiddleware, T>,
+    eth_client: EthClient,
+) -> Result<ContractCall<EthSignerMiddleware, T>, GravityError> {
+    let our_balance = eth_client.get_balance(eth_client.get_address(), None).await?;
+    let gas_limit = min((u64::MAX - 1).into(), our_balance);
+    let gas_price = eth_client.get_gas_price().await?;
+
+    Ok(contract_call.gas(gas_limit).gas_price(gas_price))
 }
 
 /// Just a helper struct to represent the cost of actions on Ethereum

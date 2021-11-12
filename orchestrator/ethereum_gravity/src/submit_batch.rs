@@ -1,10 +1,13 @@
-use crate::utils::{get_tx_batch_nonce, GasCost};
-use clarity::PrivateKey as EthPrivateKey;
-use clarity::{Address as EthAddress, Uint256};
+use crate::utils::{EthSignerMiddleware, GasCost, get_tx_batch_nonce, set_contract_call_gas_for_estimate};
+use ethers::contract::builders::ContractCall;
+use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
 use gravity_utils::error::GravityError;
+use gravity_utils::gravity::*;
 use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
 use gravity_utils::types::*;
 use web30::types::SendTxOption;
+use std::ops::Add;
 use std::{cmp::min, time::Duration};
 use web30::{client::Web3, types::TransactionRequest};
 
@@ -15,15 +18,14 @@ pub async fn send_eth_transaction_batch(
     current_valset: Valset,
     batch: TransactionBatch,
     confirms: &[BatchConfirmResponse],
-    web3: &Web3,
     timeout: Duration,
     gravity_contract_address: EthAddress,
     gravity_id: String,
-    our_eth_key: EthPrivateKey,
-    options:Vec<SendTxOption>,
+    options: Vec<SendTxOption>,
+    eth_client: EthClient,
 ) -> Result<(), GravityError> {
     let new_batch_nonce = batch.nonce;
-    let eth_address = our_eth_key.to_public_key().unwrap();
+    let eth_address = eth_client.address();
     info!(
         "Ordering signatures and submitting TransactionBatch {}:{} to Ethereum",
         batch.token_contract, new_batch_nonce
@@ -34,10 +36,11 @@ pub async fn send_eth_transaction_batch(
         gravity_contract_address,
         batch.token_contract,
         eth_address,
-        &web3,
+        eth_client,
     )
     .await?;
-    let current_block_height = web3.eth_block_number().await?;
+
+    let current_block_height = eth_client.get_block_number().await?;
     if before_nonce >= new_batch_nonce {
         info!(
             "Someone else updated the batch to {}, exiting early",
@@ -52,29 +55,28 @@ pub async fn send_eth_transaction_batch(
         return Ok(());
     }
 
-    let payload = encode_batch_payload(current_valset, &batch, confirms, gravity_id)?;
-
-    let tx = web3
-        .send_transaction(
-            gravity_contract_address,
-            payload,
-            0u32.into(),
-            eth_address,
-            our_eth_key,
-            options,
-        )
-        .await?;
+    let contract_call = build_submit_batch_contract_call(
+        current_valset, batch, confirms, gravity_contract_address, gravity_id, eth_client
+    );
+    // TODO(bolten): we need to implement the gas multiplier being passed as a TxOption
+    let pending_tx = contract_call.send().await?;
     info!("Sent batch update with txid {:#066x}", tx);
+    // TODO(bolten): ethers interval default is 7s, this mirrors what web30 was doing, should we adjust?
+    // additionally we are mirroring only waiting for 1 confirmation by leaving that as default
+    pending_tx.interval(Duration::from_secs(1));
 
-    web3.wait_for_transaction(tx.clone(), timeout, None).await?;
+    if let Err(tx_error) = tokio::time::timeout(timeout, async { pending_tx.await? }).await {
+        return Err(tx_error);
+    };
 
     let last_nonce = get_tx_batch_nonce(
         gravity_contract_address,
         batch.token_contract,
         eth_address,
-        &web3,
+        eth_client,
     )
     .await?;
+
     if last_nonce != new_batch_nonce {
         error!(
             "Current nonce is {} expected to update to nonce {}",
@@ -83,6 +85,7 @@ pub async fn send_eth_transaction_batch(
     } else {
         info!("Successfully updated Batch with new Nonce {:?}", last_nonce);
     }
+
     Ok(())
 }
 
@@ -91,42 +94,29 @@ pub async fn estimate_tx_batch_cost(
     current_valset: Valset,
     batch: TransactionBatch,
     confirms: &[BatchConfirmResponse],
-    web3: &Web3,
     gravity_contract_address: EthAddress,
     gravity_id: String,
-    our_eth_key: EthPrivateKey,
+    eth_client: EthClient,
 ) -> Result<GasCost, GravityError> {
-    let our_eth_address = our_eth_key.to_public_key().unwrap();
-    let our_balance = web3.eth_get_balance(our_eth_address).await?;
-    let our_nonce = web3.eth_get_transaction_count(our_eth_address).await?;
-    let gas_limit = min((u64::MAX - 1).into(), our_balance.clone());
-    let gas_price = web3.eth_gas_price().await?;
-    let zero: Uint256 = 0u8.into();
-    let val = web3
-        .eth_estimate_gas(TransactionRequest {
-            from: Some(our_eth_address),
-            to: gravity_contract_address,
-            nonce: Some(our_nonce.clone().into()),
-            gas_price: Some(gas_price.clone().into()),
-            gas: Some(gas_limit.into()),
-            value: Some(zero.into()),
-            data: Some(encode_batch_payload(current_valset, &batch, confirms, gravity_id)?.into()),
-        })
-        .await?;
+    let contract_call = build_submit_batch_contract_call(
+        current_valset, batch, confirms, gravity_contract_address, gravity_id, eth_client
+    );
+    let contract_call = set_contract_call_gas_for_estimate(contract_call, eth_client);
 
     Ok(GasCost {
-        gas: val,
-        gas_price,
+        gas: contract_call.estimate_gas().await?,
+        gas_price
     })
 }
 
-/// Encodes the batch payload for both estimate_tx_batch_cost and send_eth_transaction_batch
-fn encode_batch_payload(
+pub fn build_submit_batch_contract_call(
     current_valset: Valset,
-    batch: &TransactionBatch,
+    batch: TransactionBatch,
     confirms: &[BatchConfirmResponse],
+    gravity_contract_address: EthAddress,
     gravity_id: String,
-) -> Result<Vec<u8>, GravityError> {
+    eth_client: EthClient,
+) -> Result<ContractCall<EthSignerMiddleware, ()>, GravityError> {
     let (current_addresses, current_powers) = current_valset.filter_empty_addresses();
     let current_valset_nonce = current_valset.nonce;
     let new_batch_nonce = batch.nonce;
@@ -135,40 +125,12 @@ fn encode_batch_payload(
     let sig_arrays = to_arrays(sig_data);
     let (amounts, destinations, fees) = batch.get_checkpoint_values();
 
-    // Solidity function signature
-    // function submitBatch(
-    // // The validators that approve the batch and new valset
-    // address[] memory _currentValidators,
-    // uint256[] memory _currentPowers,
-    // uint256 _currentValsetNonce,
-    // // These are arrays of the parts of the validators signatures
-    // uint8[] memory _v,
-    // bytes32[] memory _r,
-    // bytes32[] memory _s,
-    // // The batch of transactions
-    // uint256[] memory _amounts,
-    // address[] memory _destinations,
-    // uint256[] memory _fees,
-    // uint256 _batchNonce,
-    // address _tokenContract,
-    // uint256 _batchTimeout
-    let tokens = &[
-        current_addresses.into(),
-        current_powers.into(),
-        current_valset_nonce.into(),
-        sig_arrays.v,
-        sig_arrays.r,
-        sig_arrays.s,
-        amounts,
-        destinations,
-        fees,
-        new_batch_nonce.clone().into(),
-        batch.token_contract.into(),
-        batch.batch_timeout.into(),
-    ];
-    let payload = clarity::abi::encode_call("submitBatch(address[],uint256[],uint256,uint8[],bytes32[],bytes32[],uint256[],address[],uint256[],uint256,address,uint256)",
-    tokens).unwrap();
-    trace!("Tokens {:?}", tokens);
-
-    Ok(payload)
+    let contract = Gravity::new(gravity_contract_address, eth_client);
+    Ok(contract.submit_batch(
+        current_addresses, current_powers.into(), current_valset_nonce.into(),
+        sig_arrays.v, sig_arrays.r, sig_arrays.s,
+        amounts, destinations, fees,
+        new_batch_nonce.into(), batch.token_contract, batch.batch_timeout.into()
+        .from(eth_client.address())
+        .value(0u8.into())))
 }

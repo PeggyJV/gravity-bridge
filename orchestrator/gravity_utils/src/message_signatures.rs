@@ -111,7 +111,7 @@ fn test_valset_signature() {
 /// Note: This is the message, you need to run Keccak256::digest() in order to get the 32byte
 /// digest that is normally signed or may be used as a 'hash of the message'
 pub fn encode_tx_batch_confirm(gravity_id: String, batch: TransactionBatch) -> Vec<u8> {
-    let (amounts, destinations, fees) = batch.get_checkpoint_values();
+    let (amounts, destinations, fees) = batch.get_checkpoint_values_tokens();
 
     abi::encode(&[
         Token::FixedBytes(gravity_id.into_bytes()),
