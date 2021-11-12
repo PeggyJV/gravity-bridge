@@ -1,3 +1,4 @@
+use ethers::contract::builders::ContractCall;
 use ethers::core::abi::{self, Token};
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -40,15 +41,10 @@ pub async fn get_valset_nonce(
     caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<u64, EthereumRestError> {
-    let (price, limit) = get_contract_eth_call_gas(eth_client, caller_address).await?;
-    let contract: Gravity<EthSignerMiddleware> = Gravity::new(contract_address, eth_client);
-    let contract_call = contract.state_lastValsetNonce()
-        .from(caller_address)
-        .gas(limit)
-        .gas_price(price)
-        .value(0u8.into());
-
-    let val = contract_call.call().await?;
+    let contract_call = Gravity::new(contract_address, eth_client)
+        .state_last_valset_nonce();
+    let contract_call = build_contract_eth_call(contract_call, eth_client, caller_address).await?;
+    let valset_nonce = contract_call.call().await?;
 
     // TODO (bolten): do we actually want to halt the bridge as the original comment implies?
     // the go represents all nonces as u64, there's no
@@ -56,7 +52,7 @@ pub async fn get_valset_nonce(
     // submitting millions or tens of millions of dollars
     // worth of transactions. But we properly check and
     // handle that case here.
-    Ok(downcast_to_u64(val).expect("Valset nonce overflow! Bridge Halt!"))
+    Ok(downcast_to_u64(valset_nonce).expect("Valset nonce overflow! Bridge Halt!"))
 }
 
 /// Gets the latest transaction batch nonce
@@ -66,15 +62,10 @@ pub async fn get_tx_batch_nonce(
     caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<u64, EthereumRestError> {
-    let (price, limit) = get_contract_eth_call_gas(eth_client, caller_address).await?;
-    let contract: Gravity<EthSignerMiddleware> = Gravity::new(contract_address, eth_client);
-    let contract_call = contract.last_batch_nonce(erc20_contract_address)
-        .from(caller_address)
-        .gas(limit)
-        .gas_price(price)
-        .value(0u8.into());
-
-    let val = contract_call.call().await?;
+    let contract_call = Gravity::new(contract_address, eth_client).state_last_batch_nonces(p0)
+        .last_batch_nonce(erc20_contract_address);
+    let contract_call = build_contract_eth_call(contract_call, eth_client, caller_address).await?;
+    let tx_batch_nonce = contract_call.call().await?;
 
     // TODO (bolten): do we actually want to halt the bridge as the original comment implies?
     // the go represents all nonces as u64, there's no
@@ -82,7 +73,7 @@ pub async fn get_tx_batch_nonce(
     // submitting millions or tens of millions of dollars
     // worth of transactions. But we properly check and
     // handle that case here.
-    Ok(downcast_to_u64(val).expect("TxBatch nonce overflow! Bridge Halt!"))
+    Ok(downcast_to_u64(tx_batch_nonce).expect("TxBatch nonce overflow! Bridge Halt!"))
 }
 
 /// Gets the latest transaction batch nonce
@@ -92,15 +83,10 @@ pub async fn get_logic_call_nonce(
     caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<u64, EthereumRestError> {
-    let (price, limit) = get_contract_eth_call_gas(eth_client, caller_address).await?;
-    let contract: Gravity<EthSignerMiddleware> = Gravity::new(contract_address, eth_client);
-    let contract_call = contract.last_logic_call_nonce(invalidation_id.as_slice())
-        .from(caller_address)
-        .gas(limit)
-        .gas_price(price)
-        .value(0u8.into());
-
-    let val = contract_call.call().await?;
+    let contract_call = Gravity::new(contract_address, eth_client)
+        .last_logic_call_nonce(invalidation_id.as_slice());
+    let contract_call = build_contract_eth_call(contract_call, eth_client, caller_address).await?;
+    let logic_call_nonce = contract_call.call().await?;
 
     // TODO (bolten): do we actually want to halt the bridge as the original comment implies?
     // the go represents all nonces as u64, there's no
@@ -108,7 +94,7 @@ pub async fn get_logic_call_nonce(
     // submitting millions or tens of millions of dollars
     // worth of transactions. But we properly check and
     // handle that case here.
-    Ok(downcast_to_u64(val).expect("LogicCall nonce overflow! Bridge Halt!"))
+    Ok(downcast_to_u64(logic_call_nonce).expect("LogicCall nonce overflow! Bridge Halt!"))
 }
 
 /// Gets the latest transaction batch nonce
@@ -117,15 +103,10 @@ pub async fn get_event_nonce(
     caller_address: EthAddress,
     web3: &Web3,
 ) -> Result<u64, Web3Error> {
-    let (price, limit) = get_contract_eth_call_gas(eth_client, caller_address).await?;
-    let contract: Gravity<EthSignerMiddleware> = Gravity::new(contract_address, eth_client);
-    let contract_call = contract.state_last_event_nonce()
-        .from(caller_address)
-        .gas(limit)
-        .gas_price(price)
-        .value(0u8.into());
-
-    let val = contract_call.call().await?;
+    let contract_call = Gravity::new(contract_address, eth_client)
+        .state_last_event_nonce();
+    let contract_call = build_contract_eth_call(contract_call, eth_client, caller_address).await?;
+    let event_nonce = contract_call.call().await?;
 
     // TODO (bolten): do we actually want to halt the bridge as the original comment implies?
     // the go represents all nonces as u64, there's no
@@ -133,7 +114,7 @@ pub async fn get_event_nonce(
     // submitting millions or tens of millions of dollars
     // worth of transactions. But we properly check and
     // handle that case here.
-    Ok(downcast_to_u64(real_num).expect("EventNonce nonce overflow! Bridge Halt!"))
+    Ok(downcast_to_u64(event_nonce).expect("EventNonce nonce overflow! Bridge Halt!"))
 }
 
 /// Gets the gravityID
@@ -142,15 +123,26 @@ pub async fn get_gravity_id(
     caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<String, GravityError> {
-    let (price, limit) = get_contract_eth_call_gas(eth_client, caller_address).await?;
-    let contract: Gravity<EthSignerMiddleware> = Gravity::new(contract_address, eth_client);
-    let contract_call = contract.state_gravity_id()
-        .from(caller_address)
-        .gas(limit)
-        .gas_price(price)
-        .value(0u8.into());
+    let contract_call = Gravity::new(contract_address, eth_client)
+        .state_gravity_id();
+    let contract_call = build_contract_eth_call(contract_call, eth_client, caller_address).await?;
 
     String::from_utf8(contract_call.call().await?.to_vec())
+}
+
+/// Since all the contract eth_calls here use the same gas and value settings, use a common
+/// function to append them to the ContractCall builder.
+pub async fn build_contract_eth_call<T>(
+    contract_call: ContractCall<EthSignerMiddleware, T>,
+    eth_client: EthClient,
+    caller_address: EthAddress,
+) -> Result<ContractCall<EthSignerMiddleware, T>, GravityError> {
+    let (price, limit) = get_contract_eth_call_gas(eth_client, caller_address).await?;
+
+    Ok(contract_call.from(caller_address)
+        .gas(limit)
+        .gas_price(price)
+        .value(0u8.into()))
 }
 
 /// Retrieve gas price and limit in a similar fashion to web30's simulate_transaction.
