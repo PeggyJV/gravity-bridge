@@ -11,7 +11,6 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::{ethereum::downcast_to_u128, ethereum::bytes_to_hex_str,
     message_signatures::encode_valset_confirm_hashed, types::Valset};
 use tonic::transport::Channel;
-use web30::client::Web3;
 
 /// Check the last validator set on Ethereum, if it's lower than our latest validator
 /// set then we should package and submit the update as an Ethereum transaction

@@ -4,7 +4,7 @@
 //! mirror Serde and perhaps even become a serde crate for Ethereum ABI decoding
 //! For now reference the ABI encoding document here https://docs.soliditylang.org/en/v0.8.3/abi-spec.html
 
-use super::{Valset, ValsetMember};
+use super::ValsetMember;
 use crate::error::GravityError;
 use crate::ethereum::downcast_to_u64;
 use crate::gravity::*;
@@ -38,7 +38,7 @@ fn log_to_ethers_event<T: EthLogDecode>(log: &Log) -> Result<T, ethers::abi::Err
 // to us as a U64 (strangely, no direct conversion from U64, so we have to do this type dance)
 fn block_height_from_log(log: &Log) -> Result<U256, GravityError> {
     match log.block_number.clone() {
-        Some(block_height) => Ok(U256::from(block_height.as_u64())),
+        Some(block_height) => Ok(block_height.as_u64().into()),
         None => Err(GravityError::InvalidEventLogError(format!(
             "Log does not have block number, we only search logs already in blocks? {:?}",
             log

@@ -2,7 +2,7 @@ use crate::main_loop::EthClient;
 use clarity::{Address, Uint256};
 use ethers::prelude::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::types::{VALSET_UPDATED_EVENT_STR, ValsetUpdatedEvent, ValsetUpdatedEventFilter};
+use gravity_utils::types::{VALSET_UPDATED_EVENT_STR, ValsetUpdatedEvent};
 use gravity_utils::{error::GravityError, ethereum::downcast_to_u64, types::Valset};
 use std::panic;
 use tonic::transport::Channel;
