@@ -129,9 +129,9 @@ pub async fn relay_valsets(
             &latest_cosmos_valset,
             &current_eth_valset,
             &latest_cosmos_confirmed,
-            eth_client.clone(),
             gravity_contract_address,
             gravity_id.clone(),
+            eth_client.clone(),
         )
         .await;
         if cost.is_err() {
@@ -155,11 +155,10 @@ pub async fn relay_valsets(
             latest_cosmos_valset.clone(),
             current_eth_valset.clone(),
             &latest_cosmos_confirmed,
-            web3,
             timeout,
             gravity_contract_address,
             gravity_id,
-            ethereum_key,
+            eth_client.clone(),
         )
         .await;
 

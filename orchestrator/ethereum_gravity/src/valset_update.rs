@@ -52,9 +52,9 @@ pub async fn estimate_valset_cost(
     new_valset: &Valset,
     old_valset: &Valset,
     confirms: &[ValsetConfirmResponse],
-    eth_client: EthClient,
     gravity_contract_address: EthAddress,
     gravity_id: String,
+    eth_client: EthClient,
 ) -> Result<GasCost, GravityError> {
     let our_eth_address = eth_client.address();
     let our_balance = eth_client.get_balance(our_eth_address, None).await?;
