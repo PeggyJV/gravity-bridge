@@ -7,7 +7,8 @@ use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::downcast_to_u64;
 use gravity_utils::types::*;
-use std::panic;
+use std::cmp::min;
+use std::sync::Arc;
 
 pub type EthSignerMiddleware = SignerMiddleware<Provider<Http>, LocalWallet>;
 pub type EthClient = Arc<EthSignerMiddleware>;
@@ -21,8 +22,8 @@ pub fn get_checkpoint_abi_encode(
     let powers = powers.iter().map(|power| Token::Uint((*power).into())).collect();
 
     Ok(abi::encode(&[
-        Token::FixedBytes(gravity_id.into_bytes()),
-        Token::FixedBytes("checkpoint".to_string().into_bytes()),
+        Token::FixedBytes(gravity_id.as_bytes().to_vec()),
+        Token::FixedBytes("checkpoint".as_bytes().to_vec()),
         Token::Uint(valset.nonce.into()),
         Token::Array(eth_addresses),
         Token::Array(powers),
@@ -40,7 +41,7 @@ pub async fn get_valset_nonce(
     contract_address: EthAddress,
     caller_address: EthAddress,
     eth_client: EthClient,
-) -> Result<u64, EthereumRestError> {
+) -> Result<u64, GravityError> {
     let contract_call = Gravity::new(contract_address, eth_client)
         .state_last_valset_nonce();
     let contract_call = build_contract_eth_call(contract_call, eth_client).await?;
@@ -61,7 +62,7 @@ pub async fn get_tx_batch_nonce(
     erc20_contract_address: EthAddress,
     caller_address: EthAddress,
     eth_client: EthClient,
-) -> Result<u64, EthereumRestError> {
+) -> Result<u64, GravityError> {
     let contract_call = Gravity::new(contract_address, eth_client)
         .last_batch_nonce(erc20_contract_address);
     let contract_call = build_contract_eth_call(contract_call, eth_client).await?;
@@ -82,7 +83,7 @@ pub async fn get_logic_call_nonce(
     invalidation_id: Vec<u8>,
     caller_address: EthAddress,
     eth_client: EthClient,
-) -> Result<u64, EthereumRestError> {
+) -> Result<u64, GravityError> {
     let contract_call = Gravity::new(contract_address, eth_client)
         .last_logic_call_nonce(invalidation_id.as_slice());
     let contract_call = build_contract_eth_call(contract_call, eth_client).await?;
@@ -101,8 +102,8 @@ pub async fn get_logic_call_nonce(
 pub async fn get_event_nonce(
     gravity_contract_address: EthAddress,
     caller_address: EthAddress,
-    web3: &Web3,
-) -> Result<u64, Web3Error> {
+    eth_client: EthClient,
+) -> Result<u64, GravityError> {
     let contract_call = Gravity::new(contract_address, eth_client)
         .state_last_event_nonce();
     let contract_call = build_contract_eth_call(contract_call, eth_client).await?;
@@ -144,12 +145,12 @@ pub async fn build_contract_eth_call<T>(
 ) -> Result<ContractCall<EthSignerMiddleware, T>, GravityError> {
     const GAS_LIMIT: u128 = 12450000; // the most Hardhat will allow, will work on Geth
 
-    let caller_balance = eth_client.get_balance(eth_client.get_address(), None).await?;
+    let caller_balance = eth_client.get_balance(eth_client.address(), None).await?;
     let latest_block = eth_client.get_block(BlockNumber::Latest).await?;
     let price = latest_block.base_fee_per_gas.ok_or(1u8.into()); // shouldn't happen unless pre-London
     let limit = min(GAS_LIMIT.into(), caller_balance / price.clone());
 
-    Ok(contract_call.from(caller_address)
+    Ok(contract_call.from(eth_client.address())
         .gas(limit)
         .gas_price(price)
         .value(0u8.into()))
@@ -161,7 +162,7 @@ pub async fn set_contract_call_gas_for_estimate<T>(
     contract_call: ContractCall<EthSignerMiddleware, T>,
     eth_client: EthClient,
 ) -> Result<ContractCall<EthSignerMiddleware, T>, GravityError> {
-    let our_balance = eth_client.get_balance(eth_client.get_address(), None).await?;
+    let our_balance = eth_client.get_balance(eth_client.address(), None).await?;
     let gas_limit = min((u64::MAX - 1).into(), our_balance);
     let gas_price = eth_client.get_gas_price().await?;
 
