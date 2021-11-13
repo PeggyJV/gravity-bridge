@@ -274,52 +274,6 @@ impl Valset {
         }
         res
     }
-
-    /// This function takes the current valset and compares it to a provided one
-    /// returning a percentage difference in their power allocation. This is a very
-    /// important function as it's used to decide when the validator sets are updated
-    /// on the Ethereum chain and when new validator sets are requested on the Cosmos
-    /// side. In theory an error here, if unnoticed for long enough, could allow funds
-    /// to be stolen from the bridge without the validators in question still having stake
-    /// to lose.
-    /// Returned value must be less than or equal to two
-    pub fn power_diff(&self, other: &Valset) -> f32 {
-        let mut total_power_diff = 0u64;
-        let a = self.to_hashmap();
-        let b = other.to_hashmap();
-        let a_map = self.to_hashset();
-        let b_map = other.to_hashset();
-        // items in A and B, we go through these and compute the absolute value of the
-        // difference in power and sum it.
-        let intersection = a_map.intersection(&b_map);
-        // items in A but not in B or vice versa, since we're just trying to compute the difference
-        // we can simply sum all of these up.
-        let symmetric_difference = a_map.symmetric_difference(&b_map);
-        for item in symmetric_difference {
-            let mut power = None;
-            if let Some(val) = a.get(item) {
-                power = Some(val);
-            } else if let Some(val) = b.get(item) {
-                power = Some(val);
-            }
-            // impossible for this to panic without a failure in the logic
-            // of the symmetric difference function
-            let power = power.unwrap();
-            total_power_diff += power;
-        }
-        for item in intersection {
-            // can't panic since there must be an entry for both.
-            let power_a = a[item];
-            let power_b = b[item];
-            if power_a > power_b {
-                total_power_diff += power_a - power_b;
-            } else {
-                total_power_diff += power_b - power_a;
-            }
-        }
-
-        (total_power_diff as f32) / (u32::MAX as f32)
-    }
 }
 
 impl From<gravity_proto::gravity::SignerSetTxResponse> for Valset {
