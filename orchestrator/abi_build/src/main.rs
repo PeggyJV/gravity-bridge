@@ -2,7 +2,7 @@ use ethers::contract::Abigen;
 use std::process;
 
 fn main() {
-    let abigen = match Abigen::new("Gravity", "../abi/Gravity.json") {
+    let abigen = match Abigen::new("Gravity", "../gravity_abi/Gravity.json") {
         Ok(abigen) => abigen,
         Err(e) => {
             println!("Could not open Gravity.json: {}", e);
@@ -22,7 +22,7 @@ fn main() {
         }
     };
 
-    match abi.write_to_file("../gravity_utils/src/gravity.rs") {
+    match abi.write_to_file("../gravity_abi/src/gravity.rs") {
         Ok(_) => (),
         Err(e) => println!("Error writing gravity.rs: {}", e),
     }

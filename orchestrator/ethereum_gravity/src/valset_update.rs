@@ -2,8 +2,8 @@ use crate::utils::{EthSignerMiddleware, get_valset_nonce, GasCost, set_contract_
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
-use gravity_utils::types::*;
-use gravity_utils::{error::GravityError, gravity::*, message_signatures::encode_valset_confirm_hashed};
+use gravity_abi::gravity::*;
+use gravity_utils::{error::GravityError, message_signatures::encode_valset_confirm_hashed, types::*};
 use std::{cmp::min, time::Duration};
 
 /// this function generates an appropriate Ethereum transaction

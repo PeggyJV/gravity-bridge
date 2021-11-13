@@ -8,6 +8,5 @@ extern crate log;
 pub mod connection_prep;
 pub mod error;
 pub mod ethereum;
-pub mod gravity;
 pub mod message_signatures;
 pub mod types;

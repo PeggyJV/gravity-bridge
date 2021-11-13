@@ -3,9 +3,9 @@ use ethers::core::abi::{self, Token};
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use ethers::utils::keccak256;
+use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::downcast_to_u64;
-use gravity_utils::gravity::*;
 use gravity_utils::types::*;
 use std::panic;
 

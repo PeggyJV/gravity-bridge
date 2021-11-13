@@ -2,8 +2,8 @@ use crate::utils::{EthSignerMiddleware, GasCost, get_tx_batch_nonce, set_contrac
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
-use gravity_utils::gravity::*;
 use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
 use gravity_utils::types::*;
 use web30::types::SendTxOption;
