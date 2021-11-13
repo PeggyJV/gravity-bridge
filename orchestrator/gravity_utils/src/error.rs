@@ -8,7 +8,8 @@ use ethers::abi::Error as EthersAbiError;
 use ethers::abi::ethereum_types::FromDecStrErr as EthersParseUintError;
 use ethers::prelude::*;
 use ethers::prelude::signer::SignerMiddlewareError;
-use hex::FromHexError as EthersParseAddressError;
+use ethers::types::SignatureError as EthersSignatureError;
+use rustc_hex::FromHexError as EthersParseAddressError;
 use num_bigint::ParseBigIntError;
 use std::fmt::{self, Debug};
 use tokio::time::error::Elapsed;
@@ -24,6 +25,7 @@ pub enum GravityError {
     EthersAbiError(EthersAbiError),
     EthersParseAddressError(EthersParseAddressError),
     EthersParseUintError(EthersParseUintError),
+    EthersSignatureError(EthersSignatureError),
     InvalidBridgeStateError(String),
     FailedToUpdateValset,
     EthereumContractError(String),
@@ -49,6 +51,7 @@ impl fmt::Display for GravityError {
             GravityError::EthersAbiError(val) => write!(f, "Ethers ABI error {}", val),
             GravityError::EthersParseAddressError(val) => write!(f, "Ethers H160 address parse error {}", val),
             GravityError::EthersParseUintError(val) => write!(f, "Ethers U256 parse error {}", val),
+            GravityError::EthersSignatureError(val) => write!(f, "Ethers signature error {}", val),
             GravityError::InvalidOptionsError(val) => {
                 write!(f, "Invalid TX options for this call {}", val)
             }
@@ -111,6 +114,12 @@ impl From<EthersParseAddressError> for GravityError {
 impl From<EthersParseUintError> for GravityError {
     fn from(error: EthersParseUintError) -> Self {
         GravityError::EthersParseUintError(error)
+    }
+}
+
+impl From<EthersSignatureError> for GravityError {
+    fn from(error: EthersSignatureError) -> Self {
+        GravityError::EthersSignatureError(error)
     }
 }
 

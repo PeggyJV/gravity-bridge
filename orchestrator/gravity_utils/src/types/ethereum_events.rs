@@ -28,7 +28,7 @@ pub const VALSET_UPDATED_EVENT_STR: &'static str =
 // the types we are generating using abigen! above for the Gravity contract
 fn log_to_ethers_event<T: EthLogDecode>(log: &Log) -> Result<T, ethers::abi::Error> {
     T::decode_log(&RawLog {
-        topics: log.topics,
+        topics: log.topics.clone(),
         data: log.data.to_vec(),
     })
     .map_err(From::from)
@@ -86,11 +86,11 @@ pub trait FromLogsWithPrefix {
 pub trait EventNonceFilter: Sized {
     /// returns all values in the array with event nonces greater
     /// than the provided value
-    fn filter_by_event_nonce<T: EventNonce>(event_nonce: u64, input: &[T]) -> Vec<T> {
+    fn filter_by_event_nonce<T: Clone + EventNonce>(event_nonce: u64, input: &[T]) -> Vec<T> {
         input
             .iter()
             .filter(|item| item.get_event_nonce() > event_nonce.into())
-            .map(|item| *item.clone())
+            .map(|item| (*item).clone())
             .collect()
     }
 }
@@ -112,8 +112,8 @@ impl FromLog for ValsetUpdatedEvent {
         let event: ValsetUpdatedEventFilter = log_to_ethers_event(input)?;
 
         let mut powers: Vec<u64> = Vec::new();
-        for power in event.powers {
-            if let Some(downcast_power) = downcast_to_u64(power) {
+        for power in &event.powers {
+            if let Some(downcast_power) = downcast_to_u64(*power) {
                 powers.push(downcast_power);
             } else {
                 return Err(GravityError::InvalidEventLogError(format!(
