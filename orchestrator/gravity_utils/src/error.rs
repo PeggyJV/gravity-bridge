@@ -8,7 +8,7 @@ use ethers::abi::Error as EthersAbiError;
 use ethers::abi::ethereum_types::FromDecStrErr as EthersParseUintError;
 use ethers::prelude::*;
 use ethers::prelude::signer::SignerMiddlewareError;
-use hex::FromHexError;
+use hex::FromHexError as EthersParseAddressError;
 use num_bigint::ParseBigIntError;
 use std::fmt::{self, Debug};
 use tokio::time::error::Elapsed;
@@ -22,7 +22,7 @@ pub enum GravityError {
     CosmosAddressError(CosmosAddressError),
     EthereumRestError(SignerMiddlewareError<Provider<Http>, LocalWallet>),
     EthersAbiError(EthersAbiError),
-    EthersParseAddressError(FromHexError),
+    EthersParseAddressError(EthersParseAddressError),
     EthersParseUintError(EthersParseUintError),
     InvalidBridgeStateError(String),
     FailedToUpdateValset,
