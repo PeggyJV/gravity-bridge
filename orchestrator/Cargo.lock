@@ -2231,6 +2231,7 @@ dependencies = [
  "cosmos-sdk-proto",
  "deep_space 2.4.7",
  "ethers",
+ "gravity_abi",
  "gravity_proto",
  "hex",
  "log",

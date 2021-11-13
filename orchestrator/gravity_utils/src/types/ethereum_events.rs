@@ -7,12 +7,12 @@
 use super::ValsetMember;
 use crate::error::GravityError;
 use crate::ethereum::downcast_to_u64;
-use crate::gravity::*;
 use deep_space::utils::bytes_to_hex_str;
 use deep_space::Address as CosmosAddress;
 use ethers::abi::RawLog;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use gravity_abi::gravity::*;
 
 pub const ERC20_DEPLOYED_EVENT_STR: &'static str =
     "ERC20DeployedEvent(string,address,string,string,uint8,uint256)";
