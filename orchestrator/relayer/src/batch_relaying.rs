@@ -10,6 +10,7 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
 use gravity_utils::types::Valset;
 use gravity_utils::types::{BatchConfirmResponse, TransactionBatch};
+use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::time::Duration;
 use tonic::transport::Channel;
@@ -112,7 +113,8 @@ async fn get_batches_and_signatures(
     // older batches so that we don't invalidate newer batches
     possible_batches.par_iter_mut().for_each(|(_key, value)| {
         value.reverse();
-    }
+    });
+
     possible_batches
 }
 
