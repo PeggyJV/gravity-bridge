@@ -25,11 +25,7 @@ import (
 
 // Keeper maintains the link to storage and exposes getter/setter methods for the various parts of the state machine
 type Keeper struct {
-	StakingKeeper          types.StakingKeeper
-	EthereumEventProcessor interface {
-		Handle(sdk.Context, types.EthereumEvent) error
-	}
-
+	StakingKeeper  types.StakingKeeper
 	storeKey       sdk.StoreKey
 	paramSpace     paramtypes.Subspace
 	cdc            codec.Codec
@@ -65,10 +61,6 @@ func NewKeeper(
 		bankKeeper:     bankKeeper,
 		SlashingKeeper: slashingKeeper,
 		PowerReduction: powerReduction,
-	}
-	k.EthereumEventProcessor = EthereumEventProcessor{
-		keeper:     k,
-		bankKeeper: bankKeeper,
 	}
 
 	return k

@@ -11,14 +11,8 @@ import (
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
 )
 
-// EthereumEventProcessor processes `accepted` EthereumEvents
-type EthereumEventProcessor struct {
-	keeper     Keeper
-	bankKeeper types.BankKeeper
-}
-
-func (a EthereumEventProcessor) DetectMaliciousSupply(ctx sdk.Context, denom string, amount sdk.Int) (err error) {
-	currentSupply := a.keeper.bankKeeper.GetSupply(ctx, denom)
+func (k Keeper) DetectMaliciousSupply(ctx sdk.Context, denom string, amount sdk.Int) (err error) {
+	currentSupply := k.bankKeeper.GetSupply(ctx, denom)
 	newSupply := new(big.Int).Add(currentSupply.Amount.BigInt(), amount.BigInt())
 	if newSupply.BitLen() > 256 {
 		return sdkerrors.Wrapf(types.ErrSupplyOverflow, "malicious supply of %s detected", denom)
@@ -28,59 +22,59 @@ func (a EthereumEventProcessor) DetectMaliciousSupply(ctx sdk.Context, denom str
 }
 
 // Handle is the entry point for EthereumEvent processing
-func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
+func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 	switch event := eve.(type) {
 	case *types.SendToCosmosEvent:
 		// Check if coin is Cosmos-originated asset and get denom
-		isCosmosOriginated, denom := a.keeper.ERC20ToDenomLookup(ctx, event.TokenContract)
+		isCosmosOriginated, denom := k.ERC20ToDenomLookup(ctx, event.TokenContract)
 		addr, _ := sdk.AccAddressFromBech32(event.CosmosReceiver)
 		coins := sdk.Coins{sdk.NewCoin(denom, event.Amount)}
 
 		if !isCosmosOriginated {
-			if err := a.DetectMaliciousSupply(ctx, denom, event.Amount); err != nil {
+			if err := k.DetectMaliciousSupply(ctx, denom, event.Amount); err != nil {
 				return err
 			}
 
 			// if it is not cosmos originated, mint the coins (aka vouchers)
-			if err := a.bankKeeper.MintCoins(ctx, types.ModuleName, coins); err != nil {
+			if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coins); err != nil {
 				return sdkerrors.Wrapf(err, "mint vouchers coins: %s", coins)
 			}
 		}
 
-		if err := a.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
+		if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
 			return err
 		}
-		a.keeper.AfterSendToCosmosEvent(ctx, *event)
+		k.AfterSendToCosmosEvent(ctx, *event)
 		return nil
 
 	case *types.BatchExecutedEvent:
-		a.keeper.batchTxExecuted(ctx, common.HexToAddress(event.TokenContract), event.BatchNonce)
-		a.keeper.AfterBatchExecutedEvent(ctx, *event)
+		k.batchTxExecuted(ctx, common.HexToAddress(event.TokenContract), event.BatchNonce)
+		k.AfterBatchExecutedEvent(ctx, *event)
 		return nil
 
 	case *types.ERC20DeployedEvent:
-		if err := a.verifyERC20DeployedEvent(ctx, event); err != nil {
+		if err := k.verifyERC20DeployedEvent(ctx, event); err != nil {
 			return err
 		}
 
 		// add to denom-erc20 mapping
-		a.keeper.setCosmosOriginatedDenomToERC20(ctx, event.CosmosDenom, event.TokenContract)
-		a.keeper.AfterERC20DeployedEvent(ctx, *event)
+		k.setCosmosOriginatedDenomToERC20(ctx, event.CosmosDenom, event.TokenContract)
+		k.AfterERC20DeployedEvent(ctx, *event)
 		return nil
 
 	case *types.ContractCallExecutedEvent:
-		a.keeper.AfterContractCallExecutedEvent(ctx, *event)
+		k.AfterContractCallExecutedEvent(ctx, *event)
 		return nil
 
 	case *types.SignerSetTxExecutedEvent:
 		// TODO here we should check the contents of the validator set against
 		// the store, if they differ we should take some action to indicate to the
 		// user that bridge highjacking has occurred
-		a.keeper.setLastObservedSignerSetTx(ctx, types.SignerSetTx{
+		k.setLastObservedSignerSetTx(ctx, types.SignerSetTx{
 			Nonce:   event.SignerSetTxNonce,
 			Signers: event.Members,
 		})
-		a.keeper.AfterSignerSetExecutedEvent(ctx, *event)
+		k.AfterSignerSetExecutedEvent(ctx, *event)
 		return nil
 
 	default:
@@ -88,8 +82,8 @@ func (a EthereumEventProcessor) Handle(ctx sdk.Context, eve types.EthereumEvent)
 	}
 }
 
-func (a EthereumEventProcessor) verifyERC20DeployedEvent(ctx sdk.Context, event *types.ERC20DeployedEvent) error {
-	if existingERC20, exists := a.keeper.getCosmosOriginatedERC20(ctx, event.CosmosDenom); exists {
+func (k Keeper) verifyERC20DeployedEvent(ctx sdk.Context, event *types.ERC20DeployedEvent) error {
+	if existingERC20, exists := k.getCosmosOriginatedERC20(ctx, event.CosmosDenom); exists {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"ERC20 token %s already exists for denom %s", existingERC20.Hex(), event.CosmosDenom,
@@ -109,11 +103,11 @@ func (a EthereumEventProcessor) verifyERC20DeployedEvent(ctx sdk.Context, event 
 	// NOTE: This path is not encouraged and all supported assets should have
 	// metadata defined. If metadata cannot be defined, consider adding the token's
 	// metadata on the fly.
-	if md, ok := a.keeper.bankKeeper.GetDenomMetaData(ctx, event.CosmosDenom); ok && md.Base != "" {
+	if md, ok := k.bankKeeper.GetDenomMetaData(ctx, event.CosmosDenom); ok && md.Base != "" {
 		return verifyERC20Token(md, event)
 	}
 
-	if supply := a.keeper.bankKeeper.GetSupply(ctx, event.CosmosDenom); supply.IsZero() {
+	if supply := k.bankKeeper.GetSupply(ctx, event.CosmosDenom); supply.IsZero() {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"no supply exists for token %s without metadata", event.CosmosDenom,
