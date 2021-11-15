@@ -130,6 +130,7 @@ func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent)
 			"nonce", fmt.Sprint(event.GetEventNonce()),
 		)
 	} else {
+		ctx.EventManager().EmitEvents(xCtx.EventManager().Events()) // copy events to original context
 		commit() // persist transient storage
 	}
 }
