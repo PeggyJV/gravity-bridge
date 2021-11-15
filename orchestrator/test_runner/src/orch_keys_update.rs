@@ -1,6 +1,5 @@
 //! This test verifies that live updating of orchestrator keys works correctly
 
-use crate::get_fee;
 use crate::utils::ValidatorKeys;
 use clarity::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
@@ -76,12 +75,12 @@ pub async fn orch_keys_update(
         );
         // send in the new delegate keys signed by the validator address
         update_gravity_delegate_addresses(
-            &contact,
+            contact,
             ethereum_key.to_public_key().unwrap(),
             cosmos_address,
             k.validator_key,
             k.eth_key,
-            (0f64,"".to_string()),
+            (0f64, "".to_string()),
             2.0,
         )
         .await

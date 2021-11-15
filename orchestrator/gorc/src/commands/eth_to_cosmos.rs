@@ -1,5 +1,5 @@
 use crate::application::APP;
-use abscissa_core::{status_err, Application, Command, Clap, Runnable};
+use abscissa_core::{status_err, Application, Clap, Command, Runnable};
 use clarity::Address as EthAddress;
 use clarity::Uint256;
 use deep_space::address::Address as CosmosAddress;

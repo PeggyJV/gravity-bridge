@@ -29,7 +29,6 @@ use std::{
     net,
     time::{Duration, Instant},
 };
-use tokio::join;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 use web30::client::Web3;
@@ -45,6 +44,8 @@ pub const ETH_ORACLE_LOOP_SPEED: Duration = Duration::from_secs(13);
 /// meaning they will occupy the same thread, but since they do
 /// very little actual cpu bound work and spend the vast majority
 /// of all execution time sleeping this shouldn't be an issue at all.
+#[allow(clippy::many_single_char_names)]
+#[allow(clippy::too_many_arguments)]
 pub async fn orchestrator_main_loop(
     cosmos_key: CosmosPrivateKey,
     ethereum_key: EthPrivateKey,
@@ -140,7 +141,7 @@ pub async fn eth_oracle_main_loop(
         let latest_cosmos_block = contact.get_chain_status().await;
         match (latest_eth_block, latest_cosmos_block) {
             (Ok(latest_eth_block), Ok(ChainStatus::Moving { block_height })) => {
-                metrics::set_cosmos_block_height(block_height.clone());
+                metrics::set_cosmos_block_height(block_height);
                 metrics::set_ethereum_block_height(latest_eth_block.clone());
                 trace!(
                     "Latest Eth block {} Latest Cosmos block {}",
@@ -195,10 +196,11 @@ pub async fn eth_oracle_main_loop(
             Err(e) => {
                 metrics::ETHEREUM_EVENT_CHECK_FAILURES.inc();
                 error!("Failed to get events for block range, Check your Eth node and Cosmos gRPC {:?}", e);
-                if let gravity_utils::error::GravityError::CosmosGrpcError(err) = e {
-                    if let CosmosGrpcError::TransactionFailed { tx: _, time: _ } = err {
-                        delay_for(Duration::from_secs(10)).await;
-                    }
+                if let gravity_utils::error::GravityError::CosmosGrpcError(
+                    CosmosGrpcError::TransactionFailed { tx: _, time: _ },
+                ) = e
+                {
+                    delay_for(Duration::from_secs(10)).await;
                 }
             }
         }
@@ -243,7 +245,7 @@ pub async fn eth_signer_main_loop(
         let latest_cosmos_block = contact.get_chain_status().await;
         match (latest_eth_block, latest_cosmos_block) {
             (Ok(latest_eth_block), Ok(ChainStatus::Moving { block_height })) => {
-                metrics::set_cosmos_block_height(block_height.clone());
+                metrics::set_cosmos_block_height(block_height);
                 metrics::set_ethereum_block_height(latest_eth_block.clone());
                 trace!(
                     "Latest Eth block {} Latest Cosmos block {}",
@@ -388,6 +390,7 @@ pub async fn eth_signer_main_loop(
     }
 }
 
+#[allow(dead_code)]
 pub async fn check_for_eth(orchestrator_address: EthAddress, web3: Web3) {
     let balance = web3.eth_get_balance(orchestrator_address).await.unwrap();
     if balance == 0u8.into() {

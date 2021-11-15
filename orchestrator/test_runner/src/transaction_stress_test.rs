@@ -1,4 +1,4 @@
-use crate::{get_fee, one_eth, one_hundred_eth, utils::*, TOTAL_TIMEOUT};
+use crate::{one_eth, one_hundred_eth, utils::*, TOTAL_TIMEOUT};
 use clarity::Address as EthAddress;
 use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
 use deep_space::coin::Coin;
@@ -150,7 +150,15 @@ pub async fn transaction_stress_test(
                 denom: send_coin.denom.clone(),
                 amount: 1u8.into(),
             };
-            let res = send_to_eth(c_key, e_dest_addr, send_coin, send_fee,             (0f64,"".to_string()),&contact, 1.0);
+            let res = send_to_eth(
+                c_key,
+                e_dest_addr,
+                send_coin,
+                send_fee,
+                (0f64, "".to_string()),
+                contact,
+                1.0,
+            );
             futs.push(res);
         }
         let results = join_all(futs).await;
@@ -166,9 +174,15 @@ pub async fn transaction_stress_test(
 
     for denom in denoms {
         info!("Requesting batch for {}", denom);
-        let res = send_request_batch_tx(keys[0].validator_key, denom, (0f64,"".to_string()), &contact, 1.0)
-            .await
-            .unwrap();
+        let res = send_request_batch_tx(
+            keys[0].validator_key,
+            denom,
+            (0f64, "".to_string()),
+            contact,
+            1.0,
+        )
+        .await
+        .unwrap();
         info!("batch request response is {:?}", res);
     }
 

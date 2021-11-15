@@ -74,7 +74,7 @@ pub async fn relayer_main_loop(
             gravity_contract_address,
             gravity_id.clone(),
             LOOP_SPEED,
-            gas_multiplier
+            gas_multiplier,
         )
         .await;
 
