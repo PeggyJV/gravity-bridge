@@ -310,7 +310,7 @@ pub async fn eth_signer_main_loop(
             }
             Err(e) => {
                 metrics::UNSIGNED_VALSET_FAILURES.inc();
-                info!(
+                error!(
                     "Failed to get unsigned valsets, check your Cosmos gRPC {:?}",
                     e
                 );
@@ -343,7 +343,7 @@ pub async fn eth_signer_main_loop(
             Ok(None) => info!("No unsigned batches! Everything good!"),
             Err(e) => {
                 metrics::UNSIGNED_BATCH_FAILURES.inc();
-                info!(
+                error!(
                     "Failed to get unsigned Batches, check your Cosmos gRPC {:?}",
                     e
                 );
@@ -374,7 +374,7 @@ pub async fn eth_signer_main_loop(
             }
         } else if let Err(e) = logic_calls {
             metrics::UNSIGNED_LOGIC_CALL_FAILURES.inc();
-            info!(
+            error!(
                 "Failed to get unsigned Logic Calls, check your Cosmos gRPC {:?}",
                 e
             );
