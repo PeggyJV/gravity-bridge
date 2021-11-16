@@ -14,6 +14,7 @@ use tonic::transport::Channel;
 use web30::client::Web3;
 use web30::types::SendTxOption;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn relay_logic_calls(
     // the validator set currently in the contract on Ethereum
     current_valset: Valset,

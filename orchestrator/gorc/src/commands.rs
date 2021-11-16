@@ -13,7 +13,7 @@ mod tests;
 mod tx;
 
 use crate::config::GorcConfig;
-use abscissa_core::{Application, Clap, Command, Configurable, FrameworkError, Runnable};
+use abscissa_core::{Clap, Command, Configurable, FrameworkError, Runnable};
 use std::path::PathBuf;
 
 /// Gorc Configuration Filename
@@ -97,8 +97,12 @@ impl Configurable<GorcConfig> for EntryPoint {
     /// This can be safely deleted if you don't want to override config
     /// settings from command-line options.
     fn process_config(&self, config: GorcConfig) -> Result<GorcConfig, FrameworkError> {
+<<<<<<< HEAD
         match &self.cmd {
             _ => Ok(config),
         }
+=======
+        Ok(config)
+>>>>>>> main
     }
 }

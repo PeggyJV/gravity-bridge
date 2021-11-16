@@ -1,4 +1,4 @@
-use crate::{get_fee, one_eth, one_hundred_eth, utils::*, TOTAL_TIMEOUT};
+use crate::{one_eth, one_hundred_eth, utils::*, TOTAL_TIMEOUT};
 use clarity::Address as EthAddress;
 use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
 use deep_space::coin::Coin;
@@ -158,7 +158,11 @@ pub async fn transaction_stress_test(
                 send_coin,
                 send_fee,
                 (0f64, "".to_string()),
+<<<<<<< HEAD
                 &contact,
+=======
+                contact,
+>>>>>>> main
                 1.0,
             );
             futs.push(res);
@@ -180,7 +184,11 @@ pub async fn transaction_stress_test(
             keys[0].validator_key,
             denom,
             (0f64, "".to_string()),
+<<<<<<< HEAD
             &contact,
+=======
+            contact,
+>>>>>>> main
             1.0,
         )
         .await

@@ -53,7 +53,7 @@ impl Runnable for CosmosToEthCmd {
         let cosmos_key = config.load_deep_space_key(cosmos_key.to_string());
 
         let cosmos_prefix = config.cosmos.prefix.trim();
-        let cosmos_address = cosmos_key.to_address(&cosmos_prefix).unwrap();
+        let cosmos_address = cosmos_key.to_address(cosmos_prefix).unwrap();
         let cosmos_grpc = config.cosmos.prefix.trim();
         println!("Sending from Cosmos address {}", cosmos_address);
         abscissa_tokio::run_with_actix(&APP, async {
@@ -114,21 +114,22 @@ impl Runnable for CosmosToEthCmd {
         let times = self.args.get(4).expect("times is required");
         let times = times.parse::<usize>().expect("cannot parse times");
 
-        if found.is_none() {
-            panic!("You don't have any {} tokens!", gravity_denom);
-        } else if amount.amount.clone() * times.into() >= found.clone().unwrap().amount
-            && times == 1
-        {
-            if is_cosmos_originated {
-                panic!("Your transfer of {} {} tokens is greater than your balance of {} tokens. Remember you need some to pay for fees!", print_atom(amount.amount), gravity_denom, print_atom(found.unwrap().amount.clone()));
-            } else {
-                panic!("Your transfer of {} {} tokens is greater than your balance of {} tokens. Remember you need some to pay for fees!", print_eth(amount.amount), gravity_denom, print_eth(found.unwrap().amount.clone()));
-            }
-        } else if amount.amount.clone() * times.into() >= found.clone().unwrap().amount {
-            if is_cosmos_originated {
-                panic!("Your transfer of {} * {} {} tokens is greater than your balance of {} tokens. Try to reduce the amount or the --times parameter", print_atom(amount.amount), times, gravity_denom, print_atom(found.unwrap().amount.clone()));
-            } else {
-                panic!("Your transfer of {} * {} {} tokens is greater than your balance of {} tokens. Try to reduce the amount or the --times parameter", print_eth(amount.amount), times, gravity_denom, print_eth(found.unwrap().amount.clone()));
+        match found {
+            None => panic!("You don't have any {} tokens!", gravity_denom),
+            Some(found) => {
+                if amount.amount.clone() * times.into() >= found.amount && times == 1 {
+                    if is_cosmos_originated {
+                        panic!("Your transfer of {} {} tokens is greater than your balance of {} tokens. Remember you need some to pay for fees!", print_atom(amount.amount), gravity_denom, print_atom(found.amount.clone()));
+                    } else {
+                        panic!("Your transfer of {} {} tokens is greater than your balance of {} tokens. Remember you need some to pay for fees!", print_eth(amount.amount), gravity_denom, print_eth(found.amount.clone()));
+                    }
+                } else if amount.amount.clone() * times.into() >= found.amount {
+                    if is_cosmos_originated {
+                        panic!("Your transfer of {} * {} {} tokens is greater than your balance of {} tokens. Try to reduce the amount or the --times parameter", print_atom(amount.amount), times, gravity_denom, print_atom(found.amount.clone()));
+                    } else {
+                        panic!("Your transfer of {} * {} {} tokens is greater than your balance of {} tokens. Try to reduce the amount or the --times parameter", print_eth(amount.amount), times, gravity_denom, print_eth(found.amount.clone()));
+                    }
+                }
             }
         }
 

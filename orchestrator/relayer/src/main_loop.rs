@@ -65,6 +65,7 @@ pub async fn relayer_main_loop(
                 )
                 .await;
 
+<<<<<<< HEAD
                 relay_logic_calls(
                     current_eth_valset,
                     ethereum_key,
@@ -79,5 +80,38 @@ pub async fn relayer_main_loop(
             },
             tokio::time::sleep(LOOP_SPEED)
         );
+=======
+        relay_batches(
+            current_eth_valset.clone(),
+            ethereum_key,
+            &web3,
+            &mut grpc_client,
+            gravity_contract_address,
+            gravity_id.clone(),
+            LOOP_SPEED,
+            gas_multiplier,
+        )
+        .await;
+
+        relay_logic_calls(
+            current_eth_valset,
+            ethereum_key,
+            &web3,
+            &mut grpc_client,
+            gravity_contract_address,
+            gravity_id.clone(),
+            LOOP_SPEED,
+            gas_multiplier,
+        )
+        .await;
+
+        // a bit of logic that tires to keep things running every 5 seconds exactly
+        // this is not required for any specific reason. In fact we expect and plan for
+        // the timing being off significantly
+        let elapsed = Instant::now() - loop_start;
+        if elapsed < LOOP_SPEED {
+            delay_for(LOOP_SPEED - elapsed).await;
+        }
+>>>>>>> main
     }
 }
