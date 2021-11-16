@@ -29,6 +29,7 @@ struct SubmittableBatch {
 /// valid to submit given the current chain state. From there we simulate a submission
 /// and if that succeeds and we like the gas cost we complete the relaying process and
 /// actually submit the data to Ethereum
+#[allow(clippy::too_many_arguments)]
 pub async fn relay_batches(
     // the validator set currently in the contract on Ethereum
     current_valset: Valset,
@@ -112,7 +113,7 @@ async fn get_batches_and_signatures(
     for (_key, value) in possible_batches.iter_mut() {
         value.reverse();
     }
-    return possible_batches;
+    possible_batches
 }
 
 /// Attempts to submit batches with valid signatures, checking the state
@@ -127,6 +128,7 @@ async fn get_batches_and_signatures(
 /// Keep in mind that many other relayers are making this same computation and some may have
 /// different standards for their profit margin, therefore there may be a race not only to
 /// submit individual batches but also batches in different orders
+#[allow(clippy::too_many_arguments)]
 async fn submit_batches(
     current_valset: Valset,
     ethereum_key: EthPrivateKey,

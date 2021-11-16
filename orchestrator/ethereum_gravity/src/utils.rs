@@ -39,7 +39,7 @@ pub fn get_checkpoint_abi_encode(
 }
 
 pub fn get_checkpoint_hash(valset: &Valset, gravity_id: &str) -> Result<Vec<u8>, GravityError> {
-    let locally_computed_abi_encode = get_checkpoint_abi_encode(&valset, &gravity_id);
+    let locally_computed_abi_encode = get_checkpoint_abi_encode(valset, gravity_id);
     let locally_computed_digest = Keccak256::digest(&locally_computed_abi_encode?);
     Ok(locally_computed_digest.to_vec())
 }

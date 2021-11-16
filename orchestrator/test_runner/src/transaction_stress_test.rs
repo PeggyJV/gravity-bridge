@@ -1,15 +1,11 @@
-use crate::{get_fee, one_eth, one_hundred_eth, utils::*, TOTAL_TIMEOUT};
+use crate::{one_eth, one_hundred_eth, utils::*, TOTAL_TIMEOUT};
 use clarity::Address as EthAddress;
 use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
 use deep_space::coin::Coin;
 use deep_space::Contact;
 use ethereum_gravity::{send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce};
 use futures::future::join_all;
-use std::{
-    collections::HashSet,
-    time::{Duration, Instant},
-};
-use tokio::time::sleep as delay_for;
+use std::{collections::HashSet, time::Duration};
 use web30::client::Web3;
 
 const TIMEOUT: Duration = Duration::from_secs(120);
@@ -88,41 +84,47 @@ pub async fn transaction_stress_test(
         );
     }
 
-    let start = Instant::now();
     let mut good = true;
-    while Instant::now() - start < TOTAL_TIMEOUT {
+    match tokio::time::timeout(TOTAL_TIMEOUT, async {
         good = true;
-        for keys in user_keys.iter() {
-            let c_addr = keys.cosmos_address;
-            let balances = contact.get_balances(c_addr).await.unwrap();
-            for token in erc20_addresses.iter() {
-                let mut found = false;
-                for balance in balances.iter() {
-                    if balance.denom.contains(&token.to_string())
-                        && balance.amount == one_hundred_eth()
-                    {
-                        found = true;
+        loop {
+            for keys in user_keys.iter() {
+                let c_addr = keys.cosmos_address;
+                let balances = contact.get_balances(c_addr).await.unwrap();
+                for token in erc20_addresses.iter() {
+                    let mut found = false;
+                    for balance in balances.iter() {
+                        if balance.denom.contains(&token.to_string())
+                            && balance.amount == one_hundred_eth()
+                        {
+                            found = true;
+                        }
+                    }
+                    if !found {
+                        good = false;
                     }
                 }
-                if !found {
-                    good = false;
-                }
             }
+            if good {
+                break;
+            }
+            tokio::time::sleep(Duration::from_secs(5)).await;
         }
-        if good {
+    })
+    .await
+    {
+        Ok(_) => {
             info!(
                 "All {} deposits bridged to Cosmos successfully!",
                 user_keys.len() * erc20_addresses.len()
             );
-            break;
         }
-        delay_for(Duration::from_secs(5)).await;
-    }
-    if !good {
-        panic!(
-            "Failed to perform all {} deposits to Cosmos!",
-            user_keys.len() * erc20_addresses.len()
-        );
+        Err(_) => {
+            panic!(
+                "Failed to perform all {} deposits to Cosmos!",
+                user_keys.len() * erc20_addresses.len()
+            );
+        }
     }
 
     let send_amount = one_hundred_eth() - 500u16.into();
@@ -186,33 +188,38 @@ pub async fn transaction_stress_test(
         info!("batch request response is {:?}", res);
     }
 
-    let start = Instant::now();
-    let mut good = true;
-    while Instant::now() - start < TOTAL_TIMEOUT {
-        good = true;
-        for keys in user_keys.iter() {
-            let e_dest_addr = keys.eth_dest_address;
-            for token in erc20_addresses.iter() {
-                let bal = web30.get_erc20_balance(*token, e_dest_addr).await.unwrap();
-                if bal != send_amount.clone() {
-                    good = false;
+    match tokio::time::timeout(TOTAL_TIMEOUT, async {
+        loop {
+            good = true;
+            for keys in user_keys.iter() {
+                let e_dest_addr = keys.eth_dest_address;
+                for token in erc20_addresses.iter() {
+                    let bal = web30.get_erc20_balance(*token, e_dest_addr).await.unwrap();
+                    if bal != send_amount.clone() {
+                        good = false;
+                    }
                 }
             }
+            if good {
+                break;
+            }
+            tokio::time::sleep(Duration::from_secs(5)).await;
         }
-        if good {
+    })
+    .await
+    {
+        Ok(_) => {
             info!(
                 "All {} withdraws to Ethereum bridged successfully!",
                 NUM_USERS * erc20_addresses.len()
             );
-            break;
         }
-        delay_for(Duration::from_secs(5)).await;
-    }
-    if !good {
-        panic!(
-            "Failed to perform all {} withdraws to Ethereum!",
-            NUM_USERS * erc20_addresses.len()
-        );
+        Err(_) => {
+            panic!(
+                "Failed to perform all {} withdraws to Ethereum!",
+                NUM_USERS * erc20_addresses.len()
+            );
+        }
     }
 
     // we should find a batch nonce greater than zero since all the batches

@@ -20,7 +20,6 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::types::SendToCosmosEvent;
 use rand::Rng;
 use std::time::Duration;
-use std::time::Instant;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 use web30::client::Web3;
@@ -109,18 +108,25 @@ pub async fn happy_path_test(
 }
 
 pub async fn wait_for_nonzero_valset(web30: &Web3, gravity_address: EthAddress) {
-    let start = Instant::now();
-    let mut current_eth_valset_nonce = get_valset_nonce(gravity_address, *MINER_ADDRESS, &web30)
-        .await
-        .expect("Failed to get current eth valset");
-
-    while 0 == current_eth_valset_nonce {
-        info!("Validator set is not yet updated to >0, waiting");
-        current_eth_valset_nonce = get_valset_nonce(gravity_address, *MINER_ADDRESS, &web30)
-            .await
-            .expect("Failed to get current eth valset");
-        delay_for(Duration::from_secs(4)).await;
-        if Instant::now() - start > TOTAL_TIMEOUT {
+    match tokio::time::timeout(TOTAL_TIMEOUT, async {
+        let mut current_eth_valset_nonce =
+            get_valset_nonce(gravity_address, *MINER_ADDRESS, &web30)
+                .await
+                .expect("Failed to get current eth valset");
+        while 0 == current_eth_valset_nonce {
+            info!("Validator set is not yet updated to >0, waiting");
+            current_eth_valset_nonce = get_valset_nonce(gravity_address, *MINER_ADDRESS, &web30)
+                .await
+                .expect("Failed to get current eth valset");
+            delay_for(Duration::from_secs(4)).await;
+        }
+    })
+    .await
+    {
+        Ok(_) => {
+            println!("Success")
+        }
+        Err(_) => {
             panic!("Failed to update validator set");
         }
     }
@@ -137,15 +143,6 @@ pub async fn test_valset_update(
     let starting_eth_valset_nonce = get_valset_nonce(gravity_address, *MINER_ADDRESS, &web30)
         .await
         .expect("Failed to get starting eth valset");
-    let start = Instant::now();
-
-    // now we send a valset request that the orchestrators will pick up on
-    // in this case we send it as the first validator because they can pay the fee
-    info!(
-        "Sending in valset request (starting_eth_valset_nonce {})",
-        starting_eth_valset_nonce
-    );
-
     // this is hacky and not really a good way to test validator set updates in a highly
     // repeatable fashion. What we really need to do is be aware of the total staking state
     // and manipulate the validator set very intentionally rather than kinda blindly like
@@ -169,54 +166,72 @@ pub async fn test_valset_update(
         amount: amount.into(),
         denom: "stake".to_string(),
     };
-    info!(
-        "Delegating {} to {} in order to generate a validator set update",
-        amount, delegate_address
-    );
+    match tokio::time::timeout(TOTAL_TIMEOUT, async {
+        // now we send a valset request that the orchestrators will pick up on
+        // in this case we send it as the first validator because they can pay the fee
+        info!(
+            "Sending in valset request (starting_eth_valset_nonce {})",
+            starting_eth_valset_nonce
+        );
 
-    loop {
-        let res = contact
-            .delegate_to_validator(
-                delegate_address.parse().unwrap(),
-                amount.clone(),
-                get_fee(),
-                keys_to_change.orch_key,
-                Some(OPERATION_TIMEOUT),
-            )
-            .await;
+        info!(
+            "Delegating {} to {} in order to generate a validator set update",
+            amount, delegate_address
+        );
+        loop {
+            let res = contact
+                .delegate_to_validator(
+                    delegate_address.parse().unwrap(),
+                    amount.clone(),
+                    get_fee(),
+                    keys_to_change.orch_key,
+                    Some(OPERATION_TIMEOUT),
+                )
+                .await;
 
-        if res.is_err() {
-            warn!("Delegate to validator failed (will retry) {:?}", res);
-            if Instant::now() - start > TOTAL_TIMEOUT {
-                panic!("Delegate to validator timed out.");
+            if res.is_err() {
+                warn!("Delegate to validator failed (will retry) {:?}", res);
+                continue; // retry
             }
-            continue; // retry
+            break;
         }
-
-        info!("Delegated {} to {}", amount, delegate_address);
-        break;
+    })
+    .await
+    {
+        Ok(_) => {
+            info!("Delegated {} to {}", amount, delegate_address);
+        }
+        Err(_) => {
+            panic!("Delegate to validator timed out.");
+        }
     }
 
     let mut current_eth_valset_nonce = get_valset_nonce(gravity_address, *MINER_ADDRESS, &web30)
         .await
         .expect("Failed to get current eth valset");
 
-    while starting_eth_valset_nonce == current_eth_valset_nonce {
-        info!(
-            "Validator set is not yet updated to >{}, waiting",
-            starting_eth_valset_nonce
-        );
-        current_eth_valset_nonce = get_valset_nonce(gravity_address, *MINER_ADDRESS, &web30)
-            .await
-            .expect("Failed to get current eth valset");
-        delay_for(Duration::from_secs(4)).await;
-        if Instant::now() - start > TOTAL_TIMEOUT {
+    match tokio::time::timeout(TOTAL_TIMEOUT, async {
+        while starting_eth_valset_nonce == current_eth_valset_nonce {
+            info!(
+                "Validator set is not yet updated to >{}, waiting",
+                starting_eth_valset_nonce
+            );
+            current_eth_valset_nonce = get_valset_nonce(gravity_address, *MINER_ADDRESS, &web30)
+                .await
+                .expect("Failed to get current eth valset");
+            delay_for(Duration::from_secs(4)).await;
+        }
+    })
+    .await
+    {
+        Ok(_) => {
+            assert!(starting_eth_valset_nonce != current_eth_valset_nonce);
+            info!("Validator set successfully updated!");
+        }
+        Err(_) => {
             panic!("Failed to update validator set");
         }
     }
-
-    assert!(starting_eth_valset_nonce != current_eth_valset_nonce);
-    info!("Validator set successfully updated!");
 }
 
 /// this function tests Ethereum -> Cosmos
@@ -248,8 +263,7 @@ async fn test_erc20_deposit(
     .expect("Failed to send tokens to Cosmos");
     info!("Send to Cosmos txid: {:#066x}", tx_id);
 
-    let start = Instant::now();
-    while Instant::now() - start < TOTAL_TIMEOUT {
+    match tokio::time::timeout(TOTAL_TIMEOUT, async {
         match (
             start_coin.clone(),
             check_cosmos_balance("gravity", dest, &contact).await,
@@ -278,10 +292,17 @@ async fn test_erc20_deposit(
             }
             _ => {}
         }
-        info!("Waiting for ERC20 deposit");
-        contact.wait_for_next_block(TOTAL_TIMEOUT).await.unwrap();
+    })
+    .await
+    {
+        Ok(_) => {
+            info!("Waiting for ERC20 deposit");
+            contact.wait_for_next_block(TOTAL_TIMEOUT).await.unwrap();
+        }
+        Err(_) => {
+            panic!("Failed to bridge ERC20!");
+        }
     }
-    panic!("Failed to bridge ERC20!")
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -354,18 +375,25 @@ async fn test_batch(
             .expect("Failed to get current eth valset");
     let starting_batch_nonce = current_eth_batch_nonce;
 
-    let start = Instant::now();
-    while starting_batch_nonce == current_eth_batch_nonce {
-        info!(
-            "Batch is not yet submitted {}>, waiting",
-            starting_batch_nonce
-        );
-        current_eth_batch_nonce =
-            get_tx_batch_nonce(gravity_address, erc20_contract, *MINER_ADDRESS, &web30)
-                .await
-                .expect("Failed to get current eth tx batch nonce");
-        delay_for(Duration::from_secs(4)).await;
-        if Instant::now() - start > TOTAL_TIMEOUT {
+    match tokio::time::timeout(TOTAL_TIMEOUT, async {
+        while starting_batch_nonce == current_eth_batch_nonce {
+            info!(
+                "Batch is not yet submitted {}>, waiting",
+                starting_batch_nonce
+            );
+            current_eth_batch_nonce =
+                get_tx_batch_nonce(gravity_address, erc20_contract, *MINER_ADDRESS, &web30)
+                    .await
+                    .expect("Failed to get current eth tx batch nonce");
+            delay_for(Duration::from_secs(4)).await;
+        }
+    })
+    .await
+    {
+        Ok(_) => {
+            println!("Submitted transaction batch set");
+        }
+        Err(_) => {
             panic!("Failed to submit transaction batch set");
         }
     }

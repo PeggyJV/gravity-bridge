@@ -1,5 +1,5 @@
+use crate::application::APP;
 use crate::config::GorcConfig;
-use crate::{application::APP, prelude::*};
 use abscissa_core::{Application, Clap, Command, Runnable};
 
 /// Command for printing configurations
