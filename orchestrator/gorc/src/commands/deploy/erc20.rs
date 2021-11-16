@@ -1,11 +1,11 @@
 use crate::{application::APP, prelude::*};
-use abscissa_core::{Command, Clap, Runnable};
+use abscissa_core::{Clap, Command, Runnable};
 use ethereum_gravity::deploy_erc20::deploy_erc20;
 use gravity_proto::gravity::{DenomToErc20ParamsRequest, DenomToErc20Request};
 use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
 use std::convert::TryFrom;
 use std::process::exit;
-use std::time::{Duration};
+use std::time::Duration;
 use tokio::time::sleep as delay_for;
 
 /// Deploy Erc20
@@ -97,8 +97,9 @@ impl Erc20 {
                     break val;
                 }
                 delay_for(Duration::from_secs(1)).await;
-            } 
-        }).await
+            }
+        })
+        .await
         {
             Ok(val) => {
                 println!(
@@ -107,11 +108,13 @@ impl Erc20 {
                     val.into_inner().erc20
                 );
                 exit(0);
-            },
+            }
             Err(_) => {
-                println!("Your ERC20 contract was not adopted, double check the metadata and try again");
+                println!(
+                    "Your ERC20 contract was not adopted, double check the metadata and try again"
+                );
                 exit(1);
-            },
+            }
         }
     }
 }

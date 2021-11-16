@@ -5,7 +5,6 @@ use hyper::Server;
 use lazy_static::lazy_static;
 use prometheus::*;
 
-
 pub async fn metrics_main_loop(addr: &net::SocketAddr) {
     let get_metrics = || async {
         let mut buffer = Vec::new();

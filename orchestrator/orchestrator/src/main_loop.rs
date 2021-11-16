@@ -25,10 +25,7 @@ use ethereum_gravity::utils::get_gravity_id;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use relayer::main_loop::relayer_main_loop;
 use std::convert::TryInto;
-use std::{
-    net,
-    time::{Duration},
-};
+use std::{net, time::Duration};
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 use web30::client::Web3;
