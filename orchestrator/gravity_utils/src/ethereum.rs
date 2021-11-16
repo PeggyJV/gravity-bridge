@@ -1,6 +1,17 @@
 use ethers::prelude::*;
 use std::panic;
 
+pub fn downcast_to_f32(input: U256) -> Option<f32> {
+    // technically the max value of u128 is larger than f32, but
+    // in practicality this won't matter for any of the cases we
+    // would care about downcasting from a U256, and Rust will
+    // gracefully saturate the cast
+    match panic::catch_unwind(|| input.as_u128() as f32) {
+        Ok(downcasted) => Some(downcasted),
+        Err(_) => None,
+    }
+}
+
 pub fn downcast_to_u64(input: U256) -> Option<u64> {
     match panic::catch_unwind(|| input.as_u64()) {
         Ok(downcasted) => Some(downcasted),

@@ -1,6 +1,6 @@
 //! This crate contains various components and utilities for interacting with the Gravity Ethereum contract.
 
-use clarity::Uint256;
+use ethers::types::U256;
 
 #[macro_use]
 extern crate log;
@@ -12,6 +12,10 @@ pub mod submit_batch;
 pub mod utils;
 pub mod valset_update;
 
-pub fn one_eth() -> Uint256 {
+pub fn one_eth() -> U256 {
     1000000000000000000u128.into()
+}
+
+pub fn one_eth_f32() -> f32 {
+    1000000000000000000u128 as f32
 }

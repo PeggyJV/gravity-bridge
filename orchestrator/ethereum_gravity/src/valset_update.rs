@@ -1,10 +1,10 @@
-use crate::utils::{EthClient, EthSignerMiddleware, get_max_gas_cost, get_valset_nonce, GasCost};
+use crate::utils::{EthClient, EthSignerMiddleware, GasCost, get_max_gas_cost, get_valset_nonce};
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
 use gravity_utils::{error::GravityError, message_signatures::encode_valset_confirm_hashed, types::*};
-use std::{cmp::min, time::Duration};
+use std::time::Duration;
 
 /// this function generates an appropriate Ethereum transaction
 /// to submit the provided validator set and signatures.
@@ -97,10 +97,12 @@ pub fn build_valset_update_contract_call(
 ) -> Result<ContractCall<EthSignerMiddleware, ()>, GravityError> {
     let (old_addresses, old_powers) = old_valset.filter_empty_addresses();
     let (new_addresses, new_powers) = new_valset.filter_empty_addresses();
+    let old_powers: Vec<U256> = old_powers.iter().map(|power| (*power).into()).collect();
+    let new_powers: Vec<U256> = new_powers.iter().map(|power| (*power).into()).collect();
 
     // remember the signatures are over the new valset and therefore this is the value we must encode
     // the old valset exists only as a hash in the ethereum store
-    let hash = encode_valset_confirm_hashed(gravity_id, new_valset);
+    let hash = encode_valset_confirm_hashed(gravity_id, new_valset.clone());
     // we need to use the old valset here because our signatures need to match the current
     // members of the validator set in the contract.
     let sig_data = old_valset.order_sigs(&hash, confirms)?;
@@ -108,8 +110,8 @@ pub fn build_valset_update_contract_call(
 
     let contract = Gravity::new(gravity_contract_address, eth_client);
     Ok(contract.update_valset(
-        new_addresses, new_powers, new_nonce.into(),
-        old_addresses, old_powers, old_nonce.into(),
+        new_addresses, new_powers, new_valset.nonce.into(),
+        old_addresses, old_powers, old_valset.nonce.into(),
         sig_arrays.v, sig_arrays.r, sig_arrays.s)
         .from(eth_client.address())
         .value(U256::zero()))

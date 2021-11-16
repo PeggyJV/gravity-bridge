@@ -1,11 +1,11 @@
 use cosmos_gravity::query::get_latest_transaction_batches;
 use cosmos_gravity::query::get_transaction_batch_signatures;
-use ethereum_gravity::{one_eth, submit_batch::send_eth_transaction_batch, utils::EthClient,
+use ethereum_gravity::{one_eth_f32, submit_batch::send_eth_transaction_batch, utils::EthClient,
     utils::get_tx_batch_nonce};
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::ethereum::downcast_to_u128;
+use gravity_utils::ethereum::downcast_to_f32;
 use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
 use gravity_utils::types::{BatchConfirmResponse, TransactionBatch, Valset};
 use web30::types::SendTxOption;
@@ -43,7 +43,7 @@ pub async fn relay_batches(
 
     submit_batches(
         current_valset,
-        eth_client,
+        eth_client.clone(),
         gravity_contract_address,
         gravity_id,
         timeout,
@@ -183,24 +183,30 @@ async fn submit_batches(
                     &oldest_signatures,
                     gravity_contract_address,
                     gravity_id.clone(),
-                    eth_client,
+                    eth_client.clone(),
                 )
                 .await;
                 if cost.is_err() {
                     error!("Batch cost estimate failed with {:?}", cost);
                     continue;
                 }
-                let cost = cost.unwrap();
-                info!(
-                "We have detected latest batch {} but latest on Ethereum is {} This batch is estimated to cost {} Gas / {:.4} ETH to submit",
-                latest_cosmos_batch_nonce,
-                latest_ethereum_batch,
-                cost.gas_price.clone(),
-                downcast_to_u128(cost.get_total()).unwrap() as f32
-                    / downcast_to_u128(one_eth()).unwrap() as f32
-            );
-            let tx_options  = vec![SendTxOption::GasPriceMultiplier(gas_multiplier)];
+                let mut cost = cost.unwrap();
+                let total_cost = downcast_to_f32(cost.get_total());
+                if total_cost.is_none() {
+                    error!("Total gas cost greater than f32 max, skipping batch submission: {}", oldest_signed_batch.nonce);
+                    continue;
+                }
+                let gas_as_f32 = downcast_to_f32(cost.gas);
 
+                info!(
+                    "We have detected latest batch {} but latest on Ethereum is {} This batch is estimated to cost {} Gas / {:.4} ETH to submit",
+                    latest_cosmos_batch_nonce,
+                    latest_ethereum_batch,
+                    cost.gas_price.clone(),
+                    downcast_to_f32(cost.get_total()).unwrap() / one_eth_f32()
+                );
+
+                cost.gas = (gas_as_f32 * gas_multiplier).into();
 
                 let res = send_eth_transaction_batch(
                     current_valset.clone(),
@@ -209,7 +215,7 @@ async fn submit_batches(
                     timeout,
                     gravity_contract_address,
                     gravity_id.clone(),
-                    tx_options,
+                    cost,
                     eth_client,
                 )
                 .await;
