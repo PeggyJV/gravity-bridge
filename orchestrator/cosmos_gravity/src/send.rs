@@ -80,7 +80,7 @@ pub async fn send_to_eth(
         return Err(CosmosGrpcError::BadInput(format!(
             "The amount ({}) and bridge_fee ({}) denominations do not match.",
             amount.denom, bridge_fee.denom,
-        )))
+        )));
     }
 
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
