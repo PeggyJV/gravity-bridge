@@ -1,4 +1,4 @@
-use crate::utils::{EthClient, EthSignerMiddleware, get_valset_nonce, GasCost, set_contract_call_gas_for_estimate};
+use crate::utils::{EthClient, EthSignerMiddleware, get_max_gas_cost, get_valset_nonce, GasCost};
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -26,7 +26,7 @@ pub async fn send_eth_valset_update(
         "Ordering signatures and submitting validator set {} -> {} update to Ethereum",
         old_nonce, new_nonce
     );
-    let before_nonce = get_valset_nonce(gravity_contract_address, eth_address, eth_client).await?;
+    let before_nonce = get_valset_nonce(gravity_contract_address, eth_address, eth_client.clone()).await?;
     if before_nonce != old_nonce {
         info!(
             "Someone else updated the valset to {}, exiting early",
@@ -36,19 +36,21 @@ pub async fn send_eth_valset_update(
     }
 
     let contract_call = build_valset_update_contract_call(
-        new_valset, old_valset, confirms, gravity_contract_address, gravity_id, eth_client
+        &new_valset, &old_valset, confirms, gravity_contract_address, gravity_id, eth_client.clone()
     )?;
     let pending_tx = contract_call.send().await?;
-    info!("Sent valset update with txid {:#066x}", pending_tx);
+    let tx_hash = *pending_tx;
+    info!("Sent valset update with txid {}", tx_hash);
     // TODO(bolten): ethers interval default is 7s, this mirrors what web30 was doing, should we adjust?
     // additionally we are mirroring only waiting for 1 confirmation by leaving that as default
-    pending_tx.interval(Duration::from_secs(1));
+    let pending_tx = pending_tx.interval(Duration::from_secs(1));
 
-    if let Err(tx_error) = tokio::time::timeout(timeout, async { pending_tx.await? }).await {
-        return Err(tx_error);
-    };
+    match tokio::time::timeout(timeout, pending_tx).await?? {
+        Some(receipt) => (),
+        None => error!("Did not receive transaction receipt when sending valset update: {}", tx_hash),
+    }
 
-    let last_nonce = get_valset_nonce(gravity_contract_address, eth_address, eth_client).await?;
+    let last_nonce = get_valset_nonce(gravity_contract_address, eth_address, eth_client.clone()).await?;
     if last_nonce != new_nonce {
         error!(
             "Current nonce is {} expected to update to nonce {}",
@@ -73,21 +75,21 @@ pub async fn estimate_valset_cost(
     gravity_id: String,
     eth_client: EthClient,
 ) -> Result<GasCost, GravityError> {
+    let max_gas_cost = get_max_gas_cost(eth_client.clone()).await?;
     let contract_call = build_valset_update_contract_call(
-        new_valset, old_valset, confirms, gravity_contract_address, gravity_id, eth_client
+        new_valset, old_valset, confirms, gravity_contract_address, gravity_id, eth_client.clone()
     )?;
-    let contract_call =
-        set_contract_call_gas_for_estimate(contract_call, eth_client).await?;
+    let contract_call = contract_call.gas(max_gas_cost.gas).gas_price(max_gas_cost.gas_price);
 
     Ok(GasCost {
         gas: contract_call.estimate_gas().await?,
-        gas_price
+        gas_price: max_gas_cost.gas_price,
     })
 }
 
 pub fn build_valset_update_contract_call(
-    new_valset: Valset,
-    old_valset: Valset,
+    new_valset: &Valset,
+    old_valset: &Valset,
     confirms: &[ValsetConfirmResponse],
     gravity_contract_address: EthAddress,
     gravity_id: String,
@@ -110,5 +112,5 @@ pub fn build_valset_update_contract_call(
         old_addresses, old_powers, old_nonce.into(),
         sig_arrays.v, sig_arrays.r, sig_arrays.s)
         .from(eth_client.address())
-        .value(0u8.into()))
+        .value(U256::zero()))
 }

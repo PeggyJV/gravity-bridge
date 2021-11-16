@@ -8,6 +8,7 @@ use ethers::abi::Error as EthersAbiError;
 use ethers::abi::ethereum_types::FromDecStrErr as EthersParseUintError;
 use ethers::prelude::*;
 use ethers::prelude::ContractError;
+use ethers::prelude::ProviderError as EthersProviderError;
 use ethers::prelude::signer::SignerMiddlewareError;
 use ethers::types::SignatureError as EthersSignatureError;
 use rustc_hex::FromHexError as EthersParseAddressError;
@@ -28,6 +29,7 @@ pub enum GravityError {
     EthersContractError(ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>),
     EthersParseAddressError(EthersParseAddressError),
     EthersParseUintError(EthersParseUintError),
+    EthersProviderError(EthersProviderError),
     EthersSignatureError(EthersSignatureError),
     GravityContractError(String),
     InvalidArgumentError(String),
@@ -58,6 +60,7 @@ impl fmt::Display for GravityError {
             GravityError::EthersContractError(val) => write!(f, "Ethers contract error: {}", val),
             GravityError::EthersParseAddressError(val) => write!(f, "Ethers H160 address parse error: {}", val),
             GravityError::EthersParseUintError(val) => write!(f, "Ethers U256 parse error: {}", val),
+            GravityError::EthersProviderError(val) => write!(f, "Ethers provider error: {}", val),
             GravityError::EthersSignatureError(val) => write!(f, "Ethers signature error: {}", val),
             GravityError::GravityContractError(val) => write!(f, "Gravity contract error: {}", val),
             GravityError::InvalidArgumentError(val) => write!(f, "Invalid argument error: {}", val),
@@ -129,6 +132,12 @@ impl From<EthersParseAddressError> for GravityError {
 impl From<EthersParseUintError> for GravityError {
     fn from(error: EthersParseUintError) -> Self {
         GravityError::EthersParseUintError(error)
+    }
+}
+
+impl From<EthersProviderError> for GravityError {
+    fn from(error: EthersProviderError) -> Self {
+        GravityError::EthersProviderError(error)
     }
 }
 

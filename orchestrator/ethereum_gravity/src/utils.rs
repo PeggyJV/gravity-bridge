@@ -176,17 +176,13 @@ pub async fn build_contract_eth_call<D: Detokenize>(
         .value(U256::zero()))
 }
 
-/// Take a ContractCall to be used with eth_estimateGas and set the gas limit and price
-/// based on the caller's state.
-pub async fn set_contract_call_gas_for_estimate<D: Detokenize>(
-    contract_call: ContractCall<EthSignerMiddleware, D>,
-    eth_client: EthClient,
-) -> Result<ContractCall<EthSignerMiddleware, D>, GravityError> {
+pub async fn get_max_gas_cost(eth_client: EthClient) -> Result<GasCost, GravityError> {
     let our_balance = eth_client.get_balance(eth_client.address(), None).await?;
-    let gas_limit = min((u64::MAX - 1).into(), our_balance);
-    let gas_price = eth_client.get_gas_price().await?;
 
-    Ok(contract_call.gas(gas_limit).gas_price(gas_price))
+    Ok(GasCost {
+        gas: min((u64::MAX - 1).into(), our_balance),
+        gas_price: eth_client.get_gas_price().await?,
+    })
 }
 
 /// Just a helper struct to represent the cost of actions on Ethereum
