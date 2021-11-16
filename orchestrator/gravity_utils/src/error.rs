@@ -7,6 +7,7 @@ use deep_space::error::CosmosGrpcError;
 use ethers::abi::Error as EthersAbiError;
 use ethers::abi::ethereum_types::FromDecStrErr as EthersParseUintError;
 use ethers::prelude::*;
+use ethers::prelude::ContractError;
 use ethers::prelude::signer::SignerMiddlewareError;
 use ethers::types::SignatureError as EthersSignatureError;
 use rustc_hex::FromHexError as EthersParseAddressError;
@@ -21,11 +22,15 @@ pub enum GravityError {
     InvalidBigInt(ParseBigIntError),
     CosmosGrpcError(CosmosGrpcError),
     CosmosAddressError(CosmosAddressError),
+    EthereumBadDataError(String),
     EthereumRestError(SignerMiddlewareError<Provider<Http>, LocalWallet>),
     EthersAbiError(EthersAbiError),
+    EthersContractError(ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>),
     EthersParseAddressError(EthersParseAddressError),
     EthersParseUintError(EthersParseUintError),
     EthersSignatureError(EthersSignatureError),
+    GravityContractError(String),
+    InvalidArgumentError(String),
     InvalidBridgeStateError(String),
     FailedToUpdateValset,
     EthereumContractError(String),
@@ -47,11 +52,15 @@ impl fmt::Display for GravityError {
                 write!(f, "Got invalid BigInt from cosmos! {}", val)
             }
             GravityError::CosmosAddressError(val) => write!(f, "Cosmos Address error {}", val),
-            GravityError::EthereumRestError(val) => write!(f, "Ethereum REST error {}", val),
-            GravityError::EthersAbiError(val) => write!(f, "Ethers ABI error {}", val),
-            GravityError::EthersParseAddressError(val) => write!(f, "Ethers H160 address parse error {}", val),
-            GravityError::EthersParseUintError(val) => write!(f, "Ethers U256 parse error {}", val),
-            GravityError::EthersSignatureError(val) => write!(f, "Ethers signature error {}", val),
+            GravityError::EthereumBadDataError(val) => write!(f, "Received unexpected data from Ethereum: {}", val),
+            GravityError::EthereumRestError(val) => write!(f, "Ethereum REST error: {}", val),
+            GravityError::EthersAbiError(val) => write!(f, "Ethers ABI error: {}", val),
+            GravityError::EthersContractError(val) => write!(f, "Ethers contract error: {}", val),
+            GravityError::EthersParseAddressError(val) => write!(f, "Ethers H160 address parse error: {}", val),
+            GravityError::EthersParseUintError(val) => write!(f, "Ethers U256 parse error: {}", val),
+            GravityError::EthersSignatureError(val) => write!(f, "Ethers signature error: {}", val),
+            GravityError::GravityContractError(val) => write!(f, "Gravity contract error: {}", val),
+            GravityError::InvalidArgumentError(val) => write!(f, "Invalid argument error: {}", val),
             GravityError::InvalidOptionsError(val) => {
                 write!(f, "Invalid TX options for this call {}", val)
             }
@@ -102,6 +111,12 @@ impl From<SignerMiddlewareError<Provider<Http>, LocalWallet>> for GravityError {
 impl From<EthersAbiError> for GravityError {
     fn from(error: EthersAbiError) -> Self {
         GravityError::EthersAbiError(error)
+    }
+}
+
+impl From<ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>> for GravityError {
+    fn from(error: ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>) -> Self {
+        GravityError::EthersContractError(error)
     }
 }
 
