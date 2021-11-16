@@ -1,7 +1,7 @@
 mod cosmos;
 mod eth;
 
-use abscissa_core::{Command, Clap, Runnable};
+use abscissa_core::{Clap, Command, Runnable};
 
 use crate::commands::keys::cosmos::CosmosKeysCmd;
 use crate::commands::keys::eth::EthKeysCmd;

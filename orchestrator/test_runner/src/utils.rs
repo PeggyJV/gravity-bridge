@@ -1,5 +1,5 @@
+use crate::MINER_PRIVATE_KEY;
 use crate::TOTAL_TIMEOUT;
-use crate::{MINER_PRIVATE_KEY};
 use crate::{MINER_ADDRESS, OPERATION_TIMEOUT};
 use clarity::{Address as EthAddress, Uint256};
 use clarity::{PrivateKey as EthPrivateKey, Transaction};

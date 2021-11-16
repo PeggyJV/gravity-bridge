@@ -1,4 +1,4 @@
-use abscissa_core::{Command, Clap, Runnable};
+use abscissa_core::{Clap, Command, Runnable};
 
 /// Run tests against configured chains
 #[derive(Command, Debug, Clap)]

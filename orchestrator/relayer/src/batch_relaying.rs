@@ -10,11 +10,11 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
 use gravity_utils::types::Valset;
 use gravity_utils::types::{BatchConfirmResponse, TransactionBatch};
-use web30::types::SendTxOption;
 use std::collections::HashMap;
 use std::time::Duration;
 use tonic::transport::Channel;
 use web30::client::Web3;
+use web30::types::SendTxOption;
 
 #[derive(Debug, Clone)]
 struct SubmittableBatch {
@@ -45,7 +45,6 @@ pub async fn relay_batches(
 
     trace!("possible batches {:?}", possible_batches);
 
-
     submit_batches(
         current_valset,
         ethereum_key,
@@ -58,7 +57,6 @@ pub async fn relay_batches(
     )
     .await;
 }
-
 
 /// This function retrieves the latest batches from the Cosmos module and then
 /// iterates through the signatures for each batch, determining if they are ready
@@ -116,7 +114,6 @@ async fn get_batches_and_signatures(
     }
     return possible_batches;
 }
-
 
 /// Attempts to submit batches with valid signatures, checking the state
 /// of the Ethereum chain to ensure that it is valid to submit a given batch
@@ -208,8 +205,7 @@ async fn submit_batches(
                 downcast_to_u128(cost.get_total()).unwrap() as f32
                     / downcast_to_u128(one_eth()).unwrap() as f32
             );
-            let tx_options  = vec![SendTxOption::GasPriceMultiplier(gas_multiplier)];
-
+                let tx_options = vec![SendTxOption::GasPriceMultiplier(gas_multiplier)];
 
                 let res = send_eth_transaction_batch(
                     current_valset.clone(),
