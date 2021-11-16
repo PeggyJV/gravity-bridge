@@ -97,12 +97,8 @@ impl Configurable<GorcConfig> for EntryPoint {
     /// This can be safely deleted if you don't want to override config
     /// settings from command-line options.
     fn process_config(&self, config: GorcConfig) -> Result<GorcConfig, FrameworkError> {
-<<<<<<< HEAD
         match &self.cmd {
             _ => Ok(config),
         }
-=======
-        Ok(config)
->>>>>>> main
     }
 }

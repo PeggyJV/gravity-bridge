@@ -14,7 +14,7 @@ use gravity_proto::gravity::{
 };
 use tonic::transport::Channel;
 use web30::client::Web3;
-
+#[allow(unused_assignments)]
 pub async fn happy_path_test_v2(
     web30: &Web3,
     grpc_client: GravityQueryClient<Channel>,

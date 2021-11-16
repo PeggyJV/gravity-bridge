@@ -6,8 +6,7 @@ use clarity::address::Address as EthAddress;
 use clarity::PrivateKey as EthPrivateKey;
 use ethereum_gravity::utils::get_gravity_id;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use std::time::{Duration, Instant};
-use tokio::time::sleep as delay_for;
+use std::time::Duration;
 use tonic::transport::Channel;
 use web30::client::Web3;
 
@@ -15,6 +14,7 @@ pub const LOOP_SPEED: Duration = Duration::from_secs(17);
 
 /// This function contains the orchestrator primary loop, it is broken out of the main loop so that
 /// it can be called in the test runner for easier orchestration of multi-node tests
+#[allow(unused_variables)]
 pub async fn relayer_main_loop(
     ethereum_key: EthPrivateKey,
     web3: Web3,
@@ -65,7 +65,6 @@ pub async fn relayer_main_loop(
                 )
                 .await;
 
-<<<<<<< HEAD
                 relay_logic_calls(
                     current_eth_valset,
                     ethereum_key,
@@ -80,38 +79,5 @@ pub async fn relayer_main_loop(
             },
             tokio::time::sleep(LOOP_SPEED)
         );
-=======
-        relay_batches(
-            current_eth_valset.clone(),
-            ethereum_key,
-            &web3,
-            &mut grpc_client,
-            gravity_contract_address,
-            gravity_id.clone(),
-            LOOP_SPEED,
-            gas_multiplier,
-        )
-        .await;
-
-        relay_logic_calls(
-            current_eth_valset,
-            ethereum_key,
-            &web3,
-            &mut grpc_client,
-            gravity_contract_address,
-            gravity_id.clone(),
-            LOOP_SPEED,
-            gas_multiplier,
-        )
-        .await;
-
-        // a bit of logic that tires to keep things running every 5 seconds exactly
-        // this is not required for any specific reason. In fact we expect and plan for
-        // the timing being off significantly
-        let elapsed = Instant::now() - loop_start;
-        if elapsed < LOOP_SPEED {
-            delay_for(LOOP_SPEED - elapsed).await;
-        }
->>>>>>> main
     }
 }
