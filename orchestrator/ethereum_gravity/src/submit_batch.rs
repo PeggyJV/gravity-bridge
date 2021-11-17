@@ -58,7 +58,6 @@ pub async fn send_eth_transaction_batch(
 
     let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
 
-    // TODO(bolten): we need to implement the gas multiplier being passed as a TxOption
     let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;
     info!("Sent batch update with txid {}", tx_hash);
