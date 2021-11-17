@@ -1,7 +1,7 @@
-use ethers::abi::Detokenize;
-use ethers::contract::builders::ContractCall;
 use ethers::core::abi::{self, Token};
+use ethers::middleware::gas_oracle::{Etherscan, GasCategory};
 use ethers::prelude::*;
+use ethers::prelude::gas_oracle::GasOracle;
 use ethers::types::Address as EthAddress;
 use ethers::utils::keccak256;
 use gravity_abi::gravity::*;
@@ -44,8 +44,12 @@ pub async fn get_valset_nonce(
     eth_client: EthClient,
 ) -> Result<u64, GravityError> {
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
-        .state_last_valset_nonce();
-    let contract_call = build_contract_eth_call(contract_call, eth_client.clone()).await?;
+        .state_last_valset_nonce()
+        .from(eth_client.address())
+        .value(U256::zero());
+    let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
+    let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
+
     let valset_nonce = contract_call.call().await?;
 
     // TODO (bolten): do we actually want to halt the bridge as the original comment implies?
@@ -65,8 +69,12 @@ pub async fn get_tx_batch_nonce(
     eth_client: EthClient,
 ) -> Result<u64, GravityError> {
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
-        .last_batch_nonce(erc20_contract_address);
-    let contract_call = build_contract_eth_call(contract_call, eth_client.clone()).await?;
+        .last_batch_nonce(erc20_contract_address)
+        .from(eth_client.address())
+        .value(U256::zero());
+    let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
+    let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
+
     let tx_batch_nonce = contract_call.call().await?;
 
     // TODO (bolten): do we actually want to halt the bridge as the original comment implies?
@@ -94,8 +102,12 @@ pub async fn get_logic_call_nonce(
     invalidation_id_slice.copy_from_slice(&invalidation_id[..]);
 
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
-        .last_logic_call_nonce(invalidation_id_slice);
-    let contract_call = build_contract_eth_call(contract_call, eth_client.clone()).await?;
+        .last_logic_call_nonce(invalidation_id_slice)
+        .from(eth_client.address())
+        .value(U256::zero());
+    let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
+    let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
+
     let logic_call_nonce = contract_call.call().await?;
 
     // TODO (bolten): do we actually want to halt the bridge as the original comment implies?
@@ -114,8 +126,12 @@ pub async fn get_event_nonce(
     eth_client: EthClient,
 ) -> Result<u64, GravityError> {
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
-        .state_last_event_nonce();
-    let contract_call = build_contract_eth_call(contract_call, eth_client.clone()).await?;
+        .state_last_event_nonce()
+        .from(eth_client.address())
+        .value(U256::zero());
+    let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
+    let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
+
     let event_nonce = contract_call.call().await?;
 
     // TODO (bolten): do we actually want to halt the bridge as the original comment implies?
@@ -134,8 +150,12 @@ pub async fn get_gravity_id(
     eth_client: EthClient,
 ) -> Result<String, GravityError> {
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
-        .state_gravity_id();
-    let contract_call = build_contract_eth_call(contract_call, eth_client.clone()).await?;
+        .state_gravity_id()
+        .from(eth_client.address())
+        .value(U256::zero());
+    let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
+    let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
+
     let gravity_id = contract_call.call().await?;
     let id_as_string = String::from_utf8(gravity_id.to_vec());
 
@@ -147,42 +167,38 @@ pub async fn get_gravity_id(
     }
 }
 
-/// Since all the contract eth_calls here use the same gas and value settings, use a common
-/// function to append them to the ContractCall builder.
-///
 /// Retrieve gas price and limit in a similar fashion to web30's simulate_transaction.
 /// These values are intended to be used in conjunction with eth_call rather than
 /// eth_sendtransaction. In ethers this is represented by `call()` on a ContractCall rather
 /// than `send()`. Using `call()` will not send a transaction from the caller account or
 /// spend gas.
-pub async fn build_contract_eth_call<D: Detokenize>(
-    contract_call: ContractCall<EthSignerMiddleware, D>,
-    eth_client: EthClient,
-) -> Result<ContractCall<EthSignerMiddleware, D>, GravityError> {
+pub async fn get_call_gas_cost(eth_client: EthClient) -> Result<GasCost, GravityError> {
     const GAS_LIMIT: u128 = 12450000; // the most Hardhat will allow, will work on Geth
 
     let caller_balance = eth_client.get_balance(eth_client.address(), None).await?;
     let latest_block = eth_client.get_block(BlockNumber::Latest).await?.unwrap();
-    let price = latest_block.base_fee_per_gas.unwrap_or(1u8.into()); // "or" clause shouldn't happen unless pre-London
-    if price == U256::zero() {
+    let gas_price = latest_block.base_fee_per_gas.unwrap_or(1u8.into()); // "or" clause shouldn't happen unless pre-London
+    if gas_price == U256::zero() {
         return Err(GravityError::EthereumBadDataError("Latest block returned base fee per gas of zero".to_string()));
     }
 
-    let limit = min(GAS_LIMIT.into(), caller_balance.div_mod(price).0);
-
-    Ok(contract_call.from(eth_client.address())
-        .gas(limit)
-        .gas_price(price)
-        .value(U256::zero()))
-}
-
-pub async fn get_max_gas_cost(eth_client: EthClient) -> Result<GasCost, GravityError> {
-    let our_balance = eth_client.get_balance(eth_client.address(), None).await?;
+    let gas = min(GAS_LIMIT.into(), caller_balance.div_mod(gas_price).0);
 
     Ok(GasCost {
-        gas: min((u64::MAX - 1).into(), our_balance),
-        gas_price: eth_client.get_gas_price().await?,
+        gas,
+        gas_price
     })
+}
+
+/// If ETHERSCAN_API_KEY env var is set, we'll call out to Etherscan for a gas estimate.
+/// Otherwise, just call eth_gasPrice.
+pub async fn get_send_transaction_gas_price(eth_client: EthClient) -> Result<U256, GravityError> {
+    if let Ok(api_key) = std::env::var("ETHERSCAN_API_KEY") {
+        let etherscan_oracle = Etherscan::new(Some(api_key.as_str())).category(GasCategory::Standard);
+        return Ok(etherscan_oracle.fetch().await?);
+    }
+
+    Ok(eth_client.get_gas_price().await?)
 }
 
 /// Just a helper struct to represent the cost of actions on Ethereum

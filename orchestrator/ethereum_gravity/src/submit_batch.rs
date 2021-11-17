@@ -1,4 +1,4 @@
-use crate::utils::{EthClient, EthSignerMiddleware, GasCost, get_max_gas_cost, get_tx_batch_nonce};
+use crate::utils::{EthClient, EthSignerMiddleware, GasCost, get_send_transaction_gas_price, get_tx_batch_nonce};
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -55,6 +55,9 @@ pub async fn send_eth_transaction_batch(
     let contract_call = build_submit_batch_contract_call(
         current_valset, &batch, confirms, gravity_contract_address, gravity_id, eth_client.clone()
     )?;
+
+    let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
+
     // TODO(bolten): we need to implement the gas multiplier being passed as a TxOption
     let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;
@@ -97,16 +100,13 @@ pub async fn estimate_tx_batch_cost(
     gravity_id: String,
     eth_client: EthClient,
 ) -> Result<GasCost, GravityError> {
-    let max_gas_cost = get_max_gas_cost(eth_client.clone()).await?;
-
     let contract_call = build_submit_batch_contract_call(
-        current_valset, &batch, confirms, gravity_contract_address, gravity_id, eth_client
+        current_valset, &batch, confirms, gravity_contract_address, gravity_id, eth_client.clone()
     )?;
-    let contract_call = contract_call.gas(max_gas_cost.gas).gas_price(max_gas_cost.gas_price);
 
     Ok(GasCost {
         gas: contract_call.estimate_gas().await?,
-        gas_price: max_gas_cost.gas_price,
+        gas_price: get_send_transaction_gas_price(eth_client.clone()).await?,
     })
 }
 
@@ -127,12 +127,13 @@ pub fn build_submit_batch_contract_call(
     let sig_arrays = to_arrays(sig_data);
     let (amounts, destinations, fees) = batch.get_checkpoint_values();
 
-    let contract = Gravity::new(gravity_contract_address, eth_client);
-    Ok(contract.submit_batch(
-        current_addresses, current_powers, current_valset_nonce.into(),
-        sig_arrays.v, sig_arrays.r, sig_arrays.s,
-        amounts, destinations, fees,
-        new_batch_nonce.into(), batch.token_contract, batch.batch_timeout.into())
+    let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
+        .submit_batch(current_addresses, current_powers, current_valset_nonce.into(),
+            sig_arrays.v, sig_arrays.r, sig_arrays.s,
+            amounts, destinations, fees,
+            new_batch_nonce.into(), batch.token_contract, batch.batch_timeout.into())
         .from(eth_client.address())
-        .value(U256::zero()))
+        .value(U256::zero());
+
+    Ok(contract_call)
 }

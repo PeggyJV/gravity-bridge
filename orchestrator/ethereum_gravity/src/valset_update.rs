@@ -1,4 +1,4 @@
-use crate::utils::{EthClient, EthSignerMiddleware, GasCost, get_max_gas_cost, get_valset_nonce};
+use crate::utils::{EthClient, EthSignerMiddleware, GasCost, get_send_transaction_gas_price, get_valset_nonce};
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -16,6 +16,7 @@ pub async fn send_eth_valset_update(
     timeout: Duration,
     gravity_contract_address: EthAddress,
     gravity_id: String,
+    gas_cost: GasCost,
     eth_client: EthClient,
 ) -> Result<(), GravityError> {
     let old_nonce = old_valset.nonce;
@@ -38,6 +39,8 @@ pub async fn send_eth_valset_update(
     let contract_call = build_valset_update_contract_call(
         &new_valset, &old_valset, confirms, gravity_contract_address, gravity_id, eth_client.clone()
     )?;
+    let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
+
     let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;
     info!("Sent valset update with txid {}", tx_hash);
@@ -75,15 +78,13 @@ pub async fn estimate_valset_cost(
     gravity_id: String,
     eth_client: EthClient,
 ) -> Result<GasCost, GravityError> {
-    let max_gas_cost = get_max_gas_cost(eth_client.clone()).await?;
     let contract_call = build_valset_update_contract_call(
         new_valset, old_valset, confirms, gravity_contract_address, gravity_id, eth_client.clone()
     )?;
-    let contract_call = contract_call.gas(max_gas_cost.gas).gas_price(max_gas_cost.gas_price);
 
     Ok(GasCost {
         gas: contract_call.estimate_gas().await?,
-        gas_price: max_gas_cost.gas_price,
+        gas_price: get_send_transaction_gas_price(eth_client.clone()).await?,
     })
 }
 

@@ -158,6 +158,7 @@ pub async fn relay_valsets(
             timeout,
             gravity_contract_address,
             gravity_id,
+            cost,
             eth_client.clone(),
         )
         .await;

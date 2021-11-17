@@ -8,6 +8,7 @@ use ethers::abi::Error as EthersAbiError;
 use ethers::abi::ethereum_types::FromDecStrErr as EthersParseUintError;
 use ethers::prelude::*;
 use ethers::prelude::ContractError;
+use ethers::prelude::gas_oracle::GasOracleError as EthersGasOracleError;
 use ethers::prelude::ProviderError as EthersProviderError;
 use ethers::prelude::signer::SignerMiddlewareError;
 use ethers::types::SignatureError as EthersSignatureError;
@@ -27,6 +28,7 @@ pub enum GravityError {
     EthereumRestError(SignerMiddlewareError<Provider<Http>, LocalWallet>),
     EthersAbiError(EthersAbiError),
     EthersContractError(ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>),
+    EthersGasOracleError(EthersGasOracleError),
     EthersParseAddressError(EthersParseAddressError),
     EthersParseUintError(EthersParseUintError),
     EthersProviderError(EthersProviderError),
@@ -58,6 +60,7 @@ impl fmt::Display for GravityError {
             GravityError::EthereumRestError(val) => write!(f, "Ethereum REST error: {}", val),
             GravityError::EthersAbiError(val) => write!(f, "Ethers ABI error: {}", val),
             GravityError::EthersContractError(val) => write!(f, "Ethers contract error: {}", val),
+            GravityError::EthersGasOracleError(val) => write!(f, "Ethers gas oracle error: {}", val),
             GravityError::EthersParseAddressError(val) => write!(f, "Ethers H160 address parse error: {}", val),
             GravityError::EthersParseUintError(val) => write!(f, "Ethers U256 parse error: {}", val),
             GravityError::EthersProviderError(val) => write!(f, "Ethers provider error: {}", val),
@@ -120,6 +123,12 @@ impl From<EthersAbiError> for GravityError {
 impl From<ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>> for GravityError {
     fn from(error: ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>) -> Self {
         GravityError::EthersContractError(error)
+    }
+}
+
+impl From<EthersGasOracleError> for GravityError {
+    fn from(error: EthersGasOracleError) -> Self {
+        GravityError::EthersGasOracleError(error)
     }
 }
 
