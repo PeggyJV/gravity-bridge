@@ -17,7 +17,7 @@ pub async fn relayer_main_loop(
     eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
-    gas_multiplier: f32,
+    eth_gas_price_multiplier: f32,
 ) {
     let mut grpc_client = grpc_client;
     loop {
@@ -57,7 +57,7 @@ pub async fn relayer_main_loop(
             gravity_contract_address,
             gravity_id.clone(),
             LOOP_SPEED,
-            gas_multiplier,
+            eth_gas_price_multiplier,
         )
         .await;
 
@@ -68,7 +68,7 @@ pub async fn relayer_main_loop(
             gravity_contract_address,
             gravity_id.clone(),
             LOOP_SPEED,
-            gas_multiplier
+            eth_gas_price_multiplier
         )
         .await;
 

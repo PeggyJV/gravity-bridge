@@ -56,7 +56,7 @@ pub async fn orchestrator_main_loop(
     gravity_contract_address: EthAddress,
     gas_price: (f64, String),
     metrics_listen: &net::SocketAddr,
-    eth_gas_multiplier: f32,
+    eth_gas_price_multiplier: f32,
     blocks_to_search: u128,
     gas_adjustment: f64,
     relayer_opt_out: bool,
@@ -99,7 +99,7 @@ pub async fn orchestrator_main_loop(
             eth_client.clone(),
             grpc_client.clone(),
             gravity_contract_address,
-            eth_gas_multiplier,
+            eth_gas_price_multiplier,
         );
         futures::future::join5(a, b, c, d, e).await;
     } else {

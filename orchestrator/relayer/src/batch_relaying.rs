@@ -34,7 +34,7 @@ pub async fn relay_batches(
     gravity_contract_address: EthAddress,
     gravity_id: String,
     timeout: Duration,
-    gas_multiplier: f32,
+    eth_gas_price_multiplier: f32,
 ) {
     let possible_batches =
         get_batches_and_signatures(current_valset.clone(), grpc_client, gravity_id.clone()).await;
@@ -47,7 +47,7 @@ pub async fn relay_batches(
         gravity_contract_address,
         gravity_id,
         timeout,
-        gas_multiplier,
+        eth_gas_price_multiplier,
         possible_batches,
     )
     .await;
@@ -186,17 +186,18 @@ async fn submit_batches(
                     eth_client.clone(),
                 )
                 .await;
+
                 if cost.is_err() {
                     error!("Batch cost estimate failed with {:?}", cost);
                     continue;
                 }
+
                 let mut cost = cost.unwrap();
                 let total_cost = downcast_to_f32(cost.get_total());
                 if total_cost.is_none() {
                     error!("Total gas cost greater than f32 max, skipping batch submission: {}", oldest_signed_batch.nonce);
                     continue;
                 }
-                let gas_as_f32 = downcast_to_f32(cost.gas);
 
                 info!(
                     "We have detected latest batch {} but latest on Ethereum is {} This batch is estimated to cost {} Gas / {:.4} ETH to submit",
@@ -206,7 +207,7 @@ async fn submit_batches(
                     downcast_to_f32(cost.get_total()).unwrap() / one_eth_f32()
                 );
 
-                cost.gas = (gas_as_f32 * gas_multiplier).into();
+                cost.gas_price = (downcast_to_f32(cost.gas_price) * eth_gas_price_multiplier).into();
 
                 let res = send_eth_transaction_batch(
                     current_valset.clone(),
@@ -219,6 +220,7 @@ async fn submit_batches(
                     eth_client,
                 )
                 .await;
+
                 if res.is_err() {
                     info!("Batch submission failed with {:?}", res);
                 }
