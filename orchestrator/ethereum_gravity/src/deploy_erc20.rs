@@ -20,7 +20,7 @@ pub async fn deploy_erc20(
     gravity_contract: Address,
     wait_timeout: Option<Duration>,
     eth_client: EthClient,
-) -> Result<U256, GravityError> {
+) -> Result<TxHash, GravityError> {
     let contract_call = Gravity::new(gravity_contract, eth_client.clone())
         .deploy_erc20(cosmos_denom, erc20_name, erc20_symbol, decimals);
     let gas_price = get_send_transaction_gas_price(eth_client.clone()).await?;
@@ -28,11 +28,11 @@ pub async fn deploy_erc20(
 
     let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;
-    info!("Sent logic call with txid {}", tx_hash);
+    info!("Deploying ERC-20 with tx hash {}", tx_hash);
     // TODO(bolten): ethers interval default is 7s, this mirrors what web30 was doing, should we adjust?
     // additionally we are mirroring only waiting for 1 confirmation by leaving that as default
     let pending_tx = pending_tx.interval(Duration::from_secs(1));
-    let potential_error = GravityError::GravityContractError(format!("Did not receive transaction receipt when deploying: {}", tx_hash));
+    let potential_error = GravityError::GravityContractError(format!("Did not receive transaction receipt when deploying ERC-20: {}", tx_hash));
 
     if let Some(timeout) = wait_timeout {
         match tokio::time::timeout(timeout, pending_tx).await?? {

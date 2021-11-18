@@ -35,6 +35,9 @@ impl Erc20 {
 
         let config = APP.config();
 
+        let ethereum_wallet = config.load_ethers_wallet(self.ethereum_key.clone());
+        let ethereum_address = ethereum_wallet.address();
+
         let contract_address = config
             .gravity
             .contract
@@ -51,11 +54,10 @@ impl Erc20 {
         .await;
 
         let mut grpc = connections.grpc.clone().unwrap();
-        let web3 = connections.web3.clone().unwrap();
+        let eth_client = SignerMiddleware::new(connections.eth_provider.clone().unwrap(), ethereum_wallet.clone());
+        let eth_client = Arc::new(eth_client);
 
-        let ethereum_key = config.load_clarity_key(self.ethereum_key.clone());
-        let ethereum_public_key = ethereum_key.to_public_key().unwrap();
-        check_for_eth(ethereum_public_key, &web3).await;
+        check_for_eth(ethereum_address, &eth_client.provider()).await;
 
         let req = DenomToErc20ParamsRequest {
             denom: denom.clone(),
@@ -75,15 +77,13 @@ impl Erc20 {
             res.erc20_symbol,
             u8::try_from(res.erc20_decimals).unwrap(),
             contract_address,
-            &web3,
             Some(timeout),
-            ethereum_key,
-            vec![],
+            eth_client.clone(),
         )
         .await
         .expect("Could not deploy ERC20");
 
-        println!("We have deployed ERC20 contract {:#066x}, waiting to see if the Cosmos chain choses to adopt it", res);
+        println!("We have deployed ERC20 contract {}, waiting to see if the Cosmos chain choses to adopt it", res);
 
         let start = Instant::now();
         loop {
