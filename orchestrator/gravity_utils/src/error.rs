@@ -10,23 +10,50 @@ use tokio::time::error::Elapsed;
 use tonic::Status;
 use web30::jsonrpc::error::Web3Error;
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug, Error, Eq, PartialEq)]
 #[allow(clippy::large_enum_variant)]
 pub enum GravityError {
+    #[error("Got invalid BigInt from cosmos! {0}")]
     InvalidBigInt(ParseBigIntError),
+
+    #[error("Cosmos gRPC error {0}")]
     CosmosGrpcError(CosmosGrpcError),
+
+    #[error("Cosmos Address error {0}")]
     CosmosAddressError(CosmosAddressError),
+
+    #[error("Ethereum REST error {0}")]
     EthereumRestError(Web3Error),
+
+    #[error("Invalid bridge state! {0}")]
     InvalidBridgeStateError(String),
+
+    #[error("ValidatorSet Update Failed")]
     FailedToUpdateValset,
+
+    #[error("Contract operation failed {0}")]
     EthereumContractError(String),
+
+    #[error("Invalid TX options for this call {0}")]
     InvalidOptionsError(String),
+
+    #[error("Clarity Error {0}")]
     ClarityError(ClarityError),
+
+    #[error("Operation timed out!")]
     TimeoutError,
+
+    #[error("InvalidEvent {0}")]
     InvalidEventLogError(String),
+
+    #[error("Gravity gRPC error {0}")]
     GravityGrpcError(Status),
+
+    #[error("Insufficient Voting Power to Pass")]
     InsufficientVotingPowerToPass(String),
-    ParseBigIntError(ParseBigIntError),
+
+    #[error("Failed to parse big integer {0}")]
+    ParseBigIntError(ParseBigIntError)
 }
 
 impl fmt::Display for GravityError {
