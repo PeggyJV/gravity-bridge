@@ -1,11 +1,10 @@
-use clarity::PrivateKey as EthPrivateKey;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::utils::bytes_to_hex_str;
 use deep_space::Contact;
 use deep_space::Msg;
-use ethereum_gravity::utils::downcast_uint256;
 use gravity_proto::gravity as proto;
 use gravity_proto::ToAny;
+use gravity_utils::ethereum::downcast_to_u64;
 use gravity_utils::message_signatures::{
     encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
 };
@@ -124,8 +123,8 @@ pub fn ethereum_event_messages(
     let mut unordered_msgs = std::collections::HashMap::new();
     for deposit in deposits {
         let event = proto::SendToCosmosEvent {
-            event_nonce: downcast_uint256(deposit.event_nonce.clone()).unwrap(),
-            ethereum_height: downcast_uint256(deposit.block_height).unwrap(),
+            event_nonce: downcast_to_u64(deposit.event_nonce.clone()).unwrap(),
+            ethereum_height: downcast_to_u64(deposit.block_height).unwrap(),
             token_contract: deposit.erc20.to_string(),
             amount: deposit.amount.to_string(),
             cosmos_receiver: deposit.destination.to_string(),
@@ -140,9 +139,9 @@ pub fn ethereum_event_messages(
     }
     for batch in batches {
         let event = proto::BatchExecutedEvent {
-            event_nonce: downcast_uint256(batch.event_nonce.clone()).unwrap(),
-            batch_nonce: downcast_uint256(batch.batch_nonce.clone()).unwrap(),
-            ethereum_height: downcast_uint256(batch.block_height).unwrap(),
+            event_nonce: downcast_to_u64(batch.event_nonce.clone()).unwrap(),
+            batch_nonce: downcast_to_u64(batch.batch_nonce.clone()).unwrap(),
+            ethereum_height: downcast_to_u64(batch.block_height).unwrap(),
             token_contract: batch.erc20.to_string(),
         };
         let msg = proto::MsgSubmitEthereumEvent {
@@ -154,8 +153,8 @@ pub fn ethereum_event_messages(
     }
     for deploy in erc20_deploys {
         let event = proto::Erc20DeployedEvent {
-            event_nonce: downcast_uint256(deploy.event_nonce.clone()).unwrap(),
-            ethereum_height: downcast_uint256(deploy.block_height).unwrap(),
+            event_nonce: downcast_to_u64(deploy.event_nonce.clone()).unwrap(),
+            ethereum_height: downcast_to_u64(deploy.block_height).unwrap(),
             cosmos_denom: deploy.cosmos_denom,
             token_contract: deploy.erc20_address.to_string(),
             erc20_name: deploy.name,
@@ -171,10 +170,10 @@ pub fn ethereum_event_messages(
     }
     for logic_call in logic_calls {
         let event = proto::ContractCallExecutedEvent {
-            event_nonce: downcast_uint256(logic_call.event_nonce.clone()).unwrap(),
-            ethereum_height: downcast_uint256(logic_call.block_height).unwrap(),
+            event_nonce: downcast_to_u64(logic_call.event_nonce.clone()).unwrap(),
+            ethereum_height: downcast_to_u64(logic_call.block_height).unwrap(),
             invalidation_id: logic_call.invalidation_id,
-            invalidation_nonce: downcast_uint256(logic_call.invalidation_nonce).unwrap(),
+            invalidation_nonce: downcast_to_u64(logic_call.invalidation_nonce).unwrap(),
         };
         let msg = proto::MsgSubmitEthereumEvent {
             signer: cosmos_address.to_string(),
@@ -185,9 +184,9 @@ pub fn ethereum_event_messages(
     }
     for valset in valsets {
         let event = proto::SignerSetTxExecutedEvent {
-            event_nonce: downcast_uint256(valset.event_nonce.clone()).unwrap(),
-            signer_set_tx_nonce: downcast_uint256(valset.valset_nonce.clone()).unwrap(),
-            ethereum_height: downcast_uint256(valset.block_height).unwrap(),
+            event_nonce: downcast_to_u64(valset.event_nonce.clone()).unwrap(),
+            signer_set_tx_nonce: downcast_to_u64(valset.valset_nonce.clone()).unwrap(),
+            ethereum_height: downcast_to_u64(valset.block_height).unwrap(),
             members: valset.members.iter().map(|v| v.into()).collect(),
         };
         let msg = proto::MsgSubmitEthereumEvent {
