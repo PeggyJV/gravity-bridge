@@ -8,8 +8,6 @@ use crate::{
     ethereum_event_watcher::check_for_events, metrics::metrics_main_loop,
     oracle_resync::get_last_checked_block,
 };
-use clarity::Uint256;
-use clarity::{utils::bytes_to_hex_str, PrivateKey as EthPrivateKey};
 use cosmos_gravity::send::send_main_loop;
 use cosmos_gravity::{
     build,
@@ -25,6 +23,7 @@ use deep_space::{Contact, Msg};
 use ethereum_gravity::utils::{EthClient, get_gravity_id};
 use ethers::{prelude::*, types::Address as EthAddress};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use gravity_utils::ethereum::bytes_to_hex_str;
 use relayer::main_loop::relayer_main_loop;
 use std::convert::TryInto;
 use std::sync::Arc;
@@ -35,7 +34,6 @@ use std::{
 use tokio::join;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
-use web30::client::Web3;
 
 /// The execution speed governing all loops in this file
 /// which is to say all loops started by Orchestrator main
@@ -121,12 +119,11 @@ pub async fn eth_oracle_main_loop(
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let long_timeout_web30 = Web3::new(&web3.get_url(), Duration::from_secs(120));
-    let mut last_checked_block: Uint256 = get_last_checked_block(
+    let mut last_checked_block: U256 = get_last_checked_block(
         grpc_client.clone(),
         our_cosmos_address,
         gravity_contract_address,
-        &long_timeout_web30,
+        eth_client.clone(),
         blocks_to_search,
     )
     .await;
@@ -136,7 +133,7 @@ pub async fn eth_oracle_main_loop(
     loop {
         let loop_start = Instant::now();
 
-        let latest_eth_block = web3.eth_block_number().await;
+        let latest_eth_block = eth_client.get_block_number().await;
         let latest_cosmos_block = contact.get_chain_status().await;
         match (latest_eth_block, latest_cosmos_block) {
             (Ok(latest_eth_block), Ok(ChainStatus::Moving { block_height })) => {
@@ -181,7 +178,7 @@ pub async fn eth_oracle_main_loop(
 
         // Relays events from Ethereum -> Cosmos
         match check_for_events(
-            &web3,
+            eth_client.clone(),
             &contact,
             &mut grpc_client,
             gravity_contract_address,
@@ -225,10 +222,10 @@ pub async fn eth_signer_main_loop(
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let our_ethereum_address = ethereum_key.to_public_key().unwrap();
+    let our_ethereum_address = eth_client.address();
     let mut grpc_client = grpc_client;
 
-    let gravity_id = get_gravity_id(contract_address, our_ethereum_address, &web3).await;
+    let gravity_id = get_gravity_id(contract_address, our_ethereum_address, eth_client.clone()).await;
     if gravity_id.is_err() {
         error!("Failed to get GravityID, check your Eth node");
         return;
@@ -238,7 +235,7 @@ pub async fn eth_signer_main_loop(
     loop {
         let loop_start = Instant::now();
 
-        let latest_eth_block = web3.eth_block_number().await;
+        let latest_eth_block = eth_client.get_block_number().await;
         let latest_cosmos_block = contact.get_chain_status().await;
         match (latest_eth_block, latest_cosmos_block) {
             (Ok(latest_eth_block), Ok(ChainStatus::Moving { block_height })) => {
@@ -294,7 +291,7 @@ pub async fn eth_signer_main_loop(
                     );
                     let messages = build::signer_set_tx_confirmation_messages(
                         &contact,
-                        ethereum_key,
+                        eth_client.clone(),
                         valsets,
                         cosmos_key,
                         gravity_id.clone(),
@@ -327,7 +324,7 @@ pub async fn eth_signer_main_loop(
                 let transaction_batches = vec![last_unsigned_batch];
                 let messages = build::batch_tx_confirmation_messages(
                     &contact,
-                    ethereum_key,
+                    eth_client.clone(),
                     transaction_batches,
                     cosmos_key,
                     gravity_id.clone(),
@@ -359,7 +356,7 @@ pub async fn eth_signer_main_loop(
                 let logic_calls = vec![logic_call];
                 let messages = build::contract_call_tx_confirmation_messages(
                     &contact,
-                    ethereum_key,
+                    eth_client.clone(),
                     logic_calls,
                     cosmos_key,
                     gravity_id.clone(),
