@@ -2,8 +2,6 @@ use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
 use deep_space::Msg;
 use ethereum_gravity::utils::EthClient;
-use ethers::core::k256::ecdsa::signature::DigestSigner;
-use ethers::prelude::Middleware;
 use ethers::prelude::Signer;
 use ethers::utils::keccak256;
 use gravity_proto::gravity as proto;
@@ -14,7 +12,7 @@ use gravity_utils::message_signatures::{
 };
 use gravity_utils::types::*;
 
-pub fn signer_set_tx_confirmation_messages(
+pub async fn signer_set_tx_confirmation_messages(
     contact: &Contact,
     eth_client: EthClient,
     valsets: Vec<Valset>,
@@ -45,7 +43,7 @@ pub fn signer_set_tx_confirmation_messages(
     msgs
 }
 
-pub fn batch_tx_confirmation_messages(
+pub async fn batch_tx_confirmation_messages(
     contact: &Contact,
     eth_client: EthClient,
     batches: Vec<TransactionBatch>,
@@ -77,7 +75,7 @@ pub fn batch_tx_confirmation_messages(
     msgs
 }
 
-pub fn contract_call_tx_confirmation_messages(
+pub async fn contract_call_tx_confirmation_messages(
     contact: &Contact,
     eth_client: EthClient,
     logic_calls: Vec<LogicCall>,

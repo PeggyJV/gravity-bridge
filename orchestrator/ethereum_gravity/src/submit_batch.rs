@@ -66,7 +66,7 @@ pub async fn send_eth_transaction_batch(
     let pending_tx = pending_tx.interval(Duration::from_secs(1));
 
     match tokio::time::timeout(timeout, pending_tx).await?? {
-        Some(receipt) => (),
+        Some(_) => (),
         None => error!("Did not receive transaction receipt when submitting batch: {}", tx_hash),
     }
 

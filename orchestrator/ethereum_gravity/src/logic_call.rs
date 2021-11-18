@@ -70,7 +70,7 @@ pub async fn send_eth_logic_call(
     let pending_tx = pending_tx.interval(Duration::from_secs(1));
 
     match tokio::time::timeout(timeout, pending_tx).await?? {
-        Some(receipt) => (),
+        Some(_) => (),
         None => error!("Did not receive transaction receipt when submitting batch: {}", tx_hash),
     }
 
@@ -138,7 +138,7 @@ pub fn build_send_logic_call_contract_call(
         .map(|fee| fee.amount).collect();
     let fee_token_contracts = call.fees.iter()
         .map(|fee| fee.token_contract_address).collect();
-    let invalidation_id = convert_invalidation_id_to_fixed_array(call.invalidation_id)?;
+    let invalidation_id = convert_invalidation_id_to_fixed_array(call.invalidation_id.clone())?;
 
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
         .submit_logic_call(current_addresses, current_powers, current_valset_nonce.into(),
@@ -149,7 +149,7 @@ pub fn build_send_logic_call_contract_call(
                 fee_amounts,
                 fee_token_contracts,
                 logic_contract_address: call.logic_contract_address,
-                payload: call.payload,
+                payload: call.payload.clone(),
                 time_out: call.timeout.into(),
                 invalidation_id,
                 invalidation_nonce: call.invalidation_nonce.into(), })

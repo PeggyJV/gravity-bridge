@@ -295,7 +295,7 @@ pub async fn eth_signer_main_loop(
                         valsets,
                         cosmos_key,
                         gravity_id.clone(),
-                    );
+                    ).await.unwrap();
                     msg_sender
                         .send(messages)
                         .await
@@ -328,7 +328,7 @@ pub async fn eth_signer_main_loop(
                     transaction_batches,
                     cosmos_key,
                     gravity_id.clone(),
-                );
+                ).await.unwrap();
                 msg_sender
                     .send(messages)
                     .await
@@ -360,7 +360,7 @@ pub async fn eth_signer_main_loop(
                     logic_calls,
                     cosmos_key,
                     gravity_id.clone(),
-                );
+                ).await.unwrap();
                 msg_sender
                     .send(messages)
                     .await

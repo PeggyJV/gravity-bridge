@@ -49,7 +49,7 @@ pub async fn send_eth_valset_update(
     let pending_tx = pending_tx.interval(Duration::from_secs(1));
 
     match tokio::time::timeout(timeout, pending_tx).await?? {
-        Some(receipt) => (),
+        Some(_) => (),
         None => error!("Did not receive transaction receipt when sending valset update: {}", tx_hash),
     }
 
@@ -109,7 +109,7 @@ pub fn build_valset_update_contract_call(
     let sig_data = old_valset.order_sigs(&hash, confirms)?;
     let sig_arrays = to_arrays(sig_data);
 
-    let contract = Gravity::new(gravity_contract_address, eth_client);
+    let contract = Gravity::new(gravity_contract_address, eth_client.clone());
     Ok(contract.update_valset(
         new_addresses, new_powers, new_valset.nonce.into(),
         old_addresses, old_powers, old_valset.nonce.into(),
