@@ -1,6 +1,7 @@
 use crate::types::{LogicCall, TransactionBatch, Valset};
 use ethers::core::abi::{self, Token};
 use ethers::utils::hash_message;
+use ethers::utils::keccak256;
 
 /// takes the required input data and produces the required signature to confirm a validator
 /// set update on the Gravity Ethereum contract. This value will then be signed before being
@@ -22,7 +23,7 @@ pub fn encode_valset_confirm(gravity_id: String, valset: Valset) -> Vec<u8> {
 }
 
 pub fn encode_valset_confirm_hashed(gravity_id: String, valset: Valset) -> Vec<u8> {
-    let digest = encode_valset_confirm(gravity_id, valset);
+    let digest = keccak256(encode_valset_confirm(gravity_id, valset).as_slice());
     hash_message(digest).as_bytes().to_vec()
 }
 
@@ -126,7 +127,7 @@ pub fn encode_tx_batch_confirm(gravity_id: String, batch: TransactionBatch) -> V
 }
 
 pub fn encode_tx_batch_confirm_hashed(gravity_id: String, batch: TransactionBatch) -> Vec<u8> {
-    let digest = encode_tx_batch_confirm(gravity_id, batch);
+    let digest = keccak256(encode_tx_batch_confirm(gravity_id, batch).as_slice());
     hash_message(digest).as_bytes().to_vec()
 }
 
@@ -266,7 +267,7 @@ pub fn encode_logic_call_confirm(gravity_id: String, call: LogicCall) -> Vec<u8>
 }
 
 pub fn encode_logic_call_confirm_hashed(gravity_id: String, call: LogicCall) -> Vec<u8> {
-    let digest = encode_logic_call_confirm(gravity_id, call);
+    let digest = keccak256(encode_logic_call_confirm(gravity_id, call).as_slice());
     hash_message(digest).as_bytes().to_vec()
 }
 
