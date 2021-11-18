@@ -5,7 +5,6 @@ use hyper::Server;
 use lazy_static::lazy_static;
 use prometheus::*;
 
-
 pub async fn metrics_main_loop(addr: &net::SocketAddr) {
     let get_metrics = || async {
         let mut buffer = Vec::new();
@@ -18,7 +17,7 @@ pub async fn metrics_main_loop(addr: &net::SocketAddr) {
     let app = route("/", get(get_metrics));
 
     info!("metrics listening on {}", addr);
-    Server::bind(&addr)
+    Server::bind(addr)
         .serve(app.into_make_service())
         .await
         .unwrap();
@@ -240,20 +239,14 @@ pub fn set_ethereum_bal(v: clarity::Uint256) {
 }
 
 fn set_u64(guage: &IntGauge, value: u64) {
-    let v = match value.try_into() {
-        Ok(v) => v,
-        Err(_) => -1,
-    };
+    let v = value.try_into().unwrap_or(-1);
     if v > guage.get() {
         guage.set(v);
     }
 }
 
 fn set_uint256(guage: &IntGauge, value: clarity::Uint256) {
-    let v = match value.to_str_radix(10).parse() {
-        Ok(v) => v,
-        Err(_) => -1,
-    };
+    let v = value.to_str_radix(10).parse().unwrap_or(-1);
     if v > guage.get() {
         guage.set(v);
     }

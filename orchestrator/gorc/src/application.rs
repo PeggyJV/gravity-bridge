@@ -86,7 +86,7 @@ impl Application for GorcApp {
         } else {
             match std::env::var("RUST_LOG") {
                 Ok(val) => {
-                    if val != "" {
+                    if !val.is_empty() {
                         val.into()
                     } else {
                         trace::Config::default()

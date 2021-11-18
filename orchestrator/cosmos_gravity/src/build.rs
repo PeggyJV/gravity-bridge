@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use clarity::PrivateKey as EthPrivateKey;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
@@ -125,7 +127,7 @@ pub fn ethereum_event_messages(
     // could be reduced by adding two traits to sort against but really this is the easiest option.
     //
     // We index the events by event nonce in an unordered hashmap and then play them back in order into a vec
-    let mut unordered_msgs = std::collections::HashMap::new();
+    let mut unordered_msgs = BTreeMap::new();
     for deposit in deposits {
         let event = proto::SendToCosmosEvent {
             event_nonce: downcast_uint256(deposit.event_nonce.clone()).unwrap(),
@@ -202,14 +204,8 @@ pub fn ethereum_event_messages(
         unordered_msgs.insert(valset.event_nonce, msg);
     }
 
-    let mut keys = Vec::new();
-    for (key, _) in unordered_msgs.iter() {
-        keys.push(key.clone());
-    }
-    keys.sort();
-
     let mut msgs = Vec::new();
-    for i in keys.iter() {
+    for (i, _) in unordered_msgs.clone().iter() {
         msgs.push(unordered_msgs.remove_entry(&i).unwrap().1);
     }
 

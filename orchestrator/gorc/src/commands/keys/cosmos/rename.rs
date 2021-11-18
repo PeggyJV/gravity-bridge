@@ -1,5 +1,5 @@
-use abscissa_core::{Application, Command, Clap, Runnable};
 use crate::application::APP;
+use abscissa_core::{Application, Clap, Command, Runnable};
 use std::path;
 
 /// Rename a Cosmos Key

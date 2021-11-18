@@ -290,10 +290,7 @@ impl SendToCosmosEvent {
             ))
         }
     }
-    pub fn from_logs(
-        input: &[Log],
-        prefix: &str,
-    ) -> Result<Vec<SendToCosmosEvent>, GravityError> {
+    pub fn from_logs(input: &[Log], prefix: &str) -> Result<Vec<SendToCosmosEvent>, GravityError> {
         let mut res = Vec::new();
         for item in input {
             res.push(Self::from_log(item, prefix)?);

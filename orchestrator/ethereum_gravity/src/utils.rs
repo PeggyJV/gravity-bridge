@@ -1,4 +1,4 @@
-use clarity::abi::{Token, encode_call};
+use clarity::abi::{encode_call, Token};
 use clarity::Uint256;
 use clarity::{abi::encode_tokens, Address as EthAddress};
 use gravity_utils::error::GravityError;
@@ -39,7 +39,7 @@ pub fn get_checkpoint_abi_encode(
 }
 
 pub fn get_checkpoint_hash(valset: &Valset, gravity_id: &str) -> Result<Vec<u8>, GravityError> {
-    let locally_computed_abi_encode = get_checkpoint_abi_encode(&valset, &gravity_id);
+    let locally_computed_abi_encode = get_checkpoint_abi_encode(valset, gravity_id);
     let locally_computed_digest = Keccak256::digest(&locally_computed_abi_encode?);
     Ok(locally_computed_digest.to_vec())
 }
@@ -114,7 +114,6 @@ pub async fn get_valset_nonce(
     caller_address: EthAddress,
     web3: &Web3,
 ) -> Result<u64, Web3Error> {
-
     let payload = encode_call("state_lastValsetNonce()", &[]).unwrap();
 
     let val = web3
@@ -233,12 +232,11 @@ pub async fn get_erc20_symbol(
     caller_address: EthAddress,
     web3: &Web3,
 ) -> Result<String, GravityError> {
-
     let payload = encode_call("symbol()", &[]).unwrap();
 
     let val_symbol = web3
-    .simulate_transaction(contract_address, 0u8.into(), payload, caller_address, None)
-    .await?;
+        .simulate_transaction(contract_address, 0u8.into(), payload, caller_address, None)
+        .await?;
     // Pardon the unwrap, but this is temporary code, intended only for the tests, to help them
     // deal with a deprecated feature (the symbol), which will be removed soon
     Ok(String::from_utf8(val_symbol).unwrap())

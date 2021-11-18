@@ -4,7 +4,7 @@ mod cosmos;
 
 mod eth;
 
-use abscissa_core::{Command, Clap, Runnable};
+use abscissa_core::{Clap, Command, Runnable};
 
 /// Query state on either ethereum or cosmos chains
 #[derive(Command, Debug, Clap)]

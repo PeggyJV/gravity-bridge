@@ -9,11 +9,12 @@ use ethereum_gravity::{
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::types::{LogicCallConfirmResponse, Valset};
 use gravity_utils::{message_signatures::encode_logic_call_confirm_hashed, types::LogicCall};
-use web30::types::SendTxOption;
 use std::time::Duration;
 use tonic::transport::Channel;
 use web30::client::Web3;
+use web30::types::SendTxOption;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn relay_logic_calls(
     // the validator set currently in the contract on Ethereum
     current_valset: Valset,
@@ -112,7 +113,7 @@ pub async fn relay_logic_calls(
                 downcast_to_u128(cost.get_total()).unwrap() as f32
                     / downcast_to_u128(one_eth()).unwrap() as f32
             );
-        let tx_options  = vec![SendTxOption::GasPriceMultiplier(gas_multiplier)];
+        let tx_options = vec![SendTxOption::GasPriceMultiplier(gas_multiplier)];
 
         let res = send_eth_logic_call(
             current_valset,
