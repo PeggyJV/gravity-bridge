@@ -3,10 +3,13 @@
 use crate::{erc20_utils::{approve_erc20_transfers, check_erc20_approved}, utils::EthClient};
 use deep_space::address::Address as CosmosAddress;
 use ethers::prelude::*;
-use ethers::types::Address as EthAddress;
+use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
 use std::time::Duration;
 
+// TODO(bolten): no callers of this function ever sent any SendTxOptions
+// for gas or anything else, but will apply this default hard limit as it was
+// done originally -- should we change this?
 const SEND_TO_COSMOS_GAS_LIMIT: u128 = 100_000;
 
 #[allow(clippy::too_many_arguments)]
@@ -17,33 +20,11 @@ pub async fn send_to_cosmos(
     cosmos_destination: CosmosAddress,
     wait_timeout: Option<Duration>,
     eth_client: EthClient,
-) -> Result<U256, GravityError> {
-    let sender_address = eth_client.address();
-    let mut approve_nonce = None;
-
+) -> Result<TxHash, GravityError> {
     let approved = check_erc20_approved(erc20, gravity_contract, eth_client.clone()).await?;
     if !approved {
         let txid = approve_erc20_transfers(erc20, gravity_contract, wait_timeout, eth_client.clone()).await?;
         trace!("ERC-20 approval for {} finished with txid {}", erc20, txid);
-    }
-
-    // if the user sets a gas limit we should honor it, if they don't we
-    // should add the default
-    let mut has_gas_limit = false;
-    let mut options = options;
-    for option in options.iter() {
-        if let SendTxOption::GasLimit(_) = option {
-            has_gas_limit = true;
-            break;
-        }
-    }
-    if !has_gas_limit {
-        options.push(SendTxOption::GasLimit(SEND_TO_COSMOS_GAS_LIMIT.into()));
-    }
-    // if we have run an approval we should increment our nonce by one so that
-    // we can be sure our actual tx can go in immediately behind
-    if let Some(nonce) = approve_nonce {
-        options.push(SendTxOption::Nonce(nonce + 1u8.into()));
     }
 
     // This code deals with some specifics of Ethereum byte encoding, Ethereum is BigEndian
@@ -54,30 +35,32 @@ pub async fn send_to_cosmos(
     while cosmos_dest_address_bytes.len() < 32 {
         cosmos_dest_address_bytes.insert(0, 0u8);
     }
-    let encoded_destination_address = Token::Bytes(cosmos_dest_address_bytes);
+    // TODO(bolten): have to convert back from what was done above for the contract call,
+    // there's probably a cleaner way to do this
+    let mut cosmos_dest_address_bytes_slice: [u8; 32] = Default::default();
+    cosmos_dest_address_bytes_slice.copy_from_slice(&cosmos_dest_address_bytes[..]);
 
-    let tx_hash = web3
-        .send_transaction(
-            gravity_contract,
-            encode_call(
-                "sendToCosmos(address,bytes32,uint256)",
-                &[
-                    erc20.into(),
-                    encoded_destination_address,
-                    amount.clone().into(),
-                ],
-            )?,
-            0u32.into(),
-            sender_address,
-            sender_secret,
-            options,
-        )
-        .await?;
+    let contract_call = Gravity::new(gravity_contract, eth_client.clone())
+        .send_to_cosmos(erc20, cosmos_dest_address_bytes_slice, amount)
+        .gas(SEND_TO_COSMOS_GAS_LIMIT);
+
+    let pending_tx = contract_call.send().await?;
+    let tx_hash = *pending_tx;
+    info!("Sending to Cosmos with txid {}", tx_hash);
+    // TODO(bolten): ethers interval default is 7s, this mirrors what web30 was doing, should we adjust?
+    // additionally we are mirroring only waiting for 1 confirmation by leaving that as default
+    let pending_tx = pending_tx.interval(Duration::from_secs(1));
+    let potential_error = GravityError::GravityContractError(format!("Did not receive transaction receipt when sending to Cosmos: {}", tx_hash));
 
     if let Some(timeout) = wait_timeout {
-        web3.wait_for_transaction(tx_hash.clone(), timeout, None)
-            .await?;
+        match tokio::time::timeout(timeout, pending_tx).await?? {
+            Some(receipt) => Ok(receipt.transaction_hash),
+            None => Err(potential_error)
+        }
+    } else {
+        match pending_tx.await? {
+            Some(receipt) => Ok(receipt.transaction_hash),
+            None => Err(potential_error)
+        }
     }
-
-    Ok(tx_hash)
 }

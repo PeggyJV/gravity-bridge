@@ -18,12 +18,13 @@ pub async fn check_erc20_approved(
         "function allowance(address owner, address spender) external view returns (uint256)"
     ]).unwrap());
     let erc20_contract = abi.into_contract(erc20, eth_client.clone());
-    let allowance = erc20_contract.allowance(eth_client.address(), gravity_contract).call().await?;
+    let contract_call = erc20_contract.method::<_, U256>("allowance", (eth_client.address(), gravity_contract))?;
+    let allowance = contract_call.call().await?;
 
     // TODO(bolten): verify if this check is sufficient/correct
-    // Check if the allowance remaining is greater than half of a U256-  it's as good
+    // Check if the allowance remaining is greater than half of a U256 - it's as good
     // a test as any.
-    Ok(allowance > (U256::MAX / 2u32.into()))
+    Ok(allowance > (U256::MAX.div_mod(2u32.into()).0))
 }
 
 /// Approves a given contract to spend erc20 funds from the given address from the erc20 contract provided.
@@ -41,8 +42,9 @@ pub async fn approve_erc20_transfers(
         "function approve(address spender, uint256 amount) external returns (bool)"
     ]).unwrap());
     let erc20_contract = abi.into_contract(erc20, eth_client.clone());
+    let contract_call = erc20_contract.method::<_, bool>("approve", (target_contract, U256::MAX))?;
 
-    let pending_tx = erc20_contract.method::<_, bool>("approve", target_contract, U256::MAX).send().await?;
+    let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;
     info!("Approving ERC-20 {} with txid {}", erc20, tx_hash);
     // TODO(bolten): ethers interval default is 7s, this mirrors what web30 was doing, should we adjust?

@@ -6,6 +6,7 @@ use deep_space::error::AddressError as CosmosAddressError;
 use deep_space::error::CosmosGrpcError;
 use ethers::abi::Error as EthersAbiError;
 use ethers::abi::ethereum_types::FromDecStrErr as EthersParseUintError;
+use ethers::contract::AbiError as EthersContractAbiError;
 use ethers::prelude::*;
 use ethers::prelude::ContractError;
 use ethers::prelude::gas_oracle::GasOracleError as EthersGasOracleError;
@@ -27,6 +28,7 @@ pub enum GravityError {
     EthereumBadDataError(String),
     EthereumRestError(SignerMiddlewareError<Provider<Http>, LocalWallet>),
     EthersAbiError(EthersAbiError),
+    EthersContractAbiError(EthersContractAbiError),
     EthersContractError(ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>),
     EthersGasOracleError(EthersGasOracleError),
     EthersParseAddressError(EthersParseAddressError),
@@ -59,6 +61,7 @@ impl fmt::Display for GravityError {
             GravityError::EthereumBadDataError(val) => write!(f, "Received unexpected data from Ethereum: {}", val),
             GravityError::EthereumRestError(val) => write!(f, "Ethereum REST error: {}", val),
             GravityError::EthersAbiError(val) => write!(f, "Ethers ABI error: {}", val),
+            GravityError::EthersContractAbiError(val) => write!(f, "Ethers contract ABI error: {}", val),
             GravityError::EthersContractError(val) => write!(f, "Ethers contract error: {}", val),
             GravityError::EthersGasOracleError(val) => write!(f, "Ethers gas oracle error: {}", val),
             GravityError::EthersParseAddressError(val) => write!(f, "Ethers H160 address parse error: {}", val),
@@ -117,6 +120,12 @@ impl From<SignerMiddlewareError<Provider<Http>, LocalWallet>> for GravityError {
 impl From<EthersAbiError> for GravityError {
     fn from(error: EthersAbiError) -> Self {
         GravityError::EthersAbiError(error)
+    }
+}
+
+impl From<EthersContractAbiError> for GravityError {
+    fn from(error: EthersContractAbiError) -> Self {
+        GravityError::EthersContractAbiError(error)
     }
 }
 
