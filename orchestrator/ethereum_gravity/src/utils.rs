@@ -156,7 +156,7 @@ pub async fn get_gravity_id(
     match id_as_string {
         Ok(id) => Ok(id),
         Err(err) => Err(GravityError::GravityContractError(format!(
-            "Received invalid utf8 when getting gravity id: {:?}", &gravity_id
+            "Received invalid utf8 when getting gravity id {:?}: {}", &gravity_id, err
         )))
     }
 }

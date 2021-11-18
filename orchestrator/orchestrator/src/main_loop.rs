@@ -26,12 +26,10 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::ethereum::bytes_to_hex_str;
 use relayer::main_loop::relayer_main_loop;
 use std::convert::TryInto;
-use std::sync::Arc;
 use std::{
     net,
     time::{Duration, Instant},
 };
-use tokio::join;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 
@@ -138,7 +136,7 @@ pub async fn eth_oracle_main_loop(
         match (latest_eth_block, latest_cosmos_block) {
             (Ok(latest_eth_block), Ok(ChainStatus::Moving { block_height })) => {
                 metrics::set_cosmos_block_height(block_height.clone());
-                metrics::set_ethereum_block_height(latest_eth_block.clone());
+                metrics::set_ethereum_block_height(latest_eth_block.as_u64());
                 trace!(
                     "Latest Eth block {} Latest Cosmos block {}",
                     latest_eth_block,
@@ -240,7 +238,7 @@ pub async fn eth_signer_main_loop(
         match (latest_eth_block, latest_cosmos_block) {
             (Ok(latest_eth_block), Ok(ChainStatus::Moving { block_height })) => {
                 metrics::set_cosmos_block_height(block_height.clone());
-                metrics::set_ethereum_block_height(latest_eth_block.clone());
+                metrics::set_ethereum_block_height(latest_eth_block.as_u64());
                 trace!(
                     "Latest Eth block {} Latest Cosmos block {}",
                     latest_eth_block,
@@ -295,7 +293,7 @@ pub async fn eth_signer_main_loop(
                         valsets,
                         cosmos_key,
                         gravity_id.clone(),
-                    ).await.unwrap();
+                    ).await;
                     msg_sender
                         .send(messages)
                         .await
@@ -328,7 +326,7 @@ pub async fn eth_signer_main_loop(
                     transaction_batches,
                     cosmos_key,
                     gravity_id.clone(),
-                ).await.unwrap();
+                ).await;
                 msg_sender
                     .send(messages)
                     .await
@@ -360,7 +358,7 @@ pub async fn eth_signer_main_loop(
                     logic_calls,
                     cosmos_key,
                     gravity_id.clone(),
-                ).await.unwrap();
+                ).await;
                 msg_sender
                     .send(messages)
                     .await

@@ -178,8 +178,8 @@ pub fn set_cosmos_last_event_nonce(v: u64) {
     set_u64(&COSMOS_LAST_EVENT_NONCE, v);
 }
 
-pub fn set_ethereum_block_height(v: U256) {
-    set_U256(&ETHEREUM_BLOCK_HEIGHT, v);
+pub fn set_ethereum_block_height(v: u64) {
+    set_u64(&ETHEREUM_BLOCK_HEIGHT, v);
 }
 
 pub fn set_ethereum_check_for_events_end_block(v: U256) {
