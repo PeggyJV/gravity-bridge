@@ -5,10 +5,10 @@ use std::time::Duration;
 
 use cosmos_gravity::query::get_latest_valset;
 use cosmos_gravity::query::{get_all_valset_confirms, get_valset};
-use ethereum_gravity::{one_eth, valset_update::send_eth_valset_update};
+use ethereum_gravity::{one_eth_f32, utils::EthClient, valset_update::send_eth_valset_update};
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::{ethereum::downcast_to_u128, ethereum::bytes_to_hex_str,
+use gravity_utils::{ethereum::downcast_to_f32, ethereum::bytes_to_hex_str,
     message_signatures::encode_valset_confirm_hashed, types::Valset};
 use tonic::transport::Channel;
 
@@ -134,6 +134,7 @@ pub async fn relay_valsets(
             eth_client.clone(),
         )
         .await;
+
         if cost.is_err() {
             error!(
                 "Valset cost estimate for Nonce {} failed with {:?}",
@@ -142,13 +143,18 @@ pub async fn relay_valsets(
             return;
         }
         let cost = cost.unwrap();
+        let total_cost = downcast_to_f32(cost.get_total());
+        if total_cost.is_none() {
+            error!("Total gas cost greater than f32 max, skipping valset submission: {}", latest_cosmos_valset.nonce);
+            return;
+        }
+        let total_cost = total_cost.unwrap();
 
         info!(
            "We have detected latest valset {} but latest on Ethereum is {} This valset is estimated to cost {} Gas / {:.4} ETH to submit",
             latest_cosmos_valset.nonce, current_eth_valset.nonce,
             cost.gas_price.clone(),
-            downcast_to_u128(cost.get_total()).unwrap() as f32
-                / downcast_to_u128(one_eth()).unwrap() as f32
+            total_cost / one_eth_f32()
         );
 
         let relay_response = send_eth_valset_update(

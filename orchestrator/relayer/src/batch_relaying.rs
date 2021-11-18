@@ -8,7 +8,6 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::ethereum::downcast_to_f32;
 use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
 use gravity_utils::types::{BatchConfirmResponse, TransactionBatch, Valset};
-use web30::types::SendTxOption;
 use std::collections::HashMap;
 use std::time::Duration;
 use tonic::transport::Channel;
@@ -151,7 +150,7 @@ async fn submit_batches(
             gravity_contract_address,
             erc20_contract,
             our_ethereum_address,
-            eth_client,
+            eth_client.clone(),
         )
         .await;
         if latest_ethereum_batch.is_err() {
@@ -198,6 +197,7 @@ async fn submit_batches(
                     error!("Total gas cost greater than f32 max, skipping batch submission: {}", oldest_signed_batch.nonce);
                     continue;
                 }
+                let total_cost = total_cost.unwrap();
                 let gas_price_as_f32 = downcast_to_f32(cost.gas_price).unwrap(); // if the total cost isn't greater, this isn't
 
                 info!(
@@ -205,10 +205,10 @@ async fn submit_batches(
                     latest_cosmos_batch_nonce,
                     latest_ethereum_batch,
                     cost.gas_price.clone(),
-                    downcast_to_f32(cost.get_total()).unwrap() / one_eth_f32()
+                    total_cost / one_eth_f32()
                 );
 
-                cost.gas_price = (gas_price_as_f32 * eth_gas_price_multiplier).round();
+                cost.gas_price = ((gas_price_as_f32 * eth_gas_price_multiplier) as u128).into();
 
                 let res = send_eth_transaction_batch(
                     current_valset.clone(),
@@ -218,7 +218,7 @@ async fn submit_batches(
                     gravity_contract_address,
                     gravity_id.clone(),
                     cost,
-                    eth_client,
+                    eth_client.clone(),
                 )
                 .await;
 

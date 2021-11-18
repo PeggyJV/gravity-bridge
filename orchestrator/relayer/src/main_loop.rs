@@ -3,9 +3,9 @@ use crate::{
     logic_call_relaying::relay_logic_calls, valset_relaying::relay_valsets,
 };
 use ethereum_gravity::utils::{EthClient, get_gravity_id};
-use ethers::{prelude::*, types::Address as EthAddress};
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use std::{sync::Arc, time::{Duration, Instant}};
+use std::time::{Duration, Instant};
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 

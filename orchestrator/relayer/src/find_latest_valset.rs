@@ -1,8 +1,8 @@
-use crate::main_loop::EthClient;
-use clarity::{Address, Uint256};
+use ethereum_gravity::utils::EthClient;
 use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::types::{VALSET_UPDATED_EVENT_STR, ValsetUpdatedEvent};
+use gravity_utils::types::{FromLog, VALSET_UPDATED_EVENT_STR, ValsetUpdatedEvent};
 use gravity_utils::{error::GravityError, ethereum::downcast_to_u64, types::Valset};
 use std::panic;
 use tonic::transport::Channel;
@@ -14,21 +14,22 @@ use tonic::transport::Channel;
 /// this will take longer.
 pub async fn find_latest_valset(
     grpc_client: &mut GravityQueryClient<Channel>,
-    gravity_contract_address: Address,
+    gravity_contract_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<Valset, GravityError> {
+    // calculate some constant U64 values only once
     const BLOCKS_TO_SEARCH: u64 = 5_000u64;
 
     let mut filter = Filter::new()
-        .address(gravity_contract_address)
+        .address(ValueOrArray::Value(gravity_contract_address))
         .event(&VALSET_UPDATED_EVENT_STR);
     let mut end_filter_block = eth_client.get_block_number().await?;
 
-    while end_filter_block > 0u64 {
+    while end_filter_block > 0u64.into() {
         trace!("About to submit a Valset or Batch, looking back into the history to find the last Valset Update, on block {}", end_filter_block);
 
-        let start_filter_block = end_filter_block.saturating_sub(BLOCKS_TO_SEARCH);
-        filter.select(start_filter_block..end_filter_block);
+        let start_filter_block = end_filter_block.saturating_sub(BLOCKS_TO_SEARCH.into());
+        filter = filter.select(start_filter_block..end_filter_block);
 
         let mut filtered_logged_events = eth_client.get_logs(&filter).await?;
         filtered_logged_events.reverse(); // we'll process these in reverse order to start from the most recent and work backwards
@@ -49,7 +50,7 @@ pub async fn find_latest_valset(
 
                     let latest_eth_valset = Valset {
                         nonce: downcast_nonce.unwrap(),
-                        members: event.members,
+                        members: valset_updated_event.members,
                     };
                     let cosmos_chain_valset =
                         cosmos_gravity::query::get_valset(grpc_client, latest_eth_valset.nonce)
@@ -62,7 +63,7 @@ pub async fn find_latest_valset(
             }
         }
 
-        end_filter_block = start_filter_block.saturating_sub(1); // filter ranges are inclusive, avoid searching same block
+        end_filter_block = start_filter_block.saturating_sub(1u64.into()); // filter ranges are inclusive, avoid searching same block
     }
 
     panic!("Could not find the last validator set for contract {}, probably not a valid Gravity contract!", gravity_contract_address)

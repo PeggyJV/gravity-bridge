@@ -1,19 +1,16 @@
 use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
-use ethereum_gravity::one_eth;
+use ethereum_gravity::one_eth_f32;
 use ethereum_gravity::{
     logic_call::send_eth_logic_call,
     utils::{EthClient, get_logic_call_nonce},
 };
-use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::ethereum::downcast_to_f32;
+use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
 use gravity_utils::types::{LogicCallConfirmResponse, Valset};
 use gravity_utils::{message_signatures::encode_logic_call_confirm_hashed, types::LogicCall};
-use web30::types::SendTxOption;
 use std::time::Duration;
 use tonic::transport::Channel;
-use web30::client::Web3;
 
 pub async fn relay_logic_calls(
     // the validator set currently in the contract on Ethereum
@@ -23,7 +20,7 @@ pub async fn relay_logic_calls(
     gravity_contract_address: EthAddress,
     gravity_id: String,
     timeout: Duration,
-    gas_multiplier: f32,
+    eth_gas_price_multiplier: f32,
 ) {
     // TODO(bolten): replace a lot of manual caller address passing
     let our_ethereum_address = eth_client.address();
@@ -108,20 +105,21 @@ pub async fn relay_logic_calls(
         let mut cost = cost.unwrap();
         let total_cost = downcast_to_f32(cost.get_total());
         if total_cost.is_none() {
-            error!("Total gas cost greater than f32 max, skipping batch submission: {}", oldest_signed_batch.nonce);
-            continue;
+            error!("Total gas cost greater than f32 max, skipping logic call submission: {}", oldest_signed_call.invalidation_nonce);
+            return;
         }
-        let gas_price_as_f32 = downcast_to_f32(cost.gas_price);
+        let total_cost = total_cost.unwrap();
+        let gas_price_as_f32 = downcast_to_f32(cost.gas_price).unwrap(); // if the total cost isn't greater, this isn't
 
         info!(
                 "We have detected latest LogicCall {} but latest on Ethereum is {} This LogicCall is estimated to cost {} Gas / {:.4} ETH to submit",
                 latest_cosmos_call_nonce,
                 latest_ethereum_call,
                 cost.gas_price.clone(),
-                downcast_to_f32(cost.get_total()).unwrap() / one_eth_f32(),
+                total_cost / one_eth_f32(),
             );
 
-        cost.gas_price = (gas_price_as_f32 * eth_gas_price_multiplier).into();
+        cost.gas_price = ((gas_price_as_f32 * eth_gas_price_multiplier) as u128).into();
 
         let res = send_eth_logic_call(
             current_valset,
