@@ -1,6 +1,6 @@
 //! Helper functions for sending tokens to Cosmos
 
-use crate::utils::EthClient;
+use crate::{erc20_utils::{approve_erc20_transfers, check_erc20_approved}, utils::EthClient};
 use deep_space::address::Address as CosmosAddress;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -21,25 +21,10 @@ pub async fn send_to_cosmos(
     let sender_address = eth_client.address();
     let mut approve_nonce = None;
 
-    let approved =
-        .check_erc20_approved(erc20, sender_address, gravity_contract)
-        .await?;
+    let approved = check_erc20_approved(erc20, gravity_contract, eth_client.clone()).await?;
     if !approved {
-        let mut options = options.clone();
-        let nonce = web3.eth_get_transaction_count(sender_address).await?;
-        options.push(SendTxOption::Nonce(nonce.clone()));
-        approve_nonce = Some(nonce);
-        let txid = web3
-            .approve_erc20_transfers(erc20, sender_secret, gravity_contract, None, options)
-            .await?;
-        trace!(
-            "We are not approved for ERC20 transfers, approving txid: {:#066x}",
-            txid
-        );
-        if let Some(timeout) = wait_timeout {
-            web3.wait_for_transaction(txid, timeout, None).await?;
-            trace!("Approval finished!")
-        }
+        let txid = approve_erc20_transfers(erc20, gravity_contract, wait_timeout, eth_client.clone()).await?;
+        trace!("ERC-20 approval for {} finished with txid {}", erc20, txid);
     }
 
     // if the user sets a gas limit we should honor it, if they don't we

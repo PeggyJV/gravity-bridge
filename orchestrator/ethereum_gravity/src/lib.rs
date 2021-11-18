@@ -5,6 +5,7 @@ use ethers::types::U256;
 #[macro_use]
 extern crate log;
 
+pub mod erc20_utils;
 pub mod deploy_erc20;
 pub mod logic_call;
 pub mod send_to_cosmos;
