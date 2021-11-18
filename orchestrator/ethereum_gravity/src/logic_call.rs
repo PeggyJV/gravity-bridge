@@ -99,14 +99,6 @@ pub async fn send_eth_logic_call(
     Ok(())
 }
 
-pub fn to_hex_string(bytes: Vec<u8>) -> String {
-    let strs: Vec<String> = bytes.iter()
-        .map(|b| format!("{:02X}", b))
-        .collect();
-    strs.join(" ")
-}
-
-
 /// Returns the cost in Eth of sending this batch
 pub async fn estimate_logic_call_cost(
     current_valset: Valset,
