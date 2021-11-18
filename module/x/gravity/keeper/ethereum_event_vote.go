@@ -62,7 +62,7 @@ func (k Keeper) recordEventVote(
 func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.EthereumEventVoteRecord) {
 	// If the event vote record has not yet been Observed, sum up the votes and see if it is ready to apply to the state.
 	// This conditional stops the event vote record from accidentally being applied twice.
-	k.Logger(ctx).Info("trying event vote record %s", eventVoteRecord.String())
+	k.Logger(ctx).Info("trying event vote record", "event vote record", eventVoteRecord.String())
 	if !eventVoteRecord.Accepted {
 		var event types.EthereumEvent
 		if err := k.cdc.UnpackAny(eventVoteRecord.Event, &event); err != nil {
@@ -119,7 +119,7 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.Ether
 func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent) {
 	// then execute in a new Tx so that we can store state on failure
 	xCtx, commit := ctx.CacheContext()
-	k.Logger(ctx).Info("processing ethereum event: %s", event.String())
+	k.Logger(ctx).Info("processing ethereum event", "event", event.String(), "cache context", xCtx)
 	if err := k.Handle(xCtx, event); err != nil { // execute with a transient storage
 		// If the attestation fails, something has gone wrong and we can't recover it. Log and move on
 		// The attestation will still be marked "Observed", and validators can still be slashed for not

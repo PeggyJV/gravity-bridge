@@ -119,7 +119,7 @@ func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper) {
 	// Then we sort it
 	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
 
-	k.Logger(ctx).Info("event vote record tally %v", attmap)
+	k.Logger(ctx).Info("event vote record tally", "attmap", attmap, "keys", keys)
 
 	// This iterates over all keys (event nonces) in the attestation mapping. Each value contains
 	// a slice with one or more attestations at that event nonce. There can be multiple attestations

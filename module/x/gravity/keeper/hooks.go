@@ -42,7 +42,7 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 var _ types.GravityHooks = Keeper{}
 
 func (k Keeper) AfterContractCallExecutedEvent(ctx sdk.Context, event types.ContractCallExecutedEvent) {
-	k.Logger(ctx).Info("after contract call event: %s", event.String())
+	k.Logger(ctx).Info("after contract call event", "event", event.String())
 
 	if k.hooks != nil {
 		k.hooks.AfterContractCallExecutedEvent(ctx, event)
