@@ -1,10 +1,13 @@
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
-use deep_space::utils::bytes_to_hex_str;
 use deep_space::Contact;
 use deep_space::Msg;
+use ethereum_gravity::utils::EthClient;
+use ethers::core::k256::ecdsa::signature::DigestSigner;
+use ethers::prelude::Middleware;
+use ethers::prelude::Signer;
 use gravity_proto::gravity as proto;
 use gravity_proto::ToAny;
-use gravity_utils::ethereum::downcast_to_u64;
+use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_u64};
 use gravity_utils::message_signatures::{
     encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
 };
@@ -12,22 +15,24 @@ use gravity_utils::types::*;
 
 pub fn signer_set_tx_confirmation_messages(
     contact: &Contact,
-    ethereum_key: EthPrivateKey,
+    eth_client: EthClient,
     valsets: Vec<Valset>,
     cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Vec<Msg> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let ethereum_address = ethereum_key.to_public_key().unwrap();
+    let ethereum_address = eth_client.address();
 
     let mut msgs = Vec::new();
     for valset in valsets {
         let data = encode_valset_confirm(gravity_id.clone(), valset.clone());
-        let signature = ethereum_key.sign_ethereum_msg(&data);
+        // Signer trait responds with a Result, but we use a LocalWallet and it
+        // will never throw an error
+        let signature = eth_client.signer().sign_message(data).await.unwrap();
         let confirmation = proto::SignerSetTxConfirmation {
             ethereum_signer: ethereum_address.to_string(),
             signer_set_nonce: valset.nonce,
-            signature: signature.to_bytes().to_vec(),
+            signature: signature.into(),
         };
         let msg = proto::MsgSubmitEthereumTxConfirmation {
             signer: cosmos_address.to_string(),
@@ -41,23 +46,25 @@ pub fn signer_set_tx_confirmation_messages(
 
 pub fn batch_tx_confirmation_messages(
     contact: &Contact,
-    ethereum_key: EthPrivateKey,
+    eth_client: EthClient,
     batches: Vec<TransactionBatch>,
     cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Vec<Msg> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let ethereum_address = ethereum_key.to_public_key().unwrap();
+    let ethereum_address = eth_client.address();
 
     let mut msgs = Vec::new();
     for batch in batches {
         let data = encode_tx_batch_confirm(gravity_id.clone(), batch.clone());
-        let signature = ethereum_key.sign_ethereum_msg(&data);
+        // Signer trait responds with a Result, but we use a LocalWallet and it
+        // will never throw an error
+        let signature = eth_client.signer().sign_message(data).await.unwrap();
         let confirmation = proto::BatchTxConfirmation {
             token_contract: batch.token_contract.to_string(),
             batch_nonce: batch.nonce,
             ethereum_signer: ethereum_address.to_string(),
-            signature: signature.to_bytes().to_vec(),
+            signature: signature.into(),
         };
         let msg = proto::MsgSubmitEthereumEvent {
             signer: cosmos_address.to_string(),
@@ -71,21 +78,23 @@ pub fn batch_tx_confirmation_messages(
 
 pub fn contract_call_tx_confirmation_messages(
     contact: &Contact,
-    ethereum_key: EthPrivateKey,
+    eth_client: EthClient,
     logic_calls: Vec<LogicCall>,
     cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Vec<Msg> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let ethereum_address = ethereum_key.to_public_key().unwrap();
+    let ethereum_address = eth_client.address();
 
     let mut msgs = Vec::new();
     for logic_call in logic_calls {
         let data = encode_logic_call_confirm(gravity_id.clone(), logic_call.clone());
-        let signature = ethereum_key.sign_ethereum_msg(&data);
+        // Signer trait responds with a Result, but we use a LocalWallet and it
+        // will never throw an error
+        let signature = eth_client.signer().sign_message(data).await.unwrap();
         let confirmation = proto::ContractCallTxConfirmation {
             ethereum_signer: ethereum_address.to_string(),
-            signature: signature.to_bytes().to_vec(),
+            signature: signature.into(),
             invalidation_scope: bytes_to_hex_str(&logic_call.invalidation_id)
                 .as_bytes()
                 .to_vec(),
