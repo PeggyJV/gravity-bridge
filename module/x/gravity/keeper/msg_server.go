@@ -109,30 +109,15 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.MsgSubmitEthereumTxConfirmation) (*types.MsgSubmitEthereumTxConfirmationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	k.Logger(ctx).Info(
-		"MsgSubmitEthereumTxConfirmation received",
-		"signer", msg.Signer,
-	)
-
 	confirmation, err := types.UnpackConfirmation(msg.Confirmation)
 	if err != nil {
 		return nil, err
 	}
 
-	k.Logger(ctx).Info(
-		"Confirmation unpacked",
-		"confirmation", confirmation,
-	)
-
 	val, err := k.getSignerValidator(ctx, msg.Signer)
 	if err != nil {
 		return nil, err
 	}
-
-	k.Logger(ctx).Info(
-		"got signer validator",
-		"signer validator", val.String(),
-	)
 
 	otx := k.GetOutgoingTx(ctx, confirmation.GetStoreIndex())
 	if otx == nil {
@@ -143,11 +128,6 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "couldn't find outgoing tx")
 	}
 
-	k.Logger(ctx).Info(
-		"got outgoing tx",
-		"otx", otx,
-	)
-
 	gravityID := k.getGravityID(ctx)
 	checkpoint := otx.GetCheckpoint([]byte(gravityID))
 
@@ -155,12 +135,6 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 	if ethAddress != confirmation.GetSigner() {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "eth address does not match signer eth address")
 	}
-	k.Logger(ctx).Info(
-		"confirmed signer eth addr",
-		"gravity id", gravityID,
-		"checkpoint", hex.EncodeToString(checkpoint),
-		"eth address", ethAddress.String(),
-	)
 
 	if err = types.ValidateEthereumSignature(checkpoint, confirmation.GetSignature(), ethAddress); err != nil {
 		k.Logger(ctx).Error("error validating signature",
@@ -180,23 +154,12 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 			err,
 		))
 	}
-	k.Logger(ctx).Info(
-		"Validated signature",
-	)
-
 	// TODO: should validators be able to overwrite their signatures?
 	if k.getEthereumSignature(ctx, confirmation.GetStoreIndex(), val) != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "signature duplicate")
 	}
-	k.Logger(ctx).Info(
-		"Signature doesn't exist",
-	)
 
 	key := k.SetEthereumSignature(ctx, confirmation, val)
-	k.Logger(ctx).Info(
-		"set signature",
-		"key", key,
-	)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -205,11 +168,6 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 			sdk.NewAttribute(types.AttributeKeyEthereumSignatureKey, string(key)),
 		),
 	)
-	k.Logger(ctx).Info("emitted event",
-		"key", key,
-		"tx bytes", ctx.TxBytes(),
-		"msg type", msg.Type())
-
 	return &types.MsgSubmitEthereumTxConfirmationResponse{}, nil
 }
 

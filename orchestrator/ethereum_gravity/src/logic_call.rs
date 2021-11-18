@@ -118,18 +118,12 @@ pub async fn estimate_logic_call_cost(
     our_eth_key: EthPrivateKey,
 ) -> Result<GasCost, GravityError> {
     let our_eth_address = our_eth_key.to_public_key().unwrap();
-    info!("eth address: {}", our_eth_address);
     let our_balance = web3.eth_get_balance(our_eth_address).await?;
-    info!("balance: {}", our_balance);
     let our_nonce = web3.eth_get_transaction_count(our_eth_address).await?;
-    info!("nonce: {}", our_nonce);
     let gas_limit = min((u64::MAX - 1).into(), our_balance.clone());
-    info!("gas limit: {}", gas_limit);
     let gas_price = web3.eth_gas_price().await?;
-    info!("gas price: {}", gas_price);
     let zero: Uint256 = 0u8.into();
     let bytes = encode_logic_call_payload(current_valset, &call, confirms, gravity_id)?;
-    info!("hex: {}", to_hex_string(bytes.clone()));
 
     let transaction = TransactionRequest {
         from: Some(our_eth_address),
@@ -217,7 +211,6 @@ fn encode_logic_call_payload(
         sig_arrays.s,
         Token::Struct(struct_tokens.to_vec()),
     ];
-    info!("tokens: {:#?}", tokens);
     let payload = clarity::abi::encode_call(
         "submitLogicCall(address[],uint256[],uint256,uint8[],bytes32[],bytes32[],(uint256[],address[],uint256[],address[],address,bytes,uint256,bytes32,uint256))",
         tokens,

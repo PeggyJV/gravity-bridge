@@ -1,9 +1,7 @@
 package types
 
 import (
-	"fmt"
 	"math/big"
-	"os"
 	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -144,9 +142,6 @@ func (b BatchTx) GetCheckpoint(gravityID []byte) []byte {
 
 // GetCheckpoint gets the checkpoint signature from the given outgoing tx batch
 func (c ContractCallTx) GetCheckpoint(gravityID []byte) []byte {
-
-	fmt.Fprintf(os.Stderr, "gravityID: %x\n", gravityID)
-
 	// Create the methodName argument which salts the signature
 	methodNameBytes := []uint8("logicCall")
 	var logicCallMethodName [32]uint8
@@ -208,6 +203,5 @@ func packCall(abiString, method string, args []interface{}) []byte {
 	if err != nil {
 		panic(sdkerrors.Wrap(err, "packing checkpoint"))
 	}
-	fmt.Fprintf(os.Stderr, "method: %s, abiEncodedCall: %x\n", method, abiEncodedCall[4:])
 	return crypto.Keccak256Hash(abiEncodedCall[4:]).Bytes()
 }
