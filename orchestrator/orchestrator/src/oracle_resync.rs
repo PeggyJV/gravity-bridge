@@ -1,5 +1,7 @@
-use clarity::{Address, Uint256};
 use deep_space::address::Address as CosmosAddress;
+use ethereum_gravity::utils::EthClient;
+use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::types::{
     ERC20_DEPLOYED_EVENT_STR, LOGIC_CALL_EVENT_STR, SEND_TO_COSMOS_EVENT_STR,
@@ -9,7 +11,6 @@ use gravity_utils::types::{
 };
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
-use web30::client::Web3;
 
 use crate::get_with_retry::get_block_number_with_retry;
 use crate::get_with_retry::get_last_event_nonce_with_retry;
@@ -21,9 +22,10 @@ pub async fn get_last_checked_block(
     grpc_client: GravityQueryClient<Channel>,
     our_cosmos_address: CosmosAddress,
     gravity_contract_address: Address,
-    web3: &Web3,
+    eth_client: EthClient,
     blocks_to_search: u128,
 ) -> Uint256 {
+    // needs 120 second timeout
     let mut grpc_client = grpc_client;
 
     let latest_block = get_block_number_with_retry(web3).await;

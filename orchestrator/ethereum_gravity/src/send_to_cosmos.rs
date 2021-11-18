@@ -1,14 +1,11 @@
 //! Helper functions for sending tokens to Cosmos
 
-use std::time::Duration;
-
-use clarity::abi::{encode_call, Token};
-use clarity::PrivateKey as EthPrivateKey;
-use clarity::{Address, Uint256};
+use crate::utils::EthClient;
 use deep_space::address::Address as CosmosAddress;
+use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
 use gravity_utils::error::GravityError;
-use web30::client::Web3;
-use web30::types::SendTxOption;
+use std::time::Duration;
 
 const SEND_TO_COSMOS_GAS_LIMIT: u128 = 100_000;
 
@@ -16,25 +13,15 @@ const SEND_TO_COSMOS_GAS_LIMIT: u128 = 100_000;
 pub async fn send_to_cosmos(
     erc20: Address,
     gravity_contract: Address,
-    amount: Uint256,
+    amount: U256,
     cosmos_destination: CosmosAddress,
-    sender_secret: EthPrivateKey,
     wait_timeout: Option<Duration>,
-    web3: &Web3,
-    options: Vec<SendTxOption>,
-) -> Result<Uint256, GravityError> {
-    let sender_address = sender_secret.to_public_key()?;
+    eth_client: EthClient,
+) -> Result<U256, GravityError> {
+    let sender_address = eth_client.address();
     let mut approve_nonce = None;
 
-    for option in options.iter() {
-        if let SendTxOption::Nonce(_) = option {
-            return Err(GravityError::InvalidOptionsError(
-                "This call sends more than one tx! Can't specify".to_string(),
-            ));
-        }
-    }
-
-    let approved = web3
+    let approved =
         .check_erc20_approved(erc20, sender_address, gravity_contract)
         .await?;
     if !approved {

@@ -4,14 +4,17 @@
 use crate::get_with_retry::get_block_number_with_retry;
 use crate::get_with_retry::get_net_version_with_retry;
 use crate::metrics;
-use clarity::{utils::bytes_to_hex_str, Address as EthAddress, Uint256};
 use cosmos_gravity::build;
 use cosmos_gravity::query::get_last_event_nonce;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::{Contact, Msg};
+use ethereum_gravity::utils::EthClient;
+use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::{
     error::GravityError,
+    ethereum::bytes_to_hex_str,
     types::{
         ERC20_DEPLOYED_EVENT_STR, LOGIC_CALL_EVENT_STR, SEND_TO_COSMOS_EVENT_STR,
         TRANSACTION_BATCH_EXECUTED_EVENT_STR, VALSET_UPDATED_EVENT_STR,
@@ -25,14 +28,14 @@ use web30::client::Web3;
 use web30::jsonrpc::error::Web3Error;
 
 pub async fn check_for_events(
-    web3: &Web3,
+    eth_client: EthClient,
     contact: &Contact,
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     cosmos_key: CosmosPrivateKey,
     starting_block: Uint256,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
-) -> Result<Uint256, GravityError> {
+) -> Result<U256, GravityError> {
     let prefix = contact.get_prefix();
     let our_cosmos_address = cosmos_key.to_address(&prefix).unwrap();
     let latest_block = get_block_number_with_retry(web3).await;
