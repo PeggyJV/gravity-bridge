@@ -65,7 +65,7 @@ async fn main() {
         .unwrap_or_else(|e| e.exit());
 
     let fee_denom = args.flag_fees;
-    let fee = Coin {
+    let _fee = Coin {
         denom: fee_denom.clone(),
         amount: 1u64.into(),
     };
