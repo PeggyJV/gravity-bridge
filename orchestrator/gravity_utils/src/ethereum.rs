@@ -54,43 +54,63 @@ pub fn hex_str_to_bytes(s: &str) -> Result<Vec<u8>, GravityError> {
 }
 
 #[test]
-fn test_downcast_to_u64() {
-    let mut i = 0u64;
-    while i < 100_000 {
-        assert_eq!(i, downcast_to_u64(i.into()).unwrap());
-        i += 1
-    }
-    let mut i: u64 = std::u32::MAX.into();
-    i -= 100;
-    let end = i + 100_000;
-    while i < end {
-        assert_eq!(i, downcast_to_u64(i.into()).unwrap());
-        i += 1
-    }
-}
-
-#[test]
-fn test_downcast_to_u128() {
-    let mut i = 0u128;
-    while i < 100_000 {
-        assert_eq!(i, downcast_to_u128(i.into()).unwrap());
-        i += 1
-    }
-    let mut i: u128 = std::u64::MAX.into();
-    i -= 100;
-    let end = i + 100_000;
-    while i < end {
-        assert_eq!(i, downcast_to_u128(i.into()).unwrap());
-        i += 1
-    }
-}
-
-#[test]
 fn encode_bytes() {
     assert_eq!(bytes_to_hex_str(&[0xf]), "0f".to_owned());
     assert_eq!(bytes_to_hex_str(&[0xff]), "ff".to_owned());
     assert_eq!(
         bytes_to_hex_str(&[0xde, 0xad, 0xbe, 0xef]),
         "deadbeef".to_owned()
+    );
+}
+
+#[test]
+fn decode_bytes() {
+    assert_eq!(
+        hex_str_to_bytes(&"deadbeef".to_owned()).expect("Unable to decode"),
+        [222, 173, 190, 239]
+    );
+}
+
+#[test]
+fn decode_odd_amount_of_bytes() {
+    assert_eq!(hex_str_to_bytes(&"f".to_owned()).unwrap(), vec![15]);
+}
+
+#[test]
+fn bytes_raises_decode_error() {
+    use crate::error::GravityError;
+
+    let e = hex_str_to_bytes(&"\u{012345}deadbeef".to_owned()).unwrap_err();
+
+    match e {
+        GravityError::FromUtf8Error(_) => {}
+        _ => panic!(),
+    };
+}
+
+#[test]
+fn bytes_raises_parse_error() {
+    use crate::error::GravityError;
+
+    let e = hex_str_to_bytes(&"Lorem ipsum".to_owned()).unwrap_err();
+    match e {
+        GravityError::ParseIntError(_) => {}
+        _ => panic!(),
+    }
+}
+
+#[test]
+fn parse_prefixed_empty() {
+    assert_eq!(
+        hex_str_to_bytes(&"0x".to_owned()).unwrap(),
+        Vec::<u8>::new()
+    );
+}
+
+#[test]
+fn parse_prefixed_non_empty() {
+    assert_eq!(
+        hex_str_to_bytes(&"0xdeadbeef".to_owned()).unwrap(),
+        vec![0xde, 0xad, 0xbe, 0xef]
     );
 }
