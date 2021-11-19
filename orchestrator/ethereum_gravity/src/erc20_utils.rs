@@ -1,11 +1,8 @@
 use crate::utils::EthClient;
-use ethers::abi::parse_abi;
 use ethers::prelude::*;
+use gravity_abi::erc20::ERC20;
 use gravity_utils::error::GravityError;
 use std::time::Duration;
-
-// TODO(bolten): verify our usage of contract.method:: is passing arguments correctly
-// maybe we can get full generic erc20 ABI from somewhere and add it to the abigen call
 
 /// Checks if any given contract is approved to spend money from any given erc20 contract
 /// using any given address. What exactly this does can be hard to grok, essentially when
@@ -17,11 +14,8 @@ pub async fn check_erc20_approved(
     gravity_contract: Address,
     eth_client: EthClient,
 ) -> Result<bool, GravityError> {
-    let abi = BaseContract::from(parse_abi(&[
-        "function allowance(address owner, address spender) external view returns (uint256)"
-    ]).unwrap());
-    let erc20_contract = abi.into_contract(erc20, eth_client.clone());
-    let contract_call = erc20_contract.method::<_, U256>("allowance", (eth_client.address(), gravity_contract))?;
+    let erc20_contract = ERC20::new(erc20, eth_client.clone());
+    let contract_call = erc20_contract.allowance(eth_client.address(), gravity_contract);
     let allowance = contract_call.call().await?;
 
     // TODO(bolten): verify if this check is sufficient/correct
@@ -41,11 +35,8 @@ pub async fn approve_erc20_transfers(
     timeout_option: Option<Duration>,
     eth_client: EthClient,
 ) -> Result<TxHash, GravityError> {
-    let abi = BaseContract::from(parse_abi(&[
-        "function approve(address spender, uint256 amount) external returns (bool)"
-    ]).unwrap());
-    let erc20_contract = abi.into_contract(erc20, eth_client.clone());
-    let contract_call = erc20_contract.method::<_, bool>("approve", (target_contract, U256::MAX))?;
+    let erc20_contract = ERC20::new(erc20, eth_client.clone());
+    let contract_call = erc20_contract.approve(target_contract, U256::MAX);
 
     let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;
@@ -72,11 +63,8 @@ pub async fn get_erc20_balance(
     erc20: Address,
     eth_client: EthClient,
 ) -> Result<U256, GravityError> {
-    let abi = BaseContract::from(parse_abi(&[
-        "function balanceOf(address account) external view returns (uint256)"
-    ]).unwrap());
-    let erc20_contract = abi.into_contract(erc20, eth_client.clone());
-    let contract_call = erc20_contract.method::<_, U256>("allowance", eth_client.address())?;
+    let erc20_contract = ERC20::new(erc20, eth_client.clone());
+    let contract_call = erc20_contract.balance_of(eth_client.address());
 
     Ok(contract_call.call().await?)
 }
