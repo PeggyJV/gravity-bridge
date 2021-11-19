@@ -19,7 +19,8 @@ impl Runnable for ShowEthKeyCmd {
         let config = APP.config();
         let name = self.args.get(0).expect("name is required");
         // TODO(bolten): is ethers wallet even capable of printing the public and
-        // private keys?
+        // private keys? for now, leaving load_clarity_key in config.rs and
+        // maintaining the functionality here
         let key = config.load_clarity_key(name.clone());
 
         let pub_key = key.to_public_key().expect("Could not build public key");

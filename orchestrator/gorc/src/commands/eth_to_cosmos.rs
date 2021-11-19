@@ -1,10 +1,10 @@
 use crate::application::APP;
 use abscissa_core::{status_err, Application, Command, Clap, Runnable};
+use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::erc20_utils::get_erc20_balance;
+use ethereum_gravity::send_to_cosmos::send_to_cosmos;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
-use deep_space::address::Address as CosmosAddress;
-use ethereum_gravity::send_to_cosmos::send_to_cosmos;
 use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
 use std::{sync::Arc, time::Duration};
 

@@ -1,6 +1,4 @@
 use bytes::BytesMut;
-use clarity::Address as EthAddress;
-use clarity::PrivateKey as EthPrivateKey;
 use deep_space::address::Address;
 use deep_space::coin::Coin;
 use deep_space::error::CosmosGrpcError;
@@ -8,15 +6,19 @@ use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
 use deep_space::Fee;
 use deep_space::Msg;
+use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
+use ethers::utils::keccak256;
 use gravity_proto::cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
 use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use gravity_proto::gravity as proto;
+use gravity_utils::error::GravityError;
 use prost::Message;
 use std::cmp;
 use std::collections::HashSet;
 use std::time::Duration;
 
-pub const MEMO: &str = "Sent using Althea Orchestrator";
+pub const MEMO: &str = "Sent using Gravity Bridge Orchestrator";
 pub const TIMEOUT: Duration = Duration::from_secs(60);
 
 /// Send a transaction updating the eth address for the sending
@@ -26,10 +28,10 @@ pub async fn update_gravity_delegate_addresses(
     delegate_eth_address: EthAddress,
     delegate_cosmos_address: Address,
     cosmos_key: CosmosPrivateKey,
-    etheruem_key: EthPrivateKey,
+    ethereum_wallet: LocalWallet,
     gas_price: (f64, String),
     gas_adjustment: f64,
-) -> Result<TxResponse, CosmosGrpcError> {
+) -> Result<TxResponse, GravityError> {
     let our_valoper_address = cosmos_key
         .to_address(&contact.get_prefix())
         .unwrap()
@@ -53,12 +55,13 @@ pub async fn update_gravity_delegate_addresses(
     let mut data = BytesMut::with_capacity(eth_sign_msg.encoded_len());
     Message::encode(&eth_sign_msg, &mut data).expect("encoding failed");
 
-    let eth_signature = etheruem_key.sign_ethereum_msg(&data).to_bytes().to_vec();
+    let data_hash = keccak256(data);
+    let eth_signature = ethereum_wallet.sign_message(data_hash).await?;
     let msg = proto::MsgDelegateKeys {
         validator_address: our_valoper_address.to_string(),
         orchestrator_address: delegate_cosmos_address.to_string(),
         ethereum_address: delegate_eth_address.to_string(),
-        eth_signature,
+        eth_signature: eth_signature.to_vec(),
     };
     let msg = Msg::new("/gravity.v1.MsgDelegateKeys", msg);
 
@@ -75,12 +78,12 @@ pub async fn send_to_eth(
     gas_price: (f64, String),
     contact: &Contact,
     gas_adjustment: f64,
-) -> Result<TxResponse, CosmosGrpcError> {
+) -> Result<TxResponse, GravityError> {
     if amount.denom != bridge_fee.denom {
-        return Err(CosmosGrpcError::BadInput(format!(
+        return Err(GravityError::CosmosGrpcError(CosmosGrpcError::BadInput(format!(
             "The amount ({}) and bridge_fee ({}) denominations do not match.",
             amount.denom, bridge_fee.denom,
-        )))
+        ))))
     }
 
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
@@ -101,7 +104,7 @@ pub async fn send_request_batch_tx(
     gas_price: (f64, String),
     contact: &Contact,
     gas_adjustment: f64,
-) -> Result<TxResponse, CosmosGrpcError> {
+) -> Result<TxResponse, GravityError> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let msg_request_batch = proto::MsgRequestBatchTx {
         signer: cosmos_address.to_string(),
@@ -118,7 +121,7 @@ async fn __send_messages(
     gas_price: (f64, String),
     messages: Vec<Msg>,
     gas_adjustment: f64,
-) -> Result<TxResponse, CosmosGrpcError> {
+) -> Result<TxResponse, GravityError> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
     let fee_amount = Coin {
@@ -157,7 +160,10 @@ async fn __send_messages(
         .send_transaction(msg_bytes, BroadcastMode::Sync)
         .await?;
 
-    contact.wait_for_tx(response, TIMEOUT).await
+    match contact.wait_for_tx(response, TIMEOUT).await {
+        Ok(res) => Ok(res),
+        Err(e) => Err(GravityError::CosmosGrpcError(e))
+    }
 }
 
 pub async fn send_messages(
@@ -166,7 +172,7 @@ pub async fn send_messages(
     gas_price: (f64, String),
     messages: Vec<Msg>,
     gas_adjustment: f64,
-) -> Result<TxResponse, CosmosGrpcError> {
+) -> Result<TxResponse, GravityError> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
     let fee_amount = Coin {
@@ -204,7 +210,10 @@ pub async fn send_messages(
         .send_transaction(msg_bytes, BroadcastMode::Sync)
         .await?;
 
-    contact.wait_for_tx(response, TIMEOUT).await
+    match contact.wait_for_tx(response, TIMEOUT).await {
+        Ok(res) => Ok(res),
+        Err(e) => Err(GravityError::CosmosGrpcError(e))
+    }
 }
 
 pub async fn send_main_loop(
