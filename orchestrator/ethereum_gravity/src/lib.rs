@@ -10,6 +10,7 @@ pub mod deploy_erc20;
 pub mod logic_call;
 pub mod send_to_cosmos;
 pub mod submit_batch;
+pub mod types;
 pub mod utils;
 pub mod valset_update;
 

@@ -2,7 +2,8 @@ use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
 use ethereum_gravity::one_eth_f32;
 use ethereum_gravity::{
     logic_call::send_eth_logic_call,
-    utils::{EthClient, get_logic_call_nonce},
+    types::EthClient,
+    utils::get_logic_call_nonce,
 };
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;

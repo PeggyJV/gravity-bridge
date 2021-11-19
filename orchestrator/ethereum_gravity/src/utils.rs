@@ -1,3 +1,4 @@
+use crate::types::EthClient;
 use ethers::core::abi::{self, Token};
 use ethers::middleware::gas_oracle::{Etherscan, GasCategory};
 use ethers::prelude::*;
@@ -9,10 +10,6 @@ use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::downcast_to_u64;
 use gravity_utils::types::*;
 use std::cmp::min;
-use std::sync::Arc;
-
-pub type EthSignerMiddleware = SignerMiddleware<Provider<Http>, LocalWallet>;
-pub type EthClient = Arc<EthSignerMiddleware>;
 
 pub fn get_checkpoint_abi_encode(
     valset: &Valset,

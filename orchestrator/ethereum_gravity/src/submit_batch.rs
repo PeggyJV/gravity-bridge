@@ -1,4 +1,5 @@
-use crate::utils::{EthClient, EthSignerMiddleware, GasCost, get_send_transaction_gas_price, get_tx_batch_nonce};
+use crate::{types::{EthClient, EthSignerMiddleware},
+    utils::{GasCost, get_send_transaction_gas_price, get_tx_batch_nonce}};
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;

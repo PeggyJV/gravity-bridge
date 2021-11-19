@@ -1,4 +1,4 @@
-use ethereum_gravity::utils::EthClient;
+use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;

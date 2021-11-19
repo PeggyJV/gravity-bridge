@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use cosmos_gravity::query::get_latest_valset;
 use cosmos_gravity::query::{get_all_valset_confirms, get_valset};
-use ethereum_gravity::{one_eth_f32, utils::EthClient, valset_update::send_eth_valset_update};
+use ethereum_gravity::{one_eth_f32, types::EthClient, valset_update::send_eth_valset_update};
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::{ethereum::downcast_to_f32, ethereum::bytes_to_hex_str,

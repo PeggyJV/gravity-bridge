@@ -8,7 +8,7 @@ use cosmos_gravity::build;
 use cosmos_gravity::query::get_last_event_nonce;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::{Contact, Msg};
-use ethereum_gravity::utils::EthClient;
+use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;

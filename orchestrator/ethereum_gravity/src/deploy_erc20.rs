@@ -2,7 +2,7 @@
 //! the event for this deployment is then ferried over to Cosmos where the validators will accept the ERC20 contract address
 //! as the representation of this asset on Ethereum
 
-use crate::utils::{EthClient, get_send_transaction_gas_price};
+use crate::{types::EthClient, utils::get_send_transaction_gas_price};
 use ethers::prelude::*;
 use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;

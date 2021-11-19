@@ -1,6 +1,6 @@
 use cosmos_gravity::query::get_latest_transaction_batches;
 use cosmos_gravity::query::get_transaction_batch_signatures;
-use ethereum_gravity::{one_eth_f32, submit_batch::send_eth_transaction_batch, utils::EthClient,
+use ethereum_gravity::{one_eth_f32, submit_batch::send_eth_transaction_batch, types::EthClient,
     utils::get_tx_batch_nonce};
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;

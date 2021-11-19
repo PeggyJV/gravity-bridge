@@ -1,6 +1,6 @@
 //! Helper functions for sending tokens to Cosmos
 
-use crate::{erc20_utils::{approve_erc20_transfers, check_erc20_approved}, utils::EthClient};
+use crate::{erc20_utils::{approve_erc20_transfers, check_erc20_approved}, types::EthClient};
 use deep_space::address::Address as CosmosAddress;
 use ethers::prelude::*;
 use gravity_abi::gravity::*;

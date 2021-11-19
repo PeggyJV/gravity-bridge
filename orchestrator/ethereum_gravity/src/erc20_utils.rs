@@ -1,4 +1,4 @@
-use crate::utils::EthClient;
+use crate::types::EthClient;
 use ethers::prelude::*;
 use gravity_abi::erc20::ERC20;
 use gravity_utils::error::GravityError;

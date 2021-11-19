@@ -1,8 +1,8 @@
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
 use deep_space::Msg;
-use ethereum_gravity::utils::EthClient;
-use ethers::prelude::Signer;
+use ethereum_gravity::types::EthClient;
+use ethers::prelude::*;
 use ethers::utils::keccak256;
 use gravity_proto::gravity as proto;
 use gravity_proto::ToAny;

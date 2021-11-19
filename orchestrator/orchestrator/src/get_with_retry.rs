@@ -1,7 +1,7 @@
 //! Basic utility functions to stubbornly get data
 use cosmos_gravity::query::get_last_event_nonce;
 use deep_space::address::Address as CosmosAddress;
-use ethereum_gravity::utils::EthClient;
+use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use std::time::Duration;

@@ -1,7 +1,8 @@
-use crate::utils::{EthClient, EthSignerMiddleware, GasCost,
+use crate::{types::{EthClient, EthSignerMiddleware},
+    utils::{GasCost,
     convert_invalidation_id_to_fixed_array,
     get_logic_call_nonce,
-    get_send_transaction_gas_price};
+    get_send_transaction_gas_price}};
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
