@@ -4,6 +4,8 @@ use ethers::prelude::*;
 use gravity_utils::error::GravityError;
 use std::time::Duration;
 
+// TODO(bolten): verify our usage of contract.method:: is passing arguments correctly
+
 /// Checks if any given contract is approved to spend money from any given erc20 contract
 /// using any given address. What exactly this does can be hard to grok, essentially when
 /// you want contract A to be able to spend your erc20 contract funds you need to call 'approve'

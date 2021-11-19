@@ -26,7 +26,8 @@ pub async fn get_last_checked_block(
     eth_client: EthClient,
     blocks_to_search: u64,
 ) -> U64 {
-    // TODO(bolten): needs 120 second timeout from old web30 with long timeout
+    // TODO(bolten): original version of this used a 120 second timeout when querying
+    // the eth chain, should we replicate that in eth_client?
     let mut grpc_client = grpc_client;
     let mut last_event_nonce: U256 =
         get_last_event_nonce_with_retry(&mut grpc_client, our_cosmos_address)
