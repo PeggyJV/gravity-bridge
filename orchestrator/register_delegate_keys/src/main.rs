@@ -5,14 +5,15 @@ extern crate serde_derive;
 #[macro_use]
 extern crate lazy_static;
 
-use log::error;
-
 use clarity::PrivateKey as EthPrivateKey;
 use cosmos_gravity::send::update_gravity_delegate_addresses;
 use deep_space::{coin::Coin, mnemonic::Mnemonic, private_key::PrivateKey as CosmosPrivateKey};
 use docopt::Docopt;
+use ethers::core::k256::ecdsa::SigningKey;
+use ethers::prelude::*;
 use gravity_utils::connection_prep::check_for_fee_denom;
 use gravity_utils::connection_prep::{create_rpc_connections, wait_for_cosmos_node_ready};
+use log::error;
 use rand::{thread_rng, Rng};
 use std::time::Duration;
 
@@ -110,14 +111,20 @@ async fn main() {
         key
     };
 
-    let ethereum_address = ethereum_key.to_public_key().unwrap();
+    // TODO(bolten): left clarity in place for the above bit because it seems like
+    // SigningKey/VerifyingKey don't implement the Display trait
+    let signing_key = SigningKey::from_bytes(&ethereum_key.to_bytes()).unwrap();
+    let ethereum_wallet = LocalWallet::from(signing_key);
+
+    let ethereum_address = ethereum_wallet.address();
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
+
     let res = update_gravity_delegate_addresses(
         &contact,
         ethereum_address,
         cosmos_address,
         validator_key,
-        ethereum_key,
+        ethereum_wallet,
         (0f64,"".to_string()),
         1.0f64,
     )

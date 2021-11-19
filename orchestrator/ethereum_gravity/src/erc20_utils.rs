@@ -5,6 +5,7 @@ use gravity_utils::error::GravityError;
 use std::time::Duration;
 
 // TODO(bolten): verify our usage of contract.method:: is passing arguments correctly
+// maybe we can get full generic erc20 ABI from somewhere and add it to the abigen call
 
 /// Checks if any given contract is approved to spend money from any given erc20 contract
 /// using any given address. What exactly this does can be hard to grok, essentially when
