@@ -40,7 +40,6 @@ pub fn get_checkpoint_hash(valset: &Valset, gravity_id: &str) -> Result<Vec<u8>,
 /// Gets the latest validator set nonce
 pub async fn get_valset_nonce(
     gravity_contract_address: EthAddress,
-    caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<u64, GravityError> {
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
@@ -65,7 +64,6 @@ pub async fn get_valset_nonce(
 pub async fn get_tx_batch_nonce(
     gravity_contract_address: EthAddress,
     erc20_contract_address: EthAddress,
-    caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<u64, GravityError> {
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
@@ -90,7 +88,6 @@ pub async fn get_tx_batch_nonce(
 pub async fn get_logic_call_nonce(
     gravity_contract_address: EthAddress,
     invalidation_id: Vec<u8>,
-    caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<u64, GravityError> {
     let invalidation_id = convert_invalidation_id_to_fixed_array(invalidation_id)?;
@@ -116,7 +113,6 @@ pub async fn get_logic_call_nonce(
 /// Gets the latest transaction batch nonce
 pub async fn get_event_nonce(
     gravity_contract_address: EthAddress,
-    caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<u64, GravityError> {
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
@@ -140,7 +136,6 @@ pub async fn get_event_nonce(
 /// Gets the gravityID
 pub async fn get_gravity_id(
     gravity_contract_address: EthAddress,
-    caller_address: EthAddress,
     eth_client: EthClient,
 ) -> Result<String, GravityError> {
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())

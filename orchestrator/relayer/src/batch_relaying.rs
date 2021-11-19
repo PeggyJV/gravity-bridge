@@ -132,7 +132,6 @@ async fn submit_batches(
     eth_gas_price_multiplier: f32,
     possible_batches: HashMap<EthAddress, Vec<SubmittableBatch>>,
 ) {
-    let our_ethereum_address = eth_client.address();
     let ethereum_block_height = if let Ok(bn) = eth_client.get_block_number().await {
         bn
     } else {
@@ -149,7 +148,6 @@ async fn submit_batches(
         let latest_ethereum_batch = get_tx_batch_nonce(
             gravity_contract_address,
             erc20_contract,
-            our_ethereum_address,
             eth_client.clone(),
         )
         .await;

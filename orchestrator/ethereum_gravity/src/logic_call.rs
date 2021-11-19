@@ -25,7 +25,6 @@ pub async fn send_eth_logic_call(
     eth_client: EthClient,
 ) -> Result<(), GravityError> {
     let new_call_nonce = call.invalidation_nonce;
-    let eth_address = eth_client.address();
     info!(
         "Ordering signatures and submitting LogicCall {}:{} to Ethereum",
         bytes_to_hex_str(&call.invalidation_id),
@@ -36,7 +35,6 @@ pub async fn send_eth_logic_call(
     let before_nonce = get_logic_call_nonce(
         gravity_contract_address,
         call.invalidation_id.clone(),
-        eth_address,
         eth_client.clone(),
     )
     .await?;
@@ -77,7 +75,6 @@ pub async fn send_eth_logic_call(
     let last_nonce = get_logic_call_nonce(
         gravity_contract_address,
         call.invalidation_id,
-        eth_address,
         eth_client.clone(),
     )
     .await?;

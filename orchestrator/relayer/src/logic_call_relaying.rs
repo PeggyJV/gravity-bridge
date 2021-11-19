@@ -22,9 +22,6 @@ pub async fn relay_logic_calls(
     timeout: Duration,
     eth_gas_price_multiplier: f32,
 ) {
-    // TODO(bolten): replace a lot of manual caller address passing
-    let our_ethereum_address = eth_client.address();
-
     let latest_calls = get_latest_logic_calls(grpc_client).await;
     trace!("Latest Logic calls {:?}", latest_calls);
     if latest_calls.is_err() {
@@ -73,7 +70,6 @@ pub async fn relay_logic_calls(
     let latest_ethereum_call = get_logic_call_nonce(
         gravity_contract_address,
         oldest_signed_call.invalidation_id.clone(),
-        our_ethereum_address,
         eth_client.clone(),
     )
     .await;

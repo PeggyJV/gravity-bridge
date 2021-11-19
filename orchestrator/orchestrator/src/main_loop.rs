@@ -220,10 +220,9 @@ pub async fn eth_signer_main_loop(
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let our_ethereum_address = eth_client.address();
     let mut grpc_client = grpc_client;
 
-    let gravity_id = get_gravity_id(contract_address, our_ethereum_address, eth_client.clone()).await;
+    let gravity_id = get_gravity_id(contract_address, eth_client.clone()).await;
     if gravity_id.is_err() {
         error!("Failed to get GravityID, check your Eth node");
         return;

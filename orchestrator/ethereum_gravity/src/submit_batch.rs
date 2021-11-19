@@ -22,7 +22,6 @@ pub async fn send_eth_transaction_batch(
     eth_client: EthClient,
 ) -> Result<(), GravityError> {
     let new_batch_nonce = batch.nonce;
-    let eth_address = eth_client.address();
     info!(
         "Ordering signatures and submitting TransactionBatch {}:{} to Ethereum",
         batch.token_contract, new_batch_nonce
@@ -32,7 +31,6 @@ pub async fn send_eth_transaction_batch(
     let before_nonce = get_tx_batch_nonce(
         gravity_contract_address,
         batch.token_contract,
-        eth_address,
         eth_client.clone(),
     )
     .await?;
@@ -73,7 +71,6 @@ pub async fn send_eth_transaction_batch(
     let last_nonce = get_tx_batch_nonce(
         gravity_contract_address,
         batch.token_contract,
-        eth_address,
         eth_client.clone(),
     )
     .await?;

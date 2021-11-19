@@ -22,12 +22,12 @@ pub async fn send_eth_valset_update(
     let old_nonce = old_valset.nonce;
     let new_nonce = new_valset.nonce;
     assert!(new_nonce > old_nonce);
-    let eth_address = eth_client.address();
+
     info!(
         "Ordering signatures and submitting validator set {} -> {} update to Ethereum",
         old_nonce, new_nonce
     );
-    let before_nonce = get_valset_nonce(gravity_contract_address, eth_address, eth_client.clone()).await?;
+    let before_nonce = get_valset_nonce(gravity_contract_address, eth_client.clone()).await?;
     if before_nonce != old_nonce {
         info!(
             "Someone else updated the valset to {}, exiting early",
@@ -53,7 +53,7 @@ pub async fn send_eth_valset_update(
         None => error!("Did not receive transaction receipt when sending valset update: {}", tx_hash),
     }
 
-    let last_nonce = get_valset_nonce(gravity_contract_address, eth_address, eth_client.clone()).await?;
+    let last_nonce = get_valset_nonce(gravity_contract_address, eth_client.clone()).await?;
     if last_nonce != new_nonce {
         error!(
             "Current nonce is {} expected to update to nonce {}",
