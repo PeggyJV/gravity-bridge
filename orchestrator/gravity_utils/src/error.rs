@@ -9,7 +9,7 @@ use tokio::time::error::Elapsed;
 use tonic::Status;
 use web30::jsonrpc::error::Web3Error;
 
-#[derive(Copy, Clone, Debug, Error, Eq, PartialEq)]
+#[derive(Error, Debug)]
 #[allow(clippy::large_enum_variant)]
 pub enum GravityError {
     #[error("Got invalid BigInt from cosmos! {0}")]
@@ -52,10 +52,8 @@ pub enum GravityError {
     InsufficientVotingPowerToPass(String),
 
     #[error("Failed to parse big integer {0}")]
-    ParseBigIntError(ParseBigIntError)
+    ParseBigIntError(ParseBigIntError),
 }
-
-impl std::error::Error for GravityError {}
 
 impl From<CosmosGrpcError> for GravityError {
     fn from(error: CosmosGrpcError) -> Self {
