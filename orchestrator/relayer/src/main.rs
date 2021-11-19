@@ -95,7 +95,7 @@ async fn main() {
     // we can't move any steps above this because they may fail on an incorrect
     // historic chain state while syncing occurs
     wait_for_cosmos_node_ready(&contact).await;
-    check_for_eth(public_eth_key, &eth_client.provider()).await;
+    check_for_eth(public_eth_key, eth_client.clone()).await;
 
     relayer_main_loop(
         eth_client,

@@ -2,8 +2,8 @@
 
 use crate::{application::APP, prelude::*, utils::*};
 use abscissa_core::{Command, Clap, Runnable};
-use clarity::Address as EthAddress;
-use clarity::{PrivateKey as EthPrivateKey, Uint256};
+use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
 use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
 use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};

@@ -84,7 +84,7 @@ impl Runnable for StartCommand {
 
             // check if we actually have the promised balance of tokens to pay fees
             check_for_fee_denom(&fees_denom, cosmos_address, &contact).await;
-            check_for_eth(ethereum_address, &eth_client.provider()).await;
+            check_for_eth(ethereum_address, eth_client.clone()).await;
 
             let gas_price = config.cosmos.gas_price.as_tuple();
 

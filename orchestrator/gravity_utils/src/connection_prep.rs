@@ -13,6 +13,7 @@ use gravity_proto::gravity::DelegateKeysByEthereumSignerRequest;
 use gravity_proto::gravity::DelegateKeysByOrchestratorRequest;
 use std::convert::TryFrom;
 use std::process::exit;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
@@ -352,9 +353,10 @@ pub async fn check_for_fee_denom(fee_denom: &str, address: CosmosAddress, contac
     }
 }
 
+// TODO(bolten): is using LocalWallet too specific?
 /// Checks the user has some Ethereum in their address to pay for things
-pub async fn check_for_eth(address: EthAddress, eth_provider: &EthProvider<Http>) {
-    let balance = eth_provider.get_balance(address, None).await.unwrap();
+pub async fn check_for_eth(address: EthAddress, eth_client: Arc<SignerMiddleware<Provider<Http>, LocalWallet>>) {
+    let balance = eth_client.get_balance(address, None).await.unwrap();
     if balance == 0u8.into() {
         warn!("You don't have any Ethereum! You will need to send some to {} for this program to work. Dust will do for basic operations, more info about average relaying costs will be presented as the program runs", address);
     }

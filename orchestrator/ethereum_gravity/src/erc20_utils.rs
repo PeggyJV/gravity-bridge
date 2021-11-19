@@ -66,3 +66,16 @@ pub async fn approve_erc20_transfers(
         }
     }
 }
+
+pub async fn get_erc20_balance(
+    erc20: Address,
+    eth_client: EthClient,
+) -> Result<U256, GravityError> {
+    let abi = BaseContract::from(parse_abi(&[
+        "function balanceOf(address account) external view returns (uint256)"
+    ]).unwrap());
+    let erc20_contract = abi.into_contract(erc20, eth_client.clone());
+    let contract_call = erc20_contract.method::<_, U256>("allowance", eth_client.address())?;
+
+    Ok(contract_call.call().await?)
+}

@@ -1,5 +1,6 @@
 use crate::{application::APP, prelude::*};
 use abscissa_core::{Application, Command, Clap, Runnable};
+use ethers::{prelude::Signer, utils::keccak256};
 use gravity_proto::gravity as proto;
 use std::time::Duration;
 
@@ -15,7 +16,7 @@ impl Runnable for SignDelegateKeysCmd {
         let config = APP.config();
         abscissa_tokio::run_with_actix(&APP, async {
             let name = self.args.get(0).expect("ethereum-key-name is required");
-            let key = config.load_clarity_key(name.clone());
+            let ethereum_wallet = config.load_ethers_wallet(name.clone());
 
             let val = self.args.get(1).expect("validator-address is required");
             let address = val.parse().expect("Could not parse address");
@@ -46,7 +47,8 @@ impl Runnable for SignDelegateKeysCmd {
             let mut buf = bytes::BytesMut::with_capacity(size);
             prost::Message::encode(&msg, &mut buf).expect("Failed to encode DelegateKeysSignMsg!");
 
-            let signature = key.sign_ethereum_msg(&buf);
+            let data = keccak256(buf); // TODO(bolten): the rest of the orchestrator expects a hash as a message...here too?
+            let signature = ethereum_wallet.sign_message(data).await.expect("Could not sign DelegateKeysSignMsg");
 
             println!("{}", signature);
         })
