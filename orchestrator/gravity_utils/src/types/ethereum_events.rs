@@ -180,8 +180,8 @@ pub struct TransactionBatchExecutedEvent {
     pub event_nonce: U256,
 }
 
-impl TransactionBatchExecutedEvent {
-    pub fn from_log(input: &Log) -> Result<TransactionBatchExecutedEvent, GravityError> {
+impl FromLog for TransactionBatchExecutedEvent {
+    fn from_log(input: &Log) -> Result<TransactionBatchExecutedEvent, GravityError> {
         let event: TransactionBatchExecutedEventFilter = log_to_ethers_event(input)?;
 
         Ok(TransactionBatchExecutedEvent {
@@ -263,8 +263,8 @@ pub struct Erc20DeployedEvent {
     pub block_height: U256,
 }
 
-impl Erc20DeployedEvent {
-    pub fn from_log(input: &Log) -> Result<Erc20DeployedEvent, GravityError> {
+impl FromLog for Erc20DeployedEvent {
+    fn from_log(input: &Log) -> Result<Erc20DeployedEvent, GravityError> {
         let event: Erc20DeployedEventFilter = log_to_ethers_event(input)?;
 
         Ok(Erc20DeployedEvent {
@@ -298,8 +298,8 @@ pub struct LogicCallExecutedEvent {
     pub block_height: U256,
 }
 
-impl LogicCallExecutedEvent {
-    pub fn from_log(input: &Log) -> Result<LogicCallExecutedEvent, GravityError> {
+impl FromLog for LogicCallExecutedEvent {
+    fn from_log(input: &Log) -> Result<LogicCallExecutedEvent, GravityError> {
         let event: LogicCallEventFilter = log_to_ethers_event(input)?;
 
         Ok(LogicCallExecutedEvent {

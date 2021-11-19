@@ -182,12 +182,12 @@ pub fn set_ethereum_block_height(v: u64) {
     set_u64(&ETHEREUM_BLOCK_HEIGHT, v);
 }
 
-pub fn set_ethereum_check_for_events_end_block(v: U256) {
-    set_U256(&ETHEREUM_CHECK_FOR_EVENTS_END_BLOCK, v);
+pub fn set_ethereum_check_for_events_end_block(v: u64) {
+    set_u64(&ETHEREUM_CHECK_FOR_EVENTS_END_BLOCK, v);
 }
 
-pub fn set_ethereum_check_for_events_starting_block(v: U256) {
-    set_U256(&ETHEREUM_CHECK_FOR_EVENTS_STARTING_BLOCK, v);
+pub fn set_ethereum_check_for_events_starting_block(v: u64) {
+    set_u64(&ETHEREUM_CHECK_FOR_EVENTS_STARTING_BLOCK, v);
 }
 
 pub fn set_ethereum_last_batch_event(v: U256) {

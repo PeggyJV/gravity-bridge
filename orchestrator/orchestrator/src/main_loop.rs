@@ -53,7 +53,7 @@ pub async fn orchestrator_main_loop(
     gas_price: (f64, String),
     metrics_listen: &net::SocketAddr,
     eth_gas_price_multiplier: f32,
-    blocks_to_search: u128,
+    blocks_to_search: u64,
     gas_adjustment: f64,
     relayer_opt_out: bool,
     cosmos_msg_batch_size: u32,
@@ -113,11 +113,11 @@ pub async fn eth_oracle_main_loop(
     eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
-    blocks_to_search: u128,
+    blocks_to_search: u64,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let mut last_checked_block: U256 = get_last_checked_block(
+    let mut last_checked_block = get_last_checked_block(
         grpc_client.clone(),
         our_cosmos_address,
         gravity_contract_address,
