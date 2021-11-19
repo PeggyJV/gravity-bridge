@@ -29,9 +29,8 @@ pub fn encode_valset_confirm_hashed(gravity_id: String, valset: Valset) -> Vec<u
 
 #[test]
 fn test_valset_signature() {
-    use crate::types::ValsetMember;
-    use clarity::utils::hex_str_to_bytes;
-    use sha3::{Digest, Keccak256};
+    use crate::{ethereum::hex_str_to_bytes, types::ValsetMember};
+    use ethers::utils::keccak256;
 
     let correct_hash: Vec<u8> =
         hex_str_to_bytes("0x88165860d955aee7dc3e83d9d1156a5864b708841965585d206dbef6e9e1a499")
@@ -68,8 +67,8 @@ fn test_valset_signature() {
         ],
     };
     let checkpoint = encode_valset_confirm("foo".to_string(), valset);
-    let checkpoint_hash = Keccak256::digest(&checkpoint);
-    assert_eq!(correct_hash, checkpoint_hash.as_slice());
+    let checkpoint_hash = keccak256(&checkpoint);
+    assert_eq!(correct_hash, checkpoint_hash);
 
     // the same valset, except with an intentionally incorrect hash
     let valset = Valset {
@@ -102,8 +101,8 @@ fn test_valset_signature() {
         ],
     };
     let checkpoint = encode_valset_confirm("foo".to_string(), valset);
-    let checkpoint_hash = Keccak256::digest(&checkpoint);
-    assert_ne!(correct_hash, checkpoint_hash.as_slice())
+    let checkpoint_hash = keccak256(&checkpoint);
+    assert_ne!(correct_hash, checkpoint_hash)
 }
 
 /// takes the required input data and produces the required signature to confirm a transaction
@@ -131,14 +130,13 @@ pub fn encode_tx_batch_confirm_hashed(gravity_id: String, batch: TransactionBatc
     hash_message(digest).as_bytes().to_vec()
 }
 
-#[test]
-fn test_batch_signature() {
-    use crate::types::BatchTransaction;
-    use crate::types::Erc20Token;
-    use clarity::utils::hex_str_to_bytes;
-    use clarity::PrivateKey as EthPrivateKey;
+#[tokio::test]
+async fn test_batch_signature() {
+    use crate::{ethereum::hex_str_to_bytes, types::{BatchTransaction, Erc20Token}};
+    use ethers::core::k256::ecdsa::SigningKey;
+    use ethers::prelude::*;
+    use ethers::utils::keccak256;
     use rand::Rng;
-    use sha3::{Digest, Keccak256};
 
     let correct_hash: Vec<u8> =
         hex_str_to_bytes("0xa3a7ee0a363b8ad2514e7ee8f110d7449c0d88f3b0913c28c1751e6e0079a9b2")
@@ -172,27 +170,28 @@ fn test_batch_signature() {
     };
 
     let checkpoint = encode_tx_batch_confirm("foo".to_string(), batch.clone());
-    let checkpoint_hash = Keccak256::digest(&checkpoint);
+    let checkpoint_hash = keccak256(&checkpoint);
     assert_eq!(correct_hash.len(), checkpoint_hash.len());
-    assert_eq!(correct_hash, checkpoint_hash.as_slice());
+    assert_eq!(correct_hash, checkpoint_hash);
 
     // checkpoint is correct lets make sure our signature code works
     let mut rng = rand::thread_rng();
     let secret: [u8; 32] = rng.gen();
-    let eth_key = EthPrivateKey::from_slice(&secret).unwrap();
-    let eth_address = eth_key.to_public_key().unwrap();
+    let eth_key = SigningKey::from_bytes(&secret).unwrap();
+    let eth_wallet = LocalWallet::from(eth_key);
+    let eth_address = eth_wallet.address();
     let checkpoint = encode_tx_batch_confirm_hashed("foo".to_string(), batch);
 
-    let eth_signature = eth_key.sign_hash(&checkpoint);
+    let eth_signature = eth_wallet.sign_message(checkpoint.clone()).await.unwrap();
 
-    assert_eq!(eth_address, eth_signature.recover(&checkpoint).unwrap());
+    assert_eq!(eth_address, eth_signature.recover(checkpoint.clone()).unwrap());
 }
 
-#[test]
-fn test_specific_batch_signature() {
-    use crate::types::BatchTransaction;
-    use crate::types::Erc20Token;
-    use clarity::PrivateKey as EthPrivateKey;
+#[tokio::test]
+async fn test_specific_batch_signature() {
+    use crate::types::{BatchTransaction, Erc20Token};
+    use ethers::core::k256::ecdsa::SigningKey;
+    use ethers::prelude::*;
     use rand::Rng;
 
     let erc20_addr = "0x0635FF793Edf48cf5dB294916720A78e6e490E40"
@@ -226,14 +225,15 @@ fn test_specific_batch_signature() {
     let mut rng = rand::thread_rng();
     let secret: [u8; 32] = rng.gen();
     // the starting location of the funds
-    let eth_key = EthPrivateKey::from_slice(&secret).unwrap();
-    let eth_address = eth_key.to_public_key().unwrap();
+    let eth_key = SigningKey::from_bytes(&secret).unwrap();
+    let eth_wallet = LocalWallet::from(eth_key);
+    let eth_address = eth_wallet.address();
 
     let checkpoint = encode_tx_batch_confirm_hashed("foo".to_string(), batch);
 
-    let eth_signature = eth_key.sign_hash(&checkpoint);
+    let eth_signature = eth_wallet.sign_message(checkpoint.clone()).await.unwrap();
 
-    assert_eq!(eth_address, eth_signature.recover(&checkpoint).unwrap());
+    assert_eq!(eth_address, eth_signature.recover(checkpoint.clone()).unwrap());
 }
 
 /// takes the required input data and produces the required signature to confirm a logic
@@ -273,10 +273,8 @@ pub fn encode_logic_call_confirm_hashed(gravity_id: String, call: LogicCall) -> 
 
 #[test]
 fn test_logic_call_signature() {
-    use crate::types::Erc20Token;
-    use crate::types::LogicCall;
-    use clarity::utils::hex_str_to_bytes;
-    use sha3::{Digest, Keccak256};
+    use crate::{ethereum::hex_str_to_bytes, types::{Erc20Token, LogicCall}};
+    use ethers::utils::keccak256;
 
     let correct_hash: Vec<u8> =
         hex_str_to_bytes("0x1de95c9ace999f8ec70c6dc8d045942da2612950567c4861aca959c0650194da")
@@ -310,8 +308,8 @@ fn test_logic_call_signature() {
     let checkpoint = encode_logic_call_confirm("foo".to_string(), logic_call);
     println!("{}", checkpoint.len() / 32);
 
-    let checkpoint_hash = Keccak256::digest(&checkpoint);
+    let checkpoint_hash = keccak256(&checkpoint);
 
     assert_eq!(correct_hash.len(), checkpoint_hash.len());
-    assert_eq!(correct_hash, checkpoint_hash.as_slice())
+    assert_eq!(correct_hash, checkpoint_hash)
 }

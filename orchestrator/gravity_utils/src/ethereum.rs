@@ -1,3 +1,4 @@
+use crate::error::GravityError;
 use ethers::prelude::*;
 use std::panic;
 
@@ -31,6 +32,25 @@ pub fn bytes_to_hex_str(bytes: &[u8]) -> String {
         .iter()
         .map(|b| format!("{:0>2x?}", b))
         .fold(String::new(), |acc, x| acc + &x)
+}
+
+pub fn hex_str_to_bytes(s: &str) -> Result<Vec<u8>, GravityError> {
+    let s = match s.strip_prefix("0x") {
+        Some(s) => s,
+        None => &s,
+    };
+    let bytes = s
+        .as_bytes()
+        .chunks(2)
+        .map::<Result<u8, GravityError>, _>(|ch| {
+            let str = String::from_utf8(ch.to_vec())?;
+            let byte = u8::from_str_radix(&str, 16)?;
+
+            Ok(byte)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(bytes)
 }
 
 #[test]

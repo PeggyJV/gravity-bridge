@@ -18,6 +18,8 @@ use ethers::types::SignatureError as EthersSignatureError;
 use rustc_hex::FromHexError as EthersParseAddressError;
 use num_bigint::ParseBigIntError;
 use std::fmt::{self, Debug};
+use std::num::ParseIntError;
+use std::string::FromUtf8Error;
 use tokio::time::error::Elapsed;
 use tonic::Status;
 
@@ -51,6 +53,8 @@ pub enum GravityError {
     GravityGrpcError(Status),
     InsufficientVotingPowerToPass(String),
     ParseBigIntError(ParseBigIntError),
+    ParseIntError(ParseIntError),
+    FromUtf8Error(FromUtf8Error),
 }
 
 impl fmt::Display for GravityError {
@@ -93,6 +97,8 @@ impl fmt::Display for GravityError {
                 write!(f, "{}", val)
             }
             GravityError::ParseBigIntError(val) => write!(f, "Failed to parse big integer {}", val),
+            GravityError::ParseIntError(val) => write!(f, "Failed to parse integer: {}", val),
+            GravityError::FromUtf8Error(val) => write!(f, "Failed to parse bytes to UTF-8: {}", val),
         }
     }
 }
@@ -199,5 +205,17 @@ impl From<Status> for GravityError {
 impl From<ParseBigIntError> for GravityError {
     fn from(error: ParseBigIntError) -> Self {
         GravityError::InvalidBigInt(error)
+    }
+}
+
+impl From<ParseIntError> for GravityError {
+    fn from(error: ParseIntError) -> Self {
+        GravityError::ParseIntError(error)
+    }
+}
+
+impl From<FromUtf8Error> for GravityError {
+    fn from(error: FromUtf8Error) -> Self {
+        GravityError::FromUtf8Error(error)
     }
 }
