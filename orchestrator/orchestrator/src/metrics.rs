@@ -191,52 +191,52 @@ pub fn set_ethereum_check_for_events_starting_block(v: u64) {
 }
 
 pub fn set_ethereum_last_batch_event(v: U256) {
-    set_U256(&ETHEREUM_LAST_BATCH_EVENT, v);
-    set_U256(&ETHEREUM_LAST_EVENT_NONCE, v);
+    set_u256(&ETHEREUM_LAST_BATCH_EVENT, v);
+    set_u256(&ETHEREUM_LAST_EVENT_NONCE, v);
 }
 
 pub fn set_ethereum_last_batch_nonce(v: U256) {
-    set_U256(&ETHEREUM_LAST_BATCH_NONCE, v);
+    set_u256(&ETHEREUM_LAST_BATCH_NONCE, v);
 }
 
 pub fn set_ethereum_last_deposit_block(v: U256) {
-    set_U256(&ETHEREUM_LAST_DEPOSIT_BLOCK, v);
+    set_u256(&ETHEREUM_LAST_DEPOSIT_BLOCK, v);
 }
 
 pub fn set_ethereum_last_deposit_event(v: U256) {
-    set_U256(&ETHEREUM_LAST_DEPOSIT_EVENT, v);
-    set_U256(&ETHEREUM_LAST_EVENT_NONCE, v);
+    set_u256(&ETHEREUM_LAST_DEPOSIT_EVENT, v);
+    set_u256(&ETHEREUM_LAST_EVENT_NONCE, v);
 }
 
 pub fn set_ethereum_last_erc20_block(v: U256) {
-    set_U256(&ETHEREUM_LAST_ERC20_BLOCK, v);
+    set_u256(&ETHEREUM_LAST_ERC20_BLOCK, v);
 }
 
 pub fn set_ethereum_last_erc20_event(v: U256) {
-    set_U256(&ETHEREUM_LAST_ERC20_EVENT, v);
-    set_U256(&ETHEREUM_LAST_EVENT_NONCE, v);
+    set_u256(&ETHEREUM_LAST_ERC20_EVENT, v);
+    set_u256(&ETHEREUM_LAST_EVENT_NONCE, v);
 }
 
 pub fn set_ethereum_last_logic_call_event(v: U256) {
-    set_U256(&ETHEREUM_LAST_LOGIC_CALL_EVENT, v);
-    set_U256(&ETHEREUM_LAST_EVENT_NONCE, v);
+    set_u256(&ETHEREUM_LAST_LOGIC_CALL_EVENT, v);
+    set_u256(&ETHEREUM_LAST_EVENT_NONCE, v);
 }
 
 pub fn set_ethereum_last_logic_call_nonce(v: U256) {
-    set_U256(&ETHEREUM_LAST_LOGIC_CALL_NONCE, v);
+    set_u256(&ETHEREUM_LAST_LOGIC_CALL_NONCE, v);
 }
 
 pub fn set_ethereum_last_valset_event(v: U256) {
-    set_U256(&ETHEREUM_LAST_VALSET_EVENT, v);
-    set_U256(&ETHEREUM_LAST_EVENT_NONCE, v);
+    set_u256(&ETHEREUM_LAST_VALSET_EVENT, v);
+    set_u256(&ETHEREUM_LAST_EVENT_NONCE, v);
 }
 
 pub fn set_ethereum_last_valset_nonce(v: U256) {
-    set_U256(&ETHEREUM_LAST_VALSET_NONCE, v);
+    set_u256(&ETHEREUM_LAST_VALSET_NONCE, v);
 }
 
 pub fn set_ethereum_bal(v: U256) {
-    set_U256(&ETHEREUM_BAL, v);
+    set_u256(&ETHEREUM_BAL, v);
 }
 
 fn set_u64(gauge: &IntGauge, value: u64) {
@@ -249,7 +249,7 @@ fn set_u64(gauge: &IntGauge, value: u64) {
     }
 }
 
-fn set_U256(gauge: &IntGauge, value: U256) {
+fn set_u256(gauge: &IntGauge, value: U256) {
     let v = match value.to_string().parse() {
         Ok(v) => v,
         Err(_) => -1,

@@ -13,7 +13,7 @@ mod tests;
 mod tx;
 
 use crate::config::GorcConfig;
-use abscissa_core::{Application, Clap, Command, Configurable, FrameworkError, Runnable};
+use abscissa_core::{Clap, Command, Configurable, FrameworkError, Runnable};
 use std::path::PathBuf;
 
 /// Gorc Configuration Filename
