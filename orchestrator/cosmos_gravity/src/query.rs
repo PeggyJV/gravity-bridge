@@ -16,11 +16,7 @@ pub async fn get_valset(
             signer_set_nonce: nonce,
         })
         .await?;
-    let valset = response.into_inner().signer_set;
-    let valset = match valset {
-        Some(v) => Some(v.into()),
-        None => None,
-    };
+    let valset = response.into_inner().signer_set.map(Into::into);
     Ok(valset)
 }
 
@@ -49,11 +45,7 @@ pub async fn get_latest_valset(
     let response = client
         .latest_signer_set_tx(LatestSignerSetTxRequest {})
         .await?;
-    let valset = response.into_inner().signer_set;
-    let valset = match valset {
-        Some(v) => Some(v.into()),
-        None => None,
-    };
+    let valset = response.into_inner().signer_set.map(Into::into);
     Ok(valset)
 }
 

@@ -18,7 +18,7 @@ pub async fn metrics_main_loop(addr: &net::SocketAddr) {
     let app = route("/", get(get_metrics));
 
     info!("metrics listening on {}", addr);
-    Server::bind(&addr)
+    Server::bind(addr)
         .serve(app.into_make_service())
         .await
         .unwrap();
@@ -240,20 +240,14 @@ pub fn set_ethereum_bal(v: U256) {
 }
 
 fn set_u64(gauge: &IntGauge, value: u64) {
-    let v = match value.try_into() {
-        Ok(v) => v,
-        Err(_) => -1,
-    };
+    let v = value.try_into().unwrap_or(-1);
     if v > gauge.get() {
         gauge.set(v);
     }
 }
 
 fn set_u256(gauge: &IntGauge, value: U256) {
-    let v = match value.to_string().parse() {
-        Ok(v) => v,
-        Err(_) => -1,
-    };
+    let v = value.to_string().parse().unwrap_or(-1);
     if v > gauge.get() {
         gauge.set(v);
     }

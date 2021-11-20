@@ -59,7 +59,6 @@ pub async fn find_latest_valset(
                         cosmos_gravity::query::get_valset(grpc_client, latest_eth_valset.nonce)
                             .await?;
                     check_if_valsets_differ(cosmos_chain_valset, &latest_eth_valset);
-
                     return Ok(latest_eth_valset);
                 }
                 Err(e) => error!("Got valset event that we can't parse {}", e),

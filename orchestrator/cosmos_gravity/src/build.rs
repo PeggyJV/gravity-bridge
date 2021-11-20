@@ -11,6 +11,7 @@ use gravity_utils::message_signatures::{
     encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
 };
 use gravity_utils::types::*;
+use std::collections::BTreeMap;
 
 pub async fn signer_set_tx_confirmation_messages(
     contact: &Contact,
@@ -129,7 +130,7 @@ pub fn ethereum_event_messages(
     // could be reduced by adding two traits to sort against but really this is the easiest option.
     //
     // We index the events by event nonce in an unordered hashmap and then play them back in order into a vec
-    let mut unordered_msgs = std::collections::HashMap::new();
+    let mut unordered_msgs = BTreeMap::new();
     for deposit in deposits {
         let event = proto::SendToCosmosEvent {
             event_nonce: downcast_to_u64(deposit.event_nonce.clone()).unwrap(),
@@ -206,14 +207,8 @@ pub fn ethereum_event_messages(
         unordered_msgs.insert(valset.event_nonce, msg);
     }
 
-    let mut keys = Vec::new();
-    for (key, _) in unordered_msgs.iter() {
-        keys.push(key.clone());
-    }
-    keys.sort();
-
     let mut msgs = Vec::new();
-    for i in keys.iter() {
+    for (i, _) in unordered_msgs.clone().iter() {
         msgs.push(unordered_msgs.remove_entry(&i).unwrap().1);
     }
 

@@ -11,6 +11,7 @@ use gravity_utils::{message_signatures::encode_logic_call_confirm_hashed, types:
 use std::time::Duration;
 use tonic::transport::Channel;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn relay_logic_calls(
     // the validator set currently in the contract on Ethereum
     current_valset: Valset,

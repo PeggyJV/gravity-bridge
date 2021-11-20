@@ -7,7 +7,7 @@ extern crate lazy_static;
 
 use clarity::PrivateKey as EthPrivateKey;
 use cosmos_gravity::send::update_gravity_delegate_addresses;
-use deep_space::{coin::Coin, mnemonic::Mnemonic, private_key::PrivateKey as CosmosPrivateKey};
+use deep_space::{mnemonic::Mnemonic, private_key::PrivateKey as CosmosPrivateKey};
 use docopt::Docopt;
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::prelude::*;
@@ -65,10 +65,6 @@ async fn main() {
         .unwrap_or_else(|e| e.exit());
 
     let fee_denom = args.flag_fees;
-    let _fee = Coin {
-        denom: fee_denom.clone(),
-        amount: 1u64.into(),
-    };
 
     let connections = create_rpc_connections(
         args.flag_address_prefix,

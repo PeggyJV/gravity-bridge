@@ -8,7 +8,7 @@ use std::convert::TryFrom;
 use std::process::exit;
 use std::{
     sync::Arc,
-    time::{Duration, Instant},
+    time::Duration,
 };
 use tokio::time::sleep as delay_for;
 
@@ -90,30 +90,36 @@ impl Erc20 {
 
         println!("We have deployed ERC20 contract {}, waiting to see if the Cosmos chain choses to adopt it", res);
 
-        let start = Instant::now();
-        loop {
-            let req = DenomToErc20Request {
-                denom: denom.clone(),
-            };
+        match tokio::time::timeout(Duration::from_secs(100), async {
+            loop {
+                let req = DenomToErc20Request {
+                    denom: denom.clone(),
+                };
 
-            let res = grpc.denom_to_erc20(req).await;
+                let res = grpc.denom_to_erc20(req).await;
 
-            if let Ok(val) = res {
-                let val = val.into_inner();
+                if let Ok(val) = res {
+                    break val;
+                }
+                delay_for(Duration::from_secs(1)).await;
+            }
+        })
+        .await
+        {
+            Ok(val) => {
                 println!(
                     "Asset {} has accepted new ERC20 representation {}",
-                    denom, val.erc20
+                    denom,
+                    val.into_inner().erc20
                 );
                 exit(0);
             }
-
-            if Instant::now() - start > Duration::from_secs(100) {
+            Err(_) => {
                 println!(
                     "Your ERC20 contract was not adopted, double check the metadata and try again"
                 );
                 exit(1);
             }
-            delay_for(Duration::from_secs(1)).await;
         }
     }
 }
