@@ -73,37 +73,3 @@ pub async fn get_erc20_balance(
 
     Ok(contract_call.call().await?)
 }
-
-// TODO(bolten): is this dead code?
-pub async fn erc20_transfer(
-    erc20: Address,
-    destination: Address,
-    amount: U256,
-    eth_client: EthClient,
-) -> Result<TxHash, GravityError> {
-    let erc20_contract = ERC20::new(erc20, eth_client.clone());
-    let contract_call = erc20_contract.transfer(destination, amount);
-
-    let pending_tx = contract_call.send().await?;
-    let tx_hash = *pending_tx;
-    info!(
-        "Transferring {} ERC-20 {} from {} to {} with txid {}",
-        amount,
-        erc20,
-        eth_client.address(),
-        destination,
-        tx_hash
-    );
-    // TODO(bolten): ethers interval default is 7s, this mirrors what web30 was doing, should we adjust?
-    // additionally we are mirroring only waiting for 1 confirmation by leaving that as default
-    let pending_tx = pending_tx.interval(Duration::from_secs(1));
-    let potential_error = GravityError::GravityContractError(format!(
-        "Did not receive transaction receipt when transferring ERC-20 {}: {}",
-        erc20, tx_hash
-    ));
-
-    match pending_tx.await? {
-        Some(receipt) => Ok(receipt.transaction_hash),
-        None => Err(potential_error),
-    }
-}
