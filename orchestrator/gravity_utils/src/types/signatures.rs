@@ -58,8 +58,9 @@ pub fn to_arrays(input: Vec<GravitySignature>) -> GravitySignatureArrays {
     // TODO(bolten): we're also throwing panics if we encounter downcast errors in
     // ethereum_gravity/src/utils.rs, we should consider broadly how to handle
     // these sorts of error conditions
-    let v = input.iter().map(|sig|
-        u8::try_from(sig.v).expect("Gravity Signature v overflow! Bridge halt!"))
+    let v = input
+        .iter()
+        .map(|sig| u8::try_from(sig.v).expect("Gravity Signature v overflow! Bridge halt!"))
         .collect();
     let r = input.iter().map(|sig| sig.r.into()).collect();
     let s = input.iter().map(|sig| sig.s.into()).collect();

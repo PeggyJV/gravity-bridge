@@ -4,8 +4,8 @@ use deep_space::coin::Coin;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
 use ethereum_gravity::{erc20_utils::get_erc20_balance, types::EthClient};
-use ethers::prelude::*;
 use ethers::core::k256::ecdsa::SigningKey;
+use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use futures::future::join_all;
 use gravity_abi::erc20::ERC20;
@@ -52,14 +52,28 @@ pub async fn send_erc20_bulk(
     destinations: &[EthAddress],
     eth_client: EthClient,
 ) {
-    let miner_balance = get_erc20_balance(erc20, eth_client.address(), eth_client.clone()).await.unwrap();
-    assert!(miner_balance > amount.clone().checked_mul(destinations.len().into()).unwrap());
+    let miner_balance = get_erc20_balance(erc20, eth_client.address(), eth_client.clone())
+        .await
+        .unwrap();
+    assert!(
+        miner_balance
+            > amount
+                .clone()
+                .checked_mul(destinations.len().into())
+                .unwrap()
+    );
 
-    let mut nonce = eth_client.get_transaction_count(eth_client.address(), None).await.unwrap();
+    let mut nonce = eth_client
+        .get_transaction_count(eth_client.address(), None)
+        .await
+        .unwrap();
     let mut transactions = Vec::new();
 
     for address in destinations {
-        let data = ERC20::new(erc20, eth_client.clone()).transfer(*address, amount).calldata().unwrap();
+        let data = ERC20::new(erc20, eth_client.clone())
+            .transfer(*address, amount)
+            .calldata()
+            .unwrap();
 
         let tx = TransactionRequest {
             from: Some(eth_client.address()),
@@ -85,7 +99,9 @@ pub async fn send_erc20_bulk(
     join_all(pending_txs).await;
 
     for address in destinations {
-        let new_balance = get_erc20_balance(erc20, *address, eth_client.clone()).await.unwrap();
+        let new_balance = get_erc20_balance(erc20, *address, eth_client.clone())
+            .await
+            .unwrap();
         assert!(new_balance >= amount.clone());
     }
 }
@@ -95,7 +111,10 @@ pub async fn send_erc20_bulk(
 /// single address without your sequence getting out of whack. By manually setting the nonce
 /// here we can quickly send thousands of transactions in only a few blocks
 pub async fn send_eth_bulk(amount: U256, destinations: &[EthAddress], eth_client: EthClient) {
-    let mut nonce = eth_client.get_transaction_count(eth_client.address(), None).await.unwrap();
+    let mut nonce = eth_client
+        .get_transaction_count(eth_client.address(), None)
+        .await
+        .unwrap();
     let mut transactions = Vec::new();
 
     for address in destinations {

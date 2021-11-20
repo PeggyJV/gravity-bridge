@@ -1,8 +1,10 @@
-use crate::{types::{EthClient, EthSignerMiddleware},
-    utils::{GasCost,
-    convert_invalidation_id_to_fixed_array,
-    get_logic_call_nonce,
-    get_send_transaction_gas_price}};
+use crate::{
+    types::{EthClient, EthSignerMiddleware},
+    utils::{
+        convert_invalidation_id_to_fixed_array, get_logic_call_nonce,
+        get_send_transaction_gas_price, GasCost,
+    },
+};
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -56,10 +58,17 @@ pub async fn send_eth_logic_call(
     }
 
     let contract_call = build_send_logic_call_contract_call(
-        current_valset, &call, confirms, gravity_contract_address, gravity_id, eth_client.clone()
+        current_valset,
+        &call,
+        confirms,
+        gravity_contract_address,
+        gravity_id,
+        eth_client.clone(),
     )?;
 
-    let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
+    let contract_call = contract_call
+        .gas(gas_cost.gas)
+        .gas_price(gas_cost.gas_price);
 
     let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;
@@ -70,7 +79,10 @@ pub async fn send_eth_logic_call(
 
     match tokio::time::timeout(timeout, pending_tx).await?? {
         Some(_) => (),
-        None => error!("Did not receive transaction receipt when submitting batch: {}", tx_hash),
+        None => error!(
+            "Did not receive transaction receipt when submitting batch: {}",
+            tx_hash
+        ),
     }
 
     let last_nonce = get_logic_call_nonce(
@@ -104,7 +116,12 @@ pub async fn estimate_logic_call_cost(
     eth_client: EthClient,
 ) -> Result<GasCost, GravityError> {
     let contract_call = build_send_logic_call_contract_call(
-        current_valset, &call, confirms, gravity_contract_address, gravity_id, eth_client.clone()
+        current_valset,
+        &call,
+        confirms,
+        gravity_contract_address,
+        gravity_id,
+        eth_client.clone(),
     )?;
 
     Ok(GasCost {
@@ -128,19 +145,32 @@ pub fn build_send_logic_call_contract_call(
     let sig_data = current_valset.order_sigs(&hash, confirms)?;
     let sig_arrays = to_arrays(sig_data);
 
-    let transfer_amounts = call.transfers.iter()
-        .map(|transfer| transfer.amount).collect();
-    let transfer_token_contracts = call.transfers.iter()
-        .map(|transfer| transfer.token_contract_address).collect();
-    let fee_amounts = call.fees.iter()
-        .map(|fee| fee.amount).collect();
-    let fee_token_contracts = call.fees.iter()
-        .map(|fee| fee.token_contract_address).collect();
+    let transfer_amounts = call
+        .transfers
+        .iter()
+        .map(|transfer| transfer.amount)
+        .collect();
+    let transfer_token_contracts = call
+        .transfers
+        .iter()
+        .map(|transfer| transfer.token_contract_address)
+        .collect();
+    let fee_amounts = call.fees.iter().map(|fee| fee.amount).collect();
+    let fee_token_contracts = call
+        .fees
+        .iter()
+        .map(|fee| fee.token_contract_address)
+        .collect();
     let invalidation_id = convert_invalidation_id_to_fixed_array(call.invalidation_id.clone())?;
 
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
-        .submit_logic_call(current_addresses, current_powers, current_valset_nonce.into(),
-            sig_arrays.v, sig_arrays.r, sig_arrays.s,
+        .submit_logic_call(
+            current_addresses,
+            current_powers,
+            current_valset_nonce.into(),
+            sig_arrays.v,
+            sig_arrays.r,
+            sig_arrays.s,
             LogicCallArgs {
                 transfer_amounts,
                 transfer_token_contracts,
@@ -150,7 +180,9 @@ pub fn build_send_logic_call_contract_call(
                 payload: call.payload.clone(),
                 time_out: call.timeout.into(),
                 invalidation_id,
-                invalidation_nonce: call.invalidation_nonce.into(), })
+                invalidation_nonce: call.invalidation_nonce.into(),
+            },
+        )
         .from(eth_client.address())
         .value(U256::zero());
 

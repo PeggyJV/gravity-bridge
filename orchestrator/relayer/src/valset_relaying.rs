@@ -8,8 +8,10 @@ use cosmos_gravity::query::{get_all_valset_confirms, get_valset};
 use ethereum_gravity::{one_eth_f32, types::EthClient, valset_update::send_eth_valset_update};
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::{ethereum::downcast_to_f32, ethereum::bytes_to_hex_str,
-    message_signatures::encode_valset_confirm_hashed, types::Valset};
+use gravity_utils::{
+    ethereum::bytes_to_hex_str, ethereum::downcast_to_f32,
+    message_signatures::encode_valset_confirm_hashed, types::Valset,
+};
 use tonic::transport::Channel;
 
 /// Check the last validator set on Ethereum, if it's lower than our latest validator
@@ -145,7 +147,10 @@ pub async fn relay_valsets(
         let cost = cost.unwrap();
         let total_cost = downcast_to_f32(cost.get_total());
         if total_cost.is_none() {
-            error!("Total gas cost greater than f32 max, skipping valset submission: {}", latest_cosmos_valset.nonce);
+            error!(
+                "Total gas cost greater than f32 max, skipping valset submission: {}",
+                latest_cosmos_valset.nonce
+            );
             return;
         }
         let total_cost = total_cost.unwrap();

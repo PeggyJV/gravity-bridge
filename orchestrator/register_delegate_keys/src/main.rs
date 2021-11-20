@@ -125,7 +125,7 @@ async fn main() {
         cosmos_address,
         validator_key,
         ethereum_wallet,
-        (0f64,"".to_string()),
+        (0f64, "".to_string()),
         1.0f64,
     )
     .await

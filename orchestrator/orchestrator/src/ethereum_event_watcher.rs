@@ -19,10 +19,10 @@ use gravity_utils::{
     error::GravityError,
     ethereum::bytes_to_hex_str,
     types::{
-        ERC20_DEPLOYED_EVENT_STR, LOGIC_CALL_EVENT_STR, SEND_TO_COSMOS_EVENT_STR,
-        TRANSACTION_BATCH_EXECUTED_EVENT_STR, VALSET_UPDATED_EVENT_STR,
         Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent,
-        TransactionBatchExecutedEvent, ValsetUpdatedEvent,
+        TransactionBatchExecutedEvent, ValsetUpdatedEvent, ERC20_DEPLOYED_EVENT_STR,
+        LOGIC_CALL_EVENT_STR, SEND_TO_COSMOS_EVENT_STR, TRANSACTION_BATCH_EXECUTED_EVENT_STR,
+        VALSET_UPDATED_EVENT_STR,
     },
 };
 use std::time;
@@ -47,15 +47,20 @@ pub async fn check_for_events(
 
     let filter_gravity_contract_address = ValueOrArray::Value(gravity_contract_address);
 
-    let mut erc20_deployed_filter = Filter::new().address(filter_gravity_contract_address.clone())
+    let mut erc20_deployed_filter = Filter::new()
+        .address(filter_gravity_contract_address.clone())
         .event(&ERC20_DEPLOYED_EVENT_STR);
-    let mut logic_call_filter = Filter::new().address(filter_gravity_contract_address.clone())
+    let mut logic_call_filter = Filter::new()
+        .address(filter_gravity_contract_address.clone())
         .event(&LOGIC_CALL_EVENT_STR);
-    let mut send_to_cosmos_filter = Filter::new().address(filter_gravity_contract_address.clone())
+    let mut send_to_cosmos_filter = Filter::new()
+        .address(filter_gravity_contract_address.clone())
         .event(&SEND_TO_COSMOS_EVENT_STR);
-    let mut transaction_batch_filter = Filter::new().address(filter_gravity_contract_address.clone())
+    let mut transaction_batch_filter = Filter::new()
+        .address(filter_gravity_contract_address.clone())
         .event(&TRANSACTION_BATCH_EXECUTED_EVENT_STR);
-    let mut valset_updated_filter = Filter::new().address(filter_gravity_contract_address.clone())
+    let mut valset_updated_filter = Filter::new()
+        .address(filter_gravity_contract_address.clone())
         .event(&VALSET_UPDATED_EVENT_STR);
 
     let search_range = starting_block..latest_block;
@@ -84,7 +89,8 @@ pub async fn check_for_events(
 
     let transaction_batch_events = eth_client.get_logs(&transaction_batch_filter).await?;
     debug!("Batch events detected {:?}", transaction_batch_events);
-    let transaction_batch_events = TransactionBatchExecutedEvent::from_logs(&transaction_batch_events)?;
+    let transaction_batch_events =
+        TransactionBatchExecutedEvent::from_logs(&transaction_batch_events)?;
     debug!("parsed batches {:?}", transaction_batch_events);
 
     let valset_updated_events = eth_client.get_logs(&valset_updated_filter).await?;
@@ -107,7 +113,10 @@ pub async fn check_for_events(
     let send_to_cosmos_events: Vec<SendToCosmosEvent> =
         SendToCosmosEvent::filter_by_event_nonce(last_event_nonce, &send_to_cosmos_events);
     let transaction_batch_events: Vec<TransactionBatchExecutedEvent> =
-        TransactionBatchExecutedEvent::filter_by_event_nonce(last_event_nonce, &transaction_batch_events);
+        TransactionBatchExecutedEvent::filter_by_event_nonce(
+            last_event_nonce,
+            &transaction_batch_events,
+        );
     let valset_updated_events: Vec<ValsetUpdatedEvent> =
         ValsetUpdatedEvent::filter_by_event_nonce(last_event_nonce, &valset_updated_events);
 
@@ -249,9 +258,10 @@ pub async fn get_block_delay(eth_client: EthClient) -> Result<U64, GravityError>
     let chain_id_result = get_chain_id_with_retry(eth_client.clone()).await;
     let chain_id = downcast_to_u64(chain_id_result);
     if chain_id.is_none() {
-        return Err(GravityError::EthereumBadDataError(
-            format!("Chain ID is larger than u64 max: {}", chain_id_result))
-        );
+        return Err(GravityError::EthereumBadDataError(format!(
+            "Chain ID is larger than u64 max: {}",
+            chain_id_result
+        )));
     }
 
     match chain_id.unwrap() {

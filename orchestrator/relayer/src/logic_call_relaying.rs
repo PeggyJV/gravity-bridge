@@ -1,9 +1,7 @@
 use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
 use ethereum_gravity::one_eth_f32;
 use ethereum_gravity::{
-    logic_call::send_eth_logic_call,
-    types::EthClient,
-    utils::get_logic_call_nonce,
+    logic_call::send_eth_logic_call, types::EthClient, utils::get_logic_call_nonce,
 };
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
@@ -102,7 +100,10 @@ pub async fn relay_logic_calls(
         let mut cost = cost.unwrap();
         let total_cost = downcast_to_f32(cost.get_total());
         if total_cost.is_none() {
-            error!("Total gas cost greater than f32 max, skipping logic call submission: {}", oldest_signed_call.invalidation_nonce);
+            error!(
+                "Total gas cost greater than f32 max, skipping logic call submission: {}",
+                oldest_signed_call.invalidation_nonce
+            );
             return;
         }
         let total_cost = total_cost.unwrap();

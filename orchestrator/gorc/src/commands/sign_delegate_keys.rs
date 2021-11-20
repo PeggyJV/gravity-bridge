@@ -1,5 +1,5 @@
 use crate::{application::APP, prelude::*};
-use abscissa_core::{Application, Command, Clap, Runnable};
+use abscissa_core::{Application, Clap, Command, Runnable};
 use ethers::{prelude::Signer, utils::keccak256};
 use gravity_proto::gravity as proto;
 use std::time::Duration;
@@ -48,7 +48,10 @@ impl Runnable for SignDelegateKeysCmd {
             prost::Message::encode(&msg, &mut buf).expect("Failed to encode DelegateKeysSignMsg!");
 
             let data = keccak256(buf); // TODO(bolten): the rest of the orchestrator expects a hash as a message...here too?
-            let signature = ethereum_wallet.sign_message(data).await.expect("Could not sign DelegateKeysSignMsg");
+            let signature = ethereum_wallet
+                .sign_message(data)
+                .await
+                .expect("Could not sign DelegateKeysSignMsg");
 
             println!("{}", signature);
         })

@@ -1,7 +1,7 @@
 use crate::utils::ValidatorKeys;
+use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::types::Address as EthAddress;
-use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 

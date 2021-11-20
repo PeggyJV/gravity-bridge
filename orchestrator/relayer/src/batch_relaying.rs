@@ -1,7 +1,9 @@
 use cosmos_gravity::query::get_latest_transaction_batches;
 use cosmos_gravity::query::get_transaction_batch_signatures;
-use ethereum_gravity::{one_eth_f32, submit_batch::send_eth_transaction_batch, types::EthClient,
-    utils::get_tx_batch_nonce};
+use ethereum_gravity::{
+    one_eth_f32, submit_batch::send_eth_transaction_batch, types::EthClient,
+    utils::get_tx_batch_nonce,
+};
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
@@ -51,7 +53,6 @@ pub async fn relay_batches(
     )
     .await;
 }
-
 
 /// This function retrieves the latest batches from the Cosmos module and then
 /// iterates through the signatures for each batch, determining if they are ready
@@ -110,7 +111,6 @@ async fn get_batches_and_signatures(
     return possible_batches;
 }
 
-
 /// Attempts to submit batches with valid signatures, checking the state
 /// of the Ethereum chain to ensure that it is valid to submit a given batch
 /// more specifically that the correctly signed batch has not timed out or already
@@ -145,12 +145,8 @@ async fn submit_batches(
     // do that though.
     for (token_type, possible_batches) in possible_batches {
         let erc20_contract = token_type;
-        let latest_ethereum_batch = get_tx_batch_nonce(
-            gravity_contract_address,
-            erc20_contract,
-            eth_client.clone(),
-        )
-        .await;
+        let latest_ethereum_batch =
+            get_tx_batch_nonce(gravity_contract_address, erc20_contract, eth_client.clone()).await;
         if latest_ethereum_batch.is_err() {
             error!(
                 "Failed to get latest Ethereum batch with {:?}",
@@ -192,7 +188,10 @@ async fn submit_batches(
                 let mut cost = cost.unwrap();
                 let total_cost = downcast_to_f32(cost.get_total());
                 if total_cost.is_none() {
-                    error!("Total gas cost greater than f32 max, skipping batch submission: {}", oldest_signed_batch.nonce);
+                    error!(
+                        "Total gas cost greater than f32 max, skipping batch submission: {}",
+                        oldest_signed_batch.nonce
+                    );
                     continue;
                 }
                 let total_cost = total_cost.unwrap();

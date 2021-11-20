@@ -1,8 +1,8 @@
 use super::*;
 use crate::error::GravityError;
+use deep_space::Address as CosmosAddress;
 use ethers::core::abi::Token;
 use ethers::types::{Address as EthAddress, Signature as EthSignature};
-use deep_space::Address as CosmosAddress;
 use std::convert::TryFrom;
 
 /// This represents an individual transaction being bridged over to Ethereum
@@ -48,12 +48,21 @@ impl TransactionBatch {
     /// extracts the amounts, destinations and fees as submitted to the Ethereum contract
     /// and used for signatures
     pub fn get_checkpoint_values(&self) -> (Vec<U256>, Vec<EthAddress>, Vec<U256>) {
-        let amounts: Vec<U256> =
-            self.transactions.iter().map(|tx| tx.erc20_token.amount).collect();
-        let destinations: Vec<EthAddress> =
-            self.transactions.iter().map(|tx| tx.ethereum_recipient).collect();
-        let fees: Vec<U256> =
-            self.transactions.iter().map(|tx| tx.erc20_fee.amount).collect();
+        let amounts: Vec<U256> = self
+            .transactions
+            .iter()
+            .map(|tx| tx.erc20_token.amount)
+            .collect();
+        let destinations: Vec<EthAddress> = self
+            .transactions
+            .iter()
+            .map(|tx| tx.ethereum_recipient)
+            .collect();
+        let fees: Vec<U256> = self
+            .transactions
+            .iter()
+            .map(|tx| tx.erc20_fee.amount)
+            .collect();
 
         assert_eq!(amounts.len(), destinations.len());
         assert_eq!(fees.len(), destinations.len());
@@ -63,12 +72,12 @@ impl TransactionBatch {
 
     pub fn get_checkpoint_values_tokens(&self) -> (Token, Token, Token) {
         let (amounts, destinations, fees) = self.get_checkpoint_values();
-        let amounts_tokens =
-            amounts.iter().map(|amount| Token::Uint(*amount)).collect();
-        let destinations_tokens =
-            destinations.iter().map(|destination| Token::Address(*destination)).collect();
-        let fees_tokens =
-            fees.iter().map(|fee| Token::Uint(*fee)).collect();
+        let amounts_tokens = amounts.iter().map(|amount| Token::Uint(*amount)).collect();
+        let destinations_tokens = destinations
+            .iter()
+            .map(|destination| Token::Address(*destination))
+            .collect();
+        let fees_tokens = fees.iter().map(|fee| Token::Uint(*fee)).collect();
 
         (
             Token::Array(amounts_tokens),

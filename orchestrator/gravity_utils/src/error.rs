@@ -5,18 +5,18 @@ use clarity::Error as ClarityError;
 use deep_space::error::AddressError as CosmosAddressError;
 use deep_space::error::CosmosGrpcError;
 use deep_space::error::PrivateKeyError as CosmosPrivateKeyError;
-use ethers::abi::Error as EthersAbiError;
 use ethers::abi::ethereum_types::FromDecStrErr as EthersParseUintError;
+use ethers::abi::Error as EthersAbiError;
 use ethers::contract::AbiError as EthersContractAbiError;
-use ethers::prelude::*;
-use ethers::prelude::ContractError;
 use ethers::prelude::gas_oracle::GasOracleError as EthersGasOracleError;
-use ethers::prelude::ProviderError as EthersProviderError;
 use ethers::prelude::signer::SignerMiddlewareError;
+use ethers::prelude::ContractError;
+use ethers::prelude::ProviderError as EthersProviderError;
+use ethers::prelude::*;
 use ethers::signers::WalletError as EthersWalletError;
 use ethers::types::SignatureError as EthersSignatureError;
-use rustc_hex::FromHexError as EthersParseAddressError;
 use num_bigint::ParseBigIntError;
+use rustc_hex::FromHexError as EthersParseAddressError;
 use std::fmt::{self, Debug};
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
@@ -66,15 +66,27 @@ impl fmt::Display for GravityError {
                 write!(f, "Got invalid BigInt from cosmos! {}", val)
             }
             GravityError::CosmosAddressError(val) => write!(f, "Cosmos Address error {}", val),
-            GravityError::CosmosPrivateKeyError(val) => write!(f, "Cosmos private key error:  {}", val),
-            GravityError::EthereumBadDataError(val) => write!(f, "Received unexpected data from Ethereum: {}", val),
+            GravityError::CosmosPrivateKeyError(val) => {
+                write!(f, "Cosmos private key error:  {}", val)
+            }
+            GravityError::EthereumBadDataError(val) => {
+                write!(f, "Received unexpected data from Ethereum: {}", val)
+            }
             GravityError::EthereumRestError(val) => write!(f, "Ethereum REST error: {}", val),
             GravityError::EthersAbiError(val) => write!(f, "Ethers ABI error: {}", val),
-            GravityError::EthersContractAbiError(val) => write!(f, "Ethers contract ABI error: {}", val),
+            GravityError::EthersContractAbiError(val) => {
+                write!(f, "Ethers contract ABI error: {}", val)
+            }
             GravityError::EthersContractError(val) => write!(f, "Ethers contract error: {}", val),
-            GravityError::EthersGasOracleError(val) => write!(f, "Ethers gas oracle error: {}", val),
-            GravityError::EthersParseAddressError(val) => write!(f, "Ethers H160 address parse error: {}", val),
-            GravityError::EthersParseUintError(val) => write!(f, "Ethers U256 parse error: {}", val),
+            GravityError::EthersGasOracleError(val) => {
+                write!(f, "Ethers gas oracle error: {}", val)
+            }
+            GravityError::EthersParseAddressError(val) => {
+                write!(f, "Ethers H160 address parse error: {}", val)
+            }
+            GravityError::EthersParseUintError(val) => {
+                write!(f, "Ethers U256 parse error: {}", val)
+            }
             GravityError::EthersProviderError(val) => write!(f, "Ethers provider error: {}", val),
             GravityError::EthersSignatureError(val) => write!(f, "Ethers signature error: {}", val),
             GravityError::EthersWalletError(val) => write!(f, "Ethers wallet error: {}", val),
@@ -98,13 +110,14 @@ impl fmt::Display for GravityError {
             }
             GravityError::ParseBigIntError(val) => write!(f, "Failed to parse big integer {}", val),
             GravityError::ParseIntError(val) => write!(f, "Failed to parse integer: {}", val),
-            GravityError::FromUtf8Error(val) => write!(f, "Failed to parse bytes to UTF-8: {}", val),
+            GravityError::FromUtf8Error(val) => {
+                write!(f, "Failed to parse bytes to UTF-8: {}", val)
+            }
         }
     }
 }
 
 impl std::error::Error for GravityError {}
-
 
 impl From<CosmosGrpcError> for GravityError {
     fn from(error: CosmosGrpcError) -> Self {

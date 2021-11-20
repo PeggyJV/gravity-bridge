@@ -197,7 +197,14 @@ pub async fn main() {
                 CosmosAddress::DEFAULT_PREFIX,
             )
             .unwrap();
-            transaction_stress_test(&eth_provider, &contact, keys, gravity_address, erc20_addresses).await;
+            transaction_stress_test(
+                &eth_provider,
+                &contact,
+                keys,
+                gravity_address,
+                erc20_addresses,
+            )
+            .await;
             return;
         } else if test_type == "VALSET_STRESS" {
             info!("Starting valset stress test");

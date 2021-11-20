@@ -1,8 +1,8 @@
 //! This is the happy path test for Cosmos to Ethereum asset transfers, meaning assets originated on Cosmos
 
-use crate::MINER_CLIENT;
 use crate::utils::get_user_key;
 use crate::utils::send_one_eth;
+use crate::MINER_CLIENT;
 use crate::TOTAL_TIMEOUT;
 use crate::{get_fee, utils::ValidatorKeys};
 use clarity::Uint256;
@@ -32,12 +32,9 @@ pub async fn happy_path_test_v2(
     let mut grpc_client = grpc_client;
     let eth_wallet = LocalWallet::from(keys[0].eth_key.clone());
     let eth_client = Arc::new(SignerMiddleware::new(eth_provider.clone(), eth_wallet));
-    let starting_event_nonce = get_event_nonce(
-        gravity_address,
-        eth_client.clone()
-    )
-    .await
-    .unwrap();
+    let starting_event_nonce = get_event_nonce(gravity_address, eth_client.clone())
+        .await
+        .unwrap();
 
     let token_to_send_to_eth = "footoken".to_string();
     let token_to_send_to_eth_display_name = "mfootoken".to_string();
@@ -49,16 +46,13 @@ pub async fn happy_path_test_v2(
         6,
         gravity_address,
         Some(TOTAL_TIMEOUT),
-        eth_client.clone()
+        eth_client.clone(),
     )
     .await
     .unwrap();
-    let ending_event_nonce = get_event_nonce(
-        gravity_address,
-        eth_client.clone()
-    )
-    .await
-    .unwrap();
+    let ending_event_nonce = get_event_nonce(gravity_address, eth_client.clone())
+        .await
+        .unwrap();
 
     assert!(starting_event_nonce != ending_event_nonce);
     info!(
@@ -146,7 +140,7 @@ pub async fn happy_path_test_v2(
         user.eth_address,
         send_to_eth_coin,
         get_fee(),
-        (10f64,"footoken".to_string()),
+        (10f64, "footoken".to_string()),
         contact,
         1.0,
     )
@@ -161,7 +155,7 @@ pub async fn happy_path_test_v2(
     let res = send_request_batch_tx(
         keys[0].validator_key,
         token_to_send_to_eth.clone(),
-        (10f64,"footoken".to_string()),
+        (10f64, "footoken".to_string()),
         contact,
         1.0,
     )
@@ -173,9 +167,8 @@ pub async fn happy_path_test_v2(
     info!("Waiting for batch to be signed and relayed to Ethereum");
     let start = Instant::now();
     while Instant::now() - start < TOTAL_TIMEOUT {
-        let balance = get_erc20_balance(
-            erc20_contract, user.eth_address, (*MINER_CLIENT).clone()
-        ).await;
+        let balance =
+            get_erc20_balance(erc20_contract, user.eth_address, (*MINER_CLIENT).clone()).await;
         if balance.is_err() {
             continue;
         }

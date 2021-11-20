@@ -87,7 +87,8 @@ pub async fn contract_call_tx_confirmation_messages(
 
     let mut msgs = Vec::new();
     for logic_call in logic_calls {
-        let data = keccak256(encode_logic_call_confirm(gravity_id.clone(), logic_call.clone()).as_slice());
+        let data =
+            keccak256(encode_logic_call_confirm(gravity_id.clone(), logic_call.clone()).as_slice());
         // Signer trait responds with a Result, but we use a LocalWallet and it
         // will never throw an error
         let signature = eth_client.signer().sign_message(data).await.unwrap();

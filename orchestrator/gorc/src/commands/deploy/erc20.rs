@@ -1,12 +1,15 @@
 use crate::{application::APP, prelude::*};
-use abscissa_core::{Command, Clap, Runnable};
+use abscissa_core::{Clap, Command, Runnable};
 use ethereum_gravity::deploy_erc20::deploy_erc20;
 use ethers::prelude::*;
 use gravity_proto::gravity::{DenomToErc20ParamsRequest, DenomToErc20Request};
 use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
 use std::convert::TryFrom;
 use std::process::exit;
-use std::{sync::Arc, time::{Duration, Instant}};
+use std::{
+    sync::Arc,
+    time::{Duration, Instant},
+};
 use tokio::time::sleep as delay_for;
 
 /// Deploy Erc20
@@ -53,7 +56,10 @@ impl Erc20 {
         .await;
 
         let mut grpc = connections.grpc.clone().unwrap();
-        let eth_client = SignerMiddleware::new(connections.eth_provider.clone().unwrap(), ethereum_wallet.clone());
+        let eth_client = SignerMiddleware::new(
+            connections.eth_provider.clone().unwrap(),
+            ethereum_wallet.clone(),
+        );
         let eth_client = Arc::new(eth_client);
 
         check_for_eth(eth_client.address(), eth_client.clone()).await;

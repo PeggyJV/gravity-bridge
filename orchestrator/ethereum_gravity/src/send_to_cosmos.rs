@@ -1,6 +1,9 @@
 //! Helper functions for sending tokens to Cosmos
 
-use crate::{erc20_utils::{approve_erc20_transfers, check_erc20_approved}, types::EthClient};
+use crate::{
+    erc20_utils::{approve_erc20_transfers, check_erc20_approved},
+    types::EthClient,
+};
 use deep_space::address::Address as CosmosAddress;
 use ethers::prelude::*;
 use gravity_abi::gravity::*;
@@ -21,9 +24,17 @@ pub async fn send_to_cosmos(
     wait_timeout: Option<Duration>,
     eth_client: EthClient,
 ) -> Result<TxHash, GravityError> {
-    let approved = check_erc20_approved(erc20, gravity_contract, eth_client.address(), eth_client.clone()).await?;
+    let approved = check_erc20_approved(
+        erc20,
+        gravity_contract,
+        eth_client.address(),
+        eth_client.clone(),
+    )
+    .await?;
     if !approved {
-        let txid = approve_erc20_transfers(erc20, gravity_contract, wait_timeout, eth_client.clone()).await?;
+        let txid =
+            approve_erc20_transfers(erc20, gravity_contract, wait_timeout, eth_client.clone())
+                .await?;
         trace!("ERC-20 approval for {} finished with txid {}", erc20, txid);
     }
 
@@ -50,17 +61,20 @@ pub async fn send_to_cosmos(
     // TODO(bolten): ethers interval default is 7s, this mirrors what web30 was doing, should we adjust?
     // additionally we are mirroring only waiting for 1 confirmation by leaving that as default
     let pending_tx = pending_tx.interval(Duration::from_secs(1));
-    let potential_error = GravityError::GravityContractError(format!("Did not receive transaction receipt when sending to Cosmos: {}", tx_hash));
+    let potential_error = GravityError::GravityContractError(format!(
+        "Did not receive transaction receipt when sending to Cosmos: {}",
+        tx_hash
+    ));
 
     if let Some(timeout) = wait_timeout {
         match tokio::time::timeout(timeout, pending_tx).await?? {
             Some(receipt) => Ok(receipt.transaction_hash),
-            None => Err(potential_error)
+            None => Err(potential_error),
         }
     } else {
         match pending_tx.await? {
             Some(receipt) => Ok(receipt.transaction_hash),
-            None => Err(potential_error)
+            None => Err(potential_error),
         }
     }
 }

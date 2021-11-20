@@ -318,7 +318,7 @@ async fn test_batch(
             amount: amount.clone(),
         },
         bridge_denom_fee.clone(),
-        (10f64,"footoken".to_string()),
+        (10f64, "footoken".to_string()),
         &contact,
         1.0,
     )
@@ -330,7 +330,7 @@ async fn test_batch(
     send_request_batch_tx(
         requester_cosmos_private_key,
         token_name.clone(),
-        (10f64,"footoken".to_string()),
+        (10f64, "footoken".to_string()),
         &contact,
         1.0,
     )
@@ -386,7 +386,9 @@ async fn test_batch(
     // we have to send this address one eth so that it can perform contract calls
     send_one_eth(dest_eth_address, eth_client.clone()).await;
     assert_eq!(
-        get_erc20_balance(erc20_contract, dest_eth_address, eth_client.clone()).await.unwrap(),
+        get_erc20_balance(erc20_contract, dest_eth_address, eth_client.clone())
+            .await
+            .unwrap(),
         amount_u256
     );
     info!(

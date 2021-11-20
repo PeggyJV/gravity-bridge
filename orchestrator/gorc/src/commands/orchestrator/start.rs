@@ -61,7 +61,10 @@ impl Runnable for StartCommand {
 
             let mut grpc = connections.grpc.clone().unwrap();
             let contact = connections.contact.clone().unwrap();
-            let eth_client = SignerMiddleware::new(connections.eth_provider.clone().unwrap(), ethereum_wallet.clone());
+            let eth_client = SignerMiddleware::new(
+                connections.eth_provider.clone().unwrap(),
+                ethereum_wallet.clone(),
+            );
             let eth_client = Arc::new(eth_client);
 
             info!("Starting Relayer + Oracle + Ethereum Signer");

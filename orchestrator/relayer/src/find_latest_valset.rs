@@ -2,7 +2,7 @@ use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::types::{FromLog, VALSET_UPDATED_EVENT_STR, ValsetUpdatedEvent};
+use gravity_utils::types::{FromLog, ValsetUpdatedEvent, VALSET_UPDATED_EVENT_STR};
 use gravity_utils::{error::GravityError, ethereum::downcast_to_u64, types::Valset};
 use std::panic;
 use tonic::transport::Channel;
@@ -44,7 +44,10 @@ pub async fn find_latest_valset(
                 Ok(valset_updated_event) => {
                     let downcast_nonce = downcast_to_u64(valset_updated_event.valset_nonce);
                     if downcast_nonce.is_none() {
-                        error!("ValsetUpdatedEvent has nonce larger than u64: {:?}", valset_updated_event);
+                        error!(
+                            "ValsetUpdatedEvent has nonce larger than u64: {:?}",
+                            valset_updated_event
+                        );
                         continue;
                     }
 

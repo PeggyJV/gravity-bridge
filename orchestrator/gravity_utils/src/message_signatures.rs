@@ -10,8 +10,14 @@ use ethers::utils::keccak256;
 /// digest that is normally signed or may be used as a 'hash of the message'
 pub fn encode_valset_confirm(gravity_id: String, valset: Valset) -> Vec<u8> {
     let (eth_addresses, powers) = valset.filter_empty_addresses();
-    let eth_addresses = eth_addresses.iter().map (|address| Token::Address(*address)).collect();
-    let powers = powers.iter().map(|power| Token::Uint((*power).into())).collect();
+    let eth_addresses = eth_addresses
+        .iter()
+        .map(|address| Token::Address(*address))
+        .collect();
+    let powers = powers
+        .iter()
+        .map(|power| Token::Uint((*power).into()))
+        .collect();
 
     abi::encode(&[
         Token::FixedBytes(gravity_id.into_bytes()),
@@ -132,7 +138,10 @@ pub fn encode_tx_batch_confirm_hashed(gravity_id: String, batch: TransactionBatc
 
 #[tokio::test]
 async fn test_batch_signature() {
-    use crate::{ethereum::hex_str_to_bytes, types::{BatchTransaction, Erc20Token}};
+    use crate::{
+        ethereum::hex_str_to_bytes,
+        types::{BatchTransaction, Erc20Token},
+    };
     use ethers::core::k256::ecdsa::SigningKey;
     use ethers::prelude::*;
     use ethers::utils::keccak256;
@@ -184,7 +193,10 @@ async fn test_batch_signature() {
 
     let eth_signature = eth_wallet.sign_message(checkpoint.clone()).await.unwrap();
 
-    assert_eq!(eth_address, eth_signature.recover(checkpoint.clone()).unwrap());
+    assert_eq!(
+        eth_address,
+        eth_signature.recover(checkpoint.clone()).unwrap()
+    );
 }
 
 #[tokio::test]
@@ -233,7 +245,10 @@ async fn test_specific_batch_signature() {
 
     let eth_signature = eth_wallet.sign_message(checkpoint.clone()).await.unwrap();
 
-    assert_eq!(eth_address, eth_signature.recover(checkpoint.clone()).unwrap());
+    assert_eq!(
+        eth_address,
+        eth_signature.recover(checkpoint.clone()).unwrap()
+    );
 }
 
 /// takes the required input data and produces the required signature to confirm a logic
@@ -242,27 +257,39 @@ async fn test_specific_batch_signature() {
 /// Note: This is the message, you need to run Keccak256::digest() in order to get the 32byte
 /// digest that is normally signed or may be used as a 'hash of the message'
 pub fn encode_logic_call_confirm(gravity_id: String, call: LogicCall) -> Vec<u8> {
-    let transfer_amounts = call.transfers.iter()
-        .map(|transfer| Token::Uint(transfer.amount)).collect();
-    let transfer_token_contracts = call.transfers.iter()
-        .map(|transfer| Token::Address(transfer.token_contract_address)).collect();
-    let fee_amounts = call.fees.iter()
-        .map(|fee| Token::Uint(fee.amount)).collect();
-    let fee_token_contracts = call.fees.iter()
-        .map(|fee| Token::Address(fee.token_contract_address)).collect();
+    let transfer_amounts = call
+        .transfers
+        .iter()
+        .map(|transfer| Token::Uint(transfer.amount))
+        .collect();
+    let transfer_token_contracts = call
+        .transfers
+        .iter()
+        .map(|transfer| Token::Address(transfer.token_contract_address))
+        .collect();
+    let fee_amounts = call
+        .fees
+        .iter()
+        .map(|fee| Token::Uint(fee.amount))
+        .collect();
+    let fee_token_contracts = call
+        .fees
+        .iter()
+        .map(|fee| Token::Address(fee.token_contract_address))
+        .collect();
 
     abi::encode(&[
-        Token::FixedBytes(gravity_id.into_bytes()),              // Gravity Instance ID
+        Token::FixedBytes(gravity_id.into_bytes()), // Gravity Instance ID
         Token::FixedBytes("logicCall".to_string().into_bytes()), // Function Name
-        Token::Array(transfer_amounts),                          // Array of Transfer amounts
-        Token::Array(transfer_token_contracts),                  // ERC-20 contract for transfers
-        Token::Array(fee_amounts),                               // Array of Fees
-        Token::Array(fee_token_contracts),                       // ERC-20 contract for fee payments
-        Token::Address(call.logic_contract_address),             // Address of a logic contract
-        Token::Bytes(call.payload),                              // Encoded arguments to logic contract
-        Token::Uint(call.timeout.into()),                        // Timeout on batch
-        Token::FixedBytes(call.invalidation_id),                 // Scope of logic batch
-        Token::Uint(call.invalidation_nonce.into()),             // Nonce of logic batch. See 2-d nonce scheme.
+        Token::Array(transfer_amounts),             // Array of Transfer amounts
+        Token::Array(transfer_token_contracts),     // ERC-20 contract for transfers
+        Token::Array(fee_amounts),                  // Array of Fees
+        Token::Array(fee_token_contracts),          // ERC-20 contract for fee payments
+        Token::Address(call.logic_contract_address), // Address of a logic contract
+        Token::Bytes(call.payload),                 // Encoded arguments to logic contract
+        Token::Uint(call.timeout.into()),           // Timeout on batch
+        Token::FixedBytes(call.invalidation_id),    // Scope of logic batch
+        Token::Uint(call.invalidation_nonce.into()), // Nonce of logic batch. See 2-d nonce scheme.
     ])
 }
 
@@ -273,7 +300,10 @@ pub fn encode_logic_call_confirm_hashed(gravity_id: String, call: LogicCall) -> 
 
 #[test]
 fn test_logic_call_signature() {
-    use crate::{ethereum::hex_str_to_bytes, types::{Erc20Token, LogicCall}};
+    use crate::{
+        ethereum::hex_str_to_bytes,
+        types::{Erc20Token, LogicCall},
+    };
     use ethers::utils::keccak256;
 
     let correct_hash: Vec<u8> =

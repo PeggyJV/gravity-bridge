@@ -1,8 +1,8 @@
 use crate::types::EthClient;
 use ethers::core::abi::{self, Token};
 use ethers::middleware::gas_oracle::{Etherscan, GasCategory};
-use ethers::prelude::*;
 use ethers::prelude::gas_oracle::GasOracle;
+use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use ethers::utils::keccak256;
 use gravity_abi::gravity::*;
@@ -16,8 +16,14 @@ pub fn get_checkpoint_abi_encode(
     gravity_id: &str,
 ) -> Result<Vec<u8>, GravityError> {
     let (eth_addresses, powers) = valset.filter_empty_addresses();
-    let eth_addresses = eth_addresses.iter().map (|address| Token::Address(*address)).collect();
-    let powers = powers.iter().map(|power| Token::Uint((*power).into())).collect();
+    let eth_addresses = eth_addresses
+        .iter()
+        .map(|address| Token::Address(*address))
+        .collect();
+    let powers = powers
+        .iter()
+        .map(|power| Token::Uint((*power).into()))
+        .collect();
 
     Ok(abi::encode(&[
         Token::FixedBytes(gravity_id.as_bytes().to_vec()),
@@ -44,7 +50,9 @@ pub async fn get_valset_nonce(
         .from(eth_client.address())
         .value(U256::zero());
     let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
-    let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
+    let contract_call = contract_call
+        .gas(gas_cost.gas)
+        .gas_price(gas_cost.gas_price);
 
     let valset_nonce = contract_call.call().await?;
 
@@ -68,7 +76,9 @@ pub async fn get_tx_batch_nonce(
         .from(eth_client.address())
         .value(U256::zero());
     let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
-    let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
+    let contract_call = contract_call
+        .gas(gas_cost.gas)
+        .gas_price(gas_cost.gas_price);
 
     let tx_batch_nonce = contract_call.call().await?;
 
@@ -94,7 +104,9 @@ pub async fn get_logic_call_nonce(
         .from(eth_client.address())
         .value(U256::zero());
     let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
-    let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
+    let contract_call = contract_call
+        .gas(gas_cost.gas)
+        .gas_price(gas_cost.gas_price);
 
     let logic_call_nonce = contract_call.call().await?;
 
@@ -117,7 +129,9 @@ pub async fn get_event_nonce(
         .from(eth_client.address())
         .value(U256::zero());
     let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
-    let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
+    let contract_call = contract_call
+        .gas(gas_cost.gas)
+        .gas_price(gas_cost.gas_price);
 
     let event_nonce = contract_call.call().await?;
 
@@ -140,7 +154,9 @@ pub async fn get_gravity_id(
         .from(eth_client.address())
         .value(U256::zero());
     let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
-    let contract_call = contract_call.gas(gas_cost.gas).gas_price(gas_cost.gas_price);
+    let contract_call = contract_call
+        .gas(gas_cost.gas)
+        .gas_price(gas_cost.gas_price);
 
     let gravity_id = contract_call.call().await?;
     let id_as_string = String::from_utf8(gravity_id.to_vec());
@@ -148,8 +164,9 @@ pub async fn get_gravity_id(
     match id_as_string {
         Ok(id) => Ok(id),
         Err(err) => Err(GravityError::GravityContractError(format!(
-            "Received invalid utf8 when getting gravity id {:?}: {}", &gravity_id, err
-        )))
+            "Received invalid utf8 when getting gravity id {:?}: {}",
+            &gravity_id, err
+        ))),
     }
 }
 
@@ -165,32 +182,36 @@ pub async fn get_call_gas_cost(eth_client: EthClient) -> Result<GasCost, Gravity
     let latest_block = eth_client.get_block(BlockNumber::Latest).await?.unwrap();
     let gas_price = latest_block.base_fee_per_gas.unwrap_or(1u8.into()); // "or" clause shouldn't happen unless pre-London
     if gas_price == U256::zero() {
-        return Err(GravityError::EthereumBadDataError("Latest block returned base fee per gas of zero".to_string()));
+        return Err(GravityError::EthereumBadDataError(
+            "Latest block returned base fee per gas of zero".to_string(),
+        ));
     }
 
     let gas = min(GAS_LIMIT.into(), caller_balance.div_mod(gas_price).0);
 
-    Ok(GasCost {
-        gas,
-        gas_price
-    })
+    Ok(GasCost { gas, gas_price })
 }
 
 /// If ETHERSCAN_API_KEY env var is set, we'll call out to Etherscan for a gas estimate.
 /// Otherwise, just call eth_gasPrice.
 pub async fn get_send_transaction_gas_price(eth_client: EthClient) -> Result<U256, GravityError> {
     if let Ok(api_key) = std::env::var("ETHERSCAN_API_KEY") {
-        let etherscan_oracle = Etherscan::new(Some(api_key.as_str())).category(GasCategory::Standard);
+        let etherscan_oracle =
+            Etherscan::new(Some(api_key.as_str())).category(GasCategory::Standard);
         return Ok(etherscan_oracle.fetch().await?);
     }
 
     Ok(eth_client.get_gas_price().await?)
 }
 
-pub fn convert_invalidation_id_to_fixed_array(invalidation_id: Vec<u8>) -> Result<[u8; 32], GravityError> {
+pub fn convert_invalidation_id_to_fixed_array(
+    invalidation_id: Vec<u8>,
+) -> Result<[u8; 32], GravityError> {
     if invalidation_id.len() != 32 {
         return Err(GravityError::InvalidArgumentError(format!(
-            "Error getting logic call nonce, invalidation id is not 32 bytes: {:?}", invalidation_id)))
+            "Error getting logic call nonce, invalidation id is not 32 bytes: {:?}",
+            invalidation_id
+        )));
     }
 
     let mut invalidation_id_slice: [u8; 32] = Default::default();

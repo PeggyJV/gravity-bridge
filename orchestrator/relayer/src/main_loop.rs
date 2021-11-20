@@ -23,16 +23,19 @@ pub async fn relayer_main_loop(
     loop {
         let loop_start = Instant::now();
 
-        let current_eth_valset =
-            find_latest_valset(&mut grpc_client, gravity_contract_address, eth_client.clone()).await;
+        let current_eth_valset = find_latest_valset(
+            &mut grpc_client,
+            gravity_contract_address,
+            eth_client.clone(),
+        )
+        .await;
         if current_eth_valset.is_err() {
             error!("Could not get current valset! {:?}", current_eth_valset);
             continue;
         }
         let current_eth_valset = current_eth_valset.unwrap();
 
-        let gravity_id =
-            get_gravity_id(gravity_contract_address, eth_client.clone()).await;
+        let gravity_id = get_gravity_id(gravity_contract_address, eth_client.clone()).await;
         if gravity_id.is_err() {
             error!("Failed to get GravityID, check your Eth node");
             return;
@@ -67,7 +70,7 @@ pub async fn relayer_main_loop(
             gravity_contract_address,
             gravity_id.clone(),
             LOOP_SPEED,
-            eth_gas_price_multiplier
+            eth_gas_price_multiplier,
         )
         .await;
 

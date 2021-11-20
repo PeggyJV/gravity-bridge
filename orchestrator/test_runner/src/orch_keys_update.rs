@@ -5,8 +5,8 @@ use cosmos_gravity::send::update_gravity_delegate_addresses;
 use deep_space::address::Address as CosmosAddress;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
-use ethers::{core::k256::ecdsa::SigningKey, prelude::*};
 use ethers::types::Address as EthAddress;
+use ethers::{core::k256::ecdsa::SigningKey, prelude::*};
 use gravity_proto::gravity::{
     query_client::QueryClient as GravityQueryClient, DelegateKeysByEthereumSignerRequest,
     DelegateKeysByOrchestratorRequest,
@@ -81,7 +81,7 @@ pub async fn orch_keys_update(
             cosmos_address,
             k.validator_key,
             ethereum_wallet,
-            (0f64,"".to_string()),
+            (0f64, "".to_string()),
             2.0,
         )
         .await

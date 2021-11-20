@@ -82,7 +82,10 @@ async fn main() {
         LOOP_SPEED,
     )
     .await;
-    let eth_client = SignerMiddleware::new(connections.eth_provider.clone().unwrap(), ethereum_wallet.clone());
+    let eth_client = SignerMiddleware::new(
+        connections.eth_provider.clone().unwrap(),
+        ethereum_wallet.clone(),
+    );
     let eth_client = Arc::new(eth_client);
 
     let public_eth_key = eth_client.address();

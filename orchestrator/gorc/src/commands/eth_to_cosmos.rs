@@ -1,5 +1,5 @@
 use crate::application::APP;
-use abscissa_core::{status_err, Application, Command, Clap, Runnable};
+use abscissa_core::{status_err, Application, Clap, Command, Runnable};
 use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::erc20_utils::get_erc20_balance;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
@@ -43,7 +43,10 @@ impl Runnable for EthToCosmosCmd {
             )
             .await;
 
-            let eth_client = SignerMiddleware::new(connections.eth_provider.clone().unwrap(), ethereum_wallet.clone());
+            let eth_client = SignerMiddleware::new(
+                connections.eth_provider.clone().unwrap(),
+                ethereum_wallet.clone(),
+            );
             let eth_client = Arc::new(eth_client);
             let cosmos_dest = self.args.get(3).expect("cosmos destination is required");
             let cosmos_dest: CosmosAddress = cosmos_dest.parse().unwrap();
@@ -53,8 +56,10 @@ impl Runnable for EthToCosmosCmd {
             let init_amount = self.args.get(4).expect("amount is required");
             let amount: U256 = init_amount.parse().unwrap();
 
-            let erc20_balance = get_erc20_balance(erc20_address, ethereum_address, eth_client.clone()).await
-                .expect("Failed to get balance, check ERC20 contract address");
+            let erc20_balance =
+                get_erc20_balance(erc20_address, ethereum_address, eth_client.clone())
+                    .await
+                    .expect("Failed to get balance, check ERC20 contract address");
 
             let times = self.args.get(5).expect("times is required");
             let times_usize = times.parse::<usize>().expect("cannot parse times");

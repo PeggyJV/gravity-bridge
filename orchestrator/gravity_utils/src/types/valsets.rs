@@ -1,14 +1,13 @@
 use super::*;
 use crate::error::GravityError;
-use ethers::types::{Address as EthAddress, Signature as EthSignature};
 use deep_space::error::CosmosGrpcError;
+use ethers::types::{Address as EthAddress, Signature as EthSignature};
 use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::{
     cmp::Ordering,
     collections::{HashMap, HashSet},
-    fmt,
-    str,
+    fmt, str,
 };
 
 /// The total power in the Gravity bridge is normalized to u32 max every

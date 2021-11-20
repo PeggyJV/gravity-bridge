@@ -1,12 +1,12 @@
 //! `eth subcommands` subcommand
 
 use crate::{application::APP, prelude::*, utils::*};
-use abscissa_core::{Command, Clap, Runnable};
+use abscissa_core::{Clap, Command, Runnable};
+use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::erc20_utils::get_erc20_balance;
+use ethereum_gravity::send_to_cosmos::send_to_cosmos;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
-use deep_space::address::Address as CosmosAddress;
-use ethereum_gravity::send_to_cosmos::send_to_cosmos;
 use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
 use std::sync::Arc;
 
@@ -51,10 +51,7 @@ impl Runnable for SendToCosmos {
         let erc20_amount = self.free[3].clone();
         let ethereum_wallet = lookup_eth_key(from_eth_key);
 
-        println!(
-            "Sending from Eth address {}",
-            ethereum_wallet.address()
-        );
+        println!("Sending from Eth address {}", ethereum_wallet.address());
         let config = APP.config();
         let cosmos_prefix = config.cosmos.prefix.clone();
         let cosmso_grpc = config.cosmos.grpc.clone();
@@ -70,7 +67,10 @@ impl Runnable for SendToCosmos {
             let connections =
                 create_rpc_connections(cosmos_prefix, Some(cosmso_grpc), Some(eth_rpc), TIMEOUT)
                     .await;
-            let eth_client = SignerMiddleware::new(connections.eth_provider.clone().unwrap(), ethereum_wallet.clone());
+            let eth_client = SignerMiddleware::new(
+                connections.eth_provider.clone().unwrap(),
+                ethereum_wallet.clone(),
+            );
             let eth_client = Arc::new(eth_client);
             check_for_eth(eth_client.address(), eth_client.clone()).await;
 
@@ -78,9 +78,10 @@ impl Runnable for SendToCosmos {
                 .parse()
                 .expect("Expected amount in xx.yy format");
 
-            let erc20_balance = get_erc20_balance(erc20_contract, eth_client.address(), eth_client.clone())
-                .await
-                .expect("Failed to get balance, check ERC20 contract address");
+            let erc20_balance =
+                get_erc20_balance(erc20_contract, eth_client.address(), eth_client.clone())
+                    .await
+                    .expect("Failed to get balance, check ERC20 contract address");
 
             if erc20_balance == 0u8.into() {
                 panic!(
@@ -90,7 +91,10 @@ impl Runnable for SendToCosmos {
             }
             println!(
                 "Sending {} / {} to Cosmos from {} to {}",
-                amount, erc20_contract, eth_client.address(), to_cosmos_addr
+                amount,
+                erc20_contract,
+                eth_client.address(),
+                to_cosmos_addr
             );
             // we send some erc20 tokens to the gravity contract to register a deposit
             let res = send_to_cosmos(

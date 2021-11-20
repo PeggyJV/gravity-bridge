@@ -293,7 +293,8 @@ pub async fn eth_signer_main_loop(
                         valsets,
                         cosmos_key,
                         gravity_id.clone(),
-                    ).await;
+                    )
+                    .await;
                     msg_sender
                         .send(messages)
                         .await
@@ -326,7 +327,8 @@ pub async fn eth_signer_main_loop(
                     transaction_batches,
                     cosmos_key,
                     gravity_id.clone(),
-                ).await;
+                )
+                .await;
                 msg_sender
                     .send(messages)
                     .await
@@ -358,7 +360,8 @@ pub async fn eth_signer_main_loop(
                     logic_calls,
                     cosmos_key,
                     gravity_id.clone(),
-                ).await;
+                )
+                .await;
                 msg_sender
                     .send(messages)
                     .await
@@ -383,7 +386,10 @@ pub async fn eth_signer_main_loop(
 }
 
 pub async fn check_for_eth(orchestrator_address: EthAddress, eth_client: EthClient) {
-    let balance = eth_client.get_balance(orchestrator_address, None).await.unwrap();
+    let balance = eth_client
+        .get_balance(orchestrator_address, None)
+        .await
+        .unwrap();
     if balance == 0u8.into() {
         warn!("You don't have any Ethereum! You will need to send some to {} for this program to work. Dust will do for basic operations, more info about average relaying costs will be presented as the program runs", orchestrator_address);
     }

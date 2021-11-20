@@ -1,13 +1,22 @@
-use crate::{MINER_CLIENT, one_eth, one_hundred_eth, one_hundred_eth_uint256, utils::*, TOTAL_TIMEOUT};
+use crate::{
+    one_eth, one_hundred_eth, one_hundred_eth_uint256, utils::*, MINER_CLIENT, TOTAL_TIMEOUT,
+};
 use clarity::Uint256;
 use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
 use deep_space::coin::Coin;
 use deep_space::Contact;
-use ethereum_gravity::{erc20_utils::get_erc20_balance, send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce};
+use ethereum_gravity::{
+    erc20_utils::get_erc20_balance, send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce,
+};
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use futures::future::join_all;
-use std::{collections::HashSet, str::FromStr, sync::Arc, time::{Duration, Instant}};
+use std::{
+    collections::HashSet,
+    str::FromStr,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 use tokio::time::sleep as delay_for;
 
 const TIMEOUT: Duration = Duration::from_secs(120);
@@ -51,7 +60,13 @@ pub async fn transaction_stress_test(
 
     // now we need to send all the sending eth addresses erc20's to send
     for token in erc20_addresses.iter() {
-        send_erc20_bulk(one_hundred_eth(), *token, &sending_eth_addresses, (*MINER_CLIENT).clone()).await;
+        send_erc20_bulk(
+            one_hundred_eth(),
+            *token,
+            &sending_eth_addresses,
+            (*MINER_CLIENT).clone(),
+        )
+        .await;
         info!("Sent {} addresses 100 {}", NUM_USERS, token);
     }
     for token in erc20_addresses.iter() {
@@ -141,7 +156,15 @@ pub async fn transaction_stress_test(
                 denom: send_coin.denom.clone(),
                 amount: 1u8.into(),
             };
-            let res = send_to_eth(c_key, e_dest_addr, send_coin, send_fee, (0f64,"".to_string()), &contact, 1.0);
+            let res = send_to_eth(
+                c_key,
+                e_dest_addr,
+                send_coin,
+                send_fee,
+                (0f64, "".to_string()),
+                &contact,
+                1.0,
+            );
             futs.push(res);
         }
         let results = join_all(futs).await;
@@ -157,9 +180,15 @@ pub async fn transaction_stress_test(
 
     for denom in denoms {
         info!("Requesting batch for {}", denom);
-        let res = send_request_batch_tx(keys[0].validator_key, denom, (0f64,"".to_string()), &contact, 1.0)
-            .await
-            .unwrap();
+        let res = send_request_batch_tx(
+            keys[0].validator_key,
+            denom,
+            (0f64, "".to_string()),
+            &contact,
+            1.0,
+        )
+        .await
+        .unwrap();
         info!("batch request response is {:?}", res);
     }
 
@@ -170,7 +199,9 @@ pub async fn transaction_stress_test(
         for keys in user_keys.iter() {
             let e_dest_addr = keys.eth_dest_address;
             for token in erc20_addresses.iter() {
-                let bal = get_erc20_balance(*token, e_dest_addr, (*MINER_CLIENT).clone()).await.unwrap();
+                let bal = get_erc20_balance(*token, e_dest_addr, (*MINER_CLIENT).clone())
+                    .await
+                    .unwrap();
                 let bal = Uint256::from_str(bal.to_string().as_str()).unwrap();
                 if bal != send_amount.clone() {
                     good = false;
@@ -199,13 +230,9 @@ pub async fn transaction_stress_test(
     let eth_client = Arc::new(SignerMiddleware::new(eth_provider.clone(), eth_wallet));
     for token in erc20_addresses {
         assert!(
-            get_tx_batch_nonce(
-                gravity_address,
-                token,
-                eth_client.clone()
-            )
-            .await
-            .unwrap()
+            get_tx_batch_nonce(gravity_address, token, eth_client.clone())
+                .await
+                .unwrap()
                 > 0
         )
     }

@@ -45,17 +45,20 @@ pub async fn approve_erc20_transfers(
     // TODO(bolten): ethers interval default is 7s, this mirrors what web30 was doing, should we adjust?
     // additionally we are mirroring only waiting for 1 confirmation by leaving that as default
     let pending_tx = pending_tx.interval(Duration::from_secs(1));
-    let potential_error = GravityError::GravityContractError(format!("Did not receive transaction receipt when approving ERC-20 {}: {}", erc20, tx_hash));
+    let potential_error = GravityError::GravityContractError(format!(
+        "Did not receive transaction receipt when approving ERC-20 {}: {}",
+        erc20, tx_hash
+    ));
 
     if let Some(timeout) = timeout_option {
         match tokio::time::timeout(timeout, pending_tx).await?? {
             Some(receipt) => Ok(receipt.transaction_hash),
-            None => Err(potential_error)
+            None => Err(potential_error),
         }
     } else {
         match pending_tx.await? {
             Some(receipt) => Ok(receipt.transaction_hash),
-            None => Err(potential_error)
+            None => Err(potential_error),
         }
     }
 }
@@ -83,18 +86,24 @@ pub async fn erc20_transfer(
 
     let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;
-    info!("Transferring {} ERC-20 {} from {} to {} with txid {}",
-        amount, erc20, eth_client.address(), destination, tx_hash
+    info!(
+        "Transferring {} ERC-20 {} from {} to {} with txid {}",
+        amount,
+        erc20,
+        eth_client.address(),
+        destination,
+        tx_hash
     );
     // TODO(bolten): ethers interval default is 7s, this mirrors what web30 was doing, should we adjust?
     // additionally we are mirroring only waiting for 1 confirmation by leaving that as default
     let pending_tx = pending_tx.interval(Duration::from_secs(1));
     let potential_error = GravityError::GravityContractError(format!(
-        "Did not receive transaction receipt when transferring ERC-20 {}: {}", erc20, tx_hash)
-    );
+        "Did not receive transaction receipt when transferring ERC-20 {}: {}",
+        erc20, tx_hash
+    ));
 
     match pending_tx.await? {
         Some(receipt) => Ok(receipt.transaction_hash),
-        None => Err(potential_error)
+        None => Err(potential_error),
     }
 }
