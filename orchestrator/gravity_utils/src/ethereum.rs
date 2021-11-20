@@ -53,7 +53,23 @@ pub fn hex_str_to_bytes(s: &str) -> Result<Vec<u8>, GravityError> {
     Ok(bytes)
 }
 
-// TODO(bolten): add tests to make sure the downcast panics catch
+#[test]
+fn overflow_f32() {
+    assert_eq!(downcast_to_f32(42.into()), Some(42f32));
+    assert_eq!(downcast_to_f32(U256::MAX), None);
+}
+
+#[test]
+fn overflow_u64() {
+    assert_eq!(downcast_to_u64(42.into()), Some(42u64));
+    assert_eq!(downcast_to_u64(U256::MAX), None);
+}
+
+#[test]
+fn overflow_u128() {
+    assert_eq!(downcast_to_u128(42.into()), Some(42u128));
+    assert_eq!(downcast_to_u128(U256::MAX), None);
+}
 
 #[test]
 fn encode_bytes() {
