@@ -68,27 +68,28 @@ pub async fn check_for_events(
     valset_updated_filter = valset_updated_filter.select(search_range.clone());
 
     let erc20_deployed_events = eth_client.get_logs(&erc20_deployed_filter).await?;
-    let logic_call_events = eth_client.get_logs(&logic_call_filter).await?;
-    let send_to_cosmos_events = eth_client.get_logs(&send_to_cosmos_filter).await?;
-    let transaction_batch_events = eth_client.get_logs(&transaction_batch_filter).await?;
-    let valset_updated_events = eth_client.get_logs(&valset_updated_filter).await?;
-
     debug!("ERC20 events detected {:?}", erc20_deployed_events);
-    debug!("Logic call events detected {:?}", logic_call_events);
-    debug!("Send to Cosmos events detected {:?}", send_to_cosmos_events);
-    debug!("Batch events detected {:?}", transaction_batch_events);
-    debug!("Valset events detected {:?}", valset_updated_events);
-
     let erc20_deployed_events = Erc20DeployedEvent::from_logs(&erc20_deployed_events)?;
-    let logic_call_events = LogicCallExecutedEvent::from_logs(&logic_call_events)?;
-    let send_to_cosmos_events = SendToCosmosEvent::from_logs(&send_to_cosmos_events, &prefix)?;
-    let transaction_batch_events = TransactionBatchExecutedEvent::from_logs(&transaction_batch_events)?;
-    let valset_updated_events = ValsetUpdatedEvent::from_logs(&valset_updated_events)?;
-
     debug!("parsed erc20 deploys {:?}", erc20_deployed_events);
+
+    let logic_call_events = eth_client.get_logs(&logic_call_filter).await?;
+    debug!("Logic call events detected {:?}", logic_call_events);
+    let logic_call_events = LogicCallExecutedEvent::from_logs(&logic_call_events)?;
     debug!("parsed logic call executions {:?}", logic_call_events);
+
+    let send_to_cosmos_events = eth_client.get_logs(&send_to_cosmos_filter).await?;
+    debug!("Send to Cosmos events detected {:?}", send_to_cosmos_events);
+    let send_to_cosmos_events = SendToCosmosEvent::from_logs(&send_to_cosmos_events, &prefix)?;
     debug!("parsed send to cosmos events {:?}", send_to_cosmos_events);
+
+    let transaction_batch_events = eth_client.get_logs(&transaction_batch_filter).await?;
+    debug!("Batch events detected {:?}", transaction_batch_events);
+    let transaction_batch_events = TransactionBatchExecutedEvent::from_logs(&transaction_batch_events)?;
     debug!("parsed batches {:?}", transaction_batch_events);
+
+    let valset_updated_events = eth_client.get_logs(&valset_updated_filter).await?;
+    debug!("Valset events detected {:?}", valset_updated_events);
+    let valset_updated_events = ValsetUpdatedEvent::from_logs(&valset_updated_events)?;
     debug!("parsed valsets {:?}", valset_updated_events);
 
     // note that starting block overlaps with our last checked block, because we have to deal with
