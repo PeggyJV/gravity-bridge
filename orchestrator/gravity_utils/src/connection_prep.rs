@@ -6,7 +6,7 @@ use deep_space::client::ChainStatus;
 use deep_space::Address as CosmosAddress;
 use deep_space::Contact;
 use ethers::prelude::*;
-use ethers::providers::Provider as EthProvider;
+use ethers::providers::Provider;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_proto::gravity::DelegateKeysByEthereumSignerRequest;
@@ -20,7 +20,7 @@ use tonic::transport::Channel;
 use url::Url;
 
 pub struct Connections {
-    pub eth_provider: Option<EthProvider<Http>>,
+    pub eth_provider: Option<Provider<Http>>,
     pub grpc: Option<GravityQueryClient<Channel>>,
     pub contact: Option<Contact>,
 }
@@ -119,7 +119,7 @@ pub async fn create_rpc_connections(
         let eth_url = eth_rpc_url.trim_end_matches('/');
         // TODO(bolten): should probably set a non-default interval, but what is the appropriate
         // value?
-        let base_eth_provider = EthProvider::<Http>::try_from(eth_url).unwrap_or_else(|_| {
+        let base_eth_provider = Provider::<Http>::try_from(eth_url).unwrap_or_else(|_| {
             panic!("Could not instantiate Ethereum HTTP provider: {}", eth_url)
         });
         let try_base = base_eth_provider.get_block_number().await;
@@ -138,14 +138,14 @@ pub async fn create_rpc_connections(
                     let prefix = url.scheme();
                     let ipv6_url = format!("{}://::1:{}", prefix, port);
                     let ipv4_url = format!("{}://127.0.0.1:{}", prefix, port);
-                    let ipv6_eth_provider = EthProvider::<Http>::try_from(ipv6_url.as_str())
+                    let ipv6_eth_provider = Provider::<Http>::try_from(ipv6_url.as_str())
                         .unwrap_or_else(|_| {
                             panic!(
                                 "Could not instantiate Ethereum HTTP provider: {}",
                                 &ipv6_url
                             )
                         });
-                    let ipv4_eth_provider = EthProvider::<Http>::try_from(ipv4_url.as_str())
+                    let ipv4_eth_provider = Provider::<Http>::try_from(ipv4_url.as_str())
                         .unwrap_or_else(|_| {
                             panic!(
                                 "Could not instantiate Ethereum HTTP provider: {}",
@@ -174,7 +174,7 @@ pub async fn create_rpc_connections(
                     // transparently upgrade to https if available, we can't transparently downgrade for obvious security reasons
                     let https_on_80_url = format!("https://{}:80", body);
                     let https_on_443_url = format!("https://{}:443", body);
-                    let https_on_80_eth_provider = EthProvider::<Http>::try_from(
+                    let https_on_80_eth_provider = Provider::<Http>::try_from(
                         https_on_80_url.as_str(),
                     )
                     .unwrap_or_else(|_| {
@@ -183,7 +183,7 @@ pub async fn create_rpc_connections(
                             &https_on_80_url
                         )
                     });
-                    let https_on_443_eth_provider = EthProvider::<Http>::try_from(
+                    let https_on_443_eth_provider = Provider::<Http>::try_from(
                         https_on_443_url.as_str(),
                     )
                     .unwrap_or_else(|_| {
