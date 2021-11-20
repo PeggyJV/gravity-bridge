@@ -12,10 +12,11 @@ use std::time::Duration;
 pub async fn check_erc20_approved(
     erc20: Address,
     gravity_contract: Address,
+    address: Address,
     eth_client: EthClient,
 ) -> Result<bool, GravityError> {
     let erc20_contract = ERC20::new(erc20, eth_client.clone());
-    let contract_call = erc20_contract.allowance(eth_client.address(), gravity_contract);
+    let contract_call = erc20_contract.allowance(address, gravity_contract);
     let allowance = contract_call.call().await?;
 
     // TODO(bolten): verify if this check is sufficient/correct
@@ -61,10 +62,11 @@ pub async fn approve_erc20_transfers(
 
 pub async fn get_erc20_balance(
     erc20: Address,
+    address: Address,
     eth_client: EthClient,
 ) -> Result<U256, GravityError> {
     let erc20_contract = ERC20::new(erc20, eth_client.clone());
-    let contract_call = erc20_contract.balance_of(eth_client.address());
+    let contract_call = erc20_contract.balance_of(address);
 
     Ok(contract_call.call().await?)
 }

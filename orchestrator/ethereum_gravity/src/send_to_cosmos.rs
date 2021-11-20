@@ -21,7 +21,7 @@ pub async fn send_to_cosmos(
     wait_timeout: Option<Duration>,
     eth_client: EthClient,
 ) -> Result<TxHash, GravityError> {
-    let approved = check_erc20_approved(erc20, gravity_contract, eth_client.clone()).await?;
+    let approved = check_erc20_approved(erc20, gravity_contract, eth_client.address(), eth_client.clone()).await?;
     if !approved {
         let txid = approve_erc20_transfers(erc20, gravity_contract, wait_timeout, eth_client.clone()).await?;
         trace!("ERC-20 approval for {} finished with txid {}", erc20, txid);

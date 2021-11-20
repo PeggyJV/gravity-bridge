@@ -53,7 +53,7 @@ impl Runnable for EthToCosmosCmd {
             let init_amount = self.args.get(4).expect("amount is required");
             let amount: U256 = init_amount.parse().unwrap();
 
-            let erc20_balance = get_erc20_balance(erc20_address, eth_client.clone()).await
+            let erc20_balance = get_erc20_balance(erc20_address, ethereum_address, eth_client.clone()).await
                 .expect("Failed to get balance, check ERC20 contract address");
 
             let times = self.args.get(5).expect("times is required");

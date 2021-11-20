@@ -78,7 +78,7 @@ impl Runnable for SendToCosmos {
                 .parse()
                 .expect("Expected amount in xx.yy format");
 
-            let erc20_balance = get_erc20_balance(erc20_contract, eth_client.clone())
+            let erc20_balance = get_erc20_balance(erc20_contract, eth_client.address(), eth_client.clone())
                 .await
                 .expect("Failed to get balance, check ERC20 contract address");
 
