@@ -53,6 +53,8 @@ pub fn hex_str_to_bytes(s: &str) -> Result<Vec<u8>, GravityError> {
     Ok(bytes)
 }
 
+// TODO(bolten): add tests to make sure the downcast panics catch
+
 #[test]
 fn encode_bytes() {
     assert_eq!(bytes_to_hex_str(&[0xf]), "0f".to_owned());
