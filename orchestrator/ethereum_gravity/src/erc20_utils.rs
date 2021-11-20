@@ -11,12 +11,12 @@ use std::time::Duration;
 /// contract A it can manipulate your ERC20 balances. This function checks if that has already been done.
 pub async fn check_erc20_approved(
     erc20: Address,
-    gravity_contract: Address,
+    target_contract: Address,
     address: Address,
     eth_client: EthClient,
 ) -> Result<bool, GravityError> {
     let erc20_contract = ERC20::new(erc20, eth_client.clone());
-    let contract_call = erc20_contract.allowance(address, gravity_contract);
+    let contract_call = erc20_contract.allowance(address, target_contract);
     let allowance = contract_call.call().await?;
 
     // TODO(bolten): verify if this check is sufficient/correct

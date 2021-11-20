@@ -10,9 +10,6 @@ use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
 use std::time::Duration;
 
-// TODO(bolten): no callers of this function ever sent any SendTxOptions
-// for gas or anything else, but will apply this default hard limit as it was
-// done originally -- should we change this?
 const SEND_TO_COSMOS_GAS_LIMIT: u128 = 100_000;
 
 #[allow(clippy::too_many_arguments)]
