@@ -11,17 +11,23 @@ extern crate lazy_static;
 use crate::bootstrapping::*;
 use crate::utils::*;
 use arbitrary_logic::arbitrary_logic_test;
-use clarity::PrivateKey as EthPrivateKey;
-use clarity::{Address as EthAddress, Uint256};
+use clarity::Uint256;
 use cosmos_gravity::utils::wait_for_cosmos_online;
 use deep_space::coin::Coin;
 use deep_space::Address as CosmosAddress;
 use deep_space::Contact;
+use ethereum_gravity::types::EthClient;
+use ethers::core::k256::ecdsa::SigningKey;
+use ethers::prelude::*;
+use ethers::providers::Provider;
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use gravity_utils::ethereum::hex_str_to_bytes;
 use happy_path::happy_path_test;
 use happy_path_v2::happy_path_test_v2;
 use orch_keys_update::orch_keys_update;
-use std::{env, time::Duration};
+use std::convert::TryFrom;
+use std::{env, sync::Arc, time::Duration};
 use transaction_stress_test::transaction_stress_test;
 use valset_stress::validator_set_stress_test;
 
@@ -59,11 +65,17 @@ lazy_static! {
     // this key is the private key for the public key defined in tests/assets/ETHGenesis.json
     // where the full node / miner sends its rewards. Therefore it's always going
     // to have a lot of ETH to pay for things like contract deployments
-    static ref MINER_PRIVATE_KEY: EthPrivateKey =
-        "0xb1bab011e03a9862664706fc3bbaa1b16651528e5f0e7fbfcbfdd8be302a13e7"
-            .parse()
-            .unwrap();
-    static ref MINER_ADDRESS: EthAddress = MINER_PRIVATE_KEY.to_public_key().unwrap();
+    static ref MINER_PRIVATE_KEY: SigningKey =
+        SigningKey::from_bytes(hex_str_to_bytes(
+            "0xb1bab011e03a9862664706fc3bbaa1b16651528e5f0e7fbfcbfdd8be302a13e7").unwrap().as_slice()
+        ).unwrap();
+    static ref MINER_WALLET: LocalWallet = LocalWallet::from((*MINER_PRIVATE_KEY).clone());
+    static ref MINER_ADDRESS: EthAddress = (*MINER_WALLET).address();
+    static ref MINER_PROVIDER: Provider<Http> = Provider::<Http>::try_from((*ETH_NODE).clone()).unwrap();
+    static ref MINER_SIGNER: SignerMiddleware<Provider<Http>, LocalWallet> =
+        SignerMiddleware::new((*MINER_PROVIDER).clone(), (*MINER_WALLET).clone());
+    static ref MINER_CLIENT: EthClient = Arc::new((*MINER_SIGNER).clone());
+
 }
 
 /// Gets the standard non-token fee for the testnet. We deploy the test chain with STAKE
@@ -89,11 +101,15 @@ pub fn get_chain_id() -> String {
     "gravity-test".to_string()
 }
 
-pub fn one_eth() -> Uint256 {
+pub fn one_eth() -> U256 {
     1000000000000000000u128.into()
 }
 
-pub fn one_hundred_eth() -> Uint256 {
+pub fn one_hundred_eth() -> U256 {
+    (1000000000000000000u128 * 100).into()
+}
+
+pub fn one_hundred_eth_uint256() -> Uint256 {
     (1000000000000000000u128 * 100).into()
 }
 
@@ -123,7 +139,7 @@ pub async fn main() {
     let grpc_client = GravityQueryClient::connect(COSMOS_NODE_GRPC.as_str())
         .await
         .unwrap();
-    let web30 = web30::client::Web3::new(ETH_NODE.as_str(), OPERATION_TIMEOUT);
+    let eth_provider = Provider::<Http>::try_from((*ETH_NODE).clone()).unwrap();
     let keys = get_keys();
 
     // // if we detect this env var we are only deploying contracts, do that then exit.
@@ -164,7 +180,6 @@ pub async fn main() {
         if test_type == "VALIDATOR_OUT" {
             info!("Starting Validator out test");
             happy_path_test(
-                &web30,
                 grpc_client,
                 &contact,
                 keys,
@@ -182,19 +197,19 @@ pub async fn main() {
                 CosmosAddress::DEFAULT_PREFIX,
             )
             .unwrap();
-            transaction_stress_test(&web30, &contact, keys, gravity_address, erc20_addresses).await;
+            transaction_stress_test(&eth_provider, &contact, keys, gravity_address, erc20_addresses).await;
             return;
         } else if test_type == "VALSET_STRESS" {
             info!("Starting valset stress test");
-            validator_set_stress_test(&web30, &contact, keys, gravity_address).await;
+            validator_set_stress_test(&contact, keys, gravity_address).await;
             return;
         } else if test_type == "V2_HAPPY_PATH" {
             info!("Starting happy path for Gravity v2");
-            happy_path_test_v2(&web30, grpc_client, &contact, keys, gravity_address).await;
+            happy_path_test_v2(&eth_provider, grpc_client, &contact, keys, gravity_address).await;
             return;
         } else if test_type == "ARBITRARY_LOGIC" {
             info!("Starting arbitrary logic tests!");
-            arbitrary_logic_test(&web30, grpc_client, &contact).await;
+            arbitrary_logic_test(&eth_provider, grpc_client, &contact).await;
             return;
         } else if test_type == "ORCHESTRATOR_KEYS" {
             info!("Starting orchestrator key update tests!");
@@ -204,7 +219,6 @@ pub async fn main() {
     }
     info!("Starting Happy path test");
     happy_path_test(
-        &web30,
         grpc_client,
         &contact,
         keys,
