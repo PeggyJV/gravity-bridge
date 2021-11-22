@@ -21,6 +21,7 @@ func (k Keeper) recordEventVote(
 	// We check the event nonce in processEthereumEvent as well,
 	// but checking it here gives individual eth signers a chance to retry,
 	// and prevents validators from submitting two claims with the same nonce
+	k.Logger(ctx).Info("recording event vote", "event", event.String(), "validator", val.String())
 	lastEventNonce := k.getLastEventNonceByValidator(ctx, val)
 	expectedNonce := lastEventNonce + 1
 	if event.GetEventNonce() != expectedNonce {
