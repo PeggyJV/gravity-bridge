@@ -361,7 +361,12 @@ impl ValsetMember {
 impl fmt::Display for ValsetMember {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.eth_address {
-            Some(a) => write!(f, "Address: {} Power: {}", format_eth_address(a), self.power),
+            Some(a) => write!(
+                f,
+                "Address: {} Power: {}",
+                format_eth_address(a),
+                self.power
+            ),
             None => write!(f, "Address: None Power: {}", self.power),
         }
     }

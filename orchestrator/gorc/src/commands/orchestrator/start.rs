@@ -2,8 +2,10 @@ use crate::{application::APP, prelude::*};
 use abscissa_core::{Clap, Command, Runnable};
 use ethers::{prelude::*, types::Address as EthAddress};
 use gravity_utils::{
-    connection_prep::{check_delegate_addresses, check_for_eth, check_for_fee_denom,
-        create_rpc_connections,wait_for_cosmos_node_ready,},
+    connection_prep::{
+        check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
+        wait_for_cosmos_node_ready,
+    },
     ethereum::format_eth_address,
 };
 use orchestrator::main_loop::{

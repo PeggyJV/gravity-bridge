@@ -54,7 +54,10 @@ impl Runnable for SendToCosmos {
         let erc20_amount = self.free[3].clone();
         let ethereum_wallet = lookup_eth_key(from_eth_key);
 
-        println!("Sending from Eth address {}", format_eth_address(ethereum_wallet.address()));
+        println!(
+            "Sending from Eth address {}",
+            format_eth_address(ethereum_wallet.address())
+        );
         let config = APP.config();
         let cosmos_prefix = config.cosmos.prefix.clone();
         let cosmso_grpc = config.cosmos.grpc.clone();

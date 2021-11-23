@@ -27,10 +27,7 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::ethereum::bytes_to_hex_str;
 use relayer::main_loop::relayer_main_loop;
 use std::convert::TryInto;
-use std::{
-    net,
-    time::Duration,
-};
+use std::{net, time::Duration};
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 
@@ -300,7 +297,9 @@ pub async fn eth_signer_main_loop(
                 }
 
                 // sign the last unsigned batch, TODO check if we already have signed this
-                match get_oldest_unsigned_transaction_batch(&mut grpc_client, our_cosmos_address).await {
+                match get_oldest_unsigned_transaction_batch(&mut grpc_client, our_cosmos_address)
+                    .await
+                {
                     Ok(Some(last_unsigned_batch)) => {
                         info!(
                             "Sending batch confirm for {}:{} fees {} timeout {}",

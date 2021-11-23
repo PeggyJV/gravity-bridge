@@ -69,6 +69,7 @@ pub async fn relay_valsets(
                 for confirm in confirms.iter() {
                     assert_eq!(cosmos_valset.nonce, confirm.nonce);
                 }
+
                 let hash = encode_valset_confirm_hashed(gravity_id.clone(), cosmos_valset.clone());
 
                 // there are two possible encoding problems that could cause the very rare sig failure bug,

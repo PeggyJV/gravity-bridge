@@ -11,12 +11,7 @@ use ethereum_gravity::{
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use futures::future::join_all;
-use std::{
-    collections::HashSet,
-    str::FromStr,
-    sync::Arc,
-    time::Duration,
-};
+use std::{collections::HashSet, str::FromStr, sync::Arc, time::Duration};
 
 const TIMEOUT: Duration = Duration::from_secs(120);
 
@@ -204,8 +199,8 @@ pub async fn transaction_stress_test(
                 let e_dest_addr = keys.eth_dest_address;
                 for token in erc20_addresses.iter() {
                     let bal = get_erc20_balance(*token, e_dest_addr, (*MINER_CLIENT).clone())
-                    .await
-                    .unwrap();
+                        .await
+                        .unwrap();
                     let bal = Uint256::from_str(bal.to_string().as_str()).unwrap();
                     if bal != send_amount.clone() {
                         good = false;

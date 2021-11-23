@@ -110,9 +110,10 @@ pub async fn happy_path_test(
 
 pub async fn wait_for_nonzero_valset(gravity_address: EthAddress) {
     match tokio::time::timeout(TOTAL_TIMEOUT, async {
-        let mut current_eth_valset_nonce = get_valset_nonce(gravity_address, (*MINER_CLIENT).clone())
-            .await
-            .expect("Failed to get current eth valset");
+        let mut current_eth_valset_nonce =
+            get_valset_nonce(gravity_address, (*MINER_CLIENT).clone())
+                .await
+                .expect("Failed to get current eth valset");
 
         while 0 == current_eth_valset_nonce {
             info!("Validator set is not yet updated to >0, waiting");

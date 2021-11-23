@@ -81,10 +81,12 @@ pub async fn send_to_eth(
     gas_adjustment: f64,
 ) -> Result<TxResponse, GravityError> {
     if amount.denom != bridge_fee.denom {
-        return Err(GravityError::CosmosGrpcError(CosmosGrpcError::BadInput(format!(
-            "The amount ({}) and bridge_fee ({}) denominations do not match.",
-            amount.denom, bridge_fee.denom,
-        ))));
+        return Err(GravityError::CosmosGrpcError(CosmosGrpcError::BadInput(
+            format!(
+                "The amount ({}) and bridge_fee ({}) denominations do not match.",
+                amount.denom, bridge_fee.denom,
+            ),
+        )));
     }
 
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
