@@ -546,6 +546,8 @@ contract Gravity is ReentrancyGuard {
 		// Deploy an ERC20 with entire supply granted to Gravity.sol
 		CosmosERC20 erc20 = new CosmosERC20(address(this), _name, _symbol, _decimals);
 
+		// TODO: Approve CosmosERC20 to mint tokens.
+
 		// Fire an event to let the Cosmos module know
 		state_lastEventNonce = state_lastEventNonce.add(1);
 		emit ERC20DeployedEvent(
