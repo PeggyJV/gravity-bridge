@@ -1,5 +1,8 @@
 use super::*;
-use crate::{error::GravityError, ethereum::{format_eth_address, u8_slice_to_fixed_32}};
+use crate::{
+    error::GravityError,
+    ethereum::{format_eth_address, u8_slice_to_fixed_32},
+};
 use deep_space::error::CosmosGrpcError;
 use ethers::types::{Address as EthAddress, Signature as EthSignature};
 use std::convert::TryFrom;

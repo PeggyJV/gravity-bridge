@@ -139,7 +139,7 @@ pub fn encode_tx_batch_confirm_hashed(gravity_id: String, batch: TransactionBatc
 #[tokio::test]
 async fn test_batch_signature() {
     use crate::{
-        ethereum::hex_str_to_bytes,
+        ethereum::{hex_str_to_bytes, u8_slice_to_fixed_32},
         types::{BatchTransaction, Erc20Token},
     };
     use ethers::core::k256::ecdsa::SigningKey;
@@ -189,21 +189,25 @@ async fn test_batch_signature() {
     let eth_key = SigningKey::from_bytes(&secret).unwrap();
     let eth_wallet = LocalWallet::from(eth_key);
     let eth_address = eth_wallet.address();
-    let checkpoint = encode_tx_batch_confirm_hashed("foo".to_string(), batch);
+    let checkpoint =
+        keccak256(encode_tx_batch_confirm("foo".to_string(), batch.clone()).as_slice());
+    let checkpoint_hash = encode_tx_batch_confirm_hashed("foo".to_string(), batch.clone());
+    let checkpoint_hash = u8_slice_to_fixed_32(&checkpoint_hash).unwrap();
 
-    let eth_signature = eth_wallet.sign_message(checkpoint.clone()).await.unwrap();
+    let eth_signature = eth_wallet.sign_message(checkpoint).await.unwrap();
 
-    assert_eq!(
-        eth_address,
-        eth_signature.recover(checkpoint.clone()).unwrap()
-    );
+    assert_eq!(eth_address, eth_signature.recover(checkpoint_hash).unwrap());
 }
 
 #[tokio::test]
 async fn test_specific_batch_signature() {
-    use crate::types::{BatchTransaction, Erc20Token};
+    use crate::{
+        ethereum::u8_slice_to_fixed_32,
+        types::{BatchTransaction, Erc20Token},
+    };
     use ethers::core::k256::ecdsa::SigningKey;
     use ethers::prelude::*;
+    use ethers::utils::keccak256;
     use rand::Rng;
 
     let erc20_addr = "0x0635FF793Edf48cf5dB294916720A78e6e490E40"
@@ -241,14 +245,14 @@ async fn test_specific_batch_signature() {
     let eth_wallet = LocalWallet::from(eth_key);
     let eth_address = eth_wallet.address();
 
-    let checkpoint = encode_tx_batch_confirm_hashed("foo".to_string(), batch);
+    let checkpoint =
+        keccak256(encode_tx_batch_confirm("foo".to_string(), batch.clone()).as_slice());
+    let checkpoint_hash = encode_tx_batch_confirm_hashed("foo".to_string(), batch.clone());
+    let checkpoint_hash = u8_slice_to_fixed_32(&checkpoint_hash).unwrap();
 
-    let eth_signature = eth_wallet.sign_message(checkpoint.clone()).await.unwrap();
+    let eth_signature = eth_wallet.sign_message(checkpoint).await.unwrap();
 
-    assert_eq!(
-        eth_address,
-        eth_signature.recover(checkpoint.clone()).unwrap()
-    );
+    assert_eq!(eth_address, eth_signature.recover(checkpoint_hash).unwrap());
 }
 
 /// takes the required input data and produces the required signature to confirm a logic
