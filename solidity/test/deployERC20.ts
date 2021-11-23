@@ -137,9 +137,7 @@ async function runTest(opts: {}) {
     powers,
     currentValsetNonce,
 
-    sigs.v,
-    sigs.r,
-    sigs.s,
+    sigs,
 
     txAmounts,
     txDestinations,

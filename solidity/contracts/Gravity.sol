@@ -26,6 +26,12 @@ struct LogicCallArgs {
 	uint256 invalidationNonce;
 }
 
+struct Signature {
+	uint8 v;
+	bytes32 r;
+	bytes32 s;
+}
+
 contract Gravity is ReentrancyGuard {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
@@ -97,18 +103,14 @@ contract Gravity is ReentrancyGuard {
 	function testCheckValidatorSignatures(
 		address[] memory _currentValidators,
 		uint256[] memory _currentPowers,
-		uint8[] memory _v,
-		bytes32[] memory _r,
-		bytes32[] memory _s,
+		Signature[] memory _sigs,
 		bytes32 _theHash,
 		uint256 _powerThreshold
 	) public pure {
 		checkValidatorSignatures(
 			_currentValidators,
 			_currentPowers,
-			_v,
-			_r,
-			_s,
+			_sigs,
 			_theHash,
 			_powerThreshold
 		);
@@ -165,9 +167,7 @@ contract Gravity is ReentrancyGuard {
 		address[] memory _currentValidators,
 		uint256[] memory _currentPowers,
 		// The current validator's signatures
-		uint8[] memory _v,
-		bytes32[] memory _r,
-		bytes32[] memory _s,
+		Signature[] memory _sigs,
 		// This is what we are checking they have signed
 		bytes32 _theHash,
 		uint256 _powerThreshold
@@ -177,10 +177,10 @@ contract Gravity is ReentrancyGuard {
 		for (uint256 i = 0; i < _currentValidators.length; i++) {
 			// If v is set to 0, this signifies that it was not possible to get a signature from this validator and we skip evaluation
 			// (In a valid signature, it is either 27 or 28)
-			if (_v[i] != 0) {
+			if (_sigs[i].v != 0) {
 				// Check that the current validator has signed off on the hash
 				require(
-					verifySig(_currentValidators[i], _theHash, _v[i], _r[i], _s[i]),
+					verifySig(_currentValidators[i], _theHash, _sigs[i].v, _sigs[i].r, _sigs[i].s),
 					"Validator signature does not match."
 				);
 
@@ -217,9 +217,7 @@ contract Gravity is ReentrancyGuard {
 		uint256[] memory _currentPowers,
 		uint256 _currentValsetNonce,
 		// These are arrays of the parts of the current validator's signatures
-		uint8[] memory _v,
-		bytes32[] memory _r,
-		bytes32[] memory _s
+		Signature[] memory _sigs
 	) public nonReentrant {
 		// CHECKS
 
@@ -230,14 +228,12 @@ contract Gravity is ReentrancyGuard {
 		);
 
 		// Check that new validators and powers set is well-formed
-		require(_newValidators.length == _newPowers.length, "Malformed new validator set");
+		require(_newValidators.length == _newPowers.length || _newValidators.length == 0, "Malformed new validator set");
 
 		// Check that current validators, powers, and signatures (v,r,s) set is well-formed
 		require(
 			_currentValidators.length == _currentPowers.length &&
-				_currentValidators.length == _v.length &&
-				_currentValidators.length == _r.length &&
-				_currentValidators.length == _s.length,
+				_currentValidators.length == _sigs.length,
 			"Malformed current validator set"
 		);
 
@@ -252,6 +248,18 @@ contract Gravity is ReentrancyGuard {
 			"Supplied current validators and powers do not match checkpoint."
 		);
 
+		uint256 cumulativePower = 0;
+		for (uint256 i = 0; i < _newPowers.length; i++) {
+			cumulativePower = cumulativePower + _newPowers[i];
+			if (cumulativePower > state_powerThreshold) {
+				break;
+			}
+		}
+		require(
+			cumulativePower > state_powerThreshold,
+			"Submitted validator set signatures do not have enough power."
+		);
+
 		// Check that enough current validators have signed off on the new validator set
 		bytes32 newCheckpoint =
 			makeCheckpoint(_newValidators, _newPowers, _newValsetNonce, state_gravityId);
@@ -259,9 +267,7 @@ contract Gravity is ReentrancyGuard {
 		checkValidatorSignatures(
 			_currentValidators,
 			_currentPowers,
-			_v,
-			_r,
-			_s,
+			_sigs,
 			newCheckpoint,
 			state_powerThreshold
 		);
@@ -290,9 +296,7 @@ contract Gravity is ReentrancyGuard {
 		uint256[] memory _currentPowers,
 		uint256 _currentValsetNonce,
 		// These are arrays of the parts of the validators signatures
-		uint8[] memory _v,
-		bytes32[] memory _r,
-		bytes32[] memory _s,
+		Signature[] memory _sigs,
 		// The batch of transactions
 		uint256[] memory _amounts,
 		address[] memory _destinations,
@@ -320,9 +324,7 @@ contract Gravity is ReentrancyGuard {
 			// Check that current validators, powers, and signatures (v,r,s) set is well-formed
 			require(
 				_currentValidators.length == _currentPowers.length &&
-					_currentValidators.length == _v.length &&
-					_currentValidators.length == _r.length &&
-					_currentValidators.length == _s.length,
+					_currentValidators.length == _sigs.length,
 				"Malformed current validator set"
 			);
 
@@ -347,9 +349,7 @@ contract Gravity is ReentrancyGuard {
 			checkValidatorSignatures(
 				_currentValidators,
 				_currentPowers,
-				_v,
-				_r,
-				_s,
+				_sigs,
 				// Get hash of the transaction batch and checkpoint
 				keccak256(
 					abi.encode(
@@ -407,9 +407,7 @@ contract Gravity is ReentrancyGuard {
 		uint256[] memory _currentPowers,
 		uint256 _currentValsetNonce,
 		// These are arrays of the parts of the validators signatures
-		uint8[] memory _v,
-		bytes32[] memory _r,
-		bytes32[] memory _s,
+		Signature[] memory _sigs,
 		LogicCallArgs memory _args
 	) public nonReentrant {
 		// CHECKS scoped to reduce stack depth
@@ -426,9 +424,7 @@ contract Gravity is ReentrancyGuard {
 			// Check that current validators, powers, and signatures (v,r,s) set is well-formed
 			require(
 				_currentValidators.length == _currentPowers.length &&
-					_currentValidators.length == _v.length &&
-					_currentValidators.length == _r.length &&
-					_currentValidators.length == _s.length,
+					_currentValidators.length == _sigs.length,
 				"Malformed current validator set"
 			);
 
@@ -479,9 +475,7 @@ contract Gravity is ReentrancyGuard {
 			checkValidatorSignatures(
 				_currentValidators,
 				_currentPowers,
-				_v,
-				_r,
-				_s,
+				_sigs,
 				// Get hash of the transaction batch and checkpoint
 				argsHash,
 				state_powerThreshold
