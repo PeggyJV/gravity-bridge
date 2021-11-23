@@ -1,15 +1,16 @@
 use crate::{
     types::{EthClient, EthSignerMiddleware},
     utils::{
-        convert_invalidation_id_to_fixed_array, get_logic_call_nonce,
-        get_send_transaction_gas_price, GasCost,
+        get_logic_call_nonce,
+        get_send_transaction_gas_price,
+        GasCost,
     },
 };
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
-use gravity_utils::ethereum::bytes_to_hex_str;
+use gravity_utils::ethereum::{bytes_to_hex_str, vec_u8_to_fixed_32};
 use gravity_utils::types::*;
 use gravity_utils::{error::GravityError, message_signatures::encode_logic_call_confirm_hashed};
 use std::time::Duration;
@@ -161,7 +162,7 @@ pub fn build_send_logic_call_contract_call(
         .iter()
         .map(|fee| fee.token_contract_address)
         .collect();
-    let invalidation_id = convert_invalidation_id_to_fixed_array(call.invalidation_id.clone())?;
+    let invalidation_id = vec_u8_to_fixed_32(call.invalidation_id.clone())?;
 
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
         .submit_logic_call(

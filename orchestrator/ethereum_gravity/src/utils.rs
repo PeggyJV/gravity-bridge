@@ -7,7 +7,7 @@ use ethers::types::Address as EthAddress;
 use ethers::utils::keccak256;
 use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
-use gravity_utils::ethereum::downcast_to_u64;
+use gravity_utils::ethereum::{downcast_to_u64, vec_u8_to_fixed_32};
 use gravity_utils::types::*;
 use std::cmp::min;
 
@@ -97,7 +97,7 @@ pub async fn get_logic_call_nonce(
     invalidation_id: Vec<u8>,
     eth_client: EthClient,
 ) -> Result<u64, GravityError> {
-    let invalidation_id = convert_invalidation_id_to_fixed_array(invalidation_id)?;
+    let invalidation_id = vec_u8_to_fixed_32(invalidation_id)?;
 
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
         .last_logic_call_nonce(invalidation_id)
@@ -202,21 +202,6 @@ pub async fn get_send_transaction_gas_price(eth_client: EthClient) -> Result<U25
     }
 
     Ok(eth_client.get_gas_price().await?)
-}
-
-pub fn convert_invalidation_id_to_fixed_array(
-    invalidation_id: Vec<u8>,
-) -> Result<[u8; 32], GravityError> {
-    if invalidation_id.len() != 32 {
-        return Err(GravityError::InvalidArgumentError(format!(
-            "Error getting logic call nonce, invalidation id is not 32 bytes: {:?}",
-            invalidation_id
-        )));
-    }
-
-    let mut invalidation_id_slice: [u8; 32] = Default::default();
-    invalidation_id_slice.copy_from_slice(&invalidation_id[..]);
-    Ok(invalidation_id_slice)
 }
 
 /// Just a helper struct to represent the cost of actions on Ethereum

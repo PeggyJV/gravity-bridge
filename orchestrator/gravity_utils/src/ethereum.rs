@@ -58,6 +58,30 @@ pub fn hex_str_to_bytes(s: &str) -> Result<Vec<u8>, GravityError> {
     Ok(bytes)
 }
 
+pub fn vec_u8_to_fixed_32(v: Vec<u8>) -> Result<[u8; 32], GravityError> {
+    if v.len() != 32 {
+        return Err(GravityError::InvalidArgumentError(format!(
+            "Error converting Vec<u8> to [u8; 32], length is not 32: {:?}",
+            v
+        )));
+    }
+
+    Ok(u8_slice_to_fixed_32(&v[..])?)
+}
+
+pub fn u8_slice_to_fixed_32(v: &[u8]) -> Result<[u8; 32], GravityError> {
+    if v.len() != 32 {
+        return Err(GravityError::InvalidArgumentError(format!(
+            "Error converting &[u8] to [u8; 32], length is not 32: {:?}",
+            v
+        )));
+    }
+
+    let mut v_slice: [u8; 32] = Default::default();
+    v_slice.copy_from_slice(v);
+    Ok(v_slice)
+}
+
 #[test]
 fn overflow_f32() {
     assert_eq!(downcast_to_f32(42.into()), Some(42f32));
