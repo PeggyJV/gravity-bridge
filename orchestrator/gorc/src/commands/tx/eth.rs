@@ -7,7 +7,10 @@ use ethereum_gravity::erc20_utils::get_erc20_balance;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
-use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
+use gravity_utils::{
+    connection_prep::{check_for_eth, create_rpc_connections},
+    ethereum::format_eth_address,
+};
 use std::sync::Arc;
 
 /// Create transactions in Eth chain
@@ -51,7 +54,7 @@ impl Runnable for SendToCosmos {
         let erc20_amount = self.free[3].clone();
         let ethereum_wallet = lookup_eth_key(from_eth_key);
 
-        println!("Sending from Eth address {}", ethereum_wallet.address());
+        println!("Sending from Eth address {}", format_eth_address(ethereum_wallet.address()));
         let config = APP.config();
         let cosmos_prefix = config.cosmos.prefix.clone();
         let cosmso_grpc = config.cosmos.grpc.clone();

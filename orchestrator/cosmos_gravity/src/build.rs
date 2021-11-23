@@ -6,7 +6,7 @@ use ethers::prelude::*;
 use ethers::utils::keccak256;
 use gravity_proto::gravity as proto;
 use gravity_proto::ToAny;
-use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_u64};
+use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_u64, format_eth_address};
 use gravity_utils::message_signatures::{
     encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
 };
@@ -30,7 +30,7 @@ pub async fn signer_set_tx_confirmation_messages(
         // will never throw an error
         let signature = eth_client.signer().sign_message(data).await.unwrap();
         let confirmation = proto::SignerSetTxConfirmation {
-            ethereum_signer: ethereum_address.to_string(),
+            ethereum_signer: format_eth_address(ethereum_address),
             signer_set_nonce: valset.nonce,
             signature: signature.into(),
         };
@@ -61,9 +61,9 @@ pub async fn batch_tx_confirmation_messages(
         // will never throw an error
         let signature = eth_client.signer().sign_message(data).await.unwrap();
         let confirmation = proto::BatchTxConfirmation {
-            token_contract: batch.token_contract.to_string(),
+            token_contract: format_eth_address(batch.token_contract),
             batch_nonce: batch.nonce,
-            ethereum_signer: ethereum_address.to_string(),
+            ethereum_signer: format_eth_address(ethereum_address),
             signature: signature.into(),
         };
         let msg = proto::MsgSubmitEthereumEvent {
@@ -94,7 +94,7 @@ pub async fn contract_call_tx_confirmation_messages(
         // will never throw an error
         let signature = eth_client.signer().sign_message(data).await.unwrap();
         let confirmation = proto::ContractCallTxConfirmation {
-            ethereum_signer: ethereum_address.to_string(),
+            ethereum_signer: format_eth_address(ethereum_address),
             signature: signature.into(),
             invalidation_scope: bytes_to_hex_str(&logic_call.invalidation_id)
                 .as_bytes()
@@ -135,10 +135,10 @@ pub fn ethereum_event_messages(
         let event = proto::SendToCosmosEvent {
             event_nonce: downcast_to_u64(deposit.event_nonce.clone()).unwrap(),
             ethereum_height: downcast_to_u64(deposit.block_height).unwrap(),
-            token_contract: deposit.erc20.to_string(),
+            token_contract: format_eth_address(deposit.erc20),
             amount: deposit.amount.to_string(),
             cosmos_receiver: deposit.destination.to_string(),
-            ethereum_sender: deposit.sender.to_string(),
+            ethereum_sender: format_eth_address(deposit.sender),
         };
         let msg = proto::MsgSubmitEthereumEvent {
             signer: cosmos_address.to_string(),
@@ -152,7 +152,7 @@ pub fn ethereum_event_messages(
             event_nonce: downcast_to_u64(batch.event_nonce.clone()).unwrap(),
             batch_nonce: downcast_to_u64(batch.batch_nonce.clone()).unwrap(),
             ethereum_height: downcast_to_u64(batch.block_height).unwrap(),
-            token_contract: batch.erc20.to_string(),
+            token_contract: format_eth_address(batch.erc20),
         };
         let msg = proto::MsgSubmitEthereumEvent {
             signer: cosmos_address.to_string(),
@@ -166,7 +166,7 @@ pub fn ethereum_event_messages(
             event_nonce: downcast_to_u64(deploy.event_nonce.clone()).unwrap(),
             ethereum_height: downcast_to_u64(deploy.block_height).unwrap(),
             cosmos_denom: deploy.cosmos_denom,
-            token_contract: deploy.erc20_address.to_string(),
+            token_contract: format_eth_address(deploy.erc20_address),
             erc20_name: deploy.name,
             erc20_symbol: deploy.symbol,
             erc20_decimals: deploy.decimals as u64,

@@ -1,9 +1,10 @@
 use crate::{application::APP, prelude::*};
 use abscissa_core::{Clap, Command, Runnable};
 use ethers::{prelude::*, types::Address as EthAddress};
-use gravity_utils::connection_prep::{
-    check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
-    wait_for_cosmos_node_ready,
+use gravity_utils::{
+    connection_prep::{check_delegate_addresses, check_for_eth, check_for_fee_denom,
+        create_rpc_connections,wait_for_cosmos_node_ready,},
+    ethereum::format_eth_address,
 };
 use orchestrator::main_loop::{
     orchestrator_main_loop, ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED,
@@ -68,7 +69,7 @@ impl Runnable for StartCommand {
             let eth_client = Arc::new(eth_client);
 
             info!("Starting Relayer + Oracle + Ethereum Signer");
-            info!("Ethereum Address: {}", ethereum_address);
+            info!("Ethereum Address: {}", format_eth_address(ethereum_address));
             info!("Cosmos Address {}", cosmos_address);
 
             // check if the cosmos node is syncing, if so wait for it

@@ -13,6 +13,7 @@ use gravity_proto::cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
 use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use gravity_proto::gravity as proto;
 use gravity_utils::error::GravityError;
+use gravity_utils::ethereum::format_eth_address;
 use prost::Message;
 use std::cmp;
 use std::collections::HashSet;
@@ -60,7 +61,7 @@ pub async fn update_gravity_delegate_addresses(
     let msg = proto::MsgDelegateKeys {
         validator_address: our_valoper_address.to_string(),
         orchestrator_address: delegate_cosmos_address.to_string(),
-        ethereum_address: delegate_eth_address.to_string(),
+        ethereum_address: format_eth_address(delegate_eth_address),
         eth_signature: eth_signature.to_vec(),
     };
     let msg = Msg::new("/gravity.v1.MsgDelegateKeys", msg);

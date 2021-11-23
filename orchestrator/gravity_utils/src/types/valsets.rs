@@ -1,5 +1,5 @@
 use super::*;
-use crate::error::GravityError;
+use crate::{error::GravityError, ethereum::format_eth_address};
 use deep_space::error::CosmosGrpcError;
 use ethers::types::{Address as EthAddress, Signature as EthSignature};
 use std::convert::TryFrom;
@@ -360,7 +360,7 @@ impl ValsetMember {
 impl fmt::Display for ValsetMember {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.eth_address {
-            Some(a) => write!(f, "Address: {} Power: {}", a, self.power),
+            Some(a) => write!(f, "Address: {} Power: {}", format_eth_address(a), self.power),
             None => write!(f, "Address: None Power: {}", self.power),
         }
     }
@@ -395,7 +395,7 @@ impl From<&gravity_proto::gravity::EthereumSigner> for ValsetMember {
 impl From<&ValsetMember> for gravity_proto::gravity::EthereumSigner {
     fn from(input: &ValsetMember) -> gravity_proto::gravity::EthereumSigner {
         let ethereum_address = match input.eth_address {
-            Some(e) => e.to_string(),
+            Some(e) => format_eth_address(e),
             None => String::new(),
         };
         gravity_proto::gravity::EthereumSigner {

@@ -1,5 +1,6 @@
 use crate::error::GravityError;
 use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
 use std::panic;
 
 pub fn downcast_to_f32(input: U256) -> Option<f32> {
@@ -25,6 +26,10 @@ pub fn downcast_to_u128(input: U256) -> Option<u128> {
         Ok(downcasted) => Some(downcasted),
         Err(_) => None,
     }
+}
+
+pub fn format_eth_address(address: EthAddress) -> String {
+    format!("0x{}", bytes_to_hex_str(address.as_bytes()))
 }
 
 pub fn bytes_to_hex_str(bytes: &[u8]) -> String {
