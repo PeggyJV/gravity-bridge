@@ -63,7 +63,6 @@ func (k Keeper) recordEventVote(
 func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.EthereumEventVoteRecord) {
 	// If the event vote record has not yet been Observed, sum up the votes and see if it is ready to apply to the state.
 	// This conditional stops the event vote record from accidentally being applied twice.
-	k.Logger(ctx).Info("trying event vote record", "event vote record", eventVoteRecord.String())
 	if !eventVoteRecord.Accepted {
 		var event types.EthereumEvent
 		if err := k.cdc.UnpackAny(eventVoteRecord.Event, &event); err != nil {
