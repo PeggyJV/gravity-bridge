@@ -26,7 +26,6 @@ use tonic::Status;
 #[derive(Debug)]
 #[allow(clippy::large_enum_variant)]
 pub enum GravityError {
-    InvalidBigInt(ParseBigIntError),
     CosmosGrpcError(CosmosGrpcError),
     CosmosAddressError(CosmosAddressError),
     CosmosPrivateKeyError(CosmosPrivateKeyError),
@@ -62,9 +61,6 @@ impl fmt::Display for GravityError {
         match self {
             GravityError::GravityGrpcError(val) => write!(f, "Gravity gRPC error {}", val),
             GravityError::CosmosGrpcError(val) => write!(f, "Cosmos gRPC error {}", val),
-            GravityError::InvalidBigInt(val) => {
-                write!(f, "Got invalid BigInt from cosmos! {}", val)
-            }
             GravityError::CosmosAddressError(val) => write!(f, "Cosmos Address error {}", val),
             GravityError::CosmosPrivateKeyError(val) => {
                 write!(f, "Cosmos private key error:  {}", val)
@@ -217,7 +213,7 @@ impl From<Status> for GravityError {
 
 impl From<ParseBigIntError> for GravityError {
     fn from(error: ParseBigIntError) -> Self {
-        GravityError::InvalidBigInt(error)
+        GravityError::ParseBigIntError(error)
     }
 }
 
