@@ -106,9 +106,10 @@ service Query {
     // "/gravity/v1/cosmos_originated/erc20_to_denom";
   }
 
-  // DenomToERC20Params implements a query that allows ERC-20 parameter information
-  // to be retrieved by a Cosmos base denomination.
-  rpc DenomToERC20Params(DenomToERC20ParamsRequest) returns (DenomToERC20ParamsResponse) {}
+  // DenomToERC20Params implements a query that allows ERC-20 parameter
+  // information to be retrieved by a Cosmos base denomination.
+  rpc DenomToERC20Params(DenomToERC20ParamsRequest)
+      returns (DenomToERC20ParamsResponse) {}
 
   // Query for info about denoms tracked by gravity
   rpc DenomToERC20(DenomToERC20Request) returns (DenomToERC20Response) {
@@ -212,14 +213,14 @@ message ContractCallTxsResponse {
 // rpc UnsignedSignerSetTxs
 message UnsignedSignerSetTxsRequest {
   // NOTE: this is an sdk.AccAddress and can represent either the
-  // orchestartor address or the cooresponding validator address
+  // orchestrator address or the corresponding validator address
   string address = 1;
 }
 message UnsignedSignerSetTxsResponse { repeated SignerSetTx signer_sets = 1; }
 
 message UnsignedBatchTxsRequest {
   // NOTE: this is an sdk.AccAddress and can represent either the
-  // orchestrator address or the cooresponding validator address
+  // orchestrator address or the corresponding validator address
   string address = 1;
 }
 message UnsignedBatchTxsResponse {

@@ -6,7 +6,7 @@ use ethers::prelude::*;
 use ethers::utils::keccak256;
 use gravity_proto::gravity as proto;
 use gravity_proto::ToAny;
-use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_u64, format_eth_address};
+use gravity_utils::ethereum::{downcast_to_u64, format_eth_address};
 use gravity_utils::message_signatures::{
     encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
 };
@@ -96,9 +96,7 @@ pub async fn contract_call_tx_confirmation_messages(
         let confirmation = proto::ContractCallTxConfirmation {
             ethereum_signer: format_eth_address(ethereum_address),
             signature: signature.into(),
-            invalidation_scope: bytes_to_hex_str(&logic_call.invalidation_id)
-                .as_bytes()
-                .to_vec(),
+            invalidation_scope: logic_call.invalidation_id,
             invalidation_nonce: logic_call.invalidation_nonce,
         };
         let msg = proto::MsgSubmitEthereumTxConfirmation {

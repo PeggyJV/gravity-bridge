@@ -121,6 +121,10 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 
 	otx := k.GetOutgoingTx(ctx, confirmation.GetStoreIndex())
 	if otx == nil {
+		k.Logger(ctx).Error(
+			"no outgoing tx",
+			"store index", fmt.Sprintf("%x", confirmation.GetStoreIndex()),
+		)
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "couldn't find outgoing tx")
 	}
 
@@ -133,6 +137,13 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 	}
 
 	if err = types.ValidateEthereumSignature(checkpoint, confirmation.GetSignature(), ethAddress); err != nil {
+		k.Logger(ctx).Error("error validating signature",
+			"eth addr", ethAddress.String(),
+			"gravityID", gravityID,
+			"checkpoint", hex.EncodeToString(checkpoint),
+			"type url", msg.Confirmation.TypeUrl,
+			"signature", hex.EncodeToString(confirmation.GetSignature()),
+			"error", err)
 		return nil, sdkerrors.Wrap(types.ErrInvalid, fmt.Sprintf(
 			"signature verification failed ethAddress %s gravityID %s checkpoint %s typeURL %s signature %s err %s",
 			ethAddress.Hex(),
@@ -143,7 +154,6 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 			err,
 		))
 	}
-
 	// TODO: should validators be able to overwrite their signatures?
 	if k.getEthereumSignature(ctx, confirmation.GetStoreIndex(), val) != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "signature duplicate")
@@ -158,11 +168,8 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 			sdk.NewAttribute(types.AttributeKeyEthereumSignatureKey, string(key)),
 		),
 	)
-
 	return &types.MsgSubmitEthereumTxConfirmationResponse{}, nil
 }
-
-// func (k Keeper) ValidateEthereumSignature
 
 // SubmitEthereumEvent handles MsgSubmitEthereumEvent
 func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEthereumEvent) (*types.MsgSubmitEthereumEventResponse, error) {

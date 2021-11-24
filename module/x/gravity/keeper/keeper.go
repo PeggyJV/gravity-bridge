@@ -424,6 +424,7 @@ func (k Keeper) SetOutgoingTx(ctx sdk.Context, outgoing types.OutgoingTx) {
 		types.MakeOutgoingTxKey(outgoing.GetStoreIndex()),
 		k.cdc.MustMarshal(any),
 	)
+	k.Logger(ctx).Info("setting outgoing tx", "otx", outgoing, "any", string(k.cdc.MustMarshal(any)), "store index", fmt.Sprintf("%x", outgoing.GetStoreIndex()))
 }
 
 // DeleteOutgoingTx deletes a given outgoingtx
@@ -508,13 +509,13 @@ func (k Keeper) setLastObservedSignerSetTx(ctx sdk.Context, signerSet types.Sign
 
 // CreateContractCallTx xxx
 func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, invalidationScope tmbytes.HexBytes,
-	payload []byte, tokens []types.ERC20Token, fees []types.ERC20Token) *types.ContractCallTx {
+	address common.Address, payload []byte, tokens []types.ERC20Token, fees []types.ERC20Token) *types.ContractCallTx {
 	params := k.GetParams(ctx)
 
 	newContractCallTx := &types.ContractCallTx{
 		InvalidationNonce: invalidationNonce,
 		InvalidationScope: invalidationScope,
-		Address:           k.getBridgeContractAddress(ctx),
+		Address:           address.String(),
 		Payload:           payload,
 		Timeout:           params.TargetEthTxTimeout,
 		Tokens:            tokens,
@@ -540,6 +541,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
 			sdk.NewAttribute(types.AttributeKeyContractCallInvalidationNonce, fmt.Sprint(invalidationNonce)),
 			sdk.NewAttribute(types.AttributeKeyContractCallInvalidationScope, fmt.Sprint(invalidationScope)),
+			sdk.NewAttribute(types.AttributeKeyContractCallAddress, fmt.Sprint(address.String())),
 			sdk.NewAttribute(types.AttributeKeyContractCallPayload, string(payload)),
 			sdk.NewAttribute(types.AttributeKeyContractCallTokens, strings.Join(tokenString, "|")),
 			sdk.NewAttribute(types.AttributeKeyContractCallFees, strings.Join(feeString, "|")),
@@ -549,9 +551,15 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 	k.SetOutgoingTx(ctx, newContractCallTx)
 	k.Logger(ctx).Info(
 		"ContractCallTx created",
+		"bridge_contract", k.getBridgeContractAddress(ctx),
+		"bridge_chain_id", strconv.Itoa(int(k.getBridgeChainID(ctx))),
 		"invalidation_nonce", newContractCallTx.InvalidationNonce,
 		"invalidation_scope", newContractCallTx.InvalidationScope,
-		// todo: fill out all fields
+		"address", address.String(),
+		"payload", string(payload),
+		"tokens", strings.Join(tokenString, "|"),
+		"fees", strings.Join(feeString, "|"),
+		"eth_tx_timeout", strconv.FormatUint(params.TargetEthTxTimeout, 10),
 	)
 	return newContractCallTx
 }

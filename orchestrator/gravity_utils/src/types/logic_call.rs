@@ -29,11 +29,7 @@ impl LogicCall {
             warn!("Fee token: {:?}", fee_token);
             fees.push(fee_token);
         }
-        if transfers.is_empty() || fees.is_empty() {
-            return Err(GravityError::InvalidBridgeStateError(
-                "Transaction batch containing no transactions!".to_string(),
-            ));
-        }
+
         warn!("Transfers: {:?}", transfers);
         warn!("Fees: {:?}", fees);
 
