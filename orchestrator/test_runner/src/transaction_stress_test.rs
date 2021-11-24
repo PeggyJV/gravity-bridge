@@ -11,6 +11,7 @@ use ethereum_gravity::{
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use futures::future::join_all;
+use gravity_utils::ethereum::downcast_to_u64;
 use std::{collections::HashSet, str::FromStr, sync::Arc, time::Duration};
 
 const TIMEOUT: Duration = Duration::from_secs(120);
@@ -67,7 +68,17 @@ pub async fn transaction_stress_test(
         let mut sends = Vec::new();
         for keys in user_keys.iter() {
             let eth_wallet = LocalWallet::from(keys.eth_key.clone());
-            let eth_client = Arc::new(SignerMiddleware::new(eth_provider.clone(), eth_wallet));
+            let provider = eth_provider.clone();
+            let chain_id = provider
+                .get_chainid()
+                .await
+                .expect("Could not retrieve chain ID");
+            let chain_id =
+                downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
+            let eth_client = Arc::new(SignerMiddleware::new(
+                eth_provider.clone(),
+                eth_wallet.with_chain_id(chain_id),
+            ));
             let fut = send_to_cosmos(
                 *token,
                 gravity_address,

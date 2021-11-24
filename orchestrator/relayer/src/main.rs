@@ -9,7 +9,7 @@ use ethers::signers::LocalWallet as EthWallet;
 use ethers::types::Address as EthAddress;
 use gravity_utils::{
     connection_prep::{check_for_eth, create_rpc_connections, wait_for_cosmos_node_ready},
-    ethereum::format_eth_address,
+    ethereum::{downcast_to_u64, format_eth_address},
 };
 
 pub mod batch_relaying;
@@ -83,9 +83,15 @@ async fn main() {
         LOOP_SPEED,
     )
     .await;
+    let provider = connections.eth_provider.clone().unwrap();
+    let chain_id = provider
+        .get_chainid()
+        .await
+        .expect("Could not retrieve chain ID during relayer start");
+    let chain_id = downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
     let eth_client = SignerMiddleware::new(
         connections.eth_provider.clone().unwrap(),
-        ethereum_wallet.clone(),
+        ethereum_wallet.clone().with_chain_id(chain_id),
     );
     let eth_client = Arc::new(eth_client);
 

@@ -9,7 +9,7 @@ use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_utils::{
     connection_prep::{check_for_eth, create_rpc_connections},
-    ethereum::format_eth_address,
+    ethereum::{downcast_to_u64, format_eth_address},
 };
 use std::sync::Arc;
 
@@ -73,9 +73,16 @@ impl Runnable for SendToCosmos {
             let connections =
                 create_rpc_connections(cosmos_prefix, Some(cosmso_grpc), Some(eth_rpc), TIMEOUT)
                     .await;
+            let provider = connections.eth_provider.clone().unwrap();
+            let chain_id = provider
+                .get_chainid()
+                .await
+                .expect("Could not retrieve chain ID");
+            let chain_id =
+                downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
             let eth_client = SignerMiddleware::new(
                 connections.eth_provider.clone().unwrap(),
-                ethereum_wallet.clone(),
+                ethereum_wallet.clone().with_chain_id(chain_id),
             );
             let eth_client = Arc::new(eth_client);
             check_for_eth(eth_client.address(), eth_client.clone()).await;

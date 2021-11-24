@@ -3,7 +3,10 @@ use abscissa_core::{Clap, Command, Runnable};
 use ethereum_gravity::deploy_erc20::deploy_erc20;
 use ethers::prelude::*;
 use gravity_proto::gravity::{DenomToErc20ParamsRequest, DenomToErc20Request};
-use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
+use gravity_utils::{
+    connection_prep::{check_for_eth, create_rpc_connections},
+    ethereum::downcast_to_u64,
+};
 use std::convert::TryFrom;
 use std::process::exit;
 use std::{sync::Arc, time::Duration};
@@ -52,12 +55,19 @@ impl Erc20 {
         )
         .await;
 
-        let mut grpc = connections.grpc.clone().unwrap();
+        let provider = connections.eth_provider.clone().unwrap();
+        let chain_id = provider
+            .get_chainid()
+            .await
+            .expect("Could not retrieve chain ID");
+        let chain_id =
+            downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
         let eth_client = SignerMiddleware::new(
             connections.eth_provider.clone().unwrap(),
-            ethereum_wallet.clone(),
+            ethereum_wallet.clone().with_chain_id(chain_id),
         );
         let eth_client = Arc::new(eth_client);
+        let mut grpc = connections.grpc.clone().unwrap();
 
         check_for_eth(eth_client.address(), eth_client.clone()).await;
 

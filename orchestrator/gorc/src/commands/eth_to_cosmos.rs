@@ -5,7 +5,10 @@ use ethereum_gravity::erc20_utils::get_erc20_balance;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
-use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
+use gravity_utils::{
+    connection_prep::{check_for_eth, create_rpc_connections},
+    ethereum::downcast_to_u64,
+};
 use std::{sync::Arc, time::Duration};
 
 const TIMEOUT: Duration = Duration::from_secs(60);
@@ -43,9 +46,16 @@ impl Runnable for EthToCosmosCmd {
             )
             .await;
 
+            let provider = connections.eth_provider.clone().unwrap();
+            let chain_id = provider
+                .get_chainid()
+                .await
+                .expect("Could not retrieve chain ID");
+            let chain_id =
+                downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
             let eth_client = SignerMiddleware::new(
                 connections.eth_provider.clone().unwrap(),
-                ethereum_wallet.clone(),
+                ethereum_wallet.clone().with_chain_id(chain_id),
             );
             let eth_client = Arc::new(eth_client);
             let cosmos_dest = self.args.get(3).expect("cosmos destination is required");

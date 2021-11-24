@@ -15,6 +15,7 @@ use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::{
     query_client::QueryClient as GravityQueryClient, DenomToErc20Request,
 };
+use gravity_utils::ethereum::downcast_to_u64;
 use std::str::FromStr;
 use std::sync::Arc;
 use tonic::transport::Channel;
@@ -28,7 +29,16 @@ pub async fn happy_path_test_v2(
 ) {
     let mut grpc_client = grpc_client;
     let eth_wallet = LocalWallet::from(keys[0].eth_key.clone());
-    let eth_client = Arc::new(SignerMiddleware::new(eth_provider.clone(), eth_wallet));
+    let provider = eth_provider.clone();
+    let chain_id = provider
+        .get_chainid()
+        .await
+        .expect("Could not retrieve chain ID");
+    let chain_id = downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
+    let eth_client = Arc::new(SignerMiddleware::new(
+        eth_provider.clone(),
+        eth_wallet.with_chain_id(chain_id),
+    ));
     let starting_event_nonce = get_event_nonce(gravity_address, eth_client.clone())
         .await
         .unwrap();

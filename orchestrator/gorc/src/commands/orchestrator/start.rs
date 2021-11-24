@@ -6,7 +6,7 @@ use gravity_utils::{
         check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
         wait_for_cosmos_node_ready,
     },
-    ethereum::format_eth_address,
+    ethereum::{downcast_to_u64, format_eth_address},
 };
 use orchestrator::main_loop::{
     orchestrator_main_loop, ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED,
@@ -64,9 +64,16 @@ impl Runnable for StartCommand {
 
             let mut grpc = connections.grpc.clone().unwrap();
             let contact = connections.contact.clone().unwrap();
+            let provider = connections.eth_provider.clone().unwrap();
+            let chain_id = provider
+                .get_chainid()
+                .await
+                .expect("Could not retrieve chain ID during orchestrator start");
+            let chain_id =
+                downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
             let eth_client = SignerMiddleware::new(
                 connections.eth_provider.clone().unwrap(),
-                ethereum_wallet.clone(),
+                ethereum_wallet.clone().with_chain_id(chain_id),
             );
             let eth_client = Arc::new(eth_client);
 
