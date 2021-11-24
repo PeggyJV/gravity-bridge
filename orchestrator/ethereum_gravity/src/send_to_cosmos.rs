@@ -8,7 +8,7 @@ use deep_space::address::Address as CosmosAddress;
 use ethers::prelude::*;
 use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
-use std::time::Duration;
+use std::{result::Result, time::Duration};
 
 const SEND_TO_COSMOS_GAS_LIMIT: u128 = 100_000;
 

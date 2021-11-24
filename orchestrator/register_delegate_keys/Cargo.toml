@@ -16,7 +16,7 @@ gravity_utils = {path = "../gravity_utils"}
 gravity_proto = {path = "../gravity_proto/"}
 
 deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="master"}
-ethers = { git = "https://github.com/mattsse/ethers-rs", branch = "matt/fix-unit8", features = ["abigen"]}
+ethers = { git = "https://github.com/gakonst/ethers-rs", branch = "master", features = ["abigen"] }
 contact = "0.4"
 serde_derive = "1.0"
 clarity = "0.4.11"

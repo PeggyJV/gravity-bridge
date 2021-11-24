@@ -9,7 +9,7 @@ use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::{downcast_to_u64, vec_u8_to_fixed_32};
 use gravity_utils::types::*;
-use std::cmp::min;
+use std::{cmp::min, result::Result};
 
 pub fn get_checkpoint_abi_encode(
     valset: &Valset,

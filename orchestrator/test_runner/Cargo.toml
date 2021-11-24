@@ -21,7 +21,7 @@ deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="master"}
 serde_derive = "1.0"
 clarity = "0.4.11"
 docopt = "1"
-ethers = { git = "https://github.com/mattsse/ethers-rs", branch = "matt/fix-unit8", features = ["abigen"]}
+ethers = { git = "https://github.com/gakonst/ethers-rs", branch = "master", features = ["abigen"] }
 serde = "1.0"
 actix = "0.12"
 actix-web = {version = "3", features=["openssl"]}
@@ -34,5 +34,5 @@ env_logger = "0.8"
 tokio = "1.4.0"
 rand = "0.8"
 tonic = "0.4"
-futures = "0.3"
+futures = "0.3.18"
 hex = "0.4.3"
