@@ -36,7 +36,7 @@ pub async fn happy_path_test_v2(
         .expect("Could not retrieve chain ID");
     let chain_id = downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
     let eth_client = Arc::new(SignerMiddleware::new(
-        eth_provider.clone(),
+        provider,
         eth_wallet.with_chain_id(chain_id),
     ));
     let starting_event_nonce = get_event_nonce(gravity_address, eth_client.clone())

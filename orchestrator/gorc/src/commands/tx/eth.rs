@@ -81,7 +81,7 @@ impl Runnable for SendToCosmos {
             let chain_id =
                 downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
             let eth_client = SignerMiddleware::new(
-                connections.eth_provider.clone().unwrap(),
+                provider,
                 ethereum_wallet.clone().with_chain_id(chain_id),
             );
             let eth_client = Arc::new(eth_client);
