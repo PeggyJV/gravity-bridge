@@ -354,7 +354,7 @@ mod gravity_mod {
     pub struct LogicCallEventFilter {
         pub invalidation_id: [u8; 32],
         pub invalidation_nonce: ethers::core::types::U256,
-        pub return_data: Vec<u8>,
+        pub return_data: ethers::core::types::Bytes,
         pub event_nonce: ethers::core::types::U256,
     }
     #[derive(
@@ -1021,7 +1021,7 @@ mod gravity_mod {
         pub fee_amounts: Vec<ethers::core::types::U256>,
         pub fee_token_contracts: Vec<ethers::core::types::Address>,
         pub logic_contract_address: ethers::core::types::Address,
-        pub payload: Vec<u8>,
+        pub payload: ethers::core::types::Bytes,
         pub time_out: ethers::core::types::U256,
         pub invalidation_id: [u8; 32],
         pub invalidation_nonce: ethers::core::types::U256,

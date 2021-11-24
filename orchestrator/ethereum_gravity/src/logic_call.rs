@@ -174,7 +174,7 @@ pub fn build_send_logic_call_contract_call(
                 fee_amounts,
                 fee_token_contracts,
                 logic_contract_address: call.logic_contract_address,
-                payload: call.payload.clone(),
+                payload: call.payload.clone().into(),
                 time_out: call.timeout.into(),
                 invalidation_id,
                 invalidation_nonce: call.invalidation_nonce.into(),

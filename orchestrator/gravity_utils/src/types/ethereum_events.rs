@@ -306,7 +306,7 @@ impl FromLog for LogicCallExecutedEvent {
         Ok(LogicCallExecutedEvent {
             invalidation_id: event.invalidation_id.into(),
             invalidation_nonce: event.invalidation_nonce,
-            return_data: event.return_data.into(),
+            return_data: event.return_data.to_vec(),
             event_nonce: event.event_nonce,
             block_height: block_height_from_log(&input)?,
         })
