@@ -1,10 +1,6 @@
 use crate::{
     types::{EthClient, EthSignerMiddleware},
-    utils::{
-        get_logic_call_nonce,
-        get_send_transaction_gas_price,
-        GasCost,
-    },
+    utils::{get_logic_call_nonce, get_send_transaction_gas_price, GasCost},
 };
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;

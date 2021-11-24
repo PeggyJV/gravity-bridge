@@ -11,7 +11,7 @@ gravity_abi = { path = "../gravity_abi" }
 gravity_utils = { path = "../gravity_utils" }
 
 deep_space = { git="https://github.com/iqlusioninc/deep_space/", branch="master" }
-ethers = { version = "0.5.4", features=["abigen"] }
+ethers = { git = "https://github.com/mattsse/ethers-rs", branch = "matt/fix-unit8", features = ["abigen"]}
 clarity = "0.4.11"
 web30 = "0.15.4"
 log = "0.4"

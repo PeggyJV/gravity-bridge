@@ -20,16 +20,22 @@ impl LogicCall {
         let mut transfers: Vec<Erc20Token> = Vec::new();
         let mut fees: Vec<Erc20Token> = Vec::new();
         for token in input.tokens {
-            transfers.push(Erc20Token::from_proto(token)?)
+            let transfer_token = Erc20Token::from_proto(token)?;
+            warn!("Transfer token: {:?}", transfer_token);
+            transfers.push(transfer_token);
         }
         for fee in input.fees {
-            fees.push(Erc20Token::from_proto(fee)?)
+            let fee_token = Erc20Token::from_proto(fee)?;
+            warn!("Fee token: {:?}", fee_token);
+            fees.push(fee_token);
         }
         if transfers.is_empty() || fees.is_empty() {
             return Err(GravityError::InvalidBridgeStateError(
                 "Transaction batch containing no transactions!".to_string(),
             ));
         }
+        warn!("Transfers: {:?}", transfers);
+        warn!("Fees: {:?}", fees);
 
         Ok(LogicCall {
             transfers,

@@ -179,9 +179,12 @@ pub async fn get_oldest_unsigned_logic_call(
         })
         .await?;
     let calls = request.into_inner().calls;
+    info!("Calls: {:?}", calls);
     let mut out = Vec::new();
     for call in calls {
-        out.push(LogicCall::from_proto(call)?)
+        let logic_call = LogicCall::from_proto(call)?;
+        warn!("Logic call from proto: {:?}", logic_call);
+        out.push(logic_call)
     }
     Ok(out)
 }

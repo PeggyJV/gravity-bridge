@@ -261,6 +261,7 @@ async fn test_specific_batch_signature() {
 /// Note: This is the message, you need to run Keccak256::digest() in order to get the 32byte
 /// digest that is normally signed or may be used as a 'hash of the message'
 pub fn encode_logic_call_confirm(gravity_id: String, call: LogicCall) -> Vec<u8> {
+    warn!("Encoding logic call confirm: {:?}", call);
     let transfer_amounts = call
         .transfers
         .iter()
@@ -281,6 +282,11 @@ pub fn encode_logic_call_confirm(gravity_id: String, call: LogicCall) -> Vec<u8>
         .iter()
         .map(|fee| Token::Address(fee.token_contract_address))
         .collect();
+
+    warn!("Transfer amounts: {:?}", transfer_amounts);
+    warn!("Transfer token contracts: {:?}", transfer_token_contracts);
+    warn!("Fee amounts: {:?}", fee_amounts);
+    warn!("Fee token contracts: {:?}", fee_token_contracts);
 
     abi::encode(&[
         Token::FixedBytes(gravity_id.into_bytes()), // Gravity Instance ID

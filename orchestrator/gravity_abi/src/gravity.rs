@@ -319,6 +319,7 @@ mod gravity_mod {
         Eq,
         PartialEq,
         ethers :: contract :: EthEvent,
+        ethers :: contract :: EthDisplay,
         serde :: Deserialize,
         serde :: Serialize,
     )]
@@ -342,6 +343,7 @@ mod gravity_mod {
         Eq,
         PartialEq,
         ethers :: contract :: EthEvent,
+        ethers :: contract :: EthDisplay,
         serde :: Deserialize,
         serde :: Serialize,
     )]
@@ -362,6 +364,7 @@ mod gravity_mod {
         Eq,
         PartialEq,
         ethers :: contract :: EthEvent,
+        ethers :: contract :: EthDisplay,
         serde :: Deserialize,
         serde :: Serialize,
     )]
@@ -386,6 +389,7 @@ mod gravity_mod {
         Eq,
         PartialEq,
         ethers :: contract :: EthEvent,
+        ethers :: contract :: EthDisplay,
         serde :: Deserialize,
         serde :: Serialize,
     )]
@@ -407,6 +411,7 @@ mod gravity_mod {
         Eq,
         PartialEq,
         ethers :: contract :: EthEvent,
+        ethers :: contract :: EthDisplay,
         serde :: Deserialize,
         serde :: Serialize,
     )]
@@ -421,7 +426,7 @@ mod gravity_mod {
         pub validators: Vec<ethers::core::types::Address>,
         pub powers: Vec<ethers::core::types::U256>,
     }
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Debug, Clone, PartialEq, Eq, ethers :: contract :: EthAbiType)]
     pub enum GravityEvents {
         Erc20DeployedEventFilter(Erc20DeployedEventFilter),
         LogicCallEventFilter(LogicCallEventFilter),
@@ -429,43 +434,6 @@ mod gravity_mod {
         TransactionBatchExecutedEventFilter(TransactionBatchExecutedEventFilter),
         ValsetUpdatedEventFilter(ValsetUpdatedEventFilter),
     }
-    impl ethers::core::abi::Tokenizable for GravityEvents {
-        fn from_token(
-            token: ethers::core::abi::Token,
-        ) -> Result<Self, ethers::core::abi::InvalidOutputType>
-        where
-            Self: Sized,
-        {
-            if let Ok(decoded) = Erc20DeployedEventFilter::from_token(token.clone()) {
-                return Ok(GravityEvents::Erc20DeployedEventFilter(decoded));
-            }
-            if let Ok(decoded) = LogicCallEventFilter::from_token(token.clone()) {
-                return Ok(GravityEvents::LogicCallEventFilter(decoded));
-            }
-            if let Ok(decoded) = SendToCosmosEventFilter::from_token(token.clone()) {
-                return Ok(GravityEvents::SendToCosmosEventFilter(decoded));
-            }
-            if let Ok(decoded) = TransactionBatchExecutedEventFilter::from_token(token.clone()) {
-                return Ok(GravityEvents::TransactionBatchExecutedEventFilter(decoded));
-            }
-            if let Ok(decoded) = ValsetUpdatedEventFilter::from_token(token.clone()) {
-                return Ok(GravityEvents::ValsetUpdatedEventFilter(decoded));
-            }
-            Err(ethers::core::abi::InvalidOutputType(
-                "Failed to decode all event variants".to_string(),
-            ))
-        }
-        fn into_token(self) -> ethers::core::abi::Token {
-            match self {
-                GravityEvents::Erc20DeployedEventFilter(element) => element.into_token(),
-                GravityEvents::LogicCallEventFilter(element) => element.into_token(),
-                GravityEvents::SendToCosmosEventFilter(element) => element.into_token(),
-                GravityEvents::TransactionBatchExecutedEventFilter(element) => element.into_token(),
-                GravityEvents::ValsetUpdatedEventFilter(element) => element.into_token(),
-            }
-        }
-    }
-    impl ethers::core::abi::TokenizableItem for GravityEvents {}
     impl ethers::contract::EthLogDecode for GravityEvents {
         fn decode_log(log: &ethers::core::abi::RawLog) -> Result<Self, ethers::core::abi::Error>
         where
@@ -487,6 +455,553 @@ mod gravity_mod {
                 return Ok(GravityEvents::ValsetUpdatedEventFilter(decoded));
             }
             Err(ethers::core::abi::Error::InvalidData)
+        }
+    }
+    impl ::std::fmt::Display for GravityEvents {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match self {
+                GravityEvents::Erc20DeployedEventFilter(element) => element.fmt(f),
+                GravityEvents::LogicCallEventFilter(element) => element.fmt(f),
+                GravityEvents::SendToCosmosEventFilter(element) => element.fmt(f),
+                GravityEvents::TransactionBatchExecutedEventFilter(element) => element.fmt(f),
+                GravityEvents::ValsetUpdatedEventFilter(element) => element.fmt(f),
+            }
+        }
+    }
+    #[doc = "Container type for all input parameters for the `deployERC20`function with signature `deployERC20(string,string,string,uint8)` and selector `[247, 149, 86, 55]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(name = "deployERC20", abi = "deployERC20(string,string,string,uint8)")]
+    pub struct DeployERC20Call {
+        pub cosmos_denom: String,
+        pub name: String,
+        pub symbol: String,
+        pub decimals: u8,
+    }
+    #[doc = "Container type for all input parameters for the `lastBatchNonce`function with signature `lastBatchNonce(address)` and selector `[1, 27, 33, 116]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(name = "lastBatchNonce", abi = "lastBatchNonce(address)")]
+    pub struct LastBatchNonceCall {
+        pub erc_20_address: ethers::core::types::Address,
+    }
+    #[doc = "Container type for all input parameters for the `lastLogicCallNonce`function with signature `lastLogicCallNonce(bytes32)` and selector `[201, 209, 148, 213]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(name = "lastLogicCallNonce", abi = "lastLogicCallNonce(bytes32)")]
+    pub struct LastLogicCallNonceCall {
+        pub invalidation_id: [u8; 32],
+    }
+    #[doc = "Container type for all input parameters for the `sendToCosmos`function with signature `sendToCosmos(address,bytes32,uint256)` and selector `[31, 251, 231, 249]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(name = "sendToCosmos", abi = "sendToCosmos(address,bytes32,uint256)")]
+    pub struct SendToCosmosCall {
+        pub token_contract: ethers::core::types::Address,
+        pub destination: [u8; 32],
+        pub amount: ethers::core::types::U256,
+    }
+    #[doc = "Container type for all input parameters for the `state_gravityId`function with signature `state_gravityId()` and selector `[189, 218, 129, 212]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(name = "state_gravityId", abi = "state_gravityId()")]
+    pub struct StateGravityIdCall;
+    #[doc = "Container type for all input parameters for the `state_invalidationMapping`function with signature `state_invalidationMapping(bytes32)` and selector `[125, 251, 111, 134]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(
+        name = "state_invalidationMapping",
+        abi = "state_invalidationMapping(bytes32)"
+    )]
+    pub struct StateInvalidationMappingCall(pub [u8; 32]);
+    #[doc = "Container type for all input parameters for the `state_lastBatchNonces`function with signature `state_lastBatchNonces(address)` and selector `[223, 151, 23, 75]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(name = "state_lastBatchNonces", abi = "state_lastBatchNonces(address)")]
+    pub struct StateLastBatchNoncesCall(pub ethers::core::types::Address);
+    #[doc = "Container type for all input parameters for the `state_lastEventNonce`function with signature `state_lastEventNonce()` and selector `[115, 178, 5, 71]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(name = "state_lastEventNonce", abi = "state_lastEventNonce()")]
+    pub struct StateLastEventNonceCall;
+    #[doc = "Container type for all input parameters for the `state_lastValsetCheckpoint`function with signature `state_lastValsetCheckpoint()` and selector `[242, 181, 51, 7]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(
+        name = "state_lastValsetCheckpoint",
+        abi = "state_lastValsetCheckpoint()"
+    )]
+    pub struct StateLastValsetCheckpointCall;
+    #[doc = "Container type for all input parameters for the `state_lastValsetNonce`function with signature `state_lastValsetNonce()` and selector `[181, 101, 97, 254]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(name = "state_lastValsetNonce", abi = "state_lastValsetNonce()")]
+    pub struct StateLastValsetNonceCall;
+    #[doc = "Container type for all input parameters for the `state_powerThreshold`function with signature `state_powerThreshold()` and selector `[229, 162, 181, 210]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(name = "state_powerThreshold", abi = "state_powerThreshold()")]
+    pub struct StatePowerThresholdCall;
+    #[doc = "Container type for all input parameters for the `submitBatch`function with signature `submitBatch(address[],uint256[],uint256,uint8[],bytes32[],bytes32[],uint256[],address[],uint256[],uint256,address,uint256)` and selector `[131, 180, 53, 219]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(
+        name = "submitBatch",
+        abi = "submitBatch(address[],uint256[],uint256,uint8[],bytes32[],bytes32[],uint256[],address[],uint256[],uint256,address,uint256)"
+    )]
+    pub struct SubmitBatchCall {
+        pub current_validators: ::std::vec::Vec<ethers::core::types::Address>,
+        pub current_powers: ::std::vec::Vec<ethers::core::types::U256>,
+        pub current_valset_nonce: ethers::core::types::U256,
+        pub v: ::std::vec::Vec<u8>,
+        pub r: ::std::vec::Vec<[u8; 32]>,
+        pub s: ::std::vec::Vec<[u8; 32]>,
+        pub amounts: ::std::vec::Vec<ethers::core::types::U256>,
+        pub destinations: ::std::vec::Vec<ethers::core::types::Address>,
+        pub fees: ::std::vec::Vec<ethers::core::types::U256>,
+        pub batch_nonce: ethers::core::types::U256,
+        pub token_contract: ethers::core::types::Address,
+        pub batch_timeout: ethers::core::types::U256,
+    }
+    #[doc = "Container type for all input parameters for the `submitLogicCall`function with signature `submitLogicCall(address[],uint256[],uint256,uint8[],bytes32[],bytes32[],(uint256[],address[],uint256[],address[],address,bytes,uint256,bytes32,uint256))` and selector `[12, 36, 108, 130]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(
+        name = "submitLogicCall",
+        abi = "submitLogicCall(address[],uint256[],uint256,uint8[],bytes32[],bytes32[],(uint256[],address[],uint256[],address[],address,bytes,uint256,bytes32,uint256))"
+    )]
+    pub struct SubmitLogicCallCall {
+        pub current_validators: ::std::vec::Vec<ethers::core::types::Address>,
+        pub current_powers: ::std::vec::Vec<ethers::core::types::U256>,
+        pub current_valset_nonce: ethers::core::types::U256,
+        pub v: ::std::vec::Vec<u8>,
+        pub r: ::std::vec::Vec<[u8; 32]>,
+        pub s: ::std::vec::Vec<[u8; 32]>,
+        pub args: LogicCallArgs,
+    }
+    #[doc = "Container type for all input parameters for the `testCheckValidatorSignatures`function with signature `testCheckValidatorSignatures(address[],uint256[],uint8[],bytes32[],bytes32[],bytes32,uint256)` and selector `[219, 124, 78, 87]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(
+        name = "testCheckValidatorSignatures",
+        abi = "testCheckValidatorSignatures(address[],uint256[],uint8[],bytes32[],bytes32[],bytes32,uint256)"
+    )]
+    pub struct TestCheckValidatorSignaturesCall {
+        pub current_validators: ::std::vec::Vec<ethers::core::types::Address>,
+        pub current_powers: ::std::vec::Vec<ethers::core::types::U256>,
+        pub v: ::std::vec::Vec<u8>,
+        pub r: ::std::vec::Vec<[u8; 32]>,
+        pub s: ::std::vec::Vec<[u8; 32]>,
+        pub the_hash: [u8; 32],
+        pub power_threshold: ethers::core::types::U256,
+    }
+    #[doc = "Container type for all input parameters for the `testMakeCheckpoint`function with signature `testMakeCheckpoint(address[],uint256[],uint256,bytes32)` and selector `[194, 39, 195, 11]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(
+        name = "testMakeCheckpoint",
+        abi = "testMakeCheckpoint(address[],uint256[],uint256,bytes32)"
+    )]
+    pub struct TestMakeCheckpointCall {
+        pub validators: ::std::vec::Vec<ethers::core::types::Address>,
+        pub powers: ::std::vec::Vec<ethers::core::types::U256>,
+        pub valset_nonce: ethers::core::types::U256,
+        pub gravity_id: [u8; 32],
+    }
+    #[doc = "Container type for all input parameters for the `updateValset`function with signature `updateValset(address[],uint256[],uint256,address[],uint256[],uint256,uint8[],bytes32[],bytes32[])` and selector `[227, 203, 159, 98]`"]
+    #[derive(
+        Clone,
+        Debug,
+        Default,
+        Eq,
+        PartialEq,
+        ethers :: contract :: EthCall,
+        ethers :: contract :: EthDisplay,
+        serde :: Deserialize,
+        serde :: Serialize,
+    )]
+    #[ethcall(
+        name = "updateValset",
+        abi = "updateValset(address[],uint256[],uint256,address[],uint256[],uint256,uint8[],bytes32[],bytes32[])"
+    )]
+    pub struct UpdateValsetCall {
+        pub new_validators: ::std::vec::Vec<ethers::core::types::Address>,
+        pub new_powers: ::std::vec::Vec<ethers::core::types::U256>,
+        pub new_valset_nonce: ethers::core::types::U256,
+        pub current_validators: ::std::vec::Vec<ethers::core::types::Address>,
+        pub current_powers: ::std::vec::Vec<ethers::core::types::U256>,
+        pub current_valset_nonce: ethers::core::types::U256,
+        pub v: ::std::vec::Vec<u8>,
+        pub r: ::std::vec::Vec<[u8; 32]>,
+        pub s: ::std::vec::Vec<[u8; 32]>,
+    }
+    #[derive(Debug, Clone, PartialEq, Eq, ethers :: contract :: EthAbiType)]
+    pub enum GravityCalls {
+        DeployERC20(DeployERC20Call),
+        LastBatchNonce(LastBatchNonceCall),
+        LastLogicCallNonce(LastLogicCallNonceCall),
+        SendToCosmos(SendToCosmosCall),
+        StateGravityId(StateGravityIdCall),
+        StateInvalidationMapping(StateInvalidationMappingCall),
+        StateLastBatchNonces(StateLastBatchNoncesCall),
+        StateLastEventNonce(StateLastEventNonceCall),
+        StateLastValsetCheckpoint(StateLastValsetCheckpointCall),
+        StateLastValsetNonce(StateLastValsetNonceCall),
+        StatePowerThreshold(StatePowerThresholdCall),
+        SubmitBatch(SubmitBatchCall),
+        SubmitLogicCall(SubmitLogicCallCall),
+        TestCheckValidatorSignatures(TestCheckValidatorSignaturesCall),
+        TestMakeCheckpoint(TestMakeCheckpointCall),
+        UpdateValset(UpdateValsetCall),
+    }
+    impl ethers::core::abi::AbiDecode for GravityCalls {
+        fn decode(data: impl AsRef<[u8]>) -> Result<Self, ethers::core::abi::AbiError> {
+            if let Ok(decoded) =
+                <DeployERC20Call as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(GravityCalls::DeployERC20(decoded));
+            }
+            if let Ok(decoded) =
+                <LastBatchNonceCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(GravityCalls::LastBatchNonce(decoded));
+            }
+            if let Ok(decoded) =
+                <LastLogicCallNonceCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(GravityCalls::LastLogicCallNonce(decoded));
+            }
+            if let Ok(decoded) =
+                <SendToCosmosCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(GravityCalls::SendToCosmos(decoded));
+            }
+            if let Ok(decoded) =
+                <StateGravityIdCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(GravityCalls::StateGravityId(decoded));
+            }
+            if let Ok(decoded) =
+                <StateInvalidationMappingCall as ethers::core::abi::AbiDecode>::decode(
+                    data.as_ref(),
+                )
+            {
+                return Ok(GravityCalls::StateInvalidationMapping(decoded));
+            }
+            if let Ok(decoded) =
+                <StateLastBatchNoncesCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(GravityCalls::StateLastBatchNonces(decoded));
+            }
+            if let Ok(decoded) =
+                <StateLastEventNonceCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(GravityCalls::StateLastEventNonce(decoded));
+            }
+            if let Ok(decoded) =
+                <StateLastValsetCheckpointCall as ethers::core::abi::AbiDecode>::decode(
+                    data.as_ref(),
+                )
+            {
+                return Ok(GravityCalls::StateLastValsetCheckpoint(decoded));
+            }
+            if let Ok(decoded) =
+                <StateLastValsetNonceCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(GravityCalls::StateLastValsetNonce(decoded));
+            }
+            if let Ok(decoded) =
+                <StatePowerThresholdCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(GravityCalls::StatePowerThreshold(decoded));
+            }
+            if let Ok(decoded) =
+                <SubmitBatchCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(GravityCalls::SubmitBatch(decoded));
+            }
+            if let Ok(decoded) =
+                <SubmitLogicCallCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(GravityCalls::SubmitLogicCall(decoded));
+            }
+            if let Ok(decoded) =
+                <TestCheckValidatorSignaturesCall as ethers::core::abi::AbiDecode>::decode(
+                    data.as_ref(),
+                )
+            {
+                return Ok(GravityCalls::TestCheckValidatorSignatures(decoded));
+            }
+            if let Ok(decoded) =
+                <TestMakeCheckpointCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(GravityCalls::TestMakeCheckpoint(decoded));
+            }
+            if let Ok(decoded) =
+                <UpdateValsetCall as ethers::core::abi::AbiDecode>::decode(data.as_ref())
+            {
+                return Ok(GravityCalls::UpdateValset(decoded));
+            }
+            Err(ethers::core::abi::Error::InvalidData.into())
+        }
+    }
+    impl ethers::core::abi::AbiEncode for GravityCalls {
+        fn encode(self) -> Vec<u8> {
+            match self {
+                GravityCalls::DeployERC20(element) => element.encode(),
+                GravityCalls::LastBatchNonce(element) => element.encode(),
+                GravityCalls::LastLogicCallNonce(element) => element.encode(),
+                GravityCalls::SendToCosmos(element) => element.encode(),
+                GravityCalls::StateGravityId(element) => element.encode(),
+                GravityCalls::StateInvalidationMapping(element) => element.encode(),
+                GravityCalls::StateLastBatchNonces(element) => element.encode(),
+                GravityCalls::StateLastEventNonce(element) => element.encode(),
+                GravityCalls::StateLastValsetCheckpoint(element) => element.encode(),
+                GravityCalls::StateLastValsetNonce(element) => element.encode(),
+                GravityCalls::StatePowerThreshold(element) => element.encode(),
+                GravityCalls::SubmitBatch(element) => element.encode(),
+                GravityCalls::SubmitLogicCall(element) => element.encode(),
+                GravityCalls::TestCheckValidatorSignatures(element) => element.encode(),
+                GravityCalls::TestMakeCheckpoint(element) => element.encode(),
+                GravityCalls::UpdateValset(element) => element.encode(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for GravityCalls {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match self {
+                GravityCalls::DeployERC20(element) => element.fmt(f),
+                GravityCalls::LastBatchNonce(element) => element.fmt(f),
+                GravityCalls::LastLogicCallNonce(element) => element.fmt(f),
+                GravityCalls::SendToCosmos(element) => element.fmt(f),
+                GravityCalls::StateGravityId(element) => element.fmt(f),
+                GravityCalls::StateInvalidationMapping(element) => element.fmt(f),
+                GravityCalls::StateLastBatchNonces(element) => element.fmt(f),
+                GravityCalls::StateLastEventNonce(element) => element.fmt(f),
+                GravityCalls::StateLastValsetCheckpoint(element) => element.fmt(f),
+                GravityCalls::StateLastValsetNonce(element) => element.fmt(f),
+                GravityCalls::StatePowerThreshold(element) => element.fmt(f),
+                GravityCalls::SubmitBatch(element) => element.fmt(f),
+                GravityCalls::SubmitLogicCall(element) => element.fmt(f),
+                GravityCalls::TestCheckValidatorSignatures(element) => element.fmt(f),
+                GravityCalls::TestMakeCheckpoint(element) => element.fmt(f),
+                GravityCalls::UpdateValset(element) => element.fmt(f),
+            }
+        }
+    }
+    impl ::std::convert::From<DeployERC20Call> for GravityCalls {
+        fn from(var: DeployERC20Call) -> Self {
+            GravityCalls::DeployERC20(var)
+        }
+    }
+    impl ::std::convert::From<LastBatchNonceCall> for GravityCalls {
+        fn from(var: LastBatchNonceCall) -> Self {
+            GravityCalls::LastBatchNonce(var)
+        }
+    }
+    impl ::std::convert::From<LastLogicCallNonceCall> for GravityCalls {
+        fn from(var: LastLogicCallNonceCall) -> Self {
+            GravityCalls::LastLogicCallNonce(var)
+        }
+    }
+    impl ::std::convert::From<SendToCosmosCall> for GravityCalls {
+        fn from(var: SendToCosmosCall) -> Self {
+            GravityCalls::SendToCosmos(var)
+        }
+    }
+    impl ::std::convert::From<StateGravityIdCall> for GravityCalls {
+        fn from(var: StateGravityIdCall) -> Self {
+            GravityCalls::StateGravityId(var)
+        }
+    }
+    impl ::std::convert::From<StateInvalidationMappingCall> for GravityCalls {
+        fn from(var: StateInvalidationMappingCall) -> Self {
+            GravityCalls::StateInvalidationMapping(var)
+        }
+    }
+    impl ::std::convert::From<StateLastBatchNoncesCall> for GravityCalls {
+        fn from(var: StateLastBatchNoncesCall) -> Self {
+            GravityCalls::StateLastBatchNonces(var)
+        }
+    }
+    impl ::std::convert::From<StateLastEventNonceCall> for GravityCalls {
+        fn from(var: StateLastEventNonceCall) -> Self {
+            GravityCalls::StateLastEventNonce(var)
+        }
+    }
+    impl ::std::convert::From<StateLastValsetCheckpointCall> for GravityCalls {
+        fn from(var: StateLastValsetCheckpointCall) -> Self {
+            GravityCalls::StateLastValsetCheckpoint(var)
+        }
+    }
+    impl ::std::convert::From<StateLastValsetNonceCall> for GravityCalls {
+        fn from(var: StateLastValsetNonceCall) -> Self {
+            GravityCalls::StateLastValsetNonce(var)
+        }
+    }
+    impl ::std::convert::From<StatePowerThresholdCall> for GravityCalls {
+        fn from(var: StatePowerThresholdCall) -> Self {
+            GravityCalls::StatePowerThreshold(var)
+        }
+    }
+    impl ::std::convert::From<SubmitBatchCall> for GravityCalls {
+        fn from(var: SubmitBatchCall) -> Self {
+            GravityCalls::SubmitBatch(var)
+        }
+    }
+    impl ::std::convert::From<SubmitLogicCallCall> for GravityCalls {
+        fn from(var: SubmitLogicCallCall) -> Self {
+            GravityCalls::SubmitLogicCall(var)
+        }
+    }
+    impl ::std::convert::From<TestCheckValidatorSignaturesCall> for GravityCalls {
+        fn from(var: TestCheckValidatorSignaturesCall) -> Self {
+            GravityCalls::TestCheckValidatorSignatures(var)
+        }
+    }
+    impl ::std::convert::From<TestMakeCheckpointCall> for GravityCalls {
+        fn from(var: TestMakeCheckpointCall) -> Self {
+            GravityCalls::TestMakeCheckpoint(var)
+        }
+    }
+    impl ::std::convert::From<UpdateValsetCall> for GravityCalls {
+        fn from(var: UpdateValsetCall) -> Self {
+            GravityCalls::UpdateValset(var)
         }
     }
     #[doc = "`LogicCallArgs(uint256[],address[],uint256[],address[],address,bytes,uint256,bytes32,uint256)`"]
