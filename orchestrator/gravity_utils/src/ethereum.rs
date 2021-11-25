@@ -1,7 +1,7 @@
 use crate::error::GravityError;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
-use std::panic;
+use std::{panic, result::Result};
 
 pub fn downcast_to_f32(input: U256) -> Option<f32> {
     // technically the max value of u128 is larger than f32, but

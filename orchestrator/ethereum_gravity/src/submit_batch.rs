@@ -9,7 +9,7 @@ use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
 use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
 use gravity_utils::types::*;
-use std::time::Duration;
+use std::{result::Result, time::Duration};
 
 /// this function generates an appropriate Ethereum transaction
 /// to submit the provided transaction batch

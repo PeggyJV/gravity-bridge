@@ -4,7 +4,7 @@ use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::types::{FromLog, ValsetUpdatedEvent, VALSET_UPDATED_EVENT_STR};
 use gravity_utils::{error::GravityError, ethereum::downcast_to_u64, types::Valset};
-use std::panic;
+use std::{panic, result::Result};
 use tonic::transport::Channel;
 
 /// This function finds the latest valset on the Gravity contract by looking back through the event

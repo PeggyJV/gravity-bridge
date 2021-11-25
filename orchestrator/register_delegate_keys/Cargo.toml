@@ -16,13 +16,13 @@ gravity_utils = {path = "../gravity_utils"}
 gravity_proto = {path = "../gravity_proto/"}
 
 deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="master"}
-ethers = { version = "0.5.4", features=["abigen"] }
+ethers = { git = "https://github.com/gakonst/ethers-rs", branch = "master", features = ["abigen"] }
 contact = "0.4"
 serde_derive = "1.0"
 clarity = "0.4.11"
 docopt = "1"
 serde = "1.0"
-actix-rt = "2.2.0"
+actix-rt = "2.5"
 lazy_static = "1"
 web30 = "0.15"
 env_logger = "0.8"

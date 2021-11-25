@@ -25,7 +25,7 @@ use gravity_utils::{
         VALSET_UPDATED_EVENT_STR,
     },
 };
-use std::time;
+use std::{result::Result, time};
 use tonic::transport::Channel;
 
 pub async fn check_for_events(

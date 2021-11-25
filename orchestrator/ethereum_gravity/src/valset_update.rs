@@ -9,7 +9,7 @@ use gravity_abi::gravity::*;
 use gravity_utils::{
     error::GravityError, message_signatures::encode_valset_confirm_hashed, types::*,
 };
-use std::time::Duration;
+use std::{result::Result, time::Duration};
 
 /// this function generates an appropriate Ethereum transaction
 /// to submit the provided validator set and signatures.

@@ -13,7 +13,7 @@ use gravity_abi::gravity::*;
 use gravity_utils::ethereum::{bytes_to_hex_str, vec_u8_to_fixed_32};
 use gravity_utils::types::*;
 use gravity_utils::{error::GravityError, message_signatures::encode_logic_call_confirm_hashed};
-use std::time::Duration;
+use std::{result::Result, time::Duration};
 
 /// this function generates an appropriate Ethereum transaction
 /// to submit the provided logic call
@@ -178,7 +178,7 @@ pub fn build_send_logic_call_contract_call(
                 fee_amounts,
                 fee_token_contracts,
                 logic_contract_address: call.logic_contract_address,
-                payload: call.payload.clone(),
+                payload: call.payload.clone().into(),
                 time_out: call.timeout.into(),
                 invalidation_id,
                 invalidation_nonce: call.invalidation_nonce.into(),

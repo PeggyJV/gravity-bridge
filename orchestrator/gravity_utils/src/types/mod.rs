@@ -3,9 +3,11 @@ mod ethereum_events;
 mod logic_call;
 mod signatures;
 mod valsets;
+
 use crate::error::GravityError;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use std::result::Result;
 
 pub use batches::*;
 pub use ethereum_events::*;

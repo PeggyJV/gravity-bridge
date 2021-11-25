@@ -11,7 +11,7 @@ gravity_abi = { path = "../gravity_abi" }
 gravity_proto = { path = "../gravity_proto/" }
 cosmos-sdk-proto = "0.6.3"
 deep_space = { git="https://github.com/iqlusioninc/deep_space/", branch="master" }
-ethers = { version = "0.5.4", features=["abigen"] }
+ethers = { git = "https://github.com/gakonst/ethers-rs", branch = "master", features = ["abigen"] }
 web30 = "0.15"
 clarity = "0.4.11"
 num256 = "0.3"
@@ -27,4 +27,4 @@ sha3 = "0.9"
 rustc-hex = "2.1.0"
 [dev_dependencies]
 rand = "0.8"
-actix = "0.11"
+actix = "0.12"

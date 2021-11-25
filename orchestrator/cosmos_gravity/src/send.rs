@@ -17,7 +17,7 @@ use gravity_utils::ethereum::format_eth_address;
 use prost::Message;
 use std::cmp;
 use std::collections::HashSet;
-use std::time::Duration;
+use std::{result::Result, time::Duration};
 
 pub const MEMO: &str = "Sent using Gravity Bridge Orchestrator";
 pub const TIMEOUT: Duration = Duration::from_secs(60);

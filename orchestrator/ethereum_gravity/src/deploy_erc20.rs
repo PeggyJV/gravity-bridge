@@ -6,7 +6,7 @@ use crate::{types::EthClient, utils::get_send_transaction_gas_price};
 use ethers::prelude::*;
 use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
-use std::time::Duration;
+use std::{result::Result, time::Duration};
 
 /// Calls the Gravity ethereum contract to deploy the ERC20 representation of the given Cosmos asset
 /// denom. If an existing contract is already deployed representing this asset this call will cost

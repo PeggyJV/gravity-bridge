@@ -13,6 +13,7 @@ use ethers::abi::RawLog;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
+use std::result::Result;
 
 pub const ERC20_DEPLOYED_EVENT_STR: &'static str =
     "ERC20DeployedEvent(string,address,string,string,uint8,uint256)";
@@ -305,7 +306,7 @@ impl FromLog for LogicCallExecutedEvent {
         Ok(LogicCallExecutedEvent {
             invalidation_id: event.invalidation_id.into(),
             invalidation_nonce: event.invalidation_nonce,
-            return_data: event.return_data.into(),
+            return_data: event.return_data.to_vec(),
             event_nonce: event.event_nonce,
             block_height: block_height_from_log(&input)?,
         })

@@ -1,7 +1,7 @@
 use super::*;
 use crate::error::GravityError;
 use ethers::types::{Address as EthAddress, Signature as EthSignature};
-use std::convert::TryFrom;
+use std::{convert::TryFrom, result::Result};
 
 /// the response we get when querying for a valset confirmation
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
