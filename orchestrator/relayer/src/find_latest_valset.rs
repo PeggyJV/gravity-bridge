@@ -26,7 +26,7 @@ pub async fn find_latest_valset(
     let mut end_filter_block = eth_client.get_block_number().await?;
 
     while end_filter_block > 0u64.into() {
-        trace!("About to submit a Valset or Batch, looking back into the history to find the last Valset Update, on block {}", end_filter_block);
+        debug!("About to submit a Valset or Batch, looking back into the history to find the last Valset Update, on block {}", end_filter_block);
 
         let start_filter_block = end_filter_block.saturating_sub(BLOCKS_TO_SEARCH.into());
         filter = filter.select(start_filter_block..end_filter_block);
@@ -38,7 +38,7 @@ pub async fn find_latest_valset(
         // filtered blockspace...need more clarity on how severe an error it is if one of these events is malformed, and if
         // we should return early with an error or just log it the way the previous version did
         for logged_event in filtered_logged_events {
-            trace!("Found event {:?}", logged_event);
+            debug!("Found event {:?}", logged_event);
 
             match ValsetUpdatedEvent::from_log(&logged_event) {
                 Ok(valset_updated_event) => {
