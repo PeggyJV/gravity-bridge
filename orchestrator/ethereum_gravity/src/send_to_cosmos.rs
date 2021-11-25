@@ -21,10 +21,15 @@ pub async fn send_to_cosmos(
     wait_timeout: Option<Duration>,
     eth_client: EthClient,
 ) -> Result<TxHash, GravityError> {
+    // TODO(bolten): this value is ported from web30, does it match our expectations?
+    // Check if the allowance remaining is greater than half of a U256 - it's as good
+    // a test as any.
+    let allowance_threshold = U256::MAX.div_mod(2u32.into()).0;
     let approved = check_erc20_approved(
         erc20,
         gravity_contract,
         eth_client.address(),
+        allowance_threshold,
         eth_client.clone(),
     )
     .await?;

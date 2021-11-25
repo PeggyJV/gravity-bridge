@@ -8,21 +8,20 @@ use std::{result::Result, time::Duration};
 /// using any given address. What exactly this does can be hard to grok, essentially when
 /// you want contract A to be able to spend your erc20 contract funds you need to call 'approve'
 /// on the ERC20 contract with your own address and A's address so that in the future when you call
-/// contract A it can manipulate your ERC20 balances. This function checks if that has already been done.
+/// contract A it can manipulate your ERC20 balances. This function checks if that has already been done
+/// and that the allowed amount is greater than the provided allowance threshold.
 pub async fn check_erc20_approved(
     erc20: Address,
     target_contract: Address,
     address: Address,
+    allowance_threshold: U256,
     eth_client: EthClient,
 ) -> Result<bool, GravityError> {
     let erc20_contract = ERC20::new(erc20, eth_client.clone());
     let contract_call = erc20_contract.allowance(address, target_contract);
     let allowance = contract_call.call().await?;
 
-    // TODO(bolten): verify if this check is sufficient/correct
-    // Check if the allowance remaining is greater than half of a U256 - it's as good
-    // a test as any.
-    Ok(allowance > (U256::MAX.div_mod(2u32.into()).0))
+    Ok(allowance > allowance_threshold)
 }
 
 /// Approves a given contract to spend erc20 funds from the given address from the erc20 contract provided.
