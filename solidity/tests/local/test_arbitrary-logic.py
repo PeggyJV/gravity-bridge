@@ -3,39 +3,58 @@
 from conftest import *
 
 def test_submitLogicCall_malformed_valset_reverts(signers):
-    with brownie.reverts("Malformed current validator set"):
+    try:
         run_test(signers, malformedCurrentValset=True)
+    except ValueError as err:
+        assert err.args[0] == "Malformed current validator set"
+    else:
+        raise "Error"
 
 def test_submitLogicCall_invalidation_nonce_not_incremented_reverts(signers):
-    with brownie.reverts("New invalidation nonce must be greater than the current nonce"):
+    try:
         run_test(signers, invalidationNonceNotHigher=True)
+    except ValueError as err:
+        assert err.args[0] == "New invalidation nonce must be greater than the current nonce"
+    else:
+        raise "Error"
 
-# https://github.com/trufflesuite/ganache/issues/332
-# After the test, we can confirm the revert string but ganach is crashed.
-# Hardhat is not crashed but it fails on gas estimation.
-# def test_submitLogicCall_non_matching_checkpoint_for_current_valset_reverts(signers):
-#     with brownie.reverts("Supplied current validators and powers do not match checkpoint"):
-#         run_test(signers, nonMatchingCurrentValset=True)
+def test_submitLogicCall_non_matching_checkpoint_for_current_valset_reverts(signers):
+    try:
+        run_test(signers, nonMatchingCurrentValset=True)
+    except ValueError as err:
+        assert err.args[0] == "Supplied current validators and powers do not match checkpoint."
+    else:
+        raise "Error"
 
-# https://github.com/trufflesuite/ganache/issues/332
-# def test_submitLogicCall_bad_validator_sig_reverts(signers):
-#     with brownie.reverts("Validator signature does not match"):
-#         run_test(signers, badValidatorSig=True)
+def test_submitLogicCall_bad_validator_sig_reverts(signers):
+    try:
+        run_test(signers, badValidatorSig=True)
+    except ValueError as err:
+        assert err.args[0] == "Validator signature does not match."
+    else:
+        raise "Error"
 
 def test_allows_zeroed_sig(signers):
     run_test(signers, zeroedValidatorSig=True)
 
-# https://github.com/trufflesuite/ganache/issues/332
-# def test_not_enough_signatures_reverts(signers):
-#     with brownie.reverts("Submitted validator set signatures do not have enough power"):
-#         run_test(signers, notEnoughPower=True)
+def test_not_enough_signatures_reverts(signers):
+    try:
+        run_test(signers, notEnoughPower=True)
+    except ValueError as err:
+        assert err.args[0] == "Submitted validator set signatures do not have enough power."
+    else:
+        raise "Error"
 
 def test_barely_enough_signatures(signers):
     run_test(signers, barelyEnoughPower=True)
 
 def test_timeout_reverts(signers):
-    with brownie.reverts("Timed out"):
+    try:
         run_test(signers, timedOut=True)
+    except ValueError as err:
+        assert err.args[0] == "Timed out"
+    else:
+        raise "Error"
 
 def test_good_hash(signers):
     gravityId = bstring2bytes32(b"foo")
@@ -266,6 +285,14 @@ def run_test(signers, invalidationNonceNotHigher=False, malformedTxBatch=False, 
         sig_v[7] = 0
         sig_v[9] = 0
         sig_v[11] = 0
+    
+    tx_data = gravity.submitLogicCall.encode_input(getSignerAddresses(validators), powers, currentValsetNonce, sig_v, sig_r, sig_s, logicCallArgs)
+    try:
+        gas = web3.eth.estimate_gas({"to": gravity.address, "from": signers[0].address, "data": tx_data})
+    except ValueError as err:
+        raise ValueError(err.args[0]["message"][50:])
+    except BaseException as err:
+        print(f"Unexpected {err=}, {type(err)=}")
 
     gravity.submitLogicCall(getSignerAddresses(validators), powers, currentValsetNonce, sig_v, sig_r, sig_s, logicCallArgs, {"from": signers[0]})
 

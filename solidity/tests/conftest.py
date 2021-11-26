@@ -4,7 +4,7 @@ import pytest
 
 import brownie
 
-from brownie import web3, TestLogicContract, SimpleLogicBatchMiddleware, Gravity, TestERC20A, Contract
+from brownie import web3, TestLogicContract, SimpleLogicBatchMiddleware, Gravity, TestERC20A, ReentrantERC20, TestTokenBatchMiddleware, HashingTest, TestUniswapLiquidity, Contract
 
 from eth_abi import encode_abi
 
@@ -13,10 +13,15 @@ from eth_account.messages import encode_defunct
 @pytest.fixture(scope="session")
 def signers(accounts):
     privKeys = getPrivKeys()
-    for i in range(1, 158):
-        accounts.add(privKeys[i - 1])
-        accounts[0].transfer(accounts[i], 3466666 * 10 ** 18)
-    return accounts[1:]
+    acc_len = len(accounts)
+    add_len = len(privKeys)
+    if acc_len > add_len:
+        return accounts[acc_len - add_len:]
+
+    for i in range(0, add_len):
+        accounts.add(privKeys[i])
+        accounts[0].transfer(accounts[acc_len + i], 3466666 * 10 ** 18)
+    return accounts[acc_len:]
 
 def getPrivKeys():
     return [
@@ -188,7 +193,7 @@ def getSignerAddresses(signers):
 def makeCheckpoint(validators, powers, valsetNonce, gravityId):
     methodName = b"checkpoint"
     abiEncoded = encode_abi(["bytes32", "bytes32", "uint256", "address[]", "uint256[]"], [gravityId, methodName, valsetNonce, validators, powers])
-    checkpoint = web3.keccak(abiEncoded).hex()
+    checkpoint = web3.keccak(abiEncoded)
     return checkpoint
 
 def examplePowers():
