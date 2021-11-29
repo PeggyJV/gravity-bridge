@@ -36,9 +36,9 @@ jobs:
       - run: cd solidity && npm ci
       - run: cd solidity && pip install -r requirements.txt
       - run: brownie pm install OpenZeppelin/openzeppelin-contracts@3.1.0
+      - run: brownie pm install Uniswap/v2-core@1.0.0
       - run: brownie pm install Uniswap/v2-periphery@1.0.0-beta.0
       - run: curl https://raw.githubusercontent.com/Uniswap/v2-periphery/master/contracts/interfaces/IUniswapV2Router02.sol -o ~/.brownie/packages/Uniswap/v2-periphery@1.0.0-beta.0/contracts/interfaces/IUniswapV2Router02.sol
-      - run: brownie pm install Uniswap/v2-core@1.0.0
       - run: cd solidity && brownie test tests/local
         
   arbitrary-logic-tests:
@@ -58,12 +58,16 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - run: npm install -g ganache-cli
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
       - run: cd solidity && npm ci
       - run: cd solidity && pip install -r requirements.txt
       - run: brownie pm install OpenZeppelin/openzeppelin-contracts@3.1.0
+      - run: brownie pm install Uniswap/v2-core@1.0.0
       - run: brownie pm install Uniswap/v2-periphery@1.0.0-beta.0
       - run: curl https://raw.githubusercontent.com/Uniswap/v2-periphery/master/contracts/interfaces/IUniswapV2Router02.sol -o ~/.brownie/packages/Uniswap/v2-periphery@1.0.0-beta.0/contracts/interfaces/IUniswapV2Router02.sol
-      - run: brownie pm install Uniswap/v2-core@1.0.0
       - run: cd solidity && ganache-cli --accounts 10 --hardfork istanbul --fork https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_ID}@11780000 --gasLimit 12000000 --mnemonic brownie --port 8545 --defaultBalanceEther 1544266562 --chainId 1 --unlock 0x0c731Fb0D03211DD32A456370AD2ec3fFad46520 &
         env:
           ALCHEMY_ID: ${{ secrets.ALCHEMY_ID }}
