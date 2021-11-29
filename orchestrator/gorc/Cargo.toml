@@ -19,7 +19,7 @@ orchestrator = { path = "../orchestrator" }
 relayer = { path = "../relayer" }
 
 deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="master"}
-ethers = { git = "https://github.com/gakonst/ethers-rs", branch = "master", features = ["abigen"] }
+ethers = "0.6.1"
 clarity = "0.4.12"
 actix-rt = "2.5"
 rpassword = "5"
