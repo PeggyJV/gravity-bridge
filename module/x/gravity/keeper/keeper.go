@@ -424,7 +424,6 @@ func (k Keeper) SetOutgoingTx(ctx sdk.Context, outgoing types.OutgoingTx) {
 		types.MakeOutgoingTxKey(outgoing.GetStoreIndex()),
 		k.cdc.MustMarshal(any),
 	)
-	k.Logger(ctx).Info("setting outgoing tx", "otx", outgoing, "any", string(k.cdc.MustMarshal(any)), "store index", fmt.Sprintf("%x", outgoing.GetStoreIndex()))
 }
 
 // DeleteOutgoingTx deletes a given outgoingtx

@@ -21,7 +21,6 @@ func (k Keeper) recordEventVote(
 	// We check the event nonce in processEthereumEvent as well,
 	// but checking it here gives individual eth signers a chance to retry,
 	// and prevents validators from submitting two claims with the same nonce
-	k.Logger(ctx).Info("recording event vote", "event", event.String(), "validator", val.String())
 	lastEventNonce := k.getLastEventNonceByValidator(ctx, val)
 	expectedNonce := lastEventNonce + 1
 	if event.GetEventNonce() != expectedNonce {
@@ -119,7 +118,6 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.Ether
 func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent) {
 	// then execute in a new Tx so that we can store state on failure
 	xCtx, commit := ctx.CacheContext()
-	k.Logger(ctx).Info("processing ethereum event", "event", event.String(), "cache context", xCtx)
 	if err := k.Handle(xCtx, event); err != nil { // execute with a transient storage
 		// If the attestation fails, something has gone wrong and we can't recover it. Log and move on
 		// The attestation will still be marked "Observed", and validators can still be slashed for not
