@@ -39,7 +39,7 @@ jobs:
       - run: cd solidity && brownie pm install Uniswap/v2-periphery@1.0.0-beta.0
       - run: curl https://raw.githubusercontent.com/Uniswap/v2-periphery/master/contracts/interfaces/IUniswapV2Router02.sol -o ~/.brownie/packages/Uniswap/v2-periphery@1.0.0-beta.0/contracts/interfaces/IUniswapV2Router02.sol
       - run: cd ~/.brownie/packages/Uniswap/v2-core@1.0.0/contracts/interfaces && ls
-      # - run: cd solidity && brownie test tests/local
+      - run: cd solidity && brownie test tests/local
         
   # arbitrary-logic-tests:
   #   runs-on: ubuntu-latest
