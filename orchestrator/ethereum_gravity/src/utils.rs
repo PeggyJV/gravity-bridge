@@ -1,6 +1,6 @@
 use crate::types::EthClient;
 use ethers::core::abi::{self, Token};
-use ethers::middleware::gas_oracle::{Etherscan, GasCategory};
+use ethers::middleware::gas_oracle::Etherscan;
 use ethers::prelude::gas_oracle::GasOracle;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -195,9 +195,9 @@ pub async fn get_call_gas_cost(eth_client: EthClient) -> Result<GasCost, Gravity
 /// If ETHERSCAN_API_KEY env var is set, we'll call out to Etherscan for a gas estimate.
 /// Otherwise, just call eth_gasPrice.
 pub async fn get_send_transaction_gas_price(eth_client: EthClient) -> Result<U256, GravityError> {
-    if let Ok(api_key) = std::env::var("ETHERSCAN_API_KEY") {
-        let etherscan_oracle =
-            Etherscan::new(Some(api_key.as_str())).category(GasCategory::Standard);
+    if let Ok(_) = std::env::var("ETHERSCAN_API_KEY") {
+        let etherscan_client = Client::new_from_env(Chain::Mainnet)?;
+        let etherscan_oracle = Etherscan::new(etherscan_client);
         return Ok(etherscan_oracle.fetch().await?);
     }
 

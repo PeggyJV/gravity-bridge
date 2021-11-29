@@ -8,6 +8,7 @@ use deep_space::error::PrivateKeyError as CosmosPrivateKeyError;
 use ethers::abi::ethereum_types::FromDecStrErr as EthersParseUintError;
 use ethers::abi::Error as EthersAbiError;
 use ethers::contract::AbiError as EthersContractAbiError;
+use ethers::prelude::errors::EtherscanError;
 use ethers::prelude::gas_oracle::GasOracleError as EthersGasOracleError;
 use ethers::prelude::signer::SignerMiddlewareError;
 use ethers::prelude::ContractError;
@@ -40,6 +41,7 @@ pub enum GravityError {
     EthersProviderError(EthersProviderError),
     EthersSignatureError(EthersSignatureError),
     EthersWalletError(EthersWalletError),
+    EtherscanError(EtherscanError),
     GravityContractError(String),
     InvalidArgumentError(String),
     InvalidBridgeStateError(String),
@@ -86,6 +88,7 @@ impl fmt::Display for GravityError {
             GravityError::EthersProviderError(val) => write!(f, "Ethers provider error: {}", val),
             GravityError::EthersSignatureError(val) => write!(f, "Ethers signature error: {}", val),
             GravityError::EthersWalletError(val) => write!(f, "Ethers wallet error: {}", val),
+            GravityError::EtherscanError(val) => write!(f, "Etherscan error: {}", val),
             GravityError::GravityContractError(val) => write!(f, "Gravity contract error: {}", val),
             GravityError::InvalidArgumentError(val) => write!(f, "Invalid argument error: {}", val),
             GravityError::InvalidOptionsError(val) => {
@@ -202,6 +205,12 @@ impl From<EthersSignatureError> for GravityError {
 impl From<EthersWalletError> for GravityError {
     fn from(error: EthersWalletError) -> Self {
         GravityError::EthersWalletError(error)
+    }
+}
+
+impl From<EtherscanError> for GravityError {
+    fn from(error: EtherscanError) -> Self {
+        GravityError::EtherscanError(error)
     }
 }
 
