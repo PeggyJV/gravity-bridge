@@ -2,9 +2,9 @@ install python >= 3.7
 install pipx
 pipx install eth-brownie
 brownie pm install OpenZeppelin/openzeppelin-contracts@3.1.0
+brownie pm install Uniswap/v2-core@1.0.0
 brownie pm install Uniswap/v2-periphery@1.0.0-beta.0
 curl https://raw.githubusercontent.com/Uniswap/v2-periphery/master/contracts/interfaces/IUniswapV2Router02.sol -o ~/.brownie/packages/Uniswap/v2-periphery@1.0.0-beta.0/contracts/interfaces/IUniswapV2Router02.sol
-brownie pm install Uniswap/v2-core@1.0.0
 
 - test
 brownie test tests/local -s
