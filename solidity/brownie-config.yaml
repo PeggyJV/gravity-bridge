@@ -1,0 +1,73 @@
+project_structure:
+    build: build
+    contracts: contracts
+    interfaces: interfaces
+    reports: reports
+    scripts: scripts
+    tests: tests
+
+networks:
+    default: development
+    development:
+        gas_limit: max
+        gas_buffer: 1
+        gas_price: 0
+        max_fee: null
+        priority_fee: null
+        reverting_tx_gas_limit: max
+        default_contract_owner: true
+        cmd_settings:
+            accounts: 1
+            default_balance: 1544266562
+            unlock:
+                - 0x0c731fb0d03211dd32a456370ad2ec3ffad46520
+    live:
+        gas_limit: auto
+        gas_buffer: 1.1
+        gas_price: auto
+        max_fee: null
+        priority_fee: null
+        reverting_tx_gas_limit: false
+        default_contract_owner: false
+
+compiler:
+    evm_version: null
+    solc:
+        version: 0.6.6
+        optimizer:
+            enabled: true
+            runs: 200
+        remappings:
+            - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@3.1.0"
+            - "@uniswap/v2-periphery=Uniswap/v2-periphery@1.0.0-beta.0"
+            - "@uniswap/v2-core=Uniswap/v2-core@1.0.0"
+    vyper:
+        version: null
+
+console:
+    show_colors: true
+    color_style: monokai
+    auto_suggest: true
+    completions: true
+    editing_mode: emacs
+
+reports:
+    exclude_paths: null
+    exclude_contracts: null
+    only_include_project: true
+
+hypothesis:
+    deadline: null
+    max_examples: 50
+    report_multiple_bugs: False
+    stateful_step_count: 10
+    phases:
+        explicit: true
+        reuse: true
+        generate: true
+        target: true
+        shrink: true
+
+autofetch_sources: false
+dependencies: null
+dev_deployment_artifacts: false
