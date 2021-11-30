@@ -28,6 +28,7 @@ jobs:
           path: |
             ~/.solcx
             ~/.vvm
+            ~/.brownie
           key: compiler-cache
       - uses: actions/setup-node@v1
         with:
