@@ -60,7 +60,7 @@ jobs:
         with:
           python-version: 3.8
       - run: cd solidity && pip install -r requirements.txt
-      - run: cd solidity && ganache-cli --accounts 10 --hardfork istanbul --fork https://eth-mainnet.alchemyapi.io/v2/$ALCHEMY_ID@11780000 --gasLimit 12000000 --mnemonic brownie --port 8545 --defaultBalanceEther 1544266562 --chainId 1 --unlock 0x0c731Fb0D03211DD32A456370AD2ec3fFad46520 &
+      - run: cd solidity && ganache-cli --accounts 10 --hardfork istanbul --fork https://eth-mainnet.alchemyapi.io/v2/${{ALCHEMY_ID}}@11780000 --gasLimit 12000000 --mnemonic brownie --port 8545 --defaultBalanceEther 1544266562 --chainId 1 --unlock 0x0c731Fb0D03211DD32A456370AD2ec3fFad46520 &
         env:
           ALCHEMY_ID: ${{ secrets.ALCHEMY_ID }}
       - run: cd solidity && brownie test tests/mainnet-fork
