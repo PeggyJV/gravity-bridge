@@ -1,44 +1,12 @@
 use crate::types::EthClient;
-use ethers::core::abi::{self, Token};
 use ethers::middleware::gas_oracle::Etherscan;
 use ethers::prelude::gas_oracle::GasOracle;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
-use ethers::utils::keccak256;
 use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::{downcast_to_u64, vec_u8_to_fixed_32};
-use gravity_utils::types::*;
 use std::{cmp::min, result::Result};
-
-pub fn get_checkpoint_abi_encode(
-    valset: &Valset,
-    gravity_id: &str,
-) -> Result<Vec<u8>, GravityError> {
-    let (eth_addresses, powers) = valset.filter_empty_addresses();
-    let eth_addresses = eth_addresses
-        .iter()
-        .map(|address| Token::Address(*address))
-        .collect();
-    let powers = powers
-        .iter()
-        .map(|power| Token::Uint((*power).into()))
-        .collect();
-
-    Ok(abi::encode(&[
-        Token::FixedBytes(gravity_id.as_bytes().to_vec()),
-        Token::FixedBytes("checkpoint".as_bytes().to_vec()),
-        Token::Uint(valset.nonce.into()),
-        Token::Array(eth_addresses),
-        Token::Array(powers),
-    ]))
-}
-
-pub fn get_checkpoint_hash(valset: &Valset, gravity_id: &str) -> Result<Vec<u8>, GravityError> {
-    let locally_computed_abi_encode = get_checkpoint_abi_encode(&valset, &gravity_id)?;
-    let locally_computed_digest = keccak256(locally_computed_abi_encode.as_slice());
-    Ok(locally_computed_digest.to_vec())
-}
 
 /// Gets the latest validator set nonce
 pub async fn get_valset_nonce(
