@@ -93,7 +93,7 @@ pub async fn send_to_eth(
 
     let msg = proto::MsgSendToEthereum {
         sender: cosmos_address.to_string(),
-        ethereum_recipient: destination.to_string(),
+        ethereum_recipient: format_eth_address(destination),
         amount: Some(amount.into()),
         bridge_fee: Some(bridge_fee.clone().into()),
     };
