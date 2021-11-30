@@ -56,6 +56,7 @@ pub enum GravityError {
     ParseBigIntError(ParseBigIntError),
     ParseIntError(ParseIntError),
     FromUtf8Error(FromUtf8Error),
+    OverflowError(String),
 }
 
 impl fmt::Display for GravityError {
@@ -111,7 +112,8 @@ impl fmt::Display for GravityError {
             GravityError::ParseIntError(val) => write!(f, "Failed to parse integer: {}", val),
             GravityError::FromUtf8Error(val) => {
                 write!(f, "Failed to parse bytes to UTF-8: {}", val)
-            }
+            },
+            GravityError::OverflowError(val) => write!(f, "Overflow error: {}", val),
         }
     }
 }

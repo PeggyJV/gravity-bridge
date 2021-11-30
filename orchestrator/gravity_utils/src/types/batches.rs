@@ -92,9 +92,16 @@ impl TransactionBatch {
         for tx in input.transactions {
             let tx = BatchTransaction::from_proto(tx)?;
             if let Some(total_fee) = running_total_fee {
+                let running_amount = total_fee.amount.checked_add(tx.erc20_fee.amount);
+                if running_amount.is_none() {
+                    return Err(GravityError::OverflowError(
+                        format!("U256 overflow when adding all fees together for transaction batch with nonce {}", input.batch_nonce)
+                    ))
+                }
+
                 running_total_fee = Some(Erc20Token {
                     token_contract_address: total_fee.token_contract_address,
-                    amount: total_fee.amount + tx.erc20_fee.amount,
+                    amount: running_amount.unwrap(),
                 });
             } else {
                 running_total_fee = Some(tx.erc20_fee.clone())
