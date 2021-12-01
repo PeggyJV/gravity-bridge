@@ -2,7 +2,7 @@ use crate::{
     types::{EthClient, EthSignerMiddleware},
     utils::{
         get_logic_call_nonce,
-        get_send_transaction_gas_price,
+        get_gas_price,
         GasCost,
     },
 };
@@ -127,7 +127,7 @@ pub async fn estimate_logic_call_cost(
 
     Ok(GasCost {
         gas: contract_call.estimate_gas().await?,
-        gas_price: get_send_transaction_gas_price(eth_client.clone()).await?,
+        gas_price: get_gas_price(eth_client.clone()).await?,
     })
 }
 

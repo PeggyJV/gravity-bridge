@@ -1,6 +1,6 @@
 use crate::{
     types::{EthClient, EthSignerMiddleware},
-    utils::{get_send_transaction_gas_price, get_valset_nonce, GasCost},
+    utils::{get_gas_price, get_valset_nonce, GasCost},
 };
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
@@ -104,7 +104,7 @@ pub async fn estimate_valset_cost(
 
     Ok(GasCost {
         gas: contract_call.estimate_gas().await?,
-        gas_price: get_send_transaction_gas_price(eth_client.clone()).await?,
+        gas_price: get_gas_price(eth_client.clone()).await?,
     })
 }
 

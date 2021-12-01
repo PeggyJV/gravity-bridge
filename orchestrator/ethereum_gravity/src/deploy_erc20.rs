@@ -2,7 +2,7 @@
 //! the event for this deployment is then ferried over to Cosmos where the validators will accept the ERC20 contract address
 //! as the representation of this asset on Ethereum
 
-use crate::{types::EthClient, utils::get_send_transaction_gas_price};
+use crate::{types::EthClient, utils::get_gas_price};
 use ethers::prelude::*;
 use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
@@ -27,7 +27,7 @@ pub async fn deploy_erc20(
         erc20_symbol.clone(),
         decimals,
     );
-    let gas_price = get_send_transaction_gas_price(eth_client.clone()).await?;
+    let gas_price = get_gas_price(eth_client.clone()).await?;
     let contract_call = contract_call.gas_price(gas_price);
 
     let pending_tx = contract_call.send().await?;

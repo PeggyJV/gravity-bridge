@@ -6,7 +6,7 @@ use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::{downcast_to_u64, vec_u8_to_fixed_32};
-use std::{cmp::min, result::Result};
+use std::result::Result;
 
 /// Gets the latest validator set nonce
 pub async fn get_valset_nonce(
@@ -17,10 +17,10 @@ pub async fn get_valset_nonce(
         .state_last_valset_nonce()
         .from(eth_client.address())
         .value(U256::zero());
-    let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
+    let gas_estimate = contract_call.estimate_gas().await?;
     let contract_call = contract_call
-        .gas(gas_cost.gas)
-        .gas_price(gas_cost.gas_price);
+        .gas(gas_estimate)
+        .gas_price(get_gas_price(eth_client.clone()).await?);
 
     let valset_nonce = contract_call.call().await?;
 
@@ -43,10 +43,10 @@ pub async fn get_tx_batch_nonce(
         .last_batch_nonce(erc20_contract_address)
         .from(eth_client.address())
         .value(U256::zero());
-    let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
+    let gas_estimate = contract_call.estimate_gas().await?;
     let contract_call = contract_call
-        .gas(gas_cost.gas)
-        .gas_price(gas_cost.gas_price);
+        .gas(gas_estimate)
+        .gas_price(get_gas_price(eth_client.clone()).await?);
 
     let tx_batch_nonce = contract_call.call().await?;
 
@@ -71,10 +71,10 @@ pub async fn get_logic_call_nonce(
         .last_logic_call_nonce(invalidation_id)
         .from(eth_client.address())
         .value(U256::zero());
-    let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
+    let gas_estimate = contract_call.estimate_gas().await?;
     let contract_call = contract_call
-        .gas(gas_cost.gas)
-        .gas_price(gas_cost.gas_price);
+        .gas(gas_estimate)
+        .gas_price(get_gas_price(eth_client.clone()).await?);
 
     let logic_call_nonce = contract_call.call().await?;
 
@@ -96,10 +96,10 @@ pub async fn get_event_nonce(
         .state_last_event_nonce()
         .from(eth_client.address())
         .value(U256::zero());
-    let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
+    let gas_estimate = contract_call.estimate_gas().await?;
     let contract_call = contract_call
-        .gas(gas_cost.gas)
-        .gas_price(gas_cost.gas_price);
+        .gas(gas_estimate)
+        .gas_price(get_gas_price(eth_client.clone()).await?);
 
     let event_nonce = contract_call.call().await?;
 
@@ -121,10 +121,10 @@ pub async fn get_gravity_id(
         .state_gravity_id()
         .from(eth_client.address())
         .value(U256::zero());
-    let gas_cost = get_call_gas_cost(eth_client.clone()).await?;
+    let gas_estimate = contract_call.estimate_gas().await?;
     let contract_call = contract_call
-        .gas(gas_cost.gas)
-        .gas_price(gas_cost.gas_price);
+        .gas(gas_estimate)
+        .gas_price(get_gas_price(eth_client.clone()).await?);
 
     let gravity_id = contract_call.call().await?;
     let id_as_string = String::from_utf8(gravity_id.to_vec());
@@ -138,31 +138,9 @@ pub async fn get_gravity_id(
     }
 }
 
-/// Retrieve gas price and limit in a similar fashion to web30's simulate_transaction.
-/// These values are intended to be used in conjunction with eth_call rather than
-/// eth_sendtransaction. In ethers this is represented by `call()` on a ContractCall rather
-/// than `send()`. Using `call()` will not send a transaction from the caller account or
-/// spend gas.
-pub async fn get_call_gas_cost(eth_client: EthClient) -> Result<GasCost, GravityError> {
-    const GAS_LIMIT: u128 = 12450000; // the most Hardhat will allow, will work on Geth
-
-    let caller_balance = eth_client.get_balance(eth_client.address(), None).await?;
-    let latest_block = eth_client.get_block(BlockNumber::Latest).await?.unwrap();
-    let gas_price = latest_block.base_fee_per_gas.unwrap_or(1u8.into()); // "or" clause shouldn't happen unless pre-London
-    if gas_price == U256::zero() {
-        return Err(GravityError::EthereumBadDataError(
-            "Latest block returned base fee per gas of zero".to_string(),
-        ));
-    }
-
-    let gas = min(GAS_LIMIT.into(), caller_balance.div_mod(gas_price).0);
-
-    Ok(GasCost { gas, gas_price })
-}
-
 /// If ETHERSCAN_API_KEY env var is set, we'll call out to Etherscan for a gas estimate.
 /// Otherwise, just call eth_gasPrice.
-pub async fn get_send_transaction_gas_price(eth_client: EthClient) -> Result<U256, GravityError> {
+pub async fn get_gas_price(eth_client: EthClient) -> Result<U256, GravityError> {
     if let Ok(_) = std::env::var("ETHERSCAN_API_KEY") {
         let etherscan_client = Client::new_from_env(Chain::Mainnet)?;
         let etherscan_oracle = Etherscan::new(etherscan_client);
