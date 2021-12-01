@@ -87,9 +87,8 @@ impl Runnable for SendToCosmos {
             let eth_client = Arc::new(eth_client);
             check_for_eth(eth_client.address(), eth_client.clone()).await;
 
-            let amount: U256 = erc20_amount
-                .parse()
-                .expect("Expected amount in xx.yy format");
+            let amount = U256::from_dec_str(erc20_amount.as_str())
+                .expect("Could not parse amount to U256");
 
             let erc20_balance =
                 get_erc20_balance(erc20_contract, eth_client.address(), eth_client.clone())

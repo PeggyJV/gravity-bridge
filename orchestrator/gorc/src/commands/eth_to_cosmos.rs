@@ -73,7 +73,7 @@ impl Runnable for EthToCosmosCmd {
 
             let times = self.args.get(5).expect("times is required");
             let times_usize = times.parse::<usize>().expect("cannot parse times");
-            let times_u256 = times.parse::<U256>().expect("cannot parse times");
+            let times_u256 = U256::from_dec_str(times).expect("cannot parse times");
 
             if erc20_balance == 0u8.into() {
                 panic!(
