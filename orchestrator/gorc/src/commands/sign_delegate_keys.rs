@@ -47,7 +47,7 @@ impl Runnable for SignDelegateKeysCmd {
             let mut buf = bytes::BytesMut::with_capacity(size);
             prost::Message::encode(&msg, &mut buf).expect("Failed to encode DelegateKeysSignMsg!");
 
-            let data = keccak256(buf); // TODO(bolten): the rest of the orchestrator expects a hash as a message...here too?
+            let data = keccak256(buf);
             let signature = ethereum_wallet
                 .sign_message(data)
                 .await
