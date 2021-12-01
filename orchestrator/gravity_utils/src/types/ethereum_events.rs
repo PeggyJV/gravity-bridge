@@ -7,7 +7,6 @@
 use super::ValsetMember;
 use crate::error::GravityError;
 use crate::ethereum::downcast_to_u64;
-use deep_space::utils::bytes_to_hex_str;
 use deep_space::Address as CosmosAddress;
 use ethers::abi::RawLog;
 use ethers::prelude::*;
@@ -16,7 +15,7 @@ use gravity_abi::gravity::*;
 use std::result::Result;
 
 // given a Log retrieved by querying the Ethereum chain, decode it into one of
-// the types we are generating using abigen! above for the Gravity contract
+// the generated event types for the Gravity contract
 fn log_to_ethers_event<T: EthLogDecode>(log: &Log) -> Result<T, ethers::abi::Error> {
     T::decode_log(&RawLog {
         topics: log.topics.clone(),
@@ -101,6 +100,12 @@ impl FromLog for ValsetUpdatedEvent {
     /// not hard at all to extract data like this by hand.
     fn from_log(input: &Log) -> Result<ValsetUpdatedEvent, GravityError> {
         let event: ValsetUpdatedEventFilter = log_to_ethers_event(input)?;
+        if event.powers.len() != event.validators.len() {
+            return Err(GravityError::InvalidEventLogError(format!(
+                "ValsetUpdatedEvent powers and validators have different length: {:?}",
+                event
+            )));
+        }
 
         let mut powers: Vec<u64> = Vec::new();
         for power in &event.powers {
@@ -310,14 +315,3 @@ impl EventNonce for LogicCallExecutedEvent {
     }
 }
 impl EventNonceFilter for LogicCallExecutedEvent {}
-
-/// Function used for debug printing hex dumps
-/// of ethereum events
-fn _debug_print_data(input: &[u8]) {
-    let count = input.len() / 32;
-    println!("data hex dump");
-    for i in 0..count {
-        println!("0x{}", bytes_to_hex_str(&input[(i * 32)..((i * 32) + 32)]))
-    }
-    println!("end dump");
-}
