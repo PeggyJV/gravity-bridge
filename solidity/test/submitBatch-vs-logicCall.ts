@@ -157,9 +157,7 @@ async function runSubmitBatchTest(opts: { batchSize: number }) {
     powers,
     0,
 
-    sigs.v,
-    sigs.r,
-    sigs.s,
+    sigs,
 
     txBatch.amounts,
     txBatch.destinations,
@@ -299,9 +297,7 @@ async function runLogicCallTest(opts: {
     powers,
     0,
 
-    sigs.v,
-    sigs.r,
-    sigs.s,
+    sigs,
     logicCallArgs
   );
 
