@@ -39,6 +39,7 @@ jobs:
       - run: cd solidity && brownie test tests/local
         
   mainnet-fork-tests:
+    environment: CI
     runs-on: ubuntu-latest
     strategy:
       matrix:
