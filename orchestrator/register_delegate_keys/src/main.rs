@@ -52,7 +52,7 @@ lazy_static! {
 
 const TIMEOUT: Duration = Duration::from_secs(60);
 
-#[actix_rt::main]
+#[tokio::main]
 async fn main() {
     env_logger::init();
     // On Linux static builds we need to probe ssl certs path to be able to
