@@ -5,7 +5,7 @@ name: Brownie test
 
 on:
   push:
-    branches: [master, main, william/brownie-implement]
+    branches: [master, main]
   pull_request:
     branches: [master, main]
 
