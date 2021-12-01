@@ -19,8 +19,9 @@ orchestrator = { path = "../orchestrator" }
 relayer = { path = "../relayer" }
 
 deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="master"}
+ethers = "0.6.1"
 clarity = "0.4.12"
-actix-rt = "2.2"
+actix-rt = "2.5"
 rpassword = "5"
 bip32 = "0.2"
 k256 = { version = "0.9", features = ["pem"] }

@@ -1,35 +1,29 @@
-use clarity::PrivateKey as EthPrivateKey;
-use clarity::{address::Address as EthAddress, utils::bytes_to_hex_str};
 use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
-use ethereum_gravity::one_eth;
+use ethereum_gravity::one_eth_f32;
 use ethereum_gravity::{
-    logic_call::send_eth_logic_call,
-    utils::{downcast_to_u128, get_logic_call_nonce},
+    logic_call::send_eth_logic_call, types::EthClient, utils::get_logic_call_nonce,
 };
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
 use gravity_utils::types::{LogicCallConfirmResponse, Valset};
 use gravity_utils::{message_signatures::encode_logic_call_confirm_hashed, types::LogicCall};
 use std::time::Duration;
 use tonic::transport::Channel;
-use web30::client::Web3;
-use web30::types::SendTxOption;
 
 #[allow(clippy::too_many_arguments)]
 pub async fn relay_logic_calls(
     // the validator set currently in the contract on Ethereum
     current_valset: Valset,
-    ethereum_key: EthPrivateKey,
-    web3: &Web3,
+    eth_client: EthClient,
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     gravity_id: String,
     timeout: Duration,
-    gas_multiplier: f32,
+    eth_gas_price_multiplier: f32,
 ) {
-    let our_ethereum_address = ethereum_key.to_public_key().unwrap();
-
     let latest_calls = get_latest_logic_calls(grpc_client).await;
-    trace!("Latest Logic calls {:?}", latest_calls);
+    debug!("Latest Logic calls {:?}", latest_calls);
     if latest_calls.is_err() {
         return;
     }
@@ -43,7 +37,7 @@ pub async fn relay_logic_calls(
             call.invalidation_nonce,
         )
         .await;
-        trace!("Got sigs {:?}", sigs);
+        debug!("Got sigs {:?}", sigs);
         if let Ok(sigs) = sigs {
             let hash = encode_logic_call_confirm_hashed(gravity_id.clone(), call.clone());
             // this checks that the signatures for the batch are actually possible to submit to the chain
@@ -67,7 +61,7 @@ pub async fn relay_logic_calls(
         }
     }
     if oldest_signed_call.is_none() {
-        trace!("Could not find Call with signatures! exiting");
+        debug!("Could not find Call with signatures! exiting");
         return;
     }
     let oldest_signed_call = oldest_signed_call.unwrap();
@@ -76,8 +70,7 @@ pub async fn relay_logic_calls(
     let latest_ethereum_call = get_logic_call_nonce(
         gravity_contract_address,
         oldest_signed_call.invalidation_id.clone(),
-        our_ethereum_address,
-        web3,
+        eth_client.clone(),
     )
     .await;
     if latest_ethereum_call.is_err() {
@@ -94,39 +87,51 @@ pub async fn relay_logic_calls(
             current_valset.clone(),
             oldest_signed_call.clone(),
             &oldest_signatures,
-            web3,
             gravity_contract_address,
             gravity_id.clone(),
-            ethereum_key,
+            eth_client.clone(),
         )
         .await;
+
         if cost.is_err() {
             error!("LogicCall cost estimate failed with {:?}", cost);
             return;
         }
-        let cost = cost.unwrap();
+
+        let mut cost = cost.unwrap();
+        let total_cost = downcast_to_f32(cost.get_total());
+        if total_cost.is_none() {
+            error!(
+                "Total gas cost greater than f32 max, skipping logic call submission: {}",
+                oldest_signed_call.invalidation_nonce
+            );
+            return;
+        }
+        let total_cost = total_cost.unwrap();
+        let gas_price_as_f32 = downcast_to_f32(cost.gas_price).unwrap(); // if the total cost isn't greater, this isn't
+
         info!(
                 "We have detected latest LogicCall {} but latest on Ethereum is {} This LogicCall is estimated to cost {} Gas / {:.4} ETH to submit",
                 latest_cosmos_call_nonce,
                 latest_ethereum_call,
                 cost.gas_price.clone(),
-                downcast_to_u128(cost.get_total()).unwrap() as f32
-                    / downcast_to_u128(one_eth()).unwrap() as f32
+                total_cost / one_eth_f32(),
             );
-        let tx_options = vec![SendTxOption::GasPriceMultiplier(gas_multiplier)];
+
+        cost.gas_price = ((gas_price_as_f32 * eth_gas_price_multiplier) as u128).into();
 
         let res = send_eth_logic_call(
             current_valset,
             oldest_signed_call,
             &oldest_signatures,
-            web3,
             timeout,
             gravity_contract_address,
             gravity_id.clone(),
-            ethereum_key,
-            tx_options,
+            cost,
+            eth_client.clone(),
         )
         .await;
+
         if res.is_err() {
             info!("LogicCall submission failed with {:?}", res);
         }

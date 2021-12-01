@@ -1,7 +1,7 @@
-use clarity::Signature as EthSignature;
-use clarity::{abi::Token, Address as EthAddress};
-use num256::Uint256;
+use ethers::prelude::*;
+use ethers::types::{Address as EthAddress, Signature as EthSignature};
 use std::cmp::Ordering;
+use std::convert::TryFrom;
 
 /// A sortable struct of a validator and it's signatures
 /// this can be used for either transaction batch or validator
@@ -10,9 +10,9 @@ use std::cmp::Ordering;
 pub struct GravitySignature {
     pub power: u64,
     pub eth_address: EthAddress,
-    pub v: Uint256,
-    pub r: Uint256,
-    pub s: Uint256,
+    pub v: u64,
+    pub r: U256,
+    pub s: U256,
 }
 
 impl Ord for GravitySignature {
@@ -44,37 +44,37 @@ impl PartialOrd for GravitySignature {
 pub struct GravitySignatureArrays {
     pub addresses: Vec<EthAddress>,
     pub powers: Vec<u64>,
-    pub v: Token,
-    pub r: Token,
-    pub s: Token,
+    pub v: Vec<u8>,
+    pub r: Vec<[u8; 32]>,
+    pub s: Vec<[u8; 32]>,
 }
 
 /// This function handles converting the GravitySignature type into an Ethereum
 /// submittable arrays, including the finicky token encoding tricks you need to
 /// perform in order to distinguish between a uint8[] and bytes32[]
 pub fn to_arrays(input: Vec<GravitySignature>) -> GravitySignatureArrays {
-    let mut addresses = Vec::new();
-    let mut powers = Vec::new();
-    let mut v = Vec::new();
-    let mut r = Vec::new();
-    let mut s = Vec::new();
-    for val in input {
-        addresses.push(val.eth_address);
-        powers.push(val.power);
-        v.push(val.v);
-        r.push(val.r);
-        s.push(val.s);
-    }
+    let addresses = input.iter().map(|sig| sig.eth_address).collect();
+    let powers = input.iter().map(|sig| sig.power).collect();
+    // TODO(bolten): we're also throwing panics if we encounter downcast errors in
+    // ethereum_gravity/src/utils.rs, we should consider broadly how to handle
+    // these sorts of error conditions
+    let v = input
+        .iter()
+        .map(|sig| u8::try_from(sig.v).expect("Gravity Signature v overflow! Bridge halt!"))
+        .collect();
+    let r = input.iter().map(|sig| sig.r.into()).collect();
+    let s = input.iter().map(|sig| sig.s.into()).collect();
+
     GravitySignatureArrays {
         addresses,
         powers,
-        v: v.into(),
-        r: r.into(),
-        s: s.into(),
+        v,
+        r,
+        s,
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct SigWithAddress {
     pub eth_address: EthAddress,
     pub eth_signature: EthSignature,

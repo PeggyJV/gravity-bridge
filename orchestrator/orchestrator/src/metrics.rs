@@ -1,6 +1,7 @@
 use std::{convert::TryInto, net};
 
 use axum::prelude::*;
+use ethers::prelude::*;
 use hyper::Server;
 use lazy_static::lazy_static;
 use prometheus::*;
@@ -63,7 +64,7 @@ lazy_static! {
     .unwrap();
 }
 
-// Guages (guarded by setters)
+// Gauges (guarded by setters)
 lazy_static! {
     static ref COSMOS_BLOCK_HEIGHT: IntGauge = register_int_gauge!(opts!(
         "cosmos_block_height",
@@ -177,77 +178,77 @@ pub fn set_cosmos_last_event_nonce(v: u64) {
     set_u64(&COSMOS_LAST_EVENT_NONCE, v);
 }
 
-pub fn set_ethereum_block_height(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_BLOCK_HEIGHT, v);
+pub fn set_ethereum_block_height(v: u64) {
+    set_u64(&ETHEREUM_BLOCK_HEIGHT, v);
 }
 
-pub fn set_ethereum_check_for_events_end_block(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_CHECK_FOR_EVENTS_END_BLOCK, v);
+pub fn set_ethereum_check_for_events_end_block(v: u64) {
+    set_u64(&ETHEREUM_CHECK_FOR_EVENTS_END_BLOCK, v);
 }
 
-pub fn set_ethereum_check_for_events_starting_block(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_CHECK_FOR_EVENTS_STARTING_BLOCK, v);
+pub fn set_ethereum_check_for_events_starting_block(v: u64) {
+    set_u64(&ETHEREUM_CHECK_FOR_EVENTS_STARTING_BLOCK, v);
 }
 
-pub fn set_ethereum_last_batch_event(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_LAST_BATCH_EVENT, v.clone());
-    set_uint256(&ETHEREUM_LAST_EVENT_NONCE, v);
+pub fn set_ethereum_last_batch_event(v: U256) {
+    set_u256(&ETHEREUM_LAST_BATCH_EVENT, v);
+    set_u256(&ETHEREUM_LAST_EVENT_NONCE, v);
 }
 
-pub fn set_ethereum_last_batch_nonce(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_LAST_BATCH_NONCE, v);
+pub fn set_ethereum_last_batch_nonce(v: U256) {
+    set_u256(&ETHEREUM_LAST_BATCH_NONCE, v);
 }
 
-pub fn set_ethereum_last_deposit_block(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_LAST_DEPOSIT_BLOCK, v);
+pub fn set_ethereum_last_deposit_block(v: U256) {
+    set_u256(&ETHEREUM_LAST_DEPOSIT_BLOCK, v);
 }
 
-pub fn set_ethereum_last_deposit_event(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_LAST_DEPOSIT_EVENT, v.clone());
-    set_uint256(&ETHEREUM_LAST_EVENT_NONCE, v);
+pub fn set_ethereum_last_deposit_event(v: U256) {
+    set_u256(&ETHEREUM_LAST_DEPOSIT_EVENT, v);
+    set_u256(&ETHEREUM_LAST_EVENT_NONCE, v);
 }
 
-pub fn set_ethereum_last_erc20_block(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_LAST_ERC20_BLOCK, v);
+pub fn set_ethereum_last_erc20_block(v: U256) {
+    set_u256(&ETHEREUM_LAST_ERC20_BLOCK, v);
 }
 
-pub fn set_ethereum_last_erc20_event(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_LAST_ERC20_EVENT, v.clone());
-    set_uint256(&ETHEREUM_LAST_EVENT_NONCE, v);
+pub fn set_ethereum_last_erc20_event(v: U256) {
+    set_u256(&ETHEREUM_LAST_ERC20_EVENT, v);
+    set_u256(&ETHEREUM_LAST_EVENT_NONCE, v);
 }
 
-pub fn set_ethereum_last_logic_call_event(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_LAST_LOGIC_CALL_EVENT, v.clone());
-    set_uint256(&ETHEREUM_LAST_EVENT_NONCE, v);
+pub fn set_ethereum_last_logic_call_event(v: U256) {
+    set_u256(&ETHEREUM_LAST_LOGIC_CALL_EVENT, v);
+    set_u256(&ETHEREUM_LAST_EVENT_NONCE, v);
 }
 
-pub fn set_ethereum_last_logic_call_nonce(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_LAST_LOGIC_CALL_NONCE, v);
+pub fn set_ethereum_last_logic_call_nonce(v: U256) {
+    set_u256(&ETHEREUM_LAST_LOGIC_CALL_NONCE, v);
 }
 
-pub fn set_ethereum_last_valset_event(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_LAST_VALSET_EVENT, v.clone());
-    set_uint256(&ETHEREUM_LAST_EVENT_NONCE, v);
+pub fn set_ethereum_last_valset_event(v: U256) {
+    set_u256(&ETHEREUM_LAST_VALSET_EVENT, v);
+    set_u256(&ETHEREUM_LAST_EVENT_NONCE, v);
 }
 
-pub fn set_ethereum_last_valset_nonce(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_LAST_VALSET_NONCE, v);
+pub fn set_ethereum_last_valset_nonce(v: U256) {
+    set_u256(&ETHEREUM_LAST_VALSET_NONCE, v);
 }
 
-pub fn set_ethereum_bal(v: clarity::Uint256) {
-    set_uint256(&ETHEREUM_BAL, v);
+pub fn set_ethereum_bal(v: U256) {
+    set_u256(&ETHEREUM_BAL, v);
 }
 
-fn set_u64(guage: &IntGauge, value: u64) {
+fn set_u64(gauge: &IntGauge, value: u64) {
     let v = value.try_into().unwrap_or(-1);
-    if v > guage.get() {
-        guage.set(v);
+    if v > gauge.get() {
+        gauge.set(v);
     }
 }
 
-fn set_uint256(guage: &IntGauge, value: clarity::Uint256) {
-    let v = value.to_str_radix(10).parse().unwrap_or(-1);
-    if v > guage.get() {
-        guage.set(v);
+fn set_u256(gauge: &IntGauge, value: U256) {
+    let v = value.to_string().parse().unwrap_or(-1);
+    if v > gauge.get() {
+        gauge.set(v);
     }
 }

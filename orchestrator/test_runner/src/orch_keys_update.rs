@@ -1,16 +1,17 @@
 //! This test verifies that live updating of orchestrator keys works correctly
 
 use crate::utils::ValidatorKeys;
-use clarity::Address as EthAddress;
-use clarity::PrivateKey as EthPrivateKey;
 use cosmos_gravity::send::update_gravity_delegate_addresses;
 use deep_space::address::Address as CosmosAddress;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
+use ethers::types::Address as EthAddress;
+use ethers::{core::k256::ecdsa::SigningKey, prelude::*};
 use gravity_proto::gravity::{
     query_client::QueryClient as GravityQueryClient, DelegateKeysByEthereumSignerRequest,
     DelegateKeysByOrchestratorRequest,
 };
+use gravity_utils::ethereum::format_eth_address;
 use rand::Rng;
 use std::time::Duration;
 use tonic::transport::Channel;
@@ -27,11 +28,11 @@ pub async fn orch_keys_update(
     // just to test that we have the right keys from the gentx
     info!("About to check already set delegate addresses");
     for k in keys.iter() {
-        let eth_address = k.eth_key.to_public_key().unwrap();
+        let eth_address = LocalWallet::from(k.eth_key.clone()).address();
         let orch_address = k.orch_key.to_address(&contact.get_prefix()).unwrap();
         let eth_response = grpc_client
             .delegate_keys_by_ethereum_signer(DelegateKeysByEthereumSignerRequest {
-                ethereum_signer: eth_address.to_string(),
+                ethereum_signer: format_eth_address(eth_address),
             })
             .await
             .unwrap()
@@ -61,7 +62,8 @@ pub async fn orch_keys_update(
         let mut rng = rand::thread_rng();
         let secret: [u8; 32] = rng.gen();
         // generate some new keys to replace the old ones
-        let ethereum_key = EthPrivateKey::from_slice(&secret).unwrap();
+        let ethereum_key = SigningKey::from_bytes(&secret).unwrap();
+        let ethereum_wallet = LocalWallet::from(ethereum_key.clone());
         let cosmos_key = CosmosPrivateKey::from_secret(&secret);
         // update the keys in the key list
         k.eth_key = ethereum_key;
@@ -70,16 +72,16 @@ pub async fn orch_keys_update(
 
         info!(
             "Signing and submitting Delegate addresses {} for validator {}",
-            ethereum_key.to_public_key().unwrap(),
+            format_eth_address(ethereum_wallet.address()),
             cosmos_address,
         );
         // send in the new delegate keys signed by the validator address
         update_gravity_delegate_addresses(
-            contact,
-            ethereum_key.to_public_key().unwrap(),
+            &contact,
+            ethereum_wallet.address(),
             cosmos_address,
             k.validator_key,
-            k.eth_key,
+            ethereum_wallet,
             (0f64, "".to_string()),
             2.0,
         )

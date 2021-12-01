@@ -1,11 +1,11 @@
 use crate::utils::ValidatorKeys;
-use clarity::Address as EthAddress;
-use clarity::PrivateKey as EthPrivateKey;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
+use ethers::core::k256::ecdsa::SigningKey;
+use ethers::types::Address as EthAddress;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 
-pub fn parse_ethereum_keys() -> Vec<EthPrivateKey> {
+pub fn parse_ethereum_keys() -> Vec<SigningKey> {
     let filename = "/testdata/validator-eth-keys";
     let file = File::open(filename).expect("Failed to find eth keys");
     let reader = BufReader::new(file);
@@ -13,7 +13,8 @@ pub fn parse_ethereum_keys() -> Vec<EthPrivateKey> {
 
     for line in reader.lines() {
         let line = line.expect("Error reading eth-keys file!");
-        let key: EthPrivateKey = line.parse().unwrap();
+        let key_hex = hex::decode(line.strip_prefix("0x").unwrap()).unwrap();
+        let key: SigningKey = SigningKey::from_bytes(&key_hex).unwrap();
         ret.push(key);
     }
     ret

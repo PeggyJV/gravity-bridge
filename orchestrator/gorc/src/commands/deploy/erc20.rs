@@ -1,11 +1,15 @@
 use crate::{application::APP, prelude::*};
 use abscissa_core::{Clap, Command, Runnable};
 use ethereum_gravity::deploy_erc20::deploy_erc20;
+use ethers::prelude::*;
 use gravity_proto::gravity::{DenomToErc20ParamsRequest, DenomToErc20Request};
-use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
+use gravity_utils::{
+    connection_prep::{check_for_eth, create_rpc_connections},
+    ethereum::downcast_to_u64,
+};
 use std::convert::TryFrom;
 use std::process::exit;
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 use tokio::time::sleep as delay_for;
 
 /// Deploy Erc20
@@ -35,6 +39,7 @@ impl Erc20 {
 
         let config = APP.config();
 
+        let ethereum_wallet = config.load_ethers_wallet(self.ethereum_key.clone());
         let contract_address = config
             .gravity
             .contract
@@ -50,12 +55,21 @@ impl Erc20 {
         )
         .await;
 
+        let provider = connections.eth_provider.clone().unwrap();
+        let chain_id = provider
+            .get_chainid()
+            .await
+            .expect("Could not retrieve chain ID");
+        let chain_id =
+            downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
+        let eth_client = SignerMiddleware::new(
+            provider,
+            ethereum_wallet.clone().with_chain_id(chain_id),
+        );
+        let eth_client = Arc::new(eth_client);
         let mut grpc = connections.grpc.clone().unwrap();
-        let web3 = connections.web3.clone().unwrap();
 
-        let ethereum_key = config.load_clarity_key(self.ethereum_key.clone());
-        let ethereum_public_key = ethereum_key.to_public_key().unwrap();
-        check_for_eth(ethereum_public_key, &web3).await;
+        check_for_eth(eth_client.address(), eth_client.clone()).await;
 
         let req = DenomToErc20ParamsRequest {
             denom: denom.clone(),
@@ -75,15 +89,13 @@ impl Erc20 {
             res.erc20_symbol,
             u8::try_from(res.erc20_decimals).unwrap(),
             contract_address,
-            &web3,
             Some(timeout),
-            ethereum_key,
-            vec![],
+            eth_client.clone(),
         )
         .await
         .expect("Could not deploy ERC20");
 
-        println!("We have deployed ERC20 contract {:#066x}, waiting to see if the Cosmos chain choses to adopt it", res);
+        println!("We have deployed ERC20 contract {}, waiting to see if the Cosmos chain choses to adopt it", res);
 
         match tokio::time::timeout(Duration::from_secs(100), async {
             loop {
