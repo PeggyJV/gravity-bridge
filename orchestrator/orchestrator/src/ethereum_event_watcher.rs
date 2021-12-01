@@ -11,6 +11,7 @@ use deep_space::{Contact, Msg};
 use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use gravity_abi::gravity::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::ethereum::downcast_to_u64;
 use gravity_utils::types::EventNonceFilter;
@@ -20,9 +21,7 @@ use gravity_utils::{
     ethereum::bytes_to_hex_str,
     types::{
         Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent,
-        TransactionBatchExecutedEvent, ValsetUpdatedEvent, ERC20_DEPLOYED_EVENT_STR,
-        LOGIC_CALL_EVENT_STR, SEND_TO_COSMOS_EVENT_STR, TRANSACTION_BATCH_EXECUTED_EVENT_STR,
-        VALSET_UPDATED_EVENT_STR,
+        TransactionBatchExecutedEvent, ValsetUpdatedEvent,
     },
 };
 use std::{result::Result, time};
@@ -49,19 +48,19 @@ pub async fn check_for_events(
 
     let mut erc20_deployed_filter = Filter::new()
         .address(filter_gravity_contract_address.clone())
-        .event(&ERC20_DEPLOYED_EVENT_STR);
+        .event(&Erc20DeployedEventFilter::abi_signature());
     let mut logic_call_filter = Filter::new()
         .address(filter_gravity_contract_address.clone())
-        .event(&LOGIC_CALL_EVENT_STR);
+        .event(&LogicCallEventFilter::abi_signature());
     let mut send_to_cosmos_filter = Filter::new()
         .address(filter_gravity_contract_address.clone())
-        .event(&SEND_TO_COSMOS_EVENT_STR);
+        .event(&SendToCosmosEventFilter::abi_signature());
     let mut transaction_batch_filter = Filter::new()
         .address(filter_gravity_contract_address.clone())
-        .event(&TRANSACTION_BATCH_EXECUTED_EVENT_STR);
+        .event(&TransactionBatchExecutedEventFilter::abi_signature());
     let mut valset_updated_filter = Filter::new()
         .address(filter_gravity_contract_address.clone())
-        .event(&VALSET_UPDATED_EVENT_STR);
+        .event(&ValsetUpdatedEventFilter::abi_signature());
 
     let search_range = starting_block..latest_block;
 

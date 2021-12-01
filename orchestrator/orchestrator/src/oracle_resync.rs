@@ -2,11 +2,11 @@ use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use gravity_abi::gravity::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::types::{
     Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent, TransactionBatchExecutedEvent,
-    ValsetUpdatedEvent, ERC20_DEPLOYED_EVENT_STR, LOGIC_CALL_EVENT_STR, SEND_TO_COSMOS_EVENT_STR,
-    TRANSACTION_BATCH_EXECUTED_EVENT_STR, VALSET_UPDATED_EVENT_STR,
+    ValsetUpdatedEvent,
 };
 use gravity_utils::types::{FromLog, FromLogWithPrefix};
 use tokio::time::sleep as delay_for;
@@ -46,19 +46,19 @@ pub async fn get_last_checked_block(
     // from the generated ABI files, should look into that
     let mut erc20_deployed_filter = Filter::new()
         .address(filter_gravity_contract_address.clone())
-        .event(&ERC20_DEPLOYED_EVENT_STR);
+        .event(&Erc20DeployedEventFilter::abi_signature());
     let mut logic_call_filter = Filter::new()
         .address(filter_gravity_contract_address.clone())
-        .event(&LOGIC_CALL_EVENT_STR);
+        .event(&LogicCallEventFilter::abi_signature());
     let mut send_to_cosmos_filter = Filter::new()
         .address(filter_gravity_contract_address.clone())
-        .event(&SEND_TO_COSMOS_EVENT_STR);
+        .event(&SendToCosmosEventFilter::abi_signature());
     let mut transaction_batch_filter = Filter::new()
         .address(filter_gravity_contract_address.clone())
-        .event(&TRANSACTION_BATCH_EXECUTED_EVENT_STR);
+        .event(&TransactionBatchExecutedEventFilter::abi_signature());
     let mut valset_updated_filter = Filter::new()
         .address(filter_gravity_contract_address.clone())
-        .event(&VALSET_UPDATED_EVENT_STR);
+        .event(&ValsetUpdatedEventFilter::abi_signature());
 
     let mut end_search_block = get_block_number_with_retry(eth_client.clone()).await;
     let blocks_to_search: U64 = blocks_to_search.into();

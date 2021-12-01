@@ -1,8 +1,9 @@
 use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use gravity_abi::gravity::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::types::{FromLog, ValsetUpdatedEvent, VALSET_UPDATED_EVENT_STR};
+use gravity_utils::types::{FromLog, ValsetUpdatedEvent};
 use gravity_utils::{error::GravityError, ethereum::downcast_to_u64, types::Valset};
 use std::{panic, result::Result};
 use tonic::transport::Channel;
@@ -22,7 +23,7 @@ pub async fn find_latest_valset(
 
     let mut filter = Filter::new()
         .address(ValueOrArray::Value(gravity_contract_address))
-        .event(&VALSET_UPDATED_EVENT_STR);
+        .event(&ValsetUpdatedEventFilter::abi_signature());
     let mut end_filter_block = eth_client.get_block_number().await?;
 
     while end_filter_block > 0u64.into() {

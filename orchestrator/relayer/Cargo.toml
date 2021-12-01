@@ -15,6 +15,7 @@ path = "src/main.rs"
 [dependencies]
 ethereum_gravity = { path = "../ethereum_gravity" }
 cosmos_gravity = { path = "../cosmos_gravity" }
+gravity_abi = { path = "../gravity_abi" }
 gravity_utils = { path = "../gravity_utils" }
 gravity_proto = { path = "../gravity_proto" }
 
