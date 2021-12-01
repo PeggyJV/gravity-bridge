@@ -333,15 +333,11 @@ def deployContracts(signers, gravityId, validators, powers, powerThreshold):
     return gravity, testERC20, checkpoint
 
 def signHash(signers, hash):
-    v = []
-    r = []
-    s = []
+    sign = []
     for i in range(len(signers)):
         signed_message = web3.eth.account.sign_message(encode_defunct(hash), signers[i].private_key)
-        v.append(signed_message.v)
-        r.append(signed_message.r)
-        s.append(signed_message.s)
-    return v, r, s
+        sign.append([signed_message.v, signed_message.r, signed_message.s])
+    return sign
 
 def bstring2bytes32(str):
     return encode_abi(["bytes32"], [str])

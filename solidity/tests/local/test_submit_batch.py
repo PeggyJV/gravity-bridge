@@ -118,10 +118,10 @@ def test_produces_good_hash(signers):
     print("batchDigest:")
     print(batchDigest)
 
-    sig_v, sig_r, sig_s = signHash(validators, batchDigest)
+    sigs = signHash(validators, batchDigest)
     currentValsetNonce = 0
 
-    res = gravity.submitBatch(getSignerAddresses(validators), powers, currentValsetNonce, sig_v, sig_r, sig_s, txAmounts, txDestinations, txFees, batchNonce, testERC20, batchTimeout)
+    res = gravity.submitBatch(getSignerAddresses(validators), powers, currentValsetNonce, sigs, txAmounts, txDestinations, txFees, batchNonce, testERC20, batchTimeout)
 
 def run_test(signers, batchNonceNotHigher=False, malformedTxBatch=False, nonMatchingCurrentValset=False, badValidatorSig=False, zeroedValidatorSig=False, notEnoughPower=False, barelyEnoughPower=False, malformedCurrentValset=False, batchTimedOut=False):
     # Prep and deploy contract
@@ -189,7 +189,7 @@ def run_test(signers, batchNonceNotHigher=False, malformedTxBatch=False, nonMatc
             batchTimeout
         ])
     )
-    sig_v, sig_r, sig_s = signHash(validators, digest)
+    sigs = signHash(validators, digest)
 
     currentValsetNonce = 0
     if nonMatchingCurrentValset:
@@ -202,42 +202,42 @@ def run_test(signers, batchNonceNotHigher=False, malformedTxBatch=False, nonMatc
 
     if badValidatorSig:
         # Switch the first sig for the second sig to screw things up
-        sig_v[1] = sig_v[0]
-        sig_r[1] = sig_r[0]
-        sig_s[1] = sig_s[0]
+        sigs[1][0] = sigs[0][0]
+        sigs[1][1] = sigs[0][1]
+        sigs[1][2] = sigs[0][2]
     
     if zeroedValidatorSig:
         # Switch the first sig for the second sig to screw things up
-        sig_v[1] = sig_v[0]
-        sig_v[1] = sig_v[0]
-        sig_v[1] = sig_v[0]
+        sigs[1][0] = sigs[0][0]
+        sigs[1][0] = sigs[0][0]
+        sigs[1][0] = sigs[0][0]
         # Then zero it out to skip evaluation
-        sig_v[1] = 0
+        sigs[1][0] = 0
     
     if notEnoughPower:
         # zero out enough signatures that we dip below the threshold
-        sig_v[1] = 0
-        sig_v[2] = 0
-        sig_v[3] = 0
-        sig_v[5] = 0
-        sig_v[6] = 0
-        sig_v[7] = 0
-        sig_v[9] = 0
-        sig_v[11] = 0
-        sig_v[13] = 0
+        sigs[1][0] = 0
+        sigs[2][0] = 0
+        sigs[3][0] = 0
+        sigs[5][0] = 0
+        sigs[6][0] = 0
+        sigs[7][0] = 0
+        sigs[9][0] = 0
+        sigs[11][0] = 0
+        sigs[13][0] = 0
     
     if barelyEnoughPower:
         # Stay just above the threshold
-        sig_v[1] = 0
-        sig_v[2] = 0
-        sig_v[3] = 0
-        sig_v[5] = 0
-        sig_v[6] = 0
-        sig_v[7] = 0
-        sig_v[9] = 0
-        sig_v[11] = 0
+        sigs[1][0] = 0
+        sigs[2][0] = 0
+        sigs[3][0] = 0
+        sigs[5][0] = 0
+        sigs[6][0] = 0
+        sigs[7][0] = 0
+        sigs[9][0] = 0
+        sigs[11][0] = 0
 
-    tx_data = gravity.submitBatch.encode_input(getSignerAddresses(validators), powers, currentValsetNonce, sig_v, sig_r, sig_s, txAmounts, txDestinations, txFees, batchNonce, testERC20, batchTimeout)
+    tx_data = gravity.submitBatch.encode_input(getSignerAddresses(validators), powers, currentValsetNonce, sigs, txAmounts, txDestinations, txFees, batchNonce, testERC20, batchTimeout)
     try:
         web3.eth.estimate_gas({"to": gravity.address, "from": signers[0].address, "data": tx_data})
     except ValueError as err:
@@ -245,5 +245,4 @@ def run_test(signers, batchNonceNotHigher=False, malformedTxBatch=False, nonMatc
     except BaseException as err:
         print(f"Unexpected {err=}, {type(err)=}")
 
-    gravity.submitBatch(getSignerAddresses(validators), powers, currentValsetNonce, sig_v, sig_r, sig_s, txAmounts, txDestinations, txFees, batchNonce, testERC20, batchTimeout)
-
+    gravity.submitBatch(getSignerAddresses(validators), powers, currentValsetNonce, sigs, txAmounts, txDestinations, txFees, batchNonce, testERC20, batchTimeout)

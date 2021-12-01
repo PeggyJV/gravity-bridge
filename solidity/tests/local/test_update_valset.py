@@ -87,35 +87,35 @@ def run_test(signers, malformedNewValset=False, malformedCurrentValset=False, no
 
     checkpoint = makeCheckpoint(getSignerAddresses(newValidators), newPowers, newValsetNonce, gravityId)
 
-    sig_v, sig_r, sig_s = signHash(validators, checkpoint)
+    sigs = signHash(validators, checkpoint)
 
     if badValidatorSig:
-        sig_v[1] = sig_v[0]
-        sig_r[1] = sig_r[0]
-        sig_s[1] = sig_s[0]
+        sigs[1][0] = sigs[0][0]
+        sigs[1][1] = sigs[0][1]
+        sigs[1][2] = sigs[0][2]
     
     if zeroedValidatorSig:
-        sig_v[1] = sig_v[0]
-        sig_r[1] = sig_r[0]
-        sig_s[1] = sig_s[0]
-        sig_v[1] = 0
+        sigs[1][0] = sigs[0][0]
+        sigs[1][1] = sigs[0][1]
+        sigs[1][2] = sigs[0][2]
+        sigs[1][0] = 0
     
     if notEnoughPower:
-        sig_v[1] = 0
-        sig_v[2] = 0
-        sig_v[3] = 0
-        sig_v[5] = 0
-        sig_v[6] = 0
-        sig_v[7] = 0
-        sig_v[9] = 0
-        sig_v[11] = 0
-        sig_v[13] = 0
+        sigs[1][0] = 0
+        sigs[2][0] = 0
+        sigs[3][0] = 0
+        sigs[5][0] = 0
+        sigs[6][0] = 0
+        sigs[7][0] = 0
+        sigs[9][0] = 0
+        sigs[11][0] = 0
+        sigs[13][0] = 0
 
     if malformedCurrentValset:
         powers.pop()
 
     
-    tx_data = gravity.updateValset.encode_input(getSignerAddresses(newValidators), newPowers, newValsetNonce, getSignerAddresses(validators), powers, currentValsetNonce, sig_v, sig_r, sig_s)
+    tx_data = gravity.updateValset.encode_input(getSignerAddresses(newValidators), newPowers, newValsetNonce, getSignerAddresses(validators), powers, currentValsetNonce, sigs)
     try:
         gas = web3.eth.estimate_gas({"to": gravity.address, "from": signers[0].address, "data": tx_data})
     except ValueError as err:
@@ -123,5 +123,5 @@ def run_test(signers, malformedNewValset=False, malformedCurrentValset=False, no
     except BaseException as err:
         print(f"Unexpected {err=}, {type(err)=}")
 
-    gravity.updateValset(getSignerAddresses(newValidators), newPowers, newValsetNonce, getSignerAddresses(validators), powers, currentValsetNonce, sig_v, sig_r, sig_s)
+    gravity.updateValset(getSignerAddresses(newValidators), newPowers, newValsetNonce, getSignerAddresses(validators), powers, currentValsetNonce, sigs)
     return gravity, checkpoint

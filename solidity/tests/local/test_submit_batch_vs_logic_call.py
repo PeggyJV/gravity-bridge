@@ -75,8 +75,8 @@ def runSubmitBatchTest(signers, batchSize):
         ]
     ))
 
-    sig_v, sig_r, sig_s = signHash(validators, digest)
-    gravity.submitBatch(getSignerAddresses(validators), powers, 0, sig_v, sig_r, sig_s, amounts, destinations, fees, 1, testERC20, batchTimeout)
+    sigs = signHash(validators, digest)
+    gravity.submitBatch(getSignerAddresses(validators), powers, 0, sigs, amounts, destinations, fees, 1, testERC20, batchTimeout)
 
     assert testERC20.balanceOf(signers[5]) == 1
     assert testERC20.balanceOf(signers[5 + numTxs - 1]) == 1
@@ -134,9 +134,9 @@ def runLogicCallTest(signers, batchSize, reentrant=False):
             logicCallArgs[8]
         ])
     )
-    sig_v, sig_r, sig_s = signHash(validators, digest)
+    sigs = signHash(validators, digest)
 
-    tx_data = gravity.submitLogicCall.encode_input(getSignerAddresses(validators), powers, 0, sig_v, sig_r, sig_s, logicCallArgs)
+    tx_data = gravity.submitLogicCall.encode_input(getSignerAddresses(validators), powers, 0, sigs, logicCallArgs)
     try:
         gas = web3.eth.estimate_gas({"to": gravity.address, "from": signers[0].address, "data": tx_data})
     except ValueError as err:
@@ -148,9 +148,7 @@ def runLogicCallTest(signers, batchSize, reentrant=False):
         getSignerAddresses(validators),
         powers,
         0,
-        sig_v,
-        sig_r,
-        sig_s,
+        sigs,
         logicCallArgs
     )
 
