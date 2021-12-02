@@ -227,9 +227,7 @@ async function runTest() {
     powers,
     currentValsetNonce,
 
-    sigs.v,
-    sigs.r,
-    sigs.s,
+    sigs,
     logicCallArgs
   );
 

@@ -1,9 +1,9 @@
 use crate::application::APP;
 use abscissa_core::{status_err, Application, Clap, Command, Runnable};
-use clarity::Address as EthAddress;
 use clarity::Uint256;
 use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
 use deep_space::coin::Coin;
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::DenomToErc20Request;
 use gravity_utils::connection_prep::{check_for_fee_denom, create_rpc_connections};
 use std::{process::exit, time::Duration};
@@ -27,6 +27,9 @@ pub fn one_atom() -> f64 {
     1000000f64
 }
 
+// TODO(bolten): deep_space's Coin type relies internally on clarity's Uint256,
+// and it would make this code super akward to try to get around that...replacing
+// that here might be part of a broader deep_space replacement
 pub fn print_atom(input: Uint256) -> String {
     let float: f64 = input.to_string().parse().unwrap();
     let res = float / one_atom();
@@ -54,7 +57,7 @@ impl Runnable for CosmosToEthCmd {
 
         let cosmos_prefix = config.cosmos.prefix.trim();
         let cosmos_address = cosmos_key.to_address(cosmos_prefix).unwrap();
-        let cosmos_grpc = config.cosmos.prefix.trim();
+        let cosmos_grpc = config.cosmos.grpc.trim();
         println!("Sending from Cosmos address {}", cosmos_address);
         abscissa_tokio::run_with_actix(&APP, async {
         let connections = create_rpc_connections(
@@ -85,13 +88,14 @@ impl Runnable for CosmosToEthCmd {
                 exit(1);
             }
         }
+
         let amount = Coin {
             amount: amount.clone(),
             denom: gravity_denom.clone(),
         };
         let bridge_fee = Coin {
-            denom: gravity_denom.clone(),
             amount: 1u64.into(),
+            denom: gravity_denom.clone(),
         };
 
         let eth_dest = self.args.get(3).expect("ethereum destination is required");

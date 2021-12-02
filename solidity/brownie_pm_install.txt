@@ -1,0 +1,14 @@
+install python >= 3.7
+install pipx
+pipx install eth-brownie
+brownie pm install OpenZeppelin/openzeppelin-contracts@3.1.0
+brownie pm install Uniswap/v2-core@1.0.0
+brownie pm install Uniswap/v2-periphery@1.0.0-beta.0
+curl https://raw.githubusercontent.com/Uniswap/v2-periphery/master/contracts/interfaces/IUniswapV2Router02.sol -o ~/.brownie/packages/Uniswap/v2-periphery@1.0.0-beta.0/contracts/interfaces/IUniswapV2Router02.sol
+
+- test
+brownie test tests/local -s
+
+- mainnet-fork test
+ganache-cli --accounts 10 --hardfork istanbul --fork https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_ID}@11780000 --gasLimit 12000000 --mnemonic brownie --port 8545 --defaultBalanceEther 1544266562 --chainId 1 --unlock 0x0c731Fb0D03211DD32A456370AD2ec3fFad46520
+brownie test tests/mainnet-fork -s

@@ -1,8 +1,9 @@
-use clarity::Address as EthAddress;
 use deep_space::address::Address;
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_proto::gravity::*;
 use gravity_utils::error::GravityError;
+use gravity_utils::ethereum::format_eth_address;
 use gravity_utils::types::*;
 use tonic::transport::Channel;
 
@@ -109,7 +110,7 @@ pub async fn get_transaction_batch_signatures(
     let request = client
         .batch_tx_confirmations(BatchTxConfirmationsRequest {
             batch_nonce: nonce,
-            token_contract: contract_address.to_string(),
+            token_contract: format_eth_address(contract_address),
         })
         .await?;
     let batch_confirms = request.into_inner().signatures;

@@ -1,20 +1,18 @@
-use clarity::address::Address as EthAddress;
-use clarity::PrivateKey as EthPrivateKey;
-use clarity::Uint256;
-
 use cosmos_gravity::query::get_latest_transaction_batches;
 use cosmos_gravity::query::get_transaction_batch_signatures;
-use ethereum_gravity::utils::{downcast_to_u128, get_tx_batch_nonce};
-use ethereum_gravity::{one_eth, submit_batch::send_eth_transaction_batch};
+use ethereum_gravity::{
+    one_eth_f32, submit_batch::send_eth_transaction_batch, types::EthClient,
+    utils::get_tx_batch_nonce,
+};
+use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use gravity_utils::ethereum::downcast_to_f32;
 use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
-use gravity_utils::types::Valset;
-use gravity_utils::types::{BatchConfirmResponse, TransactionBatch};
+use gravity_utils::types::{BatchConfirmResponse, TransactionBatch, Valset};
 use std::collections::HashMap;
 use std::time::Duration;
 use tonic::transport::Channel;
-use web30::client::Web3;
-use web30::types::SendTxOption;
 
 #[derive(Debug, Clone)]
 struct SubmittableBatch {
@@ -33,13 +31,12 @@ struct SubmittableBatch {
 pub async fn relay_batches(
     // the validator set currently in the contract on Ethereum
     current_valset: Valset,
-    ethereum_key: EthPrivateKey,
-    web3: &Web3,
+    eth_client: EthClient,
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     gravity_id: String,
     timeout: Duration,
-    gas_multiplier: f32,
+    eth_gas_price_multiplier: f32,
 ) {
     let possible_batches =
         get_batches_and_signatures(current_valset.clone(), grpc_client, gravity_id.clone()).await;
@@ -48,12 +45,11 @@ pub async fn relay_batches(
 
     submit_batches(
         current_valset,
-        ethereum_key,
-        web3,
+        eth_client.clone(),
         gravity_contract_address,
         gravity_id,
         timeout,
-        gas_multiplier,
+        eth_gas_price_multiplier,
         possible_batches,
     )
     .await;
@@ -131,19 +127,17 @@ async fn get_batches_and_signatures(
 #[allow(clippy::too_many_arguments)]
 async fn submit_batches(
     current_valset: Valset,
-    ethereum_key: EthPrivateKey,
-    web3: &Web3,
+    eth_client: EthClient,
     gravity_contract_address: EthAddress,
     gravity_id: String,
     timeout: Duration,
-    gas_multiplier: f32,
+    eth_gas_price_multiplier: f32,
     possible_batches: HashMap<EthAddress, Vec<SubmittableBatch>>,
 ) {
-    let our_ethereum_address = ethereum_key.to_public_key().unwrap();
-    let ethereum_block_height = if let Ok(bn) = web3.eth_block_number().await {
+    let ethereum_block_height = if let Ok(bn) = eth_client.get_block_number().await {
         bn
     } else {
-        warn!("Failed to get eth block height, is your eth node working?");
+        error!("Failed to get eth block height, is your eth node working?");
         return;
     };
 
@@ -153,13 +147,8 @@ async fn submit_batches(
     // do that though.
     for (token_type, possible_batches) in possible_batches {
         let erc20_contract = token_type;
-        let latest_ethereum_batch = get_tx_batch_nonce(
-            gravity_contract_address,
-            erc20_contract,
-            our_ethereum_address,
-            web3,
-        )
-        .await;
+        let latest_ethereum_batch =
+            get_tx_batch_nonce(gravity_contract_address, erc20_contract, eth_client.clone()).await;
         if latest_ethereum_batch.is_err() {
             error!(
                 "Failed to get latest Ethereum batch with {:?}",
@@ -173,8 +162,7 @@ async fn submit_batches(
             let oldest_signed_batch = batch.batch;
             let oldest_signatures = batch.sigs;
 
-            let timeout_height: Uint256 = oldest_signed_batch.batch_timeout.into();
-            if timeout_height < ethereum_block_height {
+            if oldest_signed_batch.batch_timeout < ethereum_block_height.as_u64() {
                 warn!(
                     "Batch {}/{} has timed out and can not be submitted",
                     oldest_signed_batch.nonce, oldest_signed_batch.token_contract
@@ -188,39 +176,51 @@ async fn submit_batches(
                     current_valset.clone(),
                     oldest_signed_batch.clone(),
                     &oldest_signatures,
-                    web3,
                     gravity_contract_address,
                     gravity_id.clone(),
-                    ethereum_key,
+                    eth_client.clone(),
                 )
                 .await;
+
                 if cost.is_err() {
                     error!("Batch cost estimate failed with {:?}", cost);
                     continue;
                 }
-                let cost = cost.unwrap();
+
+                let mut cost = cost.unwrap();
+                let total_cost = downcast_to_f32(cost.get_total());
+                if total_cost.is_none() {
+                    error!(
+                        "Total gas cost greater than f32 max, skipping batch submission: {}",
+                        oldest_signed_batch.nonce
+                    );
+                    continue;
+                }
+                let total_cost = total_cost.unwrap();
+                let gas_price_as_f32 = downcast_to_f32(cost.gas_price).unwrap(); // if the total cost isn't greater, this isn't
+
                 info!(
-                "We have detected latest batch {} but latest on Ethereum is {} This batch is estimated to cost {} Gas / {:.4} ETH to submit",
-                latest_cosmos_batch_nonce,
-                latest_ethereum_batch,
-                cost.gas_price.clone(),
-                downcast_to_u128(cost.get_total()).unwrap() as f32
-                    / downcast_to_u128(one_eth()).unwrap() as f32
-            );
-                let tx_options = vec![SendTxOption::GasPriceMultiplier(gas_multiplier)];
+                    "We have detected latest batch {} but latest on Ethereum is {} This batch is estimated to cost {} Gas / {:.4} ETH to submit",
+                    latest_cosmos_batch_nonce,
+                    latest_ethereum_batch,
+                    cost.gas_price.clone(),
+                    total_cost / one_eth_f32()
+                );
+
+                cost.gas_price = ((gas_price_as_f32 * eth_gas_price_multiplier) as u128).into();
 
                 let res = send_eth_transaction_batch(
                     current_valset.clone(),
                     oldest_signed_batch,
                     &oldest_signatures,
-                    web3,
                     timeout,
                     gravity_contract_address,
                     gravity_id.clone(),
-                    ethereum_key,
-                    tx_options,
+                    cost,
+                    eth_client.clone(),
                 )
                 .await;
+
                 if res.is_err() {
                     info!("Batch submission failed with {:?}", res);
                 }

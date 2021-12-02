@@ -2,22 +2,26 @@
 //! It's a common problem to have conflicts between ipv4 and ipv6 localhost and this module is first and foremost supposed to resolve that problem
 //! by trying more than one thing to handle potentially misconfigured inputs.
 
-use clarity::Address as EthAddress;
+use crate::ethereum::format_eth_address;
 use deep_space::client::ChainStatus;
 use deep_space::Address as CosmosAddress;
 use deep_space::Contact;
+use ethers::prelude::*;
+use ethers::providers::Provider;
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_proto::gravity::DelegateKeysByEthereumSignerRequest;
 use gravity_proto::gravity::DelegateKeysByOrchestratorRequest;
+use std::convert::TryFrom;
 use std::process::exit;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 use url::Url;
-use web30::client::Web3;
 
 pub struct Connections {
-    pub web3: Option<Web3>,
+    pub eth_provider: Option<Provider<Http>>,
     pub grpc: Option<GravityQueryClient<Channel>>,
     pub contact: Option<Contact>,
 }
@@ -31,7 +35,7 @@ pub async fn create_rpc_connections(
     eth_rpc_url: Option<String>,
     timeout: Duration,
 ) -> Connections {
-    let mut web3 = None;
+    let mut eth_provider = None;
     let mut grpc = None;
     let mut contact = None;
     if let Some(grpc_url) = grpc_url {
@@ -114,11 +118,15 @@ pub async fn create_rpc_connections(
             .unwrap_or_else(|_| panic!("Invalid Ethereum RPC url {}", eth_rpc_url));
         check_scheme(&url, &eth_rpc_url);
         let eth_url = eth_rpc_url.trim_end_matches('/');
-        let base_web30 = Web3::new(eth_url, timeout);
-        let try_base = base_web30.eth_block_number().await;
+        // TODO(bolten): should probably set a non-default interval, but what is the appropriate
+        // value?
+        let base_eth_provider = Provider::<Http>::try_from(eth_url).unwrap_or_else(|_| {
+            panic!("Could not instantiate Ethereum HTTP provider: {}", eth_url)
+        });
+        let try_base = base_eth_provider.get_block_number().await;
         match try_base {
             // it worked, lets go!
-            Ok(_) => web3 = Some(base_web30),
+            Ok(_) => eth_provider = Some(base_eth_provider),
             // did not work, now we check if it's localhost
             Err(e) => {
                 warn!(
@@ -131,19 +139,31 @@ pub async fn create_rpc_connections(
                     let prefix = url.scheme();
                     let ipv6_url = format!("{}://::1:{}", prefix, port);
                     let ipv4_url = format!("{}://127.0.0.1:{}", prefix, port);
-                    let ipv6_web3 = Web3::new(&ipv6_url, timeout);
-                    let ipv4_web3 = Web3::new(&ipv4_url, timeout);
-                    let ipv6_test = ipv6_web3.eth_block_number().await;
-                    let ipv4_test = ipv4_web3.eth_block_number().await;
+                    let ipv6_eth_provider = Provider::<Http>::try_from(ipv6_url.as_str())
+                        .unwrap_or_else(|_| {
+                            panic!(
+                                "Could not instantiate Ethereum HTTP provider: {}",
+                                &ipv6_url
+                            )
+                        });
+                    let ipv4_eth_provider = Provider::<Http>::try_from(ipv4_url.as_str())
+                        .unwrap_or_else(|_| {
+                            panic!(
+                                "Could not instantiate Ethereum HTTP provider: {}",
+                                &ipv4_url
+                            )
+                        });
+                    let ipv6_test = ipv6_eth_provider.get_block_number().await;
+                    let ipv4_test = ipv4_eth_provider.get_block_number().await;
                     warn!("Trying fallback urls {} {}", ipv6_url, ipv4_url);
                     match (ipv4_test, ipv6_test) {
                         (Ok(_), Err(_)) => {
                             info!("Url fallback succeeded, your Ethereum rpc url {} has been corrected to {}", eth_rpc_url, ipv4_url);
-                            web3 = Some(ipv4_web3)
+                            eth_provider = Some(ipv4_eth_provider)
                         }
                         (Err(_), Ok(_)) => {
                             info!("Url fallback succeeded, your Ethereum  rpc url {} has been corrected to {}", eth_rpc_url, ipv6_url);
-                            web3 = Some(ipv6_web3)
+                            eth_provider = Some(ipv6_eth_provider)
                         },
                         (Ok(_), Ok(_)) => panic!("This should never happen? Why didn't things work the first time?"),
                         (Err(_), Err(_)) => panic!("Could not connect to Ethereum rpc, are you sure it's running and on the specified port? {}", eth_rpc_url)
@@ -155,10 +175,24 @@ pub async fn create_rpc_connections(
                     // transparently upgrade to https if available, we can't transparently downgrade for obvious security reasons
                     let https_on_80_url = format!("https://{}:80", body);
                     let https_on_443_url = format!("https://{}:443", body);
-                    let https_on_80_web3 = Web3::new(&https_on_80_url, timeout);
-                    let https_on_443_web3 = Web3::new(&https_on_443_url, timeout);
-                    let https_on_80_test = https_on_80_web3.eth_block_number().await;
-                    let https_on_443_test = https_on_443_web3.eth_block_number().await;
+                    let https_on_80_eth_provider =
+                        Provider::<Http>::try_from(https_on_80_url.as_str()).unwrap_or_else(|_| {
+                            panic!(
+                                "Could not instantiate Ethereum HTTP provider: {}",
+                                &https_on_80_url
+                            )
+                        });
+                    let https_on_443_eth_provider = Provider::<Http>::try_from(
+                        https_on_443_url.as_str(),
+                    )
+                    .unwrap_or_else(|_| {
+                        panic!(
+                            "Could not instantiate Ethereum HTTP provider: {}",
+                            &https_on_443_url
+                        )
+                    });
+                    let https_on_80_test = https_on_80_eth_provider.get_block_number().await;
+                    let https_on_443_test = https_on_443_eth_provider.get_block_number().await;
                     warn!(
                         "Trying fallback urls {} {}",
                         https_on_443_url, https_on_80_url
@@ -166,11 +200,11 @@ pub async fn create_rpc_connections(
                     match (https_on_80_test, https_on_443_test) {
                         (Ok(_), Err(_)) => {
                             info!("Https upgrade succeeded, your Ethereum rpc url {} has been corrected to {}", eth_rpc_url, https_on_80_url);
-                            web3 = Some(https_on_80_web3)
+                            eth_provider = Some(https_on_80_eth_provider)
                         },
                         (Err(_), Ok(_)) => {
                             info!("Https upgrade succeeded, your Ethereum rpc url {} has been corrected to {}", eth_rpc_url, https_on_443_url);
-                            web3 = Some(https_on_443_web3)
+                            eth_provider = Some(https_on_443_eth_provider)
                         },
                         (Ok(_), Ok(_)) => panic!("This should never happen? Why didn't things work the first time?"),
                         (Err(_), Err(_)) => panic!("Could not connect to Ethereum rpc, are you sure it's running and on the specified port? {}", eth_rpc_url)
@@ -183,7 +217,7 @@ pub async fn create_rpc_connections(
     }
 
     Connections {
-        web3,
+        eth_provider,
         grpc,
         contact,
     }
@@ -235,7 +269,7 @@ pub async fn check_delegate_addresses(
 ) {
     let eth_response = client
         .delegate_keys_by_ethereum_signer(DelegateKeysByEthereumSignerRequest {
-            ethereum_signer: delegate_eth_address.to_string(),
+            ethereum_signer: format_eth_address(delegate_eth_address),
         })
         .await;
     let orchestrator_response = client
@@ -318,9 +352,13 @@ pub async fn check_for_fee_denom(fee_denom: &str, address: CosmosAddress, contac
     }
 }
 
+// TODO(bolten): is using LocalWallet too specific?
 /// Checks the user has some Ethereum in their address to pay for things
-pub async fn check_for_eth(address: EthAddress, web3: &Web3) {
-    let balance = web3.eth_get_balance(address).await.unwrap();
+pub async fn check_for_eth(
+    address: EthAddress,
+    eth_client: Arc<SignerMiddleware<Provider<Http>, LocalWallet>>,
+) {
+    let balance = eth_client.get_balance(address, None).await.unwrap();
     if balance == 0u8.into() {
         warn!("You don't have any Ethereum! You will need to send some to {} for this program to work. Dust will do for basic operations, more info about average relaying costs will be presented as the program runs", address);
     }

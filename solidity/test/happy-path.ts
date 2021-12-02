@@ -76,9 +76,7 @@ describe("Gravity happy path valset update + batch submit", function () {
       valset0.powers,
       valset0.nonce,
 
-      sigs1.v,
-      sigs1.r,
-      sigs1.s
+      sigs1
     );
 
     expect((await gravity.functions.state_lastValsetCheckpoint())[0]).to.equal(checkpoint1);
@@ -150,9 +148,7 @@ describe("Gravity happy path valset update + batch submit", function () {
       valset1.powers,
       valset1.nonce,
 
-      sigs.v,
-      sigs.r,
-      sigs.s,
+      sigs,
 
       txAmounts,
       txDestinations,

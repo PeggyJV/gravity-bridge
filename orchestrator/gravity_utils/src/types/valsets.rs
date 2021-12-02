@@ -1,15 +1,16 @@
 use super::*;
-use crate::error::GravityError;
-use clarity::Address as EthAddress;
-use clarity::Signature as EthSignature;
+use crate::{
+    error::GravityError,
+    ethereum::{format_eth_address, u8_slice_to_fixed_32},
+};
 use deep_space::error::CosmosGrpcError;
+use ethers::types::{Address as EthAddress, Signature as EthSignature};
+use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::{
     cmp::Ordering,
     collections::{HashMap, HashSet},
-    fmt,
-    str,
-    // str::FromStr,
+    fmt, str,
 };
 
 /// The total power in the Gravity bridge is normalized to u32 max every
@@ -66,7 +67,7 @@ impl ValsetConfirmResponse {
         Ok(ValsetConfirmResponse {
             eth_signer: input.ethereum_signer.parse()?,
             nonce: input.signer_set_nonce,
-            eth_signature: EthSignature::from_bytes(&input.signature)?,
+            eth_signature: EthSignature::try_from(input.signature.as_slice())?,
         })
     }
 }
@@ -76,7 +77,7 @@ impl Confirm for ValsetConfirmResponse {
         self.eth_signer
     }
     fn get_signature(&self) -> EthSignature {
-        self.eth_signature.clone()
+        self.eth_signature
     }
 }
 
@@ -101,7 +102,7 @@ impl Valset {
                     powers.push(val.power);
                 }
                 None => {
-                    addresses.push(EthAddress::default());
+                    addresses.push(EthAddress::zero());
                     powers.push(val.power);
                 }
             }
@@ -149,15 +150,15 @@ impl Valset {
             if let Some(eth_address) = member.eth_address {
                 if let Some(sig) = signatures_hashmap.get(&eth_address) {
                     assert_eq!(sig.get_eth_address(), eth_address);
-                    assert!(sig.get_signature().is_valid());
-                    let recover_key = sig.get_signature().recover(signed_message).unwrap();
+                    let sig_hash = u8_slice_to_fixed_32(signed_message)?;
+                    let recover_key = sig.get_signature().recover(sig_hash)?;
                     if recover_key == sig.get_eth_address() {
                         out.push(GravitySignature {
                             power: member.power,
                             eth_address: sig.get_eth_address(),
-                            v: sig.get_signature().v.clone(),
-                            r: sig.get_signature().r.clone(),
-                            s: sig.get_signature().s.clone(),
+                            v: sig.get_signature().v,
+                            r: sig.get_signature().r,
+                            s: sig.get_signature().s,
                         });
                         power_of_good_sigs += member.power;
                     } else {
@@ -276,52 +277,6 @@ impl Valset {
         }
         res
     }
-
-    /// This function takes the current valset and compares it to a provided one
-    /// returning a percentage difference in their power allocation. This is a very
-    /// important function as it's used to decide when the validator sets are updated
-    /// on the Ethereum chain and when new validator sets are requested on the Cosmos
-    /// side. In theory an error here, if unnoticed for long enough, could allow funds
-    /// to be stolen from the bridge without the validators in question still having stake
-    /// to lose.
-    /// Returned value must be less than or equal to two
-    pub fn power_diff(&self, other: &Valset) -> f32 {
-        let mut total_power_diff = 0u64;
-        let a = self.to_hashmap();
-        let b = other.to_hashmap();
-        let a_map = self.to_hashset();
-        let b_map = other.to_hashset();
-        // items in A and B, we go through these and compute the absolute value of the
-        // difference in power and sum it.
-        let intersection = a_map.intersection(&b_map);
-        // items in A but not in B or vice versa, since we're just trying to compute the difference
-        // we can simply sum all of these up.
-        let symmetric_difference = a_map.symmetric_difference(&b_map);
-        for item in symmetric_difference {
-            let mut power = None;
-            if let Some(val) = a.get(item) {
-                power = Some(val);
-            } else if let Some(val) = b.get(item) {
-                power = Some(val);
-            }
-            // impossible for this to panic without a failure in the logic
-            // of the symmetric difference function
-            let power = power.unwrap();
-            total_power_diff += power;
-        }
-        for item in intersection {
-            // can't panic since there must be an entry for both.
-            let power_a = a[item];
-            let power_b = b[item];
-            if power_a > power_b {
-                total_power_diff += power_a - power_b;
-            } else {
-                total_power_diff += power_b - power_a;
-            }
-        }
-
-        (total_power_diff as f32) / (u32::MAX as f32)
-    }
 }
 
 impl From<gravity_proto::gravity::SignerSetTxResponse> for Valset {
@@ -409,7 +364,12 @@ impl ValsetMember {
 impl fmt::Display for ValsetMember {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.eth_address {
-            Some(a) => write!(f, "Address: {} Power: {}", a, self.power),
+            Some(a) => write!(
+                f,
+                "Address: {} Power: {}",
+                format_eth_address(a),
+                self.power
+            ),
             None => write!(f, "Address: None Power: {}", self.power),
         }
     }
@@ -444,7 +404,7 @@ impl From<&gravity_proto::gravity::EthereumSigner> for ValsetMember {
 impl From<&ValsetMember> for gravity_proto::gravity::EthereumSigner {
     fn from(input: &ValsetMember) -> gravity_proto::gravity::EthereumSigner {
         let ethereum_address = match input.eth_address {
-            Some(e) => e.to_string(),
+            Some(e) => format_eth_address(e),
             None => String::new(),
         };
         gravity_proto::gravity::EthereumSigner {

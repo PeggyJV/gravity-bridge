@@ -2,9 +2,10 @@
 
 use crate::{application::APP, prelude::*, utils::*};
 use abscissa_core::{Clap, Command, Runnable};
-use clarity::{Address as EthAddress, Uint256};
+use clarity::Uint256;
 use cosmos_gravity::send::send_to_eth;
 use deep_space::{coin::Coin, private_key::PrivateKey as CosmosPrivateKey};
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::DenomToErc20Request;
 use gravity_utils::connection_prep::{check_for_fee_denom, create_rpc_connections};
 use regex::Regex;
@@ -62,6 +63,8 @@ impl Runnable for SendToEth {
 
         let cosmos_key = get_cosmos_key(&from_cosmos_key);
 
+        // TODO(bolten): I guess this command doesn't work yet? I hope no one is trying to
+        // call it
         let cosmos_address = cosmos_key.to_address("//TODO add to config file").unwrap();
 
         println!("Sending from Cosmos address {}", cosmos_address);
@@ -94,7 +97,7 @@ impl Runnable for SendToEth {
                         exit(1);
                     } }
                     let amount = Coin {
-                        amount,
+                        amount: amount.clone(),
                         denom: denom.clone(),
                     };
                     let bridge_fee = Coin {
