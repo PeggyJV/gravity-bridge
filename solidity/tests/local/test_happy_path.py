@@ -22,9 +22,9 @@ def test_happy_path(signers):
         "nonce": 1
     }
     checkpoint1 = makeCheckpoint(getSignerAddresses(valset1["validators"]), valset1["powers"], valset1["nonce"], gravityId)
-    sig1_v, sig1_r, sig1_s = signHash(valset0["validators"], checkpoint1)
+    sigs1 = signHash(valset0["validators"], checkpoint1)
 
-    gravity.updateValset(getSignerAddresses(valset1["validators"]), valset1["powers"], valset1["nonce"], valset0["validators"], valset0["powers"], valset0["nonce"], sig1_v, sig1_r, sig1_s)
+    gravity.updateValset(getSignerAddresses(valset1["validators"]), valset1["powers"], valset1["nonce"], valset0["validators"], valset0["powers"], valset0["nonce"], sigs1)
 
     assert gravity.state_lastValsetCheckpoint() == checkpoint1.hex()
 
@@ -67,14 +67,12 @@ def test_happy_path(signers):
         ]
     )
     digest = web3.keccak(abiEncoded)
-    sig_v, sig_r, sig_s = signHash(valset1["validators"], digest)
+    sigs = signHash(valset1["validators"], digest)
     gravity.submitBatch(
         getSignerAddresses(valset1["validators"]),
         valset1["powers"],
         valset1["nonce"],
-        sig_v,
-        sig_r,
-        sig_s,
+        sigs,
         txAmounts,
         txDestinations,
         txFees,

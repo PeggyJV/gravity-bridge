@@ -109,17 +109,17 @@ def test_uniswap_logic_happy_path_tests(accounts, signers):
             logicCallArgs[8]
         ])
     )
-    sig_v, sig_r, sig_s = signHash(validators, digest)
+    sigs = signHash(validators, digest)
 
     currentValsetNonce = 0
 
-    tx_data = gravity.submitLogicCall.encode_input(getSignerAddresses(validators), powers, currentValsetNonce, sig_v, sig_r, sig_s, logicCallArgs)
+    tx_data = gravity.submitLogicCall.encode_input(getSignerAddresses(validators), powers, currentValsetNonce, sigs, logicCallArgs)
     try:
         gas = web3.eth.estimate_gas({"to": gravity.address, "from": signers[0].address, "data": tx_data})
     except ValueError as err:
         raise ValueError(err.args[0]["message"][50:])
 
-    gravity.submitLogicCall(getSignerAddresses(validators), powers, currentValsetNonce, sig_v, sig_r, sig_s, logicCallArgs, {"from": signers[0]})
+    gravity.submitLogicCall(getSignerAddresses(validators), powers, currentValsetNonce, sigs, logicCallArgs, {"from": signers[0]})
 
     ending_lp_eth_balance = lp_signer.balance()
 

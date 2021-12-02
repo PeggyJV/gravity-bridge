@@ -36,8 +36,8 @@ def test_deployERC20_tests(signers):
     methodName = bstring2bytes32(b"transactionBatch")
     abiEncoded = encode_abi(["bytes32", "bytes32", "uint256[]", "address[]", "uint256[]", "uint256", "address", "uint256"], [gravityId, methodName, txAmounts, txDestinations, txFees, batchNonce, tx.events[1]["_tokenContract"], batchTimeout])
     digest = web3.keccak(abiEncoded)
-    sig_v, sig_r, sig_s = signHash(validators, digest)
+    sigs = signHash(validators, digest)
     currentValsetNonce = 0
-    gravity.submitBatch(getSignerAddresses(validators), powers, currentValsetNonce, sig_v, sig_r, sig_s, txAmounts, txDestinations, txFees, batchNonce, tx.events[1]["_tokenContract"], batchTimeout)
+    gravity.submitBatch(getSignerAddresses(validators), powers, currentValsetNonce, sigs, txAmounts, txDestinations, txFees, batchNonce, tx.events[1]["_tokenContract"], batchTimeout)
     assert ERC20contract.balanceOf(gravity) == maxUint256 - 200
     assert ERC20contract.balanceOf(signers[6].address) == 1
