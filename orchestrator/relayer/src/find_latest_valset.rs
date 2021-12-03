@@ -3,7 +3,7 @@ use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::types::{FromLog, ValsetUpdatedEvent, ValsetsNoncePair};
+use gravity_utils::types::{FromLog, ValsetUpdatedEvent};
 use gravity_utils::{error::GravityError, ethereum::downcast_to_u64, types::Valset};
 use std::{panic, result::Result};
 use tonic::transport::Channel;
@@ -97,12 +97,8 @@ fn check_if_valsets_differ(
         // if this is true then we have a logic error on the Cosmos chain
         // or with our Ethereum search
         if cosmos_valset.nonce != ethereum_valset.nonce {
-            error!(
-                "Cosmos valset nonce ({}) and Ethereum valset nonce ({}) are not the same!",
-                cosmos_valset.nonce, ethereum_valset.nonce
-            );
-            return Err(GravityError::DifferingValsetNoncesError(
-                ValsetsNoncePair::from((cosmos_valset.nonce, ethereum_valset.nonce)),
+            return Err(GravityError::InvalidBridgeStateError(
+                format!("validator set nonces do not match (cosmos: {}, ethereum: {})", cosmos_valset.nonce, ethereum_valset.nonce),
             ));
         }
 

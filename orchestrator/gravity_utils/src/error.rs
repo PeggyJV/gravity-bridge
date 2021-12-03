@@ -23,8 +23,6 @@ use std::string::FromUtf8Error;
 use tokio::time::error::Elapsed;
 use tonic::Status;
 
-use crate::types::ValsetsNoncePair;
-
 #[derive(Debug)]
 #[allow(clippy::large_enum_variant)]
 pub enum GravityError {
@@ -58,7 +56,6 @@ pub enum GravityError {
     ParseIntError(ParseIntError),
     FromUtf8Error(FromUtf8Error),
     OverflowError(String),
-    DifferingValsetNoncesError(ValsetsNoncePair),
 }
 
 impl fmt::Display for GravityError {
@@ -116,11 +113,6 @@ impl fmt::Display for GravityError {
                 write!(f, "Failed to parse bytes to UTF-8: {}", val)
             }
             GravityError::OverflowError(val) => write!(f, "Overflow error: {}", val),
-            GravityError::DifferingValsetNoncesError(nonces) => write!(
-                f,
-                "Cosmos valset nonce ({}) and Ethereum valset nonce ({}) do not match!",
-                nonces.cosmos_nonce, nonces.ethereum_nonce
-            ),
         }
     }
 }
