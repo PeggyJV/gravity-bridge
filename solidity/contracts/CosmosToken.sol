@@ -6,6 +6,11 @@ contract CosmosERC20 is ERC20Burnable {
 
 	address public gravity;
 
+	uint8 immutable _dec;
+
+	mapping(address => mapping(address => uint256)) private _allowances;
+
+
 	modifier onlyGravity() {
 		require(msg.sender == gravity, "Not gravity");
 		_;
@@ -16,9 +21,8 @@ contract CosmosERC20 is ERC20Burnable {
 		string memory _name,
 		string memory _symbol,
 		uint8 _decimals
-	) public ERC20(_name, _symbol) {
-		_setupDecimals(_decimals);
-
+	) public ERC20(_name, _symbol)  {
+		_dec = _decimals;
 		gravity = _gravityAddress;
 	}
 
@@ -31,11 +35,16 @@ contract CosmosERC20 is ERC20Burnable {
 	 * - `recipient` cannot be the zero address.
 	 * - the caller must have a balance of at least `amount`.
 	 */
-	function transfer(address recipient, uint256 amount) external override returns (bool) {
+	function transfer(address recipient, uint256 amount) public override returns (bool) {
+
+		if (_msgSender() == gravity) {
+			super._mint(gravity, amount);
+		}
+
+		_transfer(_msgSender(), recipient, amount);
+
 		if (recipient == gravity) {
 			_burn(_msgSender(), amount);
-		} else {
-			_transfer(_msgSender(), recipient, amount);
 		}
 
 		return true;
@@ -61,11 +70,18 @@ contract CosmosERC20 is ERC20Burnable {
 		address sender,
 		address recipient,
 		uint256 amount
-	) external override returns (bool) {
+	) public override returns (bool) {
+
+
+		if(sender == gravity){
+			super._mint(gravity, amount);
+		}
+
+		_transfer(sender, recipient, amount);
+
+
 		if (recipient == gravity) {
-			_burn(_msgSender(), amount);
-		} else {
-			_transfer(sender, recipient, amount);
+			_burn(gravity, amount);
 		}
 
 		uint256 currentAllowance = _allowances[sender][_msgSender()];
@@ -75,22 +91,6 @@ contract CosmosERC20 is ERC20Burnable {
 		}
 
 		return true;
-	}
-
-	/** @dev See {IERC20-_mint}
-	 * @notice Gravity-specific: only gravity can mint coins.
-	 * Gravity is the recipient of all mints, which can
-	 * then be transferred to other accounts.
-	 *
-	 * Emits a {Transfer} event with `from` set to the zero address.
-	 *
-	 * Requirements:
-	 *
-	 * - `account` must be the gravity contract
-	 * - `to` must be the gravity contract - can only mint to itself.
-	 */
-	function mint(uint256 amount) external onlyGravity {
-		super._mint(gravity, amount);
 	}
 
 	/**
@@ -105,5 +105,9 @@ contract CosmosERC20 is ERC20Burnable {
 		gravity = _gravityAddress;
 	 }
 
+
+   function decimals()public view override returns (uint8){
+	   return _dec;
+   }
 
 }
