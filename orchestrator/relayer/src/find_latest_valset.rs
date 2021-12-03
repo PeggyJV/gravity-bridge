@@ -94,14 +94,6 @@ fn check_if_valsets_differ(
     }
     let cosmos_valset = cosmos_valset.unwrap();
     if cosmos_valset != *ethereum_valset {
-        // if this is true then we have a logic error on the Cosmos chain
-        // or with our Ethereum search
-        if cosmos_valset.nonce != ethereum_valset.nonce {
-            return Err(GravityError::InvalidBridgeStateError(
-                format!("validator set nonces do not match (cosmos: {}, ethereum: {})", cosmos_valset.nonce, ethereum_valset.nonce),
-            ));
-        }
-
         let mut c_valset = cosmos_valset.members;
         let mut e_valset = ethereum_valset.members.clone();
         c_valset.sort();
