@@ -38,9 +38,7 @@ compiler:
             enabled: true
             runs: 200
         remappings:
-            - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@3.1.0"
-            - "@uniswap/v2-periphery=Uniswap/v2-periphery@1.0.0-beta.0"
-            - "@uniswap/v2-core=Uniswap/v2-core@1.0.0"
+            - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.3.2"
     vyper:
         version: null
 
