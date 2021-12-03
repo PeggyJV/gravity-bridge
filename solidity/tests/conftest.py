@@ -4,7 +4,7 @@ import pytest
 
 import brownie
 
-from brownie import web3, TestLogicContract, SimpleLogicBatchMiddleware, Gravity, TestERC20A, ReentrantERC20, TestTokenBatchMiddleware, HashingTest, TestUniswapLiquidity, Contract
+from brownie import web3, TestLogicContract, SimpleLogicBatchMiddleware, Gravity, TestERC20A, ReentrantERC20, TestTokenBatchMiddleware, HashingTest, Contract
 
 from eth_abi import encode_abi
 
