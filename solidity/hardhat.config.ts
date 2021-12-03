@@ -27,13 +27,34 @@ task("accounts", "Prints the list of accounts", async (args, hre) => {
 // Go to https://buidler.dev/config/ to learn more
 module.exports = {
   // This is a sample solc configuration that specifies which version of solc to use
+  // solidity: {
+  //   version: "0.8.0",
+  //   settings: {
+  //     optimizer: {
+  //       enabled: true
+  //     }
+  //   }  },
+
   solidity: {
-    version: "0.8.0",
-    settings: {
-      optimizer: {
-        enabled: true
-      }
-    }  },
+    compilers: [
+      {
+        version: "0.8.0",
+        settings: {
+          optimizer: {
+            enabled: true
+          }
+        }
+      },
+      {
+        version: "0.6.6",
+        settings: {
+          optimizer: {
+            enabled: true
+          }
+        }
+      },
+    ],
+  },
   networks: {
     hardhat: {
       timeout: 2000000,
