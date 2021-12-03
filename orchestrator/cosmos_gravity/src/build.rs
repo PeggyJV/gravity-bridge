@@ -1,36 +1,38 @@
-use std::collections::BTreeMap;
-
-use clarity::PrivateKey as EthPrivateKey;
 use deep_space::private_key::PrivateKey as CosmosPrivateKey;
-use deep_space::utils::bytes_to_hex_str;
 use deep_space::Contact;
 use deep_space::Msg;
-use ethereum_gravity::utils::downcast_uint256;
+use ethereum_gravity::types::EthClient;
+use ethers::prelude::*;
+use ethers::utils::keccak256;
 use gravity_proto::gravity as proto;
 use gravity_proto::ToAny;
+use gravity_utils::ethereum::{downcast_to_u64, format_eth_address};
 use gravity_utils::message_signatures::{
     encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
 };
 use gravity_utils::types::*;
+use std::collections::BTreeMap;
 
-pub fn signer_set_tx_confirmation_messages(
+pub async fn signer_set_tx_confirmation_messages(
     contact: &Contact,
-    ethereum_key: EthPrivateKey,
+    eth_client: EthClient,
     valsets: Vec<Valset>,
     cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Vec<Msg> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let ethereum_address = ethereum_key.to_public_key().unwrap();
+    let ethereum_address = eth_client.address();
 
     let mut msgs = Vec::new();
     for valset in valsets {
-        let data = encode_valset_confirm(gravity_id.clone(), valset.clone());
-        let signature = ethereum_key.sign_ethereum_msg(&data);
+        let data = keccak256(encode_valset_confirm(gravity_id.clone(), valset.clone()).as_slice());
+        // Signer trait responds with a Result, but we use a LocalWallet and it
+        // will never throw an error
+        let signature = eth_client.signer().sign_message(data).await.unwrap();
         let confirmation = proto::SignerSetTxConfirmation {
-            ethereum_signer: ethereum_address.to_string(),
+            ethereum_signer: format_eth_address(ethereum_address),
             signer_set_nonce: valset.nonce,
-            signature: signature.to_bytes().to_vec(),
+            signature: signature.into(),
         };
         let msg = proto::MsgSubmitEthereumTxConfirmation {
             signer: cosmos_address.to_string(),
@@ -42,25 +44,27 @@ pub fn signer_set_tx_confirmation_messages(
     msgs
 }
 
-pub fn batch_tx_confirmation_messages(
+pub async fn batch_tx_confirmation_messages(
     contact: &Contact,
-    ethereum_key: EthPrivateKey,
+    eth_client: EthClient,
     batches: Vec<TransactionBatch>,
     cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Vec<Msg> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let ethereum_address = ethereum_key.to_public_key().unwrap();
+    let ethereum_address = eth_client.address();
 
     let mut msgs = Vec::new();
     for batch in batches {
-        let data = encode_tx_batch_confirm(gravity_id.clone(), batch.clone());
-        let signature = ethereum_key.sign_ethereum_msg(&data);
+        let data = keccak256(encode_tx_batch_confirm(gravity_id.clone(), batch.clone()).as_slice());
+        // Signer trait responds with a Result, but we use a LocalWallet and it
+        // will never throw an error
+        let signature = eth_client.signer().sign_message(data).await.unwrap();
         let confirmation = proto::BatchTxConfirmation {
-            token_contract: batch.token_contract.to_string(),
+            token_contract: format_eth_address(batch.token_contract),
             batch_nonce: batch.nonce,
-            ethereum_signer: ethereum_address.to_string(),
-            signature: signature.to_bytes().to_vec(),
+            ethereum_signer: format_eth_address(ethereum_address),
+            signature: signature.into(),
         };
         let msg = proto::MsgSubmitEthereumEvent {
             signer: cosmos_address.to_string(),
@@ -72,26 +76,27 @@ pub fn batch_tx_confirmation_messages(
     msgs
 }
 
-pub fn contract_call_tx_confirmation_messages(
+pub async fn contract_call_tx_confirmation_messages(
     contact: &Contact,
-    ethereum_key: EthPrivateKey,
+    eth_client: EthClient,
     logic_calls: Vec<LogicCall>,
     cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Vec<Msg> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let ethereum_address = ethereum_key.to_public_key().unwrap();
+    let ethereum_address = eth_client.address();
 
     let mut msgs = Vec::new();
     for logic_call in logic_calls {
-        let data = encode_logic_call_confirm(gravity_id.clone(), logic_call.clone());
-        let signature = ethereum_key.sign_ethereum_msg(&data);
+        let data =
+            keccak256(encode_logic_call_confirm(gravity_id.clone(), logic_call.clone()).as_slice());
+        // Signer trait responds with a Result, but we use a LocalWallet and it
+        // will never throw an error
+        let signature = eth_client.signer().sign_message(data).await.unwrap();
         let confirmation = proto::ContractCallTxConfirmation {
-            ethereum_signer: ethereum_address.to_string(),
-            signature: signature.to_bytes().to_vec(),
-            invalidation_scope: bytes_to_hex_str(&logic_call.invalidation_id)
-                .as_bytes()
-                .to_vec(),
+            ethereum_signer: format_eth_address(ethereum_address),
+            signature: signature.into(),
+            invalidation_scope: logic_call.invalidation_id,
             invalidation_nonce: logic_call.invalidation_nonce,
         };
         let msg = proto::MsgSubmitEthereumTxConfirmation {
@@ -126,12 +131,12 @@ pub fn ethereum_event_messages(
     let mut unordered_msgs = BTreeMap::new();
     for deposit in deposits {
         let event = proto::SendToCosmosEvent {
-            event_nonce: downcast_uint256(deposit.event_nonce.clone()).unwrap(),
-            ethereum_height: downcast_uint256(deposit.block_height).unwrap(),
-            token_contract: deposit.erc20.to_string(),
+            event_nonce: downcast_to_u64(deposit.event_nonce.clone()).unwrap(),
+            ethereum_height: downcast_to_u64(deposit.block_height).unwrap(),
+            token_contract: format_eth_address(deposit.erc20),
             amount: deposit.amount.to_string(),
             cosmos_receiver: deposit.destination.to_string(),
-            ethereum_sender: deposit.sender.to_string(),
+            ethereum_sender: format_eth_address(deposit.sender),
         };
         let msg = proto::MsgSubmitEthereumEvent {
             signer: cosmos_address.to_string(),
@@ -142,10 +147,10 @@ pub fn ethereum_event_messages(
     }
     for batch in batches {
         let event = proto::BatchExecutedEvent {
-            event_nonce: downcast_uint256(batch.event_nonce.clone()).unwrap(),
-            batch_nonce: downcast_uint256(batch.batch_nonce.clone()).unwrap(),
-            ethereum_height: downcast_uint256(batch.block_height).unwrap(),
-            token_contract: batch.erc20.to_string(),
+            event_nonce: downcast_to_u64(batch.event_nonce.clone()).unwrap(),
+            batch_nonce: downcast_to_u64(batch.batch_nonce.clone()).unwrap(),
+            ethereum_height: downcast_to_u64(batch.block_height).unwrap(),
+            token_contract: format_eth_address(batch.erc20),
         };
         let msg = proto::MsgSubmitEthereumEvent {
             signer: cosmos_address.to_string(),
@@ -156,10 +161,10 @@ pub fn ethereum_event_messages(
     }
     for deploy in erc20_deploys {
         let event = proto::Erc20DeployedEvent {
-            event_nonce: downcast_uint256(deploy.event_nonce.clone()).unwrap(),
-            ethereum_height: downcast_uint256(deploy.block_height).unwrap(),
+            event_nonce: downcast_to_u64(deploy.event_nonce.clone()).unwrap(),
+            ethereum_height: downcast_to_u64(deploy.block_height).unwrap(),
             cosmos_denom: deploy.cosmos_denom,
-            token_contract: deploy.erc20_address.to_string(),
+            token_contract: format_eth_address(deploy.erc20_address),
             erc20_name: deploy.name,
             erc20_symbol: deploy.symbol,
             erc20_decimals: deploy.decimals as u64,
@@ -173,10 +178,10 @@ pub fn ethereum_event_messages(
     }
     for logic_call in logic_calls {
         let event = proto::ContractCallExecutedEvent {
-            event_nonce: downcast_uint256(logic_call.event_nonce.clone()).unwrap(),
-            ethereum_height: downcast_uint256(logic_call.block_height).unwrap(),
+            event_nonce: downcast_to_u64(logic_call.event_nonce.clone()).unwrap(),
+            ethereum_height: downcast_to_u64(logic_call.block_height).unwrap(),
             invalidation_id: logic_call.invalidation_id,
-            invalidation_nonce: downcast_uint256(logic_call.invalidation_nonce).unwrap(),
+            invalidation_nonce: downcast_to_u64(logic_call.invalidation_nonce).unwrap(),
         };
         let msg = proto::MsgSubmitEthereumEvent {
             signer: cosmos_address.to_string(),
@@ -187,9 +192,9 @@ pub fn ethereum_event_messages(
     }
     for valset in valsets {
         let event = proto::SignerSetTxExecutedEvent {
-            event_nonce: downcast_uint256(valset.event_nonce.clone()).unwrap(),
-            signer_set_tx_nonce: downcast_uint256(valset.valset_nonce.clone()).unwrap(),
-            ethereum_height: downcast_uint256(valset.block_height).unwrap(),
+            event_nonce: downcast_to_u64(valset.event_nonce.clone()).unwrap(),
+            signer_set_tx_nonce: downcast_to_u64(valset.valset_nonce.clone()).unwrap(),
+            ethereum_height: downcast_to_u64(valset.block_height).unwrap(),
             members: valset.members.iter().map(|v| v.into()).collect(),
         };
         let msg = proto::MsgSubmitEthereumEvent {

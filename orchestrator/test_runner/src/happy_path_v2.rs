@@ -1,35 +1,47 @@
 //! This is the happy path test for Cosmos to Ethereum asset transfers, meaning assets originated on Cosmos
 use crate::utils::get_user_key;
 use crate::utils::send_one_eth;
+use crate::MINER_CLIENT;
 use crate::TOTAL_TIMEOUT;
 use crate::{get_fee, utils::ValidatorKeys};
-use clarity::Address as EthAddress;
 use clarity::Uint256;
 use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
 use deep_space::coin::Coin;
 use deep_space::Contact;
+use ethereum_gravity::erc20_utils::get_erc20_balance;
 use ethereum_gravity::{deploy_erc20::deploy_erc20, utils::get_event_nonce};
+use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::{
     query_client::QueryClient as GravityQueryClient, DenomToErc20Request,
 };
+use gravity_utils::ethereum::downcast_to_u64;
+use std::str::FromStr;
+use std::sync::Arc;
 use tonic::transport::Channel;
-use web30::client::Web3;
-#[allow(unused_assignments)]
+
 pub async fn happy_path_test_v2(
-    web30: &Web3,
+    eth_provider: &Provider<Http>,
     grpc_client: GravityQueryClient<Channel>,
     contact: &Contact,
     keys: Vec<ValidatorKeys>,
     gravity_address: EthAddress,
 ) {
     let mut grpc_client = grpc_client;
-    let starting_event_nonce = get_event_nonce(
-        gravity_address,
-        keys[0].eth_key.to_public_key().unwrap(),
-        web30,
-    )
-    .await
-    .unwrap();
+    let eth_wallet = LocalWallet::from(keys[0].eth_key.clone());
+    let provider = eth_provider.clone();
+    let chain_id = provider
+        .get_chainid()
+        .await
+        .expect("Could not retrieve chain ID");
+    let chain_id = downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
+    let eth_client = Arc::new(SignerMiddleware::new(
+        provider,
+        eth_wallet.with_chain_id(chain_id),
+    ));
+    let starting_event_nonce = get_event_nonce(gravity_address, eth_client.clone())
+        .await
+        .unwrap();
 
     let token_to_send_to_eth = "footoken".to_string();
     let token_to_send_to_eth_display_name = "mfootoken".to_string();
@@ -40,20 +52,14 @@ pub async fn happy_path_test_v2(
         token_to_send_to_eth_display_name.clone(),
         6,
         gravity_address,
-        web30,
         Some(TOTAL_TIMEOUT),
-        keys[0].eth_key,
-        vec![],
+        eth_client.clone(),
     )
     .await
     .unwrap();
-    let ending_event_nonce = get_event_nonce(
-        gravity_address,
-        keys[0].eth_key.to_public_key().unwrap(),
-        web30,
-    )
-    .await
-    .unwrap();
+    let ending_event_nonce = get_event_nonce(gravity_address, eth_client.clone())
+        .await
+        .unwrap();
 
     assert!(starting_event_nonce != ending_event_nonce);
     info!(
@@ -61,8 +67,7 @@ pub async fn happy_path_test_v2(
         ending_event_nonce
     );
     // the erc20 representing the cosmos asset on Ethereum
-    let mut erc20_contract = None;
-    match tokio::time::timeout(TOTAL_TIMEOUT, async {
+    let erc20_contract = match tokio::time::timeout(TOTAL_TIMEOUT, async {
         loop {
             let res = grpc_client
                 .denom_to_erc20(DenomToErc20Request {
@@ -80,11 +85,11 @@ pub async fn happy_path_test_v2(
     {
         Ok(res) => {
             let erc20 = res.into_inner().erc20;
-            erc20_contract = Some(erc20.clone());
             info!(
                 "Successfully adopted {} token contract of {}",
                 token_to_send_to_eth, erc20
             );
+            Some(erc20.clone())
         }
         Err(_) => {
             panic!(
@@ -92,7 +97,7 @@ pub async fn happy_path_test_v2(
                 token_to_send_to_eth
             );
         }
-    }
+    };
 
     let erc20_contract: EthAddress = erc20_contract.unwrap().parse().unwrap();
 
@@ -140,7 +145,7 @@ pub async fn happy_path_test_v2(
     );
     // send the user some eth, they only need this to check their
     // erc20 balance, so a pretty minor usecase
-    send_one_eth(user.eth_address, web30).await;
+    send_one_eth(user.eth_address, (*MINER_CLIENT).clone()).await;
     info!("Sent 1 eth to user address {}", user.eth_address);
 
     let res = send_to_eth(
@@ -173,16 +178,15 @@ pub async fn happy_path_test_v2(
     info!("Sent batch request to move things along");
 
     info!("Waiting for batch to be signed and relayed to Ethereum");
-
     match tokio::time::timeout(TOTAL_TIMEOUT, async {
         loop {
-            let balance = web30
-                .get_erc20_balance(erc20_contract, user.eth_address)
-                .await;
+            let balance =
+                get_erc20_balance(erc20_contract, user.eth_address, (*MINER_CLIENT).clone()).await;
             if balance.is_err() {
                 continue;
             }
             let balance = balance.unwrap();
+            let balance = Uint256::from_str(balance.to_string().as_str()).unwrap();
             if balance == amount_to_bridge {
                 break;
             } else if balance != 0u8.into() {

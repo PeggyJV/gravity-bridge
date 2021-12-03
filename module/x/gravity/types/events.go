@@ -29,6 +29,7 @@ const (
 	AttributeKeyContractCallPayload           = "contract_call_payload"
 	AttributeKeyContractCallTokens            = "contract_call_tokens"
 	AttributeKeyContractCallFees              = "contract_call_fees"
+	AttributeKeyContractCallAddress           = "contract_call_address"
 	AttributeKeyEthTxTimeout                  = "eth_tx_timeout"
 	AttributeMissingBridgeBatchSig            = "missing_bridge_batch_signature"
 )

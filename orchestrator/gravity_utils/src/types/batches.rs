@@ -1,8 +1,9 @@
 use super::*;
 use crate::error::GravityError;
-use clarity::Signature as EthSignature;
-use clarity::{abi::Token, Address as EthAddress};
 use deep_space::Address as CosmosAddress;
+use ethers::core::abi::Token;
+use ethers::types::{Address as EthAddress, Signature as EthSignature};
+use std::{convert::TryFrom, result::Result};
 
 /// This represents an individual transaction being bridged over to Ethereum
 /// parallel is the OutgoingTransferTx in x/gravity/types/batch.go
@@ -22,6 +23,7 @@ impl BatchTransaction {
                 "Can not have tx with null erc20_token!".to_string(),
             ));
         }
+
         Ok(BatchTransaction {
             id: input.id,
             sender: input.sender.parse()?,
@@ -45,21 +47,42 @@ pub struct TransactionBatch {
 impl TransactionBatch {
     /// extracts the amounts, destinations and fees as submitted to the Ethereum contract
     /// and used for signatures
-    pub fn get_checkpoint_values(&self) -> (Token, Token, Token) {
-        let mut amounts = Vec::new();
-        let mut destinations = Vec::new();
-        let mut fees = Vec::new();
-        for item in self.transactions.iter() {
-            amounts.push(Token::Uint(item.erc20_token.amount.clone()));
-            fees.push(Token::Uint(item.erc20_fee.amount.clone()));
-            destinations.push(item.ethereum_recipient)
-        }
+    pub fn get_checkpoint_values(&self) -> (Vec<U256>, Vec<EthAddress>, Vec<U256>) {
+        let amounts: Vec<U256> = self
+            .transactions
+            .iter()
+            .map(|tx| tx.erc20_token.amount)
+            .collect();
+        let destinations: Vec<EthAddress> = self
+            .transactions
+            .iter()
+            .map(|tx| tx.ethereum_recipient)
+            .collect();
+        let fees: Vec<U256> = self
+            .transactions
+            .iter()
+            .map(|tx| tx.erc20_fee.amount)
+            .collect();
+
         assert_eq!(amounts.len(), destinations.len());
         assert_eq!(fees.len(), destinations.len());
+
+        (amounts, destinations, fees)
+    }
+
+    pub fn get_checkpoint_values_tokens(&self) -> (Token, Token, Token) {
+        let (amounts, destinations, fees) = self.get_checkpoint_values();
+        let amounts_tokens = amounts.iter().map(|amount| Token::Uint(*amount)).collect();
+        let destinations_tokens = destinations
+            .iter()
+            .map(|destination| Token::Address(*destination))
+            .collect();
+        let fees_tokens = fees.iter().map(|fee| Token::Uint(*fee)).collect();
+
         (
-            Token::Dynamic(amounts),
-            destinations.into(),
-            Token::Dynamic(fees),
+            Token::Array(amounts_tokens),
+            Token::Array(destinations_tokens),
+            Token::Array(fees_tokens),
         )
     }
 
@@ -69,15 +92,23 @@ impl TransactionBatch {
         for tx in input.transactions {
             let tx = BatchTransaction::from_proto(tx)?;
             if let Some(total_fee) = running_total_fee {
+                let running_amount = total_fee.amount.checked_add(tx.erc20_fee.amount);
+                if running_amount.is_none() {
+                    return Err(GravityError::OverflowError(
+                        format!("U256 overflow when adding all fees together for transaction batch with nonce {}", input.batch_nonce)
+                    ))
+                }
+
                 running_total_fee = Some(Erc20Token {
                     token_contract_address: total_fee.token_contract_address,
-                    amount: total_fee.amount + tx.erc20_fee.amount.clone(),
+                    amount: running_amount.unwrap(),
                 });
             } else {
                 running_total_fee = Some(tx.erc20_fee.clone())
             }
             transactions.push(tx);
         }
+
         if let Some(total_fee) = running_total_fee {
             Ok(TransactionBatch {
                 batch_timeout: input.timeout,
@@ -111,7 +142,7 @@ impl BatchConfirmResponse {
             nonce: input.batch_nonce,
             token_contract: input.token_contract.parse()?,
             ethereum_signer: input.ethereum_signer.parse()?,
-            eth_signature: EthSignature::from_bytes(&input.signature)?,
+            eth_signature: EthSignature::try_from(input.signature.as_slice())?,
         })
     }
 }
@@ -121,6 +152,6 @@ impl Confirm for BatchConfirmResponse {
         self.ethereum_signer
     }
     fn get_signature(&self) -> EthSignature {
-        self.eth_signature.clone()
+        self.eth_signature
     }
 }

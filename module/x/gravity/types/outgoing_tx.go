@@ -37,7 +37,7 @@ func (btx *BatchTx) GetStoreIndex() []byte {
 }
 
 func (cctx *ContractCallTx) GetStoreIndex() []byte {
-	return MakeContractCallTxKey(cctx.InvalidationScope.Bytes(), cctx.InvalidationNonce)
+	return MakeContractCallTxKey(cctx.InvalidationScope, cctx.InvalidationNonce)
 }
 
 ///////////////////
@@ -142,13 +142,12 @@ func (b BatchTx) GetCheckpoint(gravityID []byte) []byte {
 
 // GetCheckpoint gets the checkpoint signature from the given outgoing tx batch
 func (c ContractCallTx) GetCheckpoint(gravityID []byte) []byte {
-
 	// Create the methodName argument which salts the signature
 	methodNameBytes := []uint8("logicCall")
 	var logicCallMethodName [32]uint8
 	copy(logicCallMethodName[:], methodNameBytes[:])
 
-	// the contract argument is not a arbitrary length array but a fixed length 32 byte
+	// the contract argument is not an arbitrary length array but a fixed length 32 byte
 	// array, therefore we have to utf8 encode the string (the default in this case) and
 	// then copy the variable length encoded data into a fixed length array. This function
 	// will panic if gravityId is too long to fit in 32 bytes

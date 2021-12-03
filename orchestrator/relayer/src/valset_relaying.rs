@@ -3,24 +3,23 @@
 
 use std::time::Duration;
 
-use clarity::address::Address as EthAddress;
-use clarity::utils::bytes_to_hex_str;
-use clarity::PrivateKey as EthPrivateKey;
 use cosmos_gravity::query::get_latest_valset;
 use cosmos_gravity::query::{get_all_valset_confirms, get_valset};
-use ethereum_gravity::{one_eth, utils::downcast_to_u128, valset_update::send_eth_valset_update};
+use ethereum_gravity::{one_eth_f32, types::EthClient, valset_update::send_eth_valset_update};
+use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::{message_signatures::encode_valset_confirm_hashed, types::Valset};
+use gravity_utils::{
+    ethereum::bytes_to_hex_str, ethereum::downcast_to_f32,
+    message_signatures::encode_valset_confirm_hashed, types::Valset,
+};
 use tonic::transport::Channel;
-use web30::client::Web3;
 
 /// Check the last validator set on Ethereum, if it's lower than our latest validator
 /// set then we should package and submit the update as an Ethereum transaction
 pub async fn relay_valsets(
     // the validator set currently in the contract on Ethereum
     current_eth_valset: Valset,
-    ethereum_key: EthPrivateKey,
-    web3: &Web3,
+    eth_client: EthClient,
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     gravity_id: String,
@@ -70,12 +69,13 @@ pub async fn relay_valsets(
                 for confirm in confirms.iter() {
                     assert_eq!(cosmos_valset.nonce, confirm.nonce);
                 }
+
                 let hash = encode_valset_confirm_hashed(gravity_id.clone(), cosmos_valset.clone());
 
                 // there are two possible encoding problems that could cause the very rare sig failure bug,
                 // one of them is that the hash is incorrect, that's not probable considering that
                 // both Geth and Clarity agree on it. but this lets us check
-                info!("New valset hash {}", bytes_to_hex_str(&hash),);
+                info!("New valset hash {}", bytes_to_hex_str(&hash));
 
                 // order valset sigs prepares signatures for submission, notice we compare
                 // them to the 'current' set in the bridge, this confirms for us that the validator set
@@ -132,12 +132,12 @@ pub async fn relay_valsets(
             &latest_cosmos_valset,
             &current_eth_valset,
             &latest_cosmos_confirmed,
-            web3,
             gravity_contract_address,
             gravity_id.clone(),
-            ethereum_key,
+            eth_client.clone(),
         )
         .await;
+
         if cost.is_err() {
             error!(
                 "Valset cost estimate for Nonce {} failed with {:?}",
@@ -146,24 +146,32 @@ pub async fn relay_valsets(
             return;
         }
         let cost = cost.unwrap();
+        let total_cost = downcast_to_f32(cost.get_total());
+        if total_cost.is_none() {
+            error!(
+                "Total gas cost greater than f32 max, skipping valset submission: {}",
+                latest_cosmos_valset.nonce
+            );
+            return;
+        }
+        let total_cost = total_cost.unwrap();
 
         info!(
            "We have detected latest valset {} but latest on Ethereum is {} This valset is estimated to cost {} Gas / {:.4} ETH to submit",
             latest_cosmos_valset.nonce, current_eth_valset.nonce,
             cost.gas_price.clone(),
-            downcast_to_u128(cost.get_total()).unwrap() as f32
-                / downcast_to_u128(one_eth()).unwrap() as f32
+            total_cost / one_eth_f32()
         );
 
         let relay_response = send_eth_valset_update(
             latest_cosmos_valset.clone(),
             current_eth_valset.clone(),
             &latest_cosmos_confirmed,
-            web3,
             timeout,
             gravity_contract_address,
             gravity_id,
-            ethereum_key,
+            cost,
+            eth_client.clone(),
         )
         .await;
 

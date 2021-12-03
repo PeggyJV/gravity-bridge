@@ -8,33 +8,30 @@ edition = "2018"
 name = "orchestrator"
 path = "src/lib.rs"
 
-[[bin]]
-name = "orchestrator"
-path = "src/main.rs"
-
 [dependencies]
 relayer = { path = "../relayer" }
 ethereum_gravity = { path = "../ethereum_gravity" }
 cosmos_gravity = { path = "../cosmos_gravity" }
+gravity_abi = { path = "../gravity_abi" }
 gravity_utils = { path = "../gravity_utils" }
 gravity_proto = { path = "../gravity_proto" }
 
 deep_space={git="https://github.com/iqlusioninc/deep_space/", branch = "master" }
+ethers = "0.6.1"
 serde_derive = "1.0"
 clarity = "0.4.11"
 docopt = "1"
 serde = "1.0"
-actix-rt = "2.2"
+actix-rt = "2.5"
 lazy_static = "1"
 web30 = "0.15"
-num256 = "0.3"
 log = "0.4"
 env_logger = "0.8"
 serde_json = "1.0"
 tokio = "1.4.0"
 rand = "0.8"
 tonic = "0.4"
-futures = "0.3"
+futures = "0.3.18"
 openssl-probe = "0.1"
 
 axum = "0.1.2"

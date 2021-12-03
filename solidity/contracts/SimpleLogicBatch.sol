@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 
 // This middleware allows arbitrary logic batches, executed by a single
@@ -31,9 +31,9 @@ contract SimpleLogicBatchMiddleware is Ownable {
 		address _tokenContract
 	) public onlyOwner {
 		// Send transaction amounts to destinations
-		console.log("number of _amounts:%s", _amounts.length);
+		// console.log("number of _amounts:%s", _amounts.length);
 		for (uint256 i = 0; i < _amounts.length; i++) {
-			console.log("Transfering %s",_amounts[i]);
+			// console.log("Transfering %s",_amounts[i]);
 
 			IERC20(_tokenContract).safeTransfer(_logicContract, _amounts[i]);
             bytes memory returnData= Address.functionCall(_logicContract,_payloads[i]);

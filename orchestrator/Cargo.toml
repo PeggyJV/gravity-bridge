@@ -24,6 +24,8 @@ members = [
 	"relayer",
 	"register_delegate_keys",
 	"gorc",
+	"abi_build",
+	"gravity_abi",
 ]
 
 [dependencies]
@@ -37,3 +39,5 @@ gravity_proto = { path = "./gravity_proto" }
 register_delegate_keys = { path = "./register_delegate_keys" }
 gorc = { path = "./gorc" }
 relayer = { path = "./relayer" }
+abi_build = { path = "./abi_build" }
+gravity_abi = { path = "./gravity_abi" }

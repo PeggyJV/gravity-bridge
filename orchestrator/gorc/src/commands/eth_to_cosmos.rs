@@ -1,11 +1,15 @@
 use crate::application::APP;
 use abscissa_core::{status_err, Application, Clap, Command, Runnable};
-use clarity::Address as EthAddress;
-use clarity::Uint256;
 use deep_space::address::Address as CosmosAddress;
+use ethereum_gravity::erc20_utils::get_erc20_balance;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
-use gravity_utils::connection_prep::{check_for_eth, create_rpc_connections};
-use std::time::Duration;
+use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
+use gravity_utils::{
+    connection_prep::{check_for_eth, create_rpc_connections},
+    ethereum::downcast_to_u64,
+};
+use std::{sync::Arc, time::Duration};
 
 const TIMEOUT: Duration = Duration::from_secs(60);
 
@@ -24,7 +28,7 @@ impl Runnable for EthToCosmosCmd {
             .expect("Invalid ERC20 contract address!");
 
         let ethereum_key = self.args.get(1).expect("key is required");
-        let ethereum_key = config.load_clarity_key(ethereum_key.clone());
+        let ethereum_wallet = config.load_ethers_wallet(ethereum_key.clone());
 
         let contract_address = self.args.get(2).expect("contract address is required");
         let contract_address: EthAddress =
@@ -32,6 +36,7 @@ impl Runnable for EthToCosmosCmd {
 
         let cosmos_prefix = config.cosmos.prefix.trim();
         let eth_rpc = config.ethereum.rpc.trim();
+
         abscissa_tokio::run_with_actix(&APP, async {
             let connections = create_rpc_connections(
                 cosmos_prefix.to_string(),
@@ -40,58 +45,69 @@ impl Runnable for EthToCosmosCmd {
                 TIMEOUT,
             )
             .await;
-            let web3 = connections.web3.unwrap();
+
+            let provider = connections.eth_provider.clone().unwrap();
+            let chain_id = provider
+                .get_chainid()
+                .await
+                .expect("Could not retrieve chain ID");
+            let chain_id =
+                downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
+            let eth_client = SignerMiddleware::new(
+                provider,
+                ethereum_wallet.clone().with_chain_id(chain_id),
+            );
+            let eth_client = Arc::new(eth_client);
             let cosmos_dest = self.args.get(3).expect("cosmos destination is required");
             let cosmos_dest: CosmosAddress = cosmos_dest.parse().unwrap();
-            let ethereum_public_key = ethereum_key.to_public_key().unwrap();
-            check_for_eth(ethereum_public_key, &web3).await;
+            let ethereum_address = eth_client.address();
+            check_for_eth(ethereum_address, eth_client.clone()).await;
 
             let init_amount = self.args.get(4).expect("amount is required");
-            let amount: Uint256 = init_amount.parse().unwrap();
+            let amount: U256 = init_amount.parse().unwrap();
 
-            let erc20_balance = web3
-                .get_erc20_balance(erc20_address, ethereum_public_key)
-                .await
-                .expect("Failed to get balance, check ERC20 contract address");
+            let erc20_balance =
+                get_erc20_balance(erc20_address, ethereum_address, eth_client.clone())
+                    .await
+                    .expect("Failed to get balance, check ERC20 contract address");
 
             let times = self.args.get(5).expect("times is required");
-            let times = times.parse::<usize>().expect("cannot parse times");
+            let times_usize = times.parse::<usize>().expect("cannot parse times");
+            let times_u256 = U256::from_dec_str(times).expect("cannot parse times");
 
             if erc20_balance == 0u8.into() {
                 panic!(
                     "You have zero {} tokens, please double check your sender and erc20 addresses!",
                     contract_address
                 );
-            } else if amount.clone() * times.into() > erc20_balance {
+            } else if amount * times_u256 > erc20_balance {
                 panic!(
                     "Insufficient balance {} > {}",
-                    amount * times.into(),
+                    amount * times_u256,
                     erc20_balance
                 );
             }
 
-            for _ in 0..times {
+            for _ in 0..times_usize {
                 println!(
                     "Sending {} / {} to Cosmos from {} to {}",
                     init_amount.parse::<f64>().unwrap(),
                     erc20_address,
-                    ethereum_public_key,
+                    ethereum_address,
                     cosmos_dest
                 );
                 // we send some erc20 tokens to the gravity contract to register a deposit
                 let res = send_to_cosmos(
                     erc20_address,
                     contract_address,
-                    amount.clone(),
+                    amount,
                     cosmos_dest,
-                    ethereum_key,
                     Some(TIMEOUT),
-                    &web3,
-                    vec![],
+                    eth_client.clone(),
                 )
                 .await;
                 match res {
-                    Ok(tx_id) => println!("Send to Cosmos txid: {:#066x}", tx_id),
+                    Ok(tx_id) => println!("Send to Cosmos txid: {}", tx_id),
                     Err(e) => println!("Failed to send tokens! {:?}", e),
                 }
             }
