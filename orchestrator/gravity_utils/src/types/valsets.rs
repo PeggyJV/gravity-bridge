@@ -413,3 +413,22 @@ impl From<&ValsetMember> for gravity_proto::gravity::EthereumSigner {
         }
     }
 }
+
+// A convenience struct for reporting errors with mismatched valset nonces. The
+// reason two integers were not instead passed to the GravityError::DifferingValsetNoncesError
+// variant is that we need to ensure the nonces are associated with their appropriate
+// valset in the log message.
+#[derive(Debug)]
+pub struct ValsetsNoncePair {
+    pub cosmos_nonce: u64,
+    pub ethereum_nonce: u64,
+}
+
+impl From<(u64, u64)> for ValsetsNoncePair {
+    fn from(input: (u64, u64)) -> Self {
+        ValsetsNoncePair {
+            cosmos_nonce: input.0,
+            ethereum_nonce: input.1,
+        }
+    }
+}

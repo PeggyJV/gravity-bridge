@@ -64,9 +64,6 @@ impl TransactionBatch {
             .map(|tx| tx.erc20_fee.amount)
             .collect();
 
-        assert_eq!(amounts.len(), destinations.len());
-        assert_eq!(fees.len(), destinations.len());
-
         (amounts, destinations, fees)
     }
 
@@ -96,7 +93,7 @@ impl TransactionBatch {
                 if running_amount.is_none() {
                     return Err(GravityError::OverflowError(
                         format!("U256 overflow when adding all fees together for transaction batch with nonce {}", input.batch_nonce)
-                    ))
+                    ));
                 }
 
                 running_total_fee = Some(Erc20Token {
