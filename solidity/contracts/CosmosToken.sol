@@ -15,9 +15,8 @@ contract CosmosERC20 is ERC20Burnable {
 		address _gravityAddress,
 		string memory _name,
 		string memory _symbol,
-		uint8 _decimals,
-		uint256 _maxSupply
-	) public ERC20(_name, _symbol) ERC20Capped(_maxSupply) {
+		uint8 _decimals
+	) public ERC20(_name, _symbol) {
 		_setupDecimals(_decimals);
 
 		gravity = _gravityAddress;
