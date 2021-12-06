@@ -10,14 +10,14 @@ import {
   makeTxBatchHash,
   examplePowers
 } from "../test-utils/pure";
-import {ContractTransaction, utils} from 'ethers';
+import {ContractReceipt x, utils} from 'ethers';
 import { BigNumber } from "ethers";
 chai.use(solidity);
 const { expect } = chai;
 
-async function parseEvent(contract: any, txPromise: Promise<ContractTransaction>, eventOrder: number) {
-  const tx = await txPromise
-  const receipt = await contract.provider.getTransactionReceipt(tx.hash!)
+async function parseEvent(contract: any, txReceipt: Promise<ContractReceipt>, eventOrder: number) {
+  const receipt = await txReceipt
+
   let args = (contract.interface as utils.Interface).parseLog(receipt.logs![eventOrder]).args
 
   // Get rid of weird quasi-array keys
@@ -55,7 +55,13 @@ async function runTest(opts: {}) {
 
   // Deploy ERC20 contract representing Cosmos asset
   // ===============================================
-  const eventArgs = await parseEvent(gravity, gravity.deployERC20('uatom', 'Atom', 'ATOM', 6), 1)
+
+  let tx = await gravity.deployERC20('uatom', 'Atom', 'ATOM', 6);
+
+
+
+
+  const eventArgs = await parseEvent(gravity,tx.wait() , 1)
 
   expect(eventArgs).to.deep.equal({
     _cosmosDenom: 'uatom',
