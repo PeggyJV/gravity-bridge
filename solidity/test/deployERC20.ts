@@ -10,7 +10,7 @@ import {
   makeTxBatchHash,
   examplePowers
 } from "../test-utils/pure";
-import {ContractReceipt x, utils} from 'ethers';
+import {ContractReceipt, utils} from 'ethers';
 import { BigNumber } from "ethers";
 chai.use(solidity);
 const { expect } = chai;
