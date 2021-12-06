@@ -109,9 +109,6 @@ contract CosmosERC20 is ERC20Burnable {
 	 * @dev Overrides the decimal function in the base ERC20 contract. 
 	 * This override is needed to Ethereum wallets display tokens consistently
 	 * with how Cosmos wallets display the native version of the token.
-	 * 
-	 *
-	 * 
 	 */
 
    function decimals()public view override returns (uint8){
