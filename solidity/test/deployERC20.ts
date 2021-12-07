@@ -63,6 +63,8 @@ async function runTest(opts: {}) {
     throw new Error("No event args");
   }
 
+  console.log(eventArgs);
+  
   expect(eventArgs).to.deep.equal({
     _cosmosDenom: 'uatom',
     _tokenContract: eventArgs._tokenContract, // We don't know this ahead of time
