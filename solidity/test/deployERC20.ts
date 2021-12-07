@@ -16,20 +16,17 @@ chai.use(solidity);
 const { expect } = chai;
 
 async function parseEvent(contract: any, txReceipt: Promise<ContractReceipt>, eventOrder: number) {
-  const receipt = await txReceipt
+  const receipt = await txReceipt;
 
-  let args = (contract.interface as utils.Interface).parseLog(receipt.logs![eventOrder]).args
+  if (receipt.events){
+    let args = receipt.events[eventOrder].args;
 
-  // Get rid of weird quasi-array keys
-  const acc: any = {}
-  args = Object.keys(args).reduce((acc, key) => {
-    if (Number.isNaN(parseInt(key, 10)) && key !== 'length') {
-      acc[key] = args[key]
-    }
-    return acc
-  }, acc)
+    return args
 
-  return args
+
+  }
+
+  return undefined
 }
 
 async function runTest(opts: {}) {
@@ -60,8 +57,12 @@ async function runTest(opts: {}) {
 
 
 
-
   const eventArgs = await parseEvent(gravity,tx.wait() , 1)
+
+  if (eventArgs == undefined)
+   {
+    throw new Error("No event args");
+  }
 
   expect(eventArgs).to.deep.equal({
     _cosmosDenom: 'uatom',
