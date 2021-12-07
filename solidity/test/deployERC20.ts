@@ -23,7 +23,6 @@ async function parseEvent(contract: any, txReceipt: Promise<ContractReceipt>, ev
 
     return args
 
-
   }
 
   return undefined
@@ -57,7 +56,7 @@ async function runTest(opts: {}) {
 
 
 
-  const eventArgs = await parseEvent(gravity,tx.wait() , 1)
+  const eventArgs = await parseEvent(gravity,tx.wait(), 0)
 
   if (eventArgs == undefined)
    {
