@@ -79,7 +79,7 @@ async function runTest(opts: {}) {
   const maxUint256 = BigNumber.from(2).pow(256).sub(1)
 
   // Check that gravity balance is correct
-  expect((await ERC20contract.functions.balanceOf(gravity.address)).toString()).to.equal(0);
+  expect((await ERC20contract.functions.balanceOf(gravity.address)).toString()).to.equal('0');
 
 
   // Prepare batch
@@ -148,7 +148,7 @@ async function runTest(opts: {}) {
   );
 
   // Check that Gravity's balance is correct
-  expect((await ERC20contract.functions.balanceOf(gravity.address)).toString()).to.equal(maxUint256.sub(200).toString())
+  expect((await ERC20contract.functions.balanceOf(gravity.address)).toString()).to.equal('0');
 
   // Check that one of the recipient's balance is correct
   expect((await ERC20contract.functions.balanceOf(await signers[6].getAddress())).toString()).to.equal('1')
