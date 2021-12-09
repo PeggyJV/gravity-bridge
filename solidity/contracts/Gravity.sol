@@ -40,6 +40,22 @@ struct LogicCallArgs {
 	uint256 invalidationNonce;
 }
 
+// This is used purely to avoid stack too deep errors
+// represents everything about a given validator set
+struct ValsetArgs {
+	// the validators in this set, represented by an Ethereum address
+	address[] validators;
+	// the powers of the given validators in the same order as above
+	uint256[] powers;
+	// the nonce of this validator set
+	uint256 valsetNonce;
+	// the reward amount denominated in the below reward token, can be
+	// set to zero
+	uint256 rewardAmount;
+	// the reward token, should be set to the zero address if not being used
+	address rewardToken;
+}
+
 struct Signature {
 	uint8 v;
 	bytes32 r;
@@ -109,6 +125,7 @@ contract Gravity is ReentrancyGuard {
 	function testMakeCheckpoint(ValsetArgs calldata _valsetArgs, bytes32 _gravityId) external pure {
 		makeCheckpoint(_valsetArgs, _gravityId);
 	}
+
 	function testCheckValidatorSignatures(
 		ValsetArgs calldata _currentValset,
 		Signature[] calldata _sigs,
