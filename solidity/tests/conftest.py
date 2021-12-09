@@ -329,6 +329,18 @@ def deployContracts(signers, gravityId, validators, powers, powerThreshold):
     testERC20 = TestERC20A.deploy({"from": signers[0]})
     valAddresses = getSignerAddresses(validators)
     checkpoint = makeCheckpoint(valAddresses, powers, 0, gravityId)
+
+    GravityContract = web3.eth.contract(abi=Gravity.abi, bytecode=Gravity.bytecode)
+
+    try:
+        gas = GravityContract.constructor(gravityId, powerThreshold, valAddresses, powers).estimateGas({"from": signers[0].address})
+    except ValueError as err:
+        raise ValueError(err.args[0]["message"][50:])
+    except brownie.exceptions.VirtualMachineError as err:
+        raise ValueError(err.revert_msg)
+    except BaseException as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+
     gravity = Gravity.deploy(gravityId, powerThreshold, valAddresses, powers, {"from": signers[0]})
     return gravity, testERC20, checkpoint
 
