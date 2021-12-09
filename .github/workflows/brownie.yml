@@ -36,7 +36,9 @@ jobs:
         with:
           python-version: 3.8
       - run: cd solidity && pip install -r requirements.txt
-      - run: cd solidity && brownie pm install OpenZeppelin/openzeppelin-contracts@4.3.2
-          continue-on-error: true
-      - run: cd solidity && brownie test tests/local -s
+      - name: Install Open Zepplin
+        continue-on-error: true
+        run: cd solidity && brownie pm install OpenZeppelin/openzeppelin-contracts@4.3.2
+      - name: Run brownie tests
+        run: cd solidity && brownie test tests/local -s
         
