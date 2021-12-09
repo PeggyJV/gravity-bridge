@@ -6,7 +6,7 @@ def test_throws_on_malformed_new_valset(signers):
     try:
         run_test(signers, malformedNewValset=True)
     except ValueError as err:
-        assert err.args[0] == "Malformed new validator set"
+        assert err.args[0] == "MalformedNewValidatorSet()"
     else:
         raise "Error"
 
@@ -14,7 +14,7 @@ def test_throws_on_malformed_current_valset(signers):
     try:
         run_test(signers, malformedCurrentValset=True)
     except ValueError as err:
-        assert err.args[0] == "Malformed current validator set"
+        assert err.args[0] == "MalformedNewValidatorSet()"
     else:
         raise "Error"
 
@@ -22,7 +22,7 @@ def test_throws_on_non_matching_checkpoint_for_current_valset(signers):
     try:
         run_test(signers, nonMatchingCurrentValset=True)
     except ValueError as err:
-        assert err.args[0] == "Supplied current validators and powers do not match checkpoint."
+        assert err.args[0] == "IncorrectCheckpoint()"
     else:
         raise "Error"
 
@@ -30,7 +30,7 @@ def test_throws_on_new_valset_nonce_not_incremented(signers):
     try:
         run_test(signers, nonceNotIncremented=True)
     except ValueError as err:
-        assert err.args[0] == "New valset nonce must be greater than the current nonce"
+        assert err.args[0] == "InvalidValsetNonce(0, 0)"
     else:
         raise "Error"
 
@@ -38,7 +38,7 @@ def test_throws_on_bad_validator_sig(signers):
     try:
         run_test(signers, badValidatorSig=True)
     except ValueError as err:
-        assert err.args[0] == "Validator signature does not match."
+        assert err.args[0] == "InvalidSignature()"
     else:
         raise "Error"
 
@@ -49,7 +49,7 @@ def test_throws_on_not_enough_signatures(signers):
     try:
         run_test(signers, notEnoughPower=True)
     except ValueError as err:
-        assert err.args[0] == "Submitted validator set signatures do not have enough power."
+        assert err.args[0] == "InsufficientPower(2807621889, 2863311530)"
     else:
         raise "Error"
 
