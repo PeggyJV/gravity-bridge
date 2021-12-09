@@ -1,4 +1,4 @@
-pragma solidity ^0.8.10;
+pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -106,10 +106,9 @@ contract Gravity is ReentrancyGuard {
 
 	// TEST FIXTURES
 	// These are here to make it easier to measure gas usage. They should be removed before production
-	function testMakeCheckpoint(ValsetArgs memory _valsetArgs, bytes32 _gravityId) external pure {
+	function testMakeCheckpoint(ValsetArgs calldata _valsetArgs, bytes32 _gravityId) external pure {
 		makeCheckpoint(_valsetArgs, _gravityId);
 	}
-
 	function testCheckValidatorSignatures(
 		ValsetArgs calldata _currentValset,
 		Signature[] calldata _sigs,
