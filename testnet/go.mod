@@ -12,6 +12,7 @@ require (
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/ory/dockertest/v3 v3.6.5
 	github.com/peggyjv/gravity-bridge/module v0.0.0-00010101000000-000000000000
+	github.com/spf13/viper v1.8.1 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/tendermint v0.34.14
 	gotest.tools/v3 v3.0.3 // indirect
