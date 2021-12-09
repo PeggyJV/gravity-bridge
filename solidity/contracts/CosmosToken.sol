@@ -22,7 +22,7 @@ contract CosmosERC20 is ERC20 {
 		string memory _symbol,
 		uint8 _decimals
 	) public ERC20(_name, _symbol)  {
-		_dec = _decimals;
+		cosmosDecimals = _decimals;
 		gravity = _gravityAddress;
 	}
 
@@ -39,7 +39,7 @@ contract CosmosERC20 is ERC20 {
 
 	 */	
 	function totalSupply() public view virtual override returns (uint256) {
-		return MAX_UINT - balanceOf(_gravityAddress);
+		return MAX_UINT - balanceOf(gravity);
 	}
 
 
