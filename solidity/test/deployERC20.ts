@@ -8,7 +8,8 @@ import {
   makeCheckpoint,
   signHash,
   makeTxBatchHash,
-  examplePowers
+  examplePowers,
+  ZeroAddress
 } from "../test-utils/pure";
 import {ContractReceipt, utils} from 'ethers';
 import { BigNumber } from "ethers";
@@ -56,7 +57,7 @@ async function runTest(opts: {}) {
 
 
 
-  const eventArgs = await parseEvent(gravity,tx.wait(), 0)
+  const eventArgs = await parseEvent(gravity,tx.wait(), 1)
 
   if (eventArgs == undefined)
    {
@@ -79,7 +80,7 @@ async function runTest(opts: {}) {
   const maxUint256 = BigNumber.from(2).pow(256).sub(1)
 
   // Check that gravity balance is correct
-  expect((await ERC20contract.functions.balanceOf(gravity.address)).toString()).to.equal('0');
+  expect((await ERC20contract.functions.balanceOf(gravity.address)).toString()).to.equal(maxUint256.toString());
 
 
   // Prepare batch
@@ -132,10 +133,16 @@ async function runTest(opts: {}) {
   let sigs = await signHash(validators, digest);
   let currentValsetNonce = 0;
 
-  await gravity.submitBatch(
-    await getSignerAddresses(validators),
+  let valset = {
+    validators: await getSignerAddresses(validators),
     powers,
-    currentValsetNonce,
+    valsetNonce: currentValsetNonce,
+    rewardAmount: 0,
+    rewardToken: ZeroAddress
+  }
+
+  await gravity.submitBatch(
+    valset,
 
     sigs,
 
@@ -148,7 +155,7 @@ async function runTest(opts: {}) {
   );
 
   // Check that Gravity's balance is correct
-  expect((await ERC20contract.functions.balanceOf(gravity.address)).toString()).to.equal('0');
+  expect((await ERC20contract.functions.balanceOf(gravity.address)).toString()).to.equal(maxUint256.sub(200).toString())
 
   // Check that one of the recipient's balance is correct
   expect((await ERC20contract.functions.balanceOf(await signers[6].getAddress())).toString()).to.equal('1')

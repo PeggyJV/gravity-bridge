@@ -9,6 +9,7 @@ import {
   signHash,
   makeTxBatchHash,
   examplePowers,
+  ZeroAddress,
 } from "../test-utils/pure";
 
 chai.use(solidity);
@@ -152,10 +153,16 @@ async function runTest(opts: {
     sigs[11].v = 0;
   }
 
-  await gravity.submitBatch(
-    await getSignerAddresses(validators),
+  let valset = {
+    validators: await getSignerAddresses(validators),
     powers,
-    currentValsetNonce,
+    valsetNonce: currentValsetNonce,
+    rewardAmount: 0,
+    rewardToken: ZeroAddress
+  }
+
+  let batchSubmitTx = await gravity.submitBatch(
+    valset,
 
     sigs,
 
@@ -213,7 +220,7 @@ describe("submitBatch tests", function () {
 
   it("throws on not enough signatures", async function () {
     await expect(runTest({ notEnoughPower: true })).to.be.revertedWith(
-      "InsufficientPower(2807621889, 2863311530)"
+      "InsufficientPower(6537, 6666)"
     );
   });
 
@@ -301,10 +308,16 @@ describe("submitBatch Go test hash", function () {
     const sigs = await signHash(validators, batchDigest);
     const currentValsetNonce = 0;
 
-    await gravity.submitBatch(
-      await getSignerAddresses(validators),
+    let valset = {
+      validators: await getSignerAddresses(validators),
       powers,
-      currentValsetNonce,
+      valsetNonce: currentValsetNonce,
+      rewardAmount: 0,
+      rewardToken: ZeroAddress
+    }
+
+    await gravity.submitBatch(
+      valset,
 
       sigs,
 

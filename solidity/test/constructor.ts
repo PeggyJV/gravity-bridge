@@ -39,7 +39,7 @@ describe("constructor tests", function() {
     await expect(
       deployContracts(gravityId, validators, powers, powerThreshold)
     ).to.be.revertedWith(
-      "InsufficientPower(570372016, 2863311530)"
+      "InsufficientPower(10000, 666666666)"
     );
   });
 
@@ -55,7 +55,7 @@ describe("constructor tests", function() {
     await expect(
       deployContracts(gravityId, validators, powers,0)
     ).to.be.revertedWith(
-      "MalformedCurrentValidatorSet()"
+      "InsufficientPower(0, 0)"
     );
   });
 });

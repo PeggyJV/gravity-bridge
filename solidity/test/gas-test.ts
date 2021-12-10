@@ -6,7 +6,8 @@ import { deployContracts } from "../test-utils";
 import {
     getSignerAddresses,
     signHash,
-    examplePowers
+    examplePowers,
+    ZeroAddress
 } from "../test-utils/pure";
 import { BigNumber, BigNumberish } from "ethers";
 
@@ -21,7 +22,6 @@ describe("Gas tests", function () {
         // This is the power distribution on the Cosmos hub as of 7/14/2020
         let powers = examplePowers();
         let validators = signers.slice(0, powers.length);
-
         const powerThreshold = 6666;
 
         const {
@@ -30,10 +30,16 @@ describe("Gas tests", function () {
             checkpoint: deployCheckpoint
         } = await deployContracts(gravityId, validators, powers, powerThreshold);
 
-        await gravity.testMakeCheckpoint(
-            await getSignerAddresses(validators),
+        let valset = {
+            validators: await getSignerAddresses(validators),
             powers,
-            0,
+            valsetNonce: 0,
+            rewardAmount: 0,
+            rewardToken: ZeroAddress
+        }
+
+        await gravity.testMakeCheckpoint(
+            valset,
             gravityId
         );
     });
@@ -45,14 +51,14 @@ describe("Gas tests", function () {
         // This is the power distribution on the Cosmos hub as of 7/14/2020
         let powers = examplePowers();
         let validators = signers.slice(0, powers.length);
-
         const powerThreshold = 6666;
+
 
         const {
             gravity,
             testERC20,
             checkpoint: deployCheckpoint
-        } = await deployContracts(gravityId, validators, powers, powerThreshold);
+        } = await deployContracts(gravityId, validators, powers, powerThreshold );
 
         let sigs = await signHash(
             validators,

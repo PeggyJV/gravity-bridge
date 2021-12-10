@@ -8,7 +8,8 @@ import { deployContracts } from "../test-utils";
 import {
   getSignerAddresses,
   signHash,
-  examplePowers
+  examplePowers,
+  ZeroAddress,
 } from "../test-utils/pure";
 
 chai.use(solidity);
@@ -199,14 +200,29 @@ async function runTest(opts: {
     sigs[11].v = 0;
   }
 
-  await gravity.submitLogicCall(
-    await getSignerAddresses(validators),
+  let valset = {
+    validators: await getSignerAddresses(validators),
     powers,
-    currentValsetNonce,
+    valsetNonce: currentValsetNonce,
+    rewardAmount: 0,
+    rewardToken: ZeroAddress
+  }
+
+  let logicCallSubmitResult = await gravity.submitLogicCall(
+    valset,
 
     sigs,
     logicCallArgs
   );
+
+
+  // check that the relayer was paid
+  expect(
+    await (
+      await testERC20.functions.balanceOf(await logicCallSubmitResult.from)
+    )[0].toNumber()
+  ).to.equal(9010);
+
 
   expect(
       (await testERC20.functions.balanceOf(await signers[20].getAddress()))[0].toNumber()
@@ -259,7 +275,7 @@ describe("submitLogicCall tests", function () {
 
   it("throws on not enough signatures", async function () {
     await expect(runTest({ notEnoughPower: true })).to.be.revertedWith(
-      "InsufficientPower(2807621889, 2863311530)"
+      "InsufficientPower(6537, 6666)"
     );
   });
 
@@ -370,15 +386,22 @@ describe("logicCall Go test hash", function () {
     // signature testing
 
 
-    var res = await gravity.populateTransaction.submitLogicCall(
-      await getSignerAddresses(validators),
+    let valset = {
+      validators: await getSignerAddresses(validators),
       powers,
-      currentValsetNonce,
+      valsetNonce: currentValsetNonce,
+      rewardAmount: 0,
+      rewardToken: ZeroAddress
+    }
+
+    var res = await gravity.populateTransaction.submitLogicCall(
+      valset,
 
       sigs,
 
       logicCallArgs
     )
+
 
     console.log("elements in logic call digest:", {
       "gravityId": gravityId,
