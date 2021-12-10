@@ -7,7 +7,9 @@ def test_happy_path(signers):
     valset0 = {
         "powers": examplePowers(),
         "validators": signers[:len(examplePowers())],
-        "nonce": 0
+        "nonce": 0,
+        "rewardAmount": 0,
+        "rewardToken": b"0x0000000000000000000000000000000000000000",
     }
     powerThreshold = 6666
     gravity, testERC20, checkpoint = deployContracts(signers, gravityId, valset0["validators"], valset0["powers"], powerThreshold)
@@ -19,12 +21,14 @@ def test_happy_path(signers):
     valset1 = {
         "powers": powers,
         "validators": validators,
-        "nonce": 1
+        "nonce": 1,
+        "rewardAmount": 0,
+        "rewardToken": b"0x0000000000000000000000000000000000000000",
     }
     checkpoint1 = makeCheckpoint(getSignerAddresses(valset1["validators"]), valset1["powers"], valset1["nonce"], gravityId)
     sigs1 = signHash(valset0["validators"], checkpoint1)
 
-    gravity.updateValset(getSignerAddresses(valset1["validators"]), valset1["powers"], valset1["nonce"], valset0["validators"], valset0["powers"], valset0["nonce"], sigs1)
+    gravity.updateValset(valset1, valset0, sigs1)
 
     assert gravity.state_lastValsetCheckpoint() == checkpoint1.hex()
 
