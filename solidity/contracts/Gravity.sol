@@ -56,7 +56,7 @@ struct ValsetArgs {
 	address rewardToken;
 }
 
-struct Signature {
+struct ValSignature {
 	uint8 v;
 	bytes32 r;
 	bytes32 s;
@@ -130,7 +130,7 @@ contract Gravity is ReentrancyGuard {
 
 	function testCheckValidatorSignatures(
 		ValsetArgs calldata _currentValset,
-		Signature[] calldata _sigs,
+		ValSignature[] calldata _sigs,
 		bytes32 _theHash,
 		uint256 _powerThreshold
 	) external pure {
@@ -151,7 +151,7 @@ contract Gravity is ReentrancyGuard {
 	function verifySig(
 		address _signer,
 		bytes32 _theHash,
-		Signature calldata _sig
+		ValSignature calldata _sig
 	) private pure returns (bool) {
 		bytes32 messageDigest = keccak256(
 			abi.encodePacked("\x19Ethereum Signed Message:\n32", _theHash)
@@ -161,7 +161,7 @@ contract Gravity is ReentrancyGuard {
 
 
 	// Utility function to determine that a validator set and signatures are well formed
-	function validateValset(ValsetArgs calldata _valset, Signature[] calldata _sigs) private pure {
+	function validateValset(ValsetArgs calldata _valset, ValSignature[] calldata _sigs) private pure {
 		// Check that current validators, powers, and signatures (v,r,s) set is well-formed
 		if (
 			_valset.validators.length != _valset.powers.length ||
@@ -209,7 +209,7 @@ contract Gravity is ReentrancyGuard {
 		// The current validator set and their powers
 		ValsetArgs calldata _currentValset,
 		// The current validator's signatures
-		Signature[] calldata _sigs,
+		ValSignature[] calldata _sigs,
 		// This is what we are checking they have signed
 		bytes32 _theHash,
 		uint256 _powerThreshold
@@ -252,7 +252,7 @@ function updateValset(
 		// The current validators that approve the change
 		ValsetArgs calldata _currentValset,
 		// These are arrays of the parts of the current validator's signatures
-		Signature[] calldata _sigs
+		ValSignature[] calldata _sigs
 	) external {
 		// CHECKS
 
@@ -346,7 +346,7 @@ function updateValset(
 		// The validators that approve the batch
 		ValsetArgs calldata _currentValset,
 		// These are arrays of the parts of the validators signatures
-		Signature[] calldata _sigs,
+		ValSignature[] calldata _sigs,
 		// The batch of transactions
 		uint256[] calldata _amounts,
 		address[] calldata _destinations,
@@ -454,7 +454,7 @@ function updateValset(
 		// The validators that approve the call
 		ValsetArgs calldata _currentValset,
 		// These are arrays of the parts of the validators signatures
-		Signature[] calldata _sigs,
+		ValSignature[] calldata _sigs,
 		LogicCallArgs memory _args
 	) external nonReentrant {
 		// CHECKS scoped to reduce stack depth

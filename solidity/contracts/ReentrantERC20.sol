@@ -13,7 +13,7 @@ contract ReentrantERC20 {
 
 	function transfer(address, uint256) public returns (bool) {
 		address[] memory addresses = new address[](0);
-		Signature[] memory sigs = new Signature[](0);
+		ValSignature[] memory sigs = new ValSignature[](0);
 		uint256[] memory uint256s = new uint256[](0);
 		address blankAddress = address(0);
 		bytes memory bytess = new bytes(0);
