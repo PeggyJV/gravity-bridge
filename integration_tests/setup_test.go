@@ -254,7 +254,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState))
 
 	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
-		Description: "The native staking token of the test somm network",
+		Description: "The native staking token of the test gravity bridge network",
 		Display:     "testgb",
 		Base:        bondDenom,
 		DenomUnits: []*banktypes.DenomUnit{
@@ -262,7 +262,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 				Denom:    bondDenom,
 				Exponent: 0,
 				Aliases: []string{
-					"tsomm",
+					"tgb",
 				},
 			},
 			{
@@ -518,12 +518,12 @@ func (s *IntegrationTestSuite) runValidators() {
 		runOpts := &dockertest.RunOptions{
 			Name:       val.instanceName(),
 			NetworkID:  s.dockerNetwork.Network.ID,
-			Repository: "sommelier",
+			Repository: "gravity",
 			Tag:        "prebuilt",
 			Mounts: []string{
-				fmt.Sprintf("%s/:/root/.sommelier", val.configDir()),
+				fmt.Sprintf("%s/:/root/.gravity", val.configDir()),
 			},
-			Entrypoint: []string{"sommelier", "start", "--trace=true"},
+			Entrypoint: []string{"gravity", "start", "--trace=true"},
 		}
 
 		// expose the first validator for debugging and communication
@@ -554,9 +554,9 @@ func (s *IntegrationTestSuite) runValidators() {
 				s.T().Logf("can't get container status: %s", err.Error())
 			}
 			if status == nil {
-				container, ok := s.dockerPool.ContainerByName("sommelier0")
+				container, ok := s.dockerPool.ContainerByName("gravity0")
 				if !ok {
-					s.T().Logf("no container by 'sommelier0'")
+					s.T().Logf("no container by 'gravity0'")
 				} else {
 					if container.Container.State.Status == "exited" {
 						s.Fail("validators exited", "state: %s logs: \n%s", container.Container.State.String(), s.logsByContainerID(container.Container.ID))
@@ -604,7 +604,7 @@ rpc = "http://%s:8545"
 key_derivation_path = "m/44'/118'/1'/0/0"
 grpc = "http://%s:9090"
 gas_price = { amount = %s, denom = "%s" }
-prefix = "somm"
+prefix = "gb"
 gas_adjustment = 2.0
 msg_batch_size = 5
 `,
@@ -628,7 +628,7 @@ msg_batch_size = 5
 		// We must first populate the orchestrator's keystore prior to starting
 		// the orchestrator gorc process. The keystore must contain the Ethereum
 		// and orchestrator keys. These keys will be used for relaying txs to
-		// and from Somm and Ethereum. The gorc_bootstrap.sh scripts encapsulates
+		// and from the test network and Ethereum. The gorc_bootstrap.sh scripts encapsulates
 		// this entire process.
 		//
 		// NOTE: If the Docker build changes, the script might have to be modified

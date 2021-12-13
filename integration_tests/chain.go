@@ -181,7 +181,7 @@ func (c *chain) createValidator(index int) *validator {
 	return &validator{
 		chain:   c,
 		index:   index,
-		moniker: "gravity-bridge",
+		moniker: "gravity",
 	}
 }
 

@@ -24,7 +24,7 @@ task(
             });
         }
 
-        let powers: number[] = [1073741823,1073741823,1073741823,1073741823];
+        let powers: number[] = [1073741823, 1073741823, 1073741823, 1073741823];
         let powerThreshold: number = 6666;
 
         const Gravity = await hre.ethers.getContractFactory("Gravity");
