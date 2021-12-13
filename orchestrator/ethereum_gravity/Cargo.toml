@@ -10,8 +10,8 @@ edition = "2018"
 gravity_abi = { path = "../gravity_abi" }
 gravity_utils = { path = "../gravity_utils" }
 
-deep_space = { git="https://github.com/iqlusioninc/deep_space/", branch="master" }
-ethers = "0.6.1"
+deep_space = { git="https://github.com/iqlusioninc/deep_space/", branch = "master" }
+ethers = { git = "https://github.com/gakonst/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
 clarity = "0.4.11"
 web30 = "0.15.4"
 log = "0.4"

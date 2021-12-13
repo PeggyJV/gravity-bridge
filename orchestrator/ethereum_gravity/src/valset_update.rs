@@ -127,20 +127,26 @@ pub fn build_valset_update_contract_call(
     // we need to use the old valset here because our signatures need to match the current
     // members of the validator set in the contract.
     let sig_data = old_valset.order_sigs(&hash, confirms)?;
-    let sig_arrays = to_arrays(sig_data);
 
     let contract = Gravity::new(gravity_contract_address, eth_client.clone());
     Ok(contract
         .update_valset(
-            new_addresses,
-            new_powers,
-            new_valset.nonce.into(),
-            old_addresses,
-            old_powers,
-            old_valset.nonce.into(),
-            sig_arrays.v,
-            sig_arrays.r,
-            sig_arrays.s,
+            ValsetArgs{
+                validators: new_addresses,
+                powers:new_powers,
+                valset_nonce: new_valset.nonce.into(),
+                reward_amount: U256::zero(),
+                reward_token: H160::zero(),
+            },
+            ValsetArgs{
+                validators: old_addresses,
+                powers:old_powers,
+                valset_nonce: old_valset.nonce.into(),
+                reward_amount: U256::zero(),
+                reward_token: H160::zero(),
+            },
+            sig_data.iter().map(|sig_data| sig_data.to_val_sig()).collect(),
+
         )
         .from(eth_client.address())
         .value(U256::zero()))

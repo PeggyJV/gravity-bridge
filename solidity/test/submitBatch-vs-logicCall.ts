@@ -9,6 +9,7 @@ import {
   makeCheckpoint,
   signHash,
   examplePowers,
+  ZeroAddress,
 } from "../test-utils/pure";
 import { Signer } from "ethers";
 import { Gravity } from "../typechain/Gravity";
@@ -152,10 +153,17 @@ async function runSubmitBatchTest(opts: { batchSize: number }) {
 
   let sigs = await signHash(validators, digest);
 
-  await gravity.submitBatch(
-    await getSignerAddresses(validators),
+  let valset = {
+    validators: await getSignerAddresses(validators),
     powers,
-    0,
+    valsetNonce: 0,
+    rewardAmount: 0,
+    rewardToken: ZeroAddress
+  }
+
+
+  await gravity.submitBatch(
+    valset,
 
     sigs,
 
@@ -292,10 +300,16 @@ async function runLogicCallTest(opts: {
 
   const sigs = await signHash(validators, digest);
 
-  await gravity.submitLogicCall(
-    await getSignerAddresses(validators),
+  let valset = {
+    validators: await getSignerAddresses(validators),
     powers,
-    0,
+    valsetNonce: 0,
+    rewardAmount: 0,
+    rewardToken: ZeroAddress
+  }
+
+  await gravity.submitLogicCall(
+    valset,
 
     sigs,
     logicCallArgs

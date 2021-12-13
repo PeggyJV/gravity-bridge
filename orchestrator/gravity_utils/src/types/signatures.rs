@@ -2,6 +2,7 @@ use ethers::prelude::*;
 use ethers::types::{Address as EthAddress, Signature as EthSignature};
 use std::cmp::Ordering;
 use std::convert::TryFrom;
+use gravity_abi::gravity::ValSignature;
 
 /// A sortable struct of a validator and it's signatures
 /// this can be used for either transaction batch or validator
@@ -13,6 +14,16 @@ pub struct GravitySignature {
     pub v: u64,
     pub r: U256,
     pub s: U256,
+}
+
+impl GravitySignature {
+    pub fn to_val_sig(&self) -> ValSignature {
+        ValSignature {
+            v: self.v as u8,
+            r: self.r.into(),
+            s: self.s.into(),
+        }
+}
 }
 
 impl Ord for GravitySignature {

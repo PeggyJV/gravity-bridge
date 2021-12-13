@@ -25,15 +25,11 @@ func TestValsetConfirmHash(t *testing.T) {
 		}
 	}
 
-	var mem []*EthereumSigner
-	for _, m := range members {
-		mem = append(mem, m)
-	}
-	v := SignerSetTx{Signers: mem}
+	v := SignerSetTx{Nonce: 0, Height: 0, Signers: members}
 	// TODO: this is hardcoded to foo, replace?
 	hash := v.GetCheckpoint([]byte("foo"))
 	hexHash := hex.EncodeToString(hash)
-	correctHash := "88165860d955aee7dc3e83d9d1156a5864b708841965585d206dbef6e9e1a499"
+	correctHash := "0x8cd4cc7f06bd39d4f77d94643a9ae6b3bdc3d3b78263683933cdd5c088452b9d"[2:]
 	assert.Equal(t, correctHash, hexHash)
 }
 

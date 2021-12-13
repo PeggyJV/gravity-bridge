@@ -144,7 +144,6 @@ pub fn build_send_logic_call_contract_call(
     let current_valset_nonce = current_valset.nonce;
     let hash = encode_logic_call_confirm_hashed(gravity_id, call.clone());
     let sig_data = current_valset.order_sigs(&hash, confirms)?;
-    let sig_arrays = to_arrays(sig_data);
 
     let transfer_amounts = call
         .transfers
@@ -164,14 +163,18 @@ pub fn build_send_logic_call_contract_call(
         .collect();
     let invalidation_id = vec_u8_to_fixed_32(call.invalidation_id.clone())?;
 
+
+
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
         .submit_logic_call(
-            current_addresses,
-            current_powers,
-            current_valset_nonce.into(),
-            sig_arrays.v,
-            sig_arrays.r,
-            sig_arrays.s,
+            ValsetArgs{
+                validators: current_addresses,
+                powers:current_powers,
+                valset_nonce: current_valset_nonce.into(),
+                reward_amount: U256::zero(),
+                reward_token: H160::zero(),
+            },
+            sig_data.iter().map(|sig_data| sig_data.to_val_sig()).collect(),
             LogicCallArgs {
                 transfer_amounts,
                 transfer_token_contracts,
