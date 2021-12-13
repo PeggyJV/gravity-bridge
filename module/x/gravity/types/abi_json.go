@@ -14,310 +14,63 @@ package types
 // truncate the first several bytes where the call name is encoded to finally get the equal of the
 
 const (
-	// BatchTxCheckpointABIJSON checks the ETH ABI for compatability of the OutgoingBatchTx message
-	BatchTxCheckpointABIJSON = `[{
+	// OutgoingBatchTxCheckpointABIJSON checks the ETH ABI for compatability of the OutgoingBatchTx message
+	OutgoingBatchTxCheckpointABIJSON = `[{
+		"name": "submitBatch",
+		"stateMutability": "pure",
+		"type": "function",
 		"inputs": [
-			{
-			  "components": [
-				{
-				  "internalType": "address[]",
-				  "name": "validators",
-				  "type": "address[]"
-				},
-				{
-				  "internalType": "uint256[]",
-				  "name": "powers",
-				  "type": "uint256[]"
-				},
-				{
-				  "internalType": "uint256",
-				  "name": "valsetNonce",
-				  "type": "uint256"
-				},
-				{
-				  "internalType": "uint256",
-				  "name": "rewardAmount",
-				  "type": "uint256"
-				},
-				{
-				  "internalType": "address",
-				  "name": "rewardToken",
-				  "type": "address"
-				}
-			  ],
-			  "internalType": "struct ValsetArgs",
-			  "name": "_currentValset",
-			  "type": "tuple"
-			},
-			{
-			  "components": [
-				{
-				  "internalType": "uint8",
-				  "name": "v",
-				  "type": "uint8"
-				},
-				{
-				  "internalType": "bytes32",
-				  "name": "r",
-				  "type": "bytes32"
-				},
-				{
-				  "internalType": "bytes32",
-				  "name": "s",
-				  "type": "bytes32"
-				}
-			  ],
-			  "internalType": "struct Signature[]",
-			  "name": "_sigs",
-			  "type": "tuple[]"
-			},
-			{
-			  "internalType": "uint256[]",
-			  "name": "_amounts",
-			  "type": "uint256[]"
-			},
-			{
-			  "internalType": "address[]",
-			  "name": "_destinations",
-			  "type": "address[]"
-			},
-			{
-			  "internalType": "uint256[]",
-			  "name": "_fees",
-			  "type": "uint256[]"
-			},
-			{
-			  "internalType": "uint256",
-			  "name": "_batchNonce",
-			  "type": "uint256"
-			},
-			{
-			  "internalType": "address",
-			  "name": "_tokenContract",
-			  "type": "address"
-			},
-			{
-			  "internalType": "uint256",
-			  "name": "_batchTimeout",
-			  "type": "uint256"
-			}
-		  ],
-		  "name": "submitBatch",
-		  "outputs": [],
-		  "stateMutability": "nonpayable",
-		  "type": "function"
+			{ "internalType": "bytes32",   "name": "_gravityId",       "type": "bytes32" },
+			{ "internalType": "bytes32",   "name": "_methodName",    "type": "bytes32" },
+			{ "internalType": "uint256[]", "name": "_amounts",       "type": "uint256[]" },
+			{ "internalType": "address[]", "name": "_destinations",  "type": "address[]" },
+			{ "internalType": "uint256[]", "name": "_fees",          "type": "uint256[]" },
+			{ "internalType": "uint256",   "name": "_batchNonce",    "type": "uint256" },
+			{ "internalType": "address",   "name": "_tokenContract", "type": "address" },
+			{ "internalType": "uint256",   "name": "_batchTimeout",  "type": "uint256" }
+		],
+		"outputs": [
+			{ "internalType": "bytes32", "name": "", "type": "bytes32" }
+		]
 	}]`
 
-	// SignerSetTxCheckpointABIJSON checks the ETH ABI for compatability of the signer set update message
-	SignerSetTxCheckpointABIJSON = `[{
+	// ValsetCheckpointABIJSON checks the ETH ABI for compatability of the Valset update message
+	ValsetCheckpointABIJSON = `[{
+		"name": "checkpoint",
+		"stateMutability": "pure",
+		"type": "function",
 		"inputs": [
-			{
-			  "components": [
-				{
-				  "internalType": "address[]",
-				  "name": "validators",
-				  "type": "address[]"
-				},
-				{
-				  "internalType": "uint256[]",
-				  "name": "powers",
-				  "type": "uint256[]"
-				},
-				{
-				  "internalType": "uint256",
-				  "name": "valsetNonce",
-				  "type": "uint256"
-				},
-				{
-				  "internalType": "uint256",
-				  "name": "rewardAmount",
-				  "type": "uint256"
-				},
-				{
-				  "internalType": "address",
-				  "name": "rewardToken",
-				  "type": "address"
-				}
-			  ],
-			  "internalType": "struct ValsetArgs",
-			  "name": "_newValset",
-			  "type": "tuple"
-			},
-			{
-			  "components": [
-				{
-				  "internalType": "address[]",
-				  "name": "validators",
-				  "type": "address[]"
-				},
-				{
-				  "internalType": "uint256[]",
-				  "name": "powers",
-				  "type": "uint256[]"
-				},
-				{
-				  "internalType": "uint256",
-				  "name": "valsetNonce",
-				  "type": "uint256"
-				},
-				{
-				  "internalType": "uint256",
-				  "name": "rewardAmount",
-				  "type": "uint256"
-				},
-				{
-				  "internalType": "address",
-				  "name": "rewardToken",
-				  "type": "address"
-				}
-			  ],
-			  "internalType": "struct ValsetArgs",
-			  "name": "_currentValset",
-			  "type": "tuple"
-			},
-			{
-			  "components": [
-				{
-				  "internalType": "uint8",
-				  "name": "v",
-				  "type": "uint8"
-				},
-				{
-				  "internalType": "bytes32",
-				  "name": "r",
-				  "type": "bytes32"
-				},
-				{
-				  "internalType": "bytes32",
-				  "name": "s",
-				  "type": "bytes32"
-				}
-			  ],
-			  "internalType": "struct Signature[]",
-			  "name": "_sigs",
-			  "type": "tuple[]"
-			}
-		  ],
-		  "name": "updateValset",
-		  "outputs": [],
-		  "stateMutability": "nonpayable",
-		  "type": "function"
-		
+			{ "internalType": "bytes32",   "name": "_gravityId",   "type": "bytes32"   },
+			{ "internalType": "bytes32",   "name": "_checkpoint",  "type": "bytes32"   },
+			{ "internalType": "uint256",   "name": "_valsetNonce", "type": "uint256"   },
+			{ "internalType": "address[]", "name": "_validators",  "type": "address[]" },
+			{ "internalType": "uint256[]", "name": "_powers",      "type": "uint256[]" },
+			{ "internalType": "uint256",   "name": "_rewardAmount","type": "uint256"   },
+			{ "internalType": "address",   "name": "_rewardToken", "type": "address"   }
+		],
+		"outputs": [
+			{ "internalType": "bytes32", "name": "", "type": "bytes32" }
+		]
 	}]`
 
-	// ContractCallTxABIJSON checks the ETH ABI for compatability of the logic call message
-	ContractCallTxABIJSON = `[{
-		"inputs": [
-			{
-			  "components": [
-				{
-				  "internalType": "address[]",
-				  "name": "validators",
-				  "type": "address[]"
-				},
-				{
-				  "internalType": "uint256[]",
-				  "name": "powers",
-				  "type": "uint256[]"
-				},
-				{
-				  "internalType": "uint256",
-				  "name": "valsetNonce",
-				  "type": "uint256"
-				},
-				{
-				  "internalType": "uint256",
-				  "name": "rewardAmount",
-				  "type": "uint256"
-				},
-				{
-				  "internalType": "address",
-				  "name": "rewardToken",
-				  "type": "address"
-				}
-			  ],
-			  "internalType": "struct ValsetArgs",
-			  "name": "_currentValset",
-			  "type": "tuple"
-			},
-			{
-			  "components": [
-				{
-				  "internalType": "uint8",
-				  "name": "v",
-				  "type": "uint8"
-				},
-				{
-				  "internalType": "bytes32",
-				  "name": "r",
-				  "type": "bytes32"
-				},
-				{
-				  "internalType": "bytes32",
-				  "name": "s",
-				  "type": "bytes32"
-				}
-			  ],
-			  "internalType": "struct Signature[]",
-			  "name": "_sigs",
-			  "type": "tuple[]"
-			},
-			{
-			  "components": [
-				{
-				  "internalType": "uint256[]",
-				  "name": "transferAmounts",
-				  "type": "uint256[]"
-				},
-				{
-				  "internalType": "address[]",
-				  "name": "transferTokenContracts",
-				  "type": "address[]"
-				},
-				{
-				  "internalType": "uint256[]",
-				  "name": "feeAmounts",
-				  "type": "uint256[]"
-				},
-				{
-				  "internalType": "address[]",
-				  "name": "feeTokenContracts",
-				  "type": "address[]"
-				},
-				{
-				  "internalType": "address",
-				  "name": "logicContractAddress",
-				  "type": "address"
-				},
-				{
-				  "internalType": "bytes",
-				  "name": "payload",
-				  "type": "bytes"
-				},
-				{
-				  "internalType": "uint256",
-				  "name": "timeOut",
-				  "type": "uint256"
-				},
-				{
-				  "internalType": "bytes32",
-				  "name": "invalidationId",
-				  "type": "bytes32"
-				},
-				{
-				  "internalType": "uint256",
-				  "name": "invalidationNonce",
-				  "type": "uint256"
-				}
-			  ],
-			  "internalType": "struct LogicCallArgs",
-			  "name": "_args",
-			  "type": "tuple"
-			}
-		  ],
-		  "name": "submitLogicCall",
-		  "outputs": [],
-		  "stateMutability": "nonpayable",
-		  "type": "function"
+	// OutgoingLogicCallABIJSON checks the ETH ABI for compatability of the logic call message
+	OutgoingLogicCallABIJSON = `[{
+	  "name": "checkpoint",
+      "outputs": [],
+      "stateMutability": "pure",
+      "type": "function",
+      "inputs": [
+			{ "internalType": "bytes32",   "name": "_gravityId",                "type": "bytes32"   },
+			{ "internalType": "bytes32",   "name": "_methodName",             "type": "bytes32"   },
+			{ "internalType": "uint256[]", "name": "_transferAmounts",        "type": "uint256[]" },
+			{ "internalType": "address[]", "name": "_transferTokenContracts", "type": "address[]" },
+			{ "internalType": "uint256[]", "name": "_feeAmounts",             "type": "uint256[]" },
+			{ "internalType": "address[]", "name": "_feeTokenContracts",      "type": "address[]" },
+			{ "internalType": "address",   "name": "_logicContractAddress",   "type": "address"   },
+			{ "internalType": "bytes",     "name": "_payload",                "type": "bytes"     },
+			{ "internalType": "uint256",   "name": "_timeout",                "type": "uint256"   },
+			{ "internalType": "bytes32",   "name": "_invalidationId",         "type": "bytes32"   },
+			{ "internalType": "uint256",   "name": "_invalidationNonce",      "type": "uint256"   }
+      ]
     }]`
 )

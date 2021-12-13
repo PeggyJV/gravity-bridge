@@ -29,11 +29,11 @@ func TestValsetConfirmHash(t *testing.T) {
 	for _, m := range members {
 		mem = append(mem, m)
 	}
-	v := SignerSetTx{Signers: mem}
+	v := SignerSetTx{Nonce: 0, Height: 0, Signers: mem}
 	// TODO: this is hardcoded to foo, replace?
 	hash := v.GetCheckpoint([]byte("foo"))
 	hexHash := hex.EncodeToString(hash)
-	correctHash := "88165860d955aee7dc3e83d9d1156a5864b708841965585d206dbef6e9e1a499"
+	correctHash := "0xaca2f283f21a03ba182dc7d34a55c04771b25087401d680011df7dcba453f798"[2:]
 	assert.Equal(t, correctHash, hexHash)
 }
 
