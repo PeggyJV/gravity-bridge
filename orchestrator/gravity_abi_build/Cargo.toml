@@ -1,5 +1,5 @@
 [package]
-name = "abi_build"
+name = "gravity_abi_build"
 version = "0.1.0"
 edition = "2021"
 
