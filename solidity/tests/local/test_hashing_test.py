@@ -18,9 +18,14 @@ def test_hashing_test(signers):
     hashingContract.ConcatHash2(getSignerAddresses(validators), powers, 1, gravityId)
 
     contractCheckpoint = hashingContract.lastCheckpoint()
-    externalCheckpoint = makeCheckpoint(getSignerAddresses(validators), powers, 1, gravityId)
+    externalCheckpoint = makeTestCheckpoint(getSignerAddresses(validators), powers, 1, gravityId)
     assert contractCheckpoint == externalCheckpoint.hex()
 
     hashingContract.JustSaveEverything(getSignerAddresses(validators), powers, 1)
     hashingContract.JustSaveEverythingAgain(getSignerAddresses(validators), powers, 1)
 
+def makeTestCheckpoint(validators, powers, valsetNonce, gravityId):
+    methodName = b"checkpoint"
+    abiEncoded = encode_abi(["bytes32", "bytes32", "uint256", "address[]", "uint256[]"], [gravityId, methodName, valsetNonce, validators, powers])
+    checkpoint = web3.keccak(abiEncoded)
+    return checkpoint

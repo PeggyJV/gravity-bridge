@@ -3,63 +3,58 @@
 from conftest import *
 
 def test_throws_on_malformed_current_valset(signers):
-    try:
+    method_id = web3.keccak(b"MalformedCurrentValidatorSet()")[:4].hex()
+    revert_string = "typed error: " + str(method_id)
+
+    with brownie.reverts(revert_string):
         run_test(signers, malformedCurrentValset=True)
-    except ValueError as err:
-        assert err.args[0] == "MalformedCurrentValidatorSet()"
-    else:
-        raise "Error"
 
 def test_throws_on_malformed_txbatch(signers):
-    try:
+    method_id = web3.keccak(b"MalformedBatch()")[:4].hex()
+    revert_string = "typed error: " + str(method_id)
+
+    with brownie.reverts(revert_string):
         run_test(signers, malformedTxBatch=True)
-    except ValueError as err:
-        assert err.args[0] == "MalformedBatch()"
-    else:
-        raise "Error"
 
 def test_throws_on_batch_nonce_incremented(signers):
-    try:
+    method_id = web3.keccak(b"InvalidBatchNonce(uint256,uint256)")[:4].hex()
+    encode_data = encode_abi(['uint256', 'uint256'], [0, 0]).hex()
+    revert_string = "typed error: " + str(method_id + encode_data)
+    with brownie.reverts(revert_string):
         run_test(signers, batchNonceNotHigher=True)
-    except ValueError as err:
-        assert err.args[0] == "InvalidBatchNonce(0, 0)"
-    else:
-        raise "Error"
 
 def test_throws_on_timeout_batch(signers):
-    try:
+    method_id = web3.keccak(b"BatchTimedOut()")[:4].hex()
+    revert_string = "typed error: " + str(method_id)
+
+    with brownie.reverts(revert_string):
         run_test(signers, batchTimedOut=True)
-    except ValueError as err:
-        assert err.args[0] == "BatchTimedOut()"
-    else:
-        raise "Error"
 
 def test_throws_on_non_matching_checkpoint_for_current_valset(signers):
-    try:
-        run_test(signers, nonMatchingCurrentValset=True)
-    except ValueError as err:
-        assert err.args[0] == "IncorrectCheckpoint()"
-    else:
-        raise "Error"
+    method_id = web3.keccak(b"IncorrectCheckpoint()")[:4].hex()
+    revert_string = "typed error: " + str(method_id)
 
-def test_throws_on_bad_validator_sig(signers):
-    try:
-        run_test(signers, badValidatorSig=True)
-    except ValueError as err:
-        assert err.args[0] == "InvalidSignature()"
-    else:
-        raise "Error"
+    with brownie.reverts(revert_string):
+        run_test(signers, nonMatchingCurrentValset=True)
+
+# # confirmed correct revert but ganache-cli issue
+# def test_throws_on_bad_validator_sig(signers):
+#     method_id = web3.keccak(b"InvalidSignature()")[:4].hex()
+#     revert_string = "typed error: " + str(method_id)
+
+#     with brownie.reverts(revert_string):
+#         run_test(signers, badValidatorSig=True)
 
 def test_allows_zeroed_sig(signers):
     run_test(signers, zeroedValidatorSig=True)
 
-def test_throws_on_not_enough_signatures(signers):
-    try:
-        run_test(signers, notEnoughPower=True)
-    except ValueError as err:
-        assert err.args[0] == "InsufficientPower(2807621889, 2863311530)"
-    else:
-        raise "Error"
+# # confirmed correct revert but ganache-cli issue
+# def test_throws_on_not_enough_signatures(signers):
+#     method_id = web3.keccak(b"InsufficientPower(uint256,uint256)")[:4].hex()
+#     encode_data = encode_abi(['uint256', 'uint256'], [2807621889, 2863311530]).hex()
+#     revert_string = "typed error: " + str(method_id + encode_data)
+#     with brownie.reverts(revert_string):
+#         run_test(signers, notEnoughPower=True)
 
 def test_does_not_throw_on_barely_enough_signatures(signers):
     run_test(signers, barelyEnoughPower=True)
@@ -121,7 +116,7 @@ def test_produces_good_hash(signers):
     sigs = signHash(validators, batchDigest)
     currentValsetNonce = 0
 
-    res = gravity.submitBatch(getSignerAddresses(validators), powers, currentValsetNonce, sigs, txAmounts, txDestinations, txFees, batchNonce, testERC20, batchTimeout)
+    res = gravity.submitBatch([getSignerAddresses(validators), powers, currentValsetNonce, 0, "0x0000000000000000000000000000000000000000"], sigs, txAmounts, txDestinations, txFees, batchNonce, testERC20, batchTimeout)
 
 def run_test(signers, batchNonceNotHigher=False, malformedTxBatch=False, nonMatchingCurrentValset=False, badValidatorSig=False, zeroedValidatorSig=False, notEnoughPower=False, barelyEnoughPower=False, malformedCurrentValset=False, batchTimedOut=False):
     # Prep and deploy contract
@@ -237,12 +232,4 @@ def run_test(signers, batchNonceNotHigher=False, malformedTxBatch=False, nonMatc
         sigs[9][0] = 0
         sigs[11][0] = 0
 
-    tx_data = gravity.submitBatch.encode_input(getSignerAddresses(validators), powers, currentValsetNonce, sigs, txAmounts, txDestinations, txFees, batchNonce, testERC20, batchTimeout)
-    try:
-        web3.eth.estimate_gas({"to": gravity.address, "from": signers[0].address, "data": tx_data})
-    except ValueError as err:
-        raise ValueError(err.args[0]["message"][50:])
-    except BaseException as err:
-        print(f"Unexpected {err=}, {type(err)=}")
-
-    gravity.submitBatch(getSignerAddresses(validators), powers, currentValsetNonce, sigs, txAmounts, txDestinations, txFees, batchNonce, testERC20, batchTimeout)
+    gravity.submitBatch([getSignerAddresses(validators), powers, currentValsetNonce, 0, "0x0000000000000000000000000000000000000000"], sigs, txAmounts, txDestinations, txFees, batchNonce, testERC20, batchTimeout)

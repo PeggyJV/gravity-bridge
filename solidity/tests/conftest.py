@@ -190,9 +190,9 @@ def getSignerAddresses(signers):
         ret.append(signers[i].address)
     return ret
 
-def makeCheckpoint(validators, powers, valsetNonce, gravityId):
+def makeCheckpoint(validators, powers, valsetNonce, gravityId, rewardAmount=0, rewardToken="0x0000000000000000000000000000000000000000"):
     methodName = b"checkpoint"
-    abiEncoded = encode_abi(["bytes32", "bytes32", "uint256", "address[]", "uint256[]"], [gravityId, methodName, valsetNonce, validators, powers])
+    abiEncoded = encode_abi(["bytes32", "bytes32", "uint256", "address[]", "uint256[]", "uint256", "address"], [gravityId, methodName, valsetNonce, validators, powers, rewardAmount, rewardToken])
     checkpoint = web3.keccak(abiEncoded)
     return checkpoint
 
@@ -329,17 +329,6 @@ def deployContracts(signers, gravityId, validators, powers, powerThreshold):
     testERC20 = TestERC20A.deploy({"from": signers[0]})
     valAddresses = getSignerAddresses(validators)
     checkpoint = makeCheckpoint(valAddresses, powers, 0, gravityId)
-
-    GravityContract = web3.eth.contract(abi=Gravity.abi, bytecode=Gravity.bytecode)
-
-    try:
-        gas = GravityContract.constructor(gravityId, powerThreshold, valAddresses, powers).estimateGas({"from": signers[0].address})
-    except ValueError as err:
-        raise ValueError(err.args[0]["message"][50:])
-    except brownie.exceptions.VirtualMachineError as err:
-        raise ValueError(err.revert_msg)
-    except BaseException as err:
-        print(f"Unexpected {err=}, {type(err)=}")
 
     gravity = Gravity.deploy(gravityId, powerThreshold, valAddresses, powers, {"from": signers[0]})
     return gravity, testERC20, checkpoint

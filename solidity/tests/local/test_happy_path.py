@@ -9,7 +9,7 @@ def test_happy_path(signers):
         "validators": signers[:len(examplePowers())],
         "nonce": 0,
         "rewardAmount": 0,
-        "rewardToken": b"0x0000000000000000000000000000000000000000",
+        "rewardToken": "0x0000000000000000000000000000000000000000"
     }
     powerThreshold = 6666
     gravity, testERC20, checkpoint = deployContracts(signers, gravityId, valset0["validators"], valset0["powers"], powerThreshold)
@@ -23,12 +23,12 @@ def test_happy_path(signers):
         "validators": validators,
         "nonce": 1,
         "rewardAmount": 0,
-        "rewardToken": b"0x0000000000000000000000000000000000000000",
+        "rewardToken": "0x0000000000000000000000000000000000000000"
     }
     checkpoint1 = makeCheckpoint(getSignerAddresses(valset1["validators"]), valset1["powers"], valset1["nonce"], gravityId)
     sigs1 = signHash(valset0["validators"], checkpoint1)
 
-    gravity.updateValset(valset1, valset0, sigs1)
+    gravity.updateValset([getSignerAddresses(valset1["validators"]), valset1["powers"], valset1["nonce"], valset1["rewardAmount"], valset1["rewardToken"]], [getSignerAddresses(valset0["validators"]), valset0["powers"], valset0["nonce"], valset0["rewardAmount"], valset0["rewardToken"]], sigs1)
 
     assert gravity.state_lastValsetCheckpoint() == checkpoint1.hex()
 
@@ -73,9 +73,13 @@ def test_happy_path(signers):
     digest = web3.keccak(abiEncoded)
     sigs = signHash(valset1["validators"], digest)
     gravity.submitBatch(
-        getSignerAddresses(valset1["validators"]),
-        valset1["powers"],
-        valset1["nonce"],
+        [
+            getSignerAddresses(valset1["validators"]),
+            valset1["powers"],
+            valset1["nonce"],
+            valset1["rewardAmount"],
+            valset1["rewardToken"]
+        ],
         sigs,
         txAmounts,
         txDestinations,

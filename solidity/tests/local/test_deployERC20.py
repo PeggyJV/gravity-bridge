@@ -46,9 +46,9 @@ def test_deployERC20_tests(signers):
         "powers": powers,
         "valSetNonce": currentValsetNonce,
         "rewardAmount": 0,
-        "rewardToken": b"0x0000000000000000000000000000000000000000",
+        "rewardToken": "0x0000000000000000000000000000000000000000",
     }
     
-    gravity.submitBatch(valset, sigs, txAmounts, txDestinations, txFees, batchNonce, tx.events["ERC20DeployedEvent"]["_tokenContract"], batchTimeout)
+    gravity.submitBatch([valset["validators"], valset["powers"], valset["valSetNonce"], valset["rewardAmount"], valset["rewardToken"]], sigs, txAmounts, txDestinations, txFees, batchNonce, tx.events["ERC20DeployedEvent"]["_tokenContract"], batchTimeout)
     assert ERC20contract.balanceOf(gravity) == maxUint256 - 200
     assert ERC20contract.balanceOf(signers[6].address) == 1
