@@ -5,10 +5,7 @@ import { TestERC20C } from "./typechain/TestERC20C";
 import { ethers } from "ethers";
 import fs from "fs";
 import commandLineArgs from "command-line-args";
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { exit } from "process";
-import { start } from "node:repl";
-import { SSL_OP_EPHEMERAL_RSA } from "node:constants";
 
 import { createProtobufRpcClient, QueryClient } from "@cosmjs/stargate";
 import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
