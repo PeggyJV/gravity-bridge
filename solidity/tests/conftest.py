@@ -4,7 +4,7 @@ import pytest
 
 import brownie
 
-from brownie import web3, TestLogicContract, SimpleLogicBatchMiddleware, Gravity, TestERC20A, ReentrantERC20, TestTokenBatchMiddleware, HashingTest, TestUniswapLiquidity, Contract
+from brownie import web3, TestLogicContract, SimpleLogicBatchMiddleware, Gravity, TestERC20A, ReentrantERC20, TestTokenBatchMiddleware, HashingTest, Contract
 
 from eth_abi import encode_abi
 
@@ -190,9 +190,9 @@ def getSignerAddresses(signers):
         ret.append(signers[i].address)
     return ret
 
-def makeCheckpoint(validators, powers, valsetNonce, gravityId):
+def makeCheckpoint(validators, powers, valsetNonce, gravityId, rewardAmount=0, rewardToken="0x0000000000000000000000000000000000000000"):
     methodName = b"checkpoint"
-    abiEncoded = encode_abi(["bytes32", "bytes32", "uint256", "address[]", "uint256[]"], [gravityId, methodName, valsetNonce, validators, powers])
+    abiEncoded = encode_abi(["bytes32", "bytes32", "uint256", "address[]", "uint256[]", "uint256", "address"], [gravityId, methodName, valsetNonce, validators, powers, rewardAmount, rewardToken])
     checkpoint = web3.keccak(abiEncoded)
     return checkpoint
 
@@ -329,6 +329,7 @@ def deployContracts(signers, gravityId, validators, powers, powerThreshold):
     testERC20 = TestERC20A.deploy({"from": signers[0]})
     valAddresses = getSignerAddresses(validators)
     checkpoint = makeCheckpoint(valAddresses, powers, 0, gravityId)
+
     gravity = Gravity.deploy(gravityId, powerThreshold, valAddresses, powers, {"from": signers[0]})
     return gravity, testERC20, checkpoint
 

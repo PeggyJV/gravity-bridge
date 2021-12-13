@@ -23,6 +23,14 @@ const (
 	ContractCallTxPrefixByte
 )
 
+type ABIEncodedValsetArgs struct {
+	Validators   []gethcommon.Address `abi:"validators"`
+	Powers       []*big.Int           `abi:"powers"`
+	Nonce        *big.Int             `abi:"valsetNonce"`
+	RewardAmount *big.Int             `abi:"rewardAmount"`
+	RewardToken  gethcommon.Address   `abi:"rewardToken"`
+}
+
 ///////////////////
 // GetStoreIndex //
 ///////////////////
@@ -82,6 +90,7 @@ func (u SignerSetTx) GetCheckpoint(gravityID []byte) []byte {
 		memberAddresses[i] = gethcommon.HexToAddress(m.EthereumAddress)
 		convertedPowers[i] = big.NewInt(int64(m.Power))
 	}
+
 	// the word 'checkpoint' needs to be the same as the 'name' above in the checkpointAbiJson
 	// but other than that it's a constant that has no impact on the output. This is because
 	// it gets encoded as a function name which we must then discard.
@@ -91,9 +100,11 @@ func (u SignerSetTx) GetCheckpoint(gravityID []byte) []byte {
 		big.NewInt(int64(u.Nonce)),
 		memberAddresses,
 		convertedPowers,
+		big.NewInt(0),
+		gethcommon.HexToAddress("0x0000000000000000000000000000000000000000"),
 	}
 
-	return packCall(SignerSetTxCheckpointABIJSON, "checkpoint", args)
+	return packCall(ValsetCheckpointABIJSON, "checkpoint", args)
 }
 
 // GetCheckpoint gets the checkpoint signature from the given outgoing tx batch
@@ -137,7 +148,7 @@ func (b BatchTx) GetCheckpoint(gravityID []byte) []byte {
 		big.NewInt(int64(b.Timeout)),
 	}
 
-	return packCall(BatchTxCheckpointABIJSON, "submitBatch", args)
+	return packCall(OutgoingBatchTxCheckpointABIJSON, "submitBatch", args)
 }
 
 // GetCheckpoint gets the checkpoint signature from the given outgoing tx batch
@@ -191,7 +202,7 @@ func (c ContractCallTx) GetCheckpoint(gravityID []byte) []byte {
 		big.NewInt(int64(c.InvalidationNonce)),
 	}
 
-	return packCall(ContractCallTxABIJSON, "checkpoint", args)
+	return packCall(OutgoingLogicCallABIJSON, "checkpoint", args)
 }
 
 func packCall(abiString, method string, args []interface{}) []byte {

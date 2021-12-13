@@ -8,7 +8,8 @@ import { deployContracts } from "../test-utils";
 import {
   getSignerAddresses,
   signHash,
-  examplePowers
+  examplePowers,
+  ZeroAddress,
 } from "../test-utils/pure";
 
 chai.use(solidity);
@@ -199,14 +200,29 @@ async function runTest(opts: {
     sigs[11].v = 0;
   }
 
-  await gravity.submitLogicCall(
-    await getSignerAddresses(validators),
+  let valset = {
+    validators: await getSignerAddresses(validators),
     powers,
-    currentValsetNonce,
+    valsetNonce: currentValsetNonce,
+    rewardAmount: 0,
+    rewardToken: ZeroAddress
+  }
+
+  let logicCallSubmitResult = await gravity.submitLogicCall(
+    valset,
 
     sigs,
     logicCallArgs
   );
+
+
+  // check that the relayer was paid
+  expect(
+    await (
+      await testERC20.functions.balanceOf(await logicCallSubmitResult.from)
+    )[0].toNumber()
+  ).to.equal(9010);
+
 
   expect(
       (await testERC20.functions.balanceOf(await signers[20].getAddress()))[0].toNumber()
@@ -228,13 +244,13 @@ async function runTest(opts: {
 describe("submitLogicCall tests", function () {
   it("throws on malformed current valset", async function () {
     await expect(runTest({ malformedCurrentValset: true })).to.be.revertedWith(
-      "Malformed current validator set"
+      "MalformedCurrentValidatorSet()"
     );
   });
 
   it("throws on invalidation nonce not incremented", async function () {
     await expect(runTest({ invalidationNonceNotHigher: true })).to.be.revertedWith(
-      "New invalidation nonce must be greater than the current nonce"
+      "InvalidLogicCallNonce(0, 0)"
     );
   });
 
@@ -242,14 +258,14 @@ describe("submitLogicCall tests", function () {
     await expect(
       runTest({ nonMatchingCurrentValset: true })
     ).to.be.revertedWith(
-      "Supplied current validators and powers do not match checkpoint"
+      "IncorrectCheckpoint()"
     );
   });
 
 
   it("throws on bad validator sig", async function () {
     await expect(runTest({ badValidatorSig: true })).to.be.revertedWith(
-      "Validator signature does not match"
+      "InvalidSignature()"
     );
   });
 
@@ -259,7 +275,7 @@ describe("submitLogicCall tests", function () {
 
   it("throws on not enough signatures", async function () {
     await expect(runTest({ notEnoughPower: true })).to.be.revertedWith(
-      "Submitted validator set signatures do not have enough power"
+      "InsufficientPower(6537, 6666)"
     );
   });
 
@@ -269,7 +285,7 @@ describe("submitLogicCall tests", function () {
 
   it("throws on timeout", async function () {
     await expect(runTest({ timedOut: true })).to.be.revertedWith(
-      "Timed out"
+      "LogicCallTimedOut()"
     );
   });
 
@@ -370,15 +386,22 @@ describe("logicCall Go test hash", function () {
     // signature testing
 
 
-    var res = await gravity.populateTransaction.submitLogicCall(
-      await getSignerAddresses(validators),
+    let valset = {
+      validators: await getSignerAddresses(validators),
       powers,
-      currentValsetNonce,
+      valsetNonce: currentValsetNonce,
+      rewardAmount: 0,
+      rewardToken: ZeroAddress
+    }
+
+    var res = await gravity.populateTransaction.submitLogicCall(
+      valset,
 
       sigs,
 
       logicCallArgs
     )
+
 
     console.log("elements in logic call digest:", {
       "gravityId": gravityId,

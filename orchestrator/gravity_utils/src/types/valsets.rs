@@ -12,6 +12,7 @@ use std::{
     collections::{HashMap, HashSet},
     fmt, str,
 };
+use gravity_abi::gravity::ValsetArgs;
 
 /// The total power in the Gravity bridge is normalized to u32 max every
 /// time a validator set is created. This value of up to u32 max is then
