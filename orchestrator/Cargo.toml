@@ -18,7 +18,7 @@ members = [
 	"cosmos_gravity",
 	"ethereum_gravity",
 	"gravity_utils",
-	"proto_build",
+	"gravity_proto_build",
 	"test_runner",
 	"gravity_proto",
 	"relayer",
@@ -33,7 +33,7 @@ orchestrator = { path = "./orchestrator" }
 cosmos_gravity = { path = "./cosmos_gravity" }
 ethereum_gravity = { path = "./ethereum_gravity" }
 gravity_utils = { path = "./gravity_utils" }
-proto_build = { path = "./proto_build" }
+gravity_proto_build = { path = "./gravity_proto_build" }
 test_runner = { path = "./test_runner" }
 gravity_proto = { path = "./gravity_proto" }
 register_delegate_keys = { path = "./register_delegate_keys" }
