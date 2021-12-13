@@ -1,4 +1,4 @@
-FROM node:15.11-alpine3.13
+FROM node:16.13-alpine3.13
 
 RUN apk update
 RUN apk add --no-cache python3 make g++ curl
