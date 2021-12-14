@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/x/gravity/types"
 	"math/big"
 	"os"
 	"path"
@@ -28,6 +27,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/x/gravity/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	tmconfig "github.com/tendermint/tendermint/config"
@@ -493,7 +493,7 @@ func (s *IntegrationTestSuite) runEthContainer() {
 		}
 		return false
 	}, time.Minute*5, time.Second*10, "unable to retrieve gravity address from logs")
-	s.T().Logf("gravity contrained deployed at %s", gravityContract.String())
+	s.T().Logf("gravity contract deployed at %s", gravityContract.String())
 
 	s.Require().Eventuallyf(func() bool {
 		for _, s := range strings.Split(ethereumLogOutput.String(), "\n") {
@@ -604,7 +604,7 @@ rpc = "http://%s:8545"
 key_derivation_path = "m/44'/118'/1'/0/0"
 grpc = "http://%s:9090"
 gas_price = { amount = %s, denom = "%s" }
-prefix = "gb"
+prefix = "cosmos"
 gas_adjustment = 2.0
 msg_batch_size = 5
 `,
