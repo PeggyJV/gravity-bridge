@@ -18,8 +18,14 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		)
 
 		s.Require().Eventuallyf(func() bool {
-			orch := s.chain.orchestrators[0]
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", orch.keyring, "orch", orch.keyInfo.GetAddress())
+			//orch := s.chain.orchestrators[0]
+			//clientCtx, err := s.chain.clientContext("tcp://localhost:26657", orch.keyring, "orch", orch.keyInfo.GetAddress())
+			//s.Require().NoError(err)
+
+			val := s.chain.validators[0]
+			keyring, err := val.keyring()
+			s.Require().NoError(err)
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", val.keyInfo.GetAddress())
 			s.Require().NoError(err)
 
 			response, err := s.chain.sendMsgs(*clientCtx, sendToEthereumMsg)
