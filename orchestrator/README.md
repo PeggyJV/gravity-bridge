@@ -15,9 +15,21 @@ This is a library for interacting with the cosmos chain both queries and transac
 
 This is a library that contains code for the interactions with the counterparty ethereum chain.
 
+### gravity_abi/
+
+`ethers` generated ABI bindings for the Gravity and ERC20 contracts
+
+### gravity_abi_build/
+
+Run `cargo run` in this folder to build `gravity_abi`.
+
 ### gravity_proto/
 
 `prost` generated bindings for working with the gravity protobuf objects.
+
+### gravity_proto_build/
+
+Run `cargo run` in this folder to build `gravity_proto` also note, this will generate too many files. Only `gravity.v1.rs` is required.
 
 ### gravity_utils/
 
@@ -26,10 +38,6 @@ Various utilities for working with the `gravity` code.
 ### orchestrator/
 
 The package to build the orchestartor binary.
-
-### proto_build/
-
-Run `cargo run` in this folder to build `gravity_proto` also note, this will generate too many files. Only `gravity.v1.rs` is required.
 
 ### register_delegate_keys/
 

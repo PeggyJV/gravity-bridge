@@ -13,16 +13,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "abi_build"
-version = "0.1.0"
-dependencies = [
- "ethers",
- "serde",
- "serde_derive",
- "serde_json",
-]
-
-[[package]]
 name = "abscissa_core"
 version = "0.6.0-beta.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2298,18 +2288,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "gravity_abi_build"
+version = "0.1.0"
+dependencies = [
+ "ethers",
+ "serde",
+ "serde_derive",
+ "serde_json",
+]
+
+[[package]]
 name = "gravity_bridge"
 version = "0.1.0"
 dependencies = [
- "abi_build",
  "cosmos_gravity",
  "ethereum_gravity",
  "gorc",
  "gravity_abi",
+ "gravity_abi_build",
  "gravity_proto",
+ "gravity_proto_build",
  "gravity_utils",
  "orchestrator",
- "proto_build",
  "register_delegate_keys",
  "relayer",
  "test_runner",
@@ -2324,6 +2324,19 @@ dependencies = [
  "prost",
  "prost-types",
  "tonic",
+]
+
+[[package]]
+name = "gravity_proto_build"
+version = "0.1.0"
+dependencies = [
+ "prost",
+ "prost-build",
+ "regex",
+ "tempdir",
+ "tonic",
+ "tonic-build",
+ "walkdir",
 ]
 
 [[package]]
@@ -3630,19 +3643,6 @@ checksum = "b518d7cdd93dab1d1122cf07fa9a60771836c668dde9d9e2a139f957f0d9f1bb"
 dependencies = [
  "bytes 1.1.0",
  "prost",
-]
-
-[[package]]
-name = "proto_build"
-version = "0.1.0"
-dependencies = [
- "prost",
- "prost-build",
- "regex",
- "tempdir",
- "tonic",
- "tonic-build",
- "walkdir",
 ]
 
 [[package]]
