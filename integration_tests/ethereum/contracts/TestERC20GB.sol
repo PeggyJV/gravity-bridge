@@ -3,7 +3,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // One of three testing coins
 contract TestERC20GB is ERC20 {
-    constructor() public ERC20("TestGB", "TGB") {
+    constructor() public ERC20("DollaryDoos", "DDS") {
         // the four test validators
         _mint(0xd312f0f1B39D54Db2829537595fC1167B14d4b34, 10000);
         _mint(0x7bE2a04df4b9C3227928147461e19158eB2B11d1, 10000);

@@ -13,15 +13,11 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		sendToEthereumMsg := types.NewMsgSendToEthereum(
 			s.chain.validators[0].keyInfo.GetAddress(),
 			s.chain.validators[1].ethereumKey.address,
-			sdk.Coin{Denom: "TGB", Amount: sdk.NewInt(100)},
-			sdk.Coin{Denom: "TGB", Amount: sdk.NewInt(1)},
+			sdk.Coin{Denom: "DDS", Amount: sdk.NewInt(100)},
+			sdk.Coin{Denom: "DDS", Amount: sdk.NewInt(1)},
 		)
 
 		s.Require().Eventuallyf(func() bool {
-			//orch := s.chain.orchestrators[0]
-			//clientCtx, err := s.chain.clientContext("tcp://localhost:26657", orch.keyring, "orch", orch.keyInfo.GetAddress())
-			//s.Require().NoError(err)
-
 			val := s.chain.validators[0]
 			keyring, err := val.keyring()
 			s.Require().NoError(err)
