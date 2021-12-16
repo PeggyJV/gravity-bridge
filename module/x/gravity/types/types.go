@@ -31,7 +31,7 @@ func (b EthereumSigners) Sort() {
 	sort.Slice(b, func(i, j int) bool {
 		if b[i].Power == b[j].Power {
 			// Secondary sort on eth address in case powers are equal
-			return EthereumAddrLessThan(b[i].EthereumAddress, b[j].EthereumAddress)
+			return EthereumAddrGreaterThan(b[i].EthereumAddress, b[j].EthereumAddress)
 		}
 		return b[i].Power > b[j].Power
 	})
@@ -115,7 +115,7 @@ func (b EthereumSigners) GetPowers() []uint64 {
 // NewSignerSetTx returns a new valset
 func NewSignerSetTx(nonce, height uint64, members EthereumSigners) *SignerSetTx {
 	members.Sort()
-	var mem []*EthereumSigner
+	var mem EthereumSigners
 	for _, val := range members {
 		mem = append(mem, val)
 	}

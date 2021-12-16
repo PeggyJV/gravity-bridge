@@ -168,6 +168,7 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 			sdk.NewAttribute(types.AttributeKeyEthereumSignatureKey, string(key)),
 		),
 	)
+
 	return &types.MsgSubmitEthereumTxConfirmationResponse{}, nil
 }
 

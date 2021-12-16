@@ -42,8 +42,6 @@ pub async fn get_last_checked_block(
 
     let filter_gravity_contract_address = ValueOrArray::Value(gravity_contract_address);
 
-    // TODO(bolten): there might be a cleaner way to get these event ABI signature strings
-    // from the generated ABI files, should look into that
     let mut erc20_deployed_filter = Filter::new()
         .address(filter_gravity_contract_address.clone())
         .event(&Erc20DeployedEventFilter::abi_signature());

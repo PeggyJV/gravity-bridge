@@ -23,9 +23,9 @@ const (
 	GravityDenomLen = len(GravityDenomPrefix) + len(GravityDenomSeparator) + EthereumContractAddressLen
 )
 
-// EthereumAddrLessThan migrates the Ethereum address less than function
-func EthereumAddrLessThan(e, o string) bool {
-	return bytes.Compare([]byte(e)[:], []byte(o)[:]) == -1
+// Used to sort validators in descending address order
+func EthereumAddrGreaterThan(e, o string) bool {
+	return bytes.Compare([]byte(e)[:], []byte(o)[:]) == 1
 }
 
 // ValidateEthereumAddress validates the ethereum address strings

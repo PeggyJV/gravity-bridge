@@ -35,9 +35,6 @@ pub async fn find_latest_valset(
         let mut filtered_logged_events = eth_client.get_logs(&filter).await?;
         filtered_logged_events.reverse(); // we'll process these in reverse order to start from the most recent and work backwards
 
-        // TODO(bolten): the original logic only checked one valset event, even if there may have been multiple within the
-        // filtered blockspace...need more clarity on how severe an error it is if one of these events is malformed, and if
-        // we should return early with an error or just log it the way the previous version did
         for logged_event in filtered_logged_events {
             debug!("Found event {:?}", logged_event);
 

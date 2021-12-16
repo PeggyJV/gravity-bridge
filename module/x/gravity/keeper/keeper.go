@@ -284,7 +284,7 @@ func (k Keeper) CreateSignerSetTx(ctx sdk.Context) *types.SignerSetTx {
 // implementations are involved.
 func (k Keeper) CurrentSignerSet(ctx sdk.Context) types.EthereumSigners {
 	validators := k.StakingKeeper.GetBondedValidatorsByPower(ctx)
-	ethereumSigners := make([]*types.EthereumSigner, 0)
+	ethereumSigners := make(types.EthereumSigners, 0)
 	var totalPower uint64
 	for _, validator := range validators {
 		val := validator.GetOperator()

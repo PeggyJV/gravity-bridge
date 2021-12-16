@@ -183,7 +183,7 @@ pub async fn send_main_loop(
             )
             .await
             {
-                Ok(res) => trace!("okay: {:?}", res),
+                Ok(res) => trace!("Successful gRPC call to Cosmos: {:?}", res),
                 Err(err) => {
                     let msg_types = msg_chunk
                         .iter()
