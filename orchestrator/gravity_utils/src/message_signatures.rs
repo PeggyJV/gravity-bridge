@@ -1,5 +1,6 @@
 use crate::types::{LogicCall, TransactionBatch, Valset};
 use ethers::core::abi::{self, Token};
+use ethers::prelude::*;
 use ethers::utils::hash_message;
 use ethers::utils::keccak256;
 
@@ -25,6 +26,8 @@ pub fn encode_valset_confirm(gravity_id: String, valset: Valset) -> Vec<u8> {
         Token::Uint(valset.nonce.into()),
         Token::Array(eth_addresses),
         Token::Array(powers),
+        Token::Uint(U256::zero()),
+        Token::Address(H160::zero()),
     ])
 }
 
@@ -39,7 +42,7 @@ fn test_valset_signature() {
     use ethers::utils::keccak256;
 
     let correct_hash: Vec<u8> =
-        hex_str_to_bytes("0x88165860d955aee7dc3e83d9d1156a5864b708841965585d206dbef6e9e1a499")
+        hex_str_to_bytes("0x8cd4cc7f06bd39d4f77d94643a9ae6b3bdc3d3b78263683933cdd5c088452b9d")
             .unwrap();
 
     // a validator set
