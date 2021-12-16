@@ -84,6 +84,8 @@ func (u SignerSetTx) GetCheckpoint(gravityID []byte) []byte {
 	var checkpoint [32]uint8
 	copy(checkpoint[:], checkpointBytes[:])
 
+	u.Signers.Sort()
+
 	memberAddresses := make([]gethcommon.Address, len(u.Signers))
 	convertedPowers := make([]*big.Int, len(u.Signers))
 	for i, m := range u.Signers {
