@@ -29,7 +29,7 @@ func TestValsetConfirmHash(t *testing.T) {
 	// TODO: this is hardcoded to foo, replace?
 	hash := v.GetCheckpoint([]byte("foo"))
 	hexHash := hex.EncodeToString(hash)
-	correctHash := "0x8cd4cc7f06bd39d4f77d94643a9ae6b3bdc3d3b78263683933cdd5c088452b9d"[2:]
+	correctHash := "0xaca2f283f21a03ba182dc7d34a55c04771b25087401d680011df7dcba453f798"[2:]
 	assert.Equal(t, correctHash, hexHash)
 }
 
