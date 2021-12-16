@@ -1,5 +1,6 @@
 use crate::types::{LogicCall, TransactionBatch, Valset};
 use ethers::core::abi::{self, Token};
+use ethers::prelude::*;
 use ethers::utils::hash_message;
 use ethers::utils::keccak256;
 
@@ -25,6 +26,8 @@ pub fn encode_valset_confirm(gravity_id: String, valset: Valset) -> Vec<u8> {
         Token::Uint(valset.nonce.into()),
         Token::Array(eth_addresses),
         Token::Array(powers),
+        Token::Uint(U256::zero()),
+        Token::Address(H160::zero()),
     ])
 }
 
