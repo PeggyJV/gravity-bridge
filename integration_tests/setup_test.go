@@ -753,20 +753,16 @@ func (s *IntegrationTestSuite) sendToCosmos(destination sdk.ValAddress, amount s
 		return err
 	}
 
-	data := gravitytypes.PackSendToCosmos()
+	data := gravitytypes.PackSendToCosmos(testERC20contract)
 
 	bz, err := ethClient.CallContract(context.Background(), ethereum.CallMsg{
 		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
 		To:   &gravityContract,
 		Gas:  0,
-		Data: types.ABIEncodedCellarTickInfoBytes(uint(0)),
+		Data: data,
 	}, nil)
 	if err != nil {
-		return nil, err
-	}
-	tr, err := types.BytesToABIEncodedTickRange(bz)
-	if err != nil {
-		return nil, err
+		return err
 	}
 
 	return nil

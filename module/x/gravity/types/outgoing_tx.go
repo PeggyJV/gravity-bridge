@@ -229,7 +229,7 @@ func PackDeployERC20(denom string, name string, symbol string, decimals uint8) [
 	})
 }
 
-func PackSendToCosmos(tokenContract gethcommon.Address, destination gethcommon.Address, amount sdk.Int) []byte {
+func PackSendToCosmos(tokenContract gethcommon.Address, destination sdk.ValAddress, amount sdk.Int) []byte {
 	return packCall(SendToCosmosABIJSON, "sendToCosmos", []interface{}{
 		tokenContract,
 		destination,
