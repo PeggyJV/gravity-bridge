@@ -130,10 +130,7 @@ impl FromLog for ValsetUpdatedEvent {
 
         let mut check = validators.clone();
         check.sort();
-        check.reverse();
-        // if the validator set is not sorted we're in a bad spot
-        // TODO(bolten): perhaps there is a better way to handle this than logging the event?
-        // what would the downstream effects of not returning a ValsetUpdatedEvent here?
+
         if validators != check {
             warn!(
                 "Someone submitted an unsorted validator set, this means all updates will fail until someone feeds in this unsorted value by hand {:?} instead of {:?}",
