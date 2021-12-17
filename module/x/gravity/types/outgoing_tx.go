@@ -48,9 +48,9 @@ func (cctx *ContractCallTx) GetStoreIndex() []byte {
 	return MakeContractCallTxKey(cctx.InvalidationScope, cctx.InvalidationNonce)
 }
 
-///////////////////
-// GetCheckpoint //
-///////////////////
+/////////////////////
+// GetCosmosHeight //
+/////////////////////
 
 func (sstx *SignerSetTx) GetCosmosHeight() uint64 {
 	return sstx.Height
@@ -83,8 +83,6 @@ func (u SignerSetTx) GetCheckpoint(gravityID []byte) []byte {
 	checkpointBytes := []uint8("checkpoint")
 	var checkpoint [32]uint8
 	copy(checkpoint[:], checkpointBytes[:])
-
-	u.Signers.Sort()
 
 	memberAddresses := make([]gethcommon.Address, len(u.Signers))
 	convertedPowers := make([]*big.Int, len(u.Signers))
