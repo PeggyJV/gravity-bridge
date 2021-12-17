@@ -114,11 +114,11 @@ func (b EthereumSigners) GetPowers() []uint64 {
 
 // NewSignerSetTx returns a new valset
 func NewSignerSetTx(nonce, height uint64, members EthereumSigners) *SignerSetTx {
-	members.Sort()
 	var mem EthereumSigners
 	for _, val := range members {
 		mem = append(mem, val)
 	}
+	mem.Sort()
 	return &SignerSetTx{Nonce: nonce, Height: height, Signers: mem}
 }
 
