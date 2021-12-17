@@ -5,6 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/crypto"
 	"math/big"
 	"os"
 	"path"
@@ -736,7 +739,7 @@ func (s *IntegrationTestSuite) deployERC20(denom string, name string, symbol str
 		return err
 	}
 
-	data := gravitytypes.PackDeployERC20(denom, name, symbol, decimals)
+	data := PackDeployERC20(denom, name, symbol, decimals)
 
 	_, err = ethClient.CallContract(context.Background(), ethereum.CallMsg{
 		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
@@ -753,7 +756,7 @@ func (s *IntegrationTestSuite) sendToCosmos(destination sdk.AccAddress, amount s
 		return err
 	}
 
-	data := gravitytypes.PackSendToCosmos(testERC20contract, destination, amount)
+	data := PackSendToCosmos(testERC20contract, destination, amount)
 
 	_, err = ethClient.CallContract(context.Background(), ethereum.CallMsg{
 		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
@@ -766,4 +769,33 @@ func (s *IntegrationTestSuite) sendToCosmos(destination sdk.AccAddress, amount s
 	}
 
 	return nil
+}
+
+func packCall(abiString, method string, args []interface{}) []byte {
+	encodedCall, err := abi.JSON(strings.NewReader(abiString))
+	if err != nil {
+		panic(sdkerrors.Wrap(err, "bad ABI definition in code"))
+	}
+	abiEncodedCall, err := encodedCall.Pack(method, args...)
+	if err != nil {
+		panic(sdkerrors.Wrap(err, "packing checkpoint"))
+	}
+	return crypto.Keccak256Hash(abiEncodedCall[4:]).Bytes()
+}
+
+func PackDeployERC20(denom string, name string, symbol string, decimals uint8) []byte {
+	return packCall(gravitytypes.DeployERC20ABIJSON, "deployERC20", []interface{}{
+		denom,
+		name,
+		symbol,
+		decimals,
+	})
+}
+
+func PackSendToCosmos(tokenContract common.Address, destination sdk.AccAddress, amount sdk.Int) []byte {
+	return packCall(gravitytypes.SendToCosmosABIJSON, "sendToCosmos", []interface{}{
+		tokenContract,
+		destination.Bytes(),
+		amount,
+	})
 }
