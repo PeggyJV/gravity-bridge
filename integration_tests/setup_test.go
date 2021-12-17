@@ -747,15 +747,15 @@ func (s *IntegrationTestSuite) deployERC20(denom string, name string, symbol str
 	return err
 }
 
-func (s *IntegrationTestSuite) sendToCosmos(destination sdk.ValAddress, amount sdk.Int) error {
+func (s *IntegrationTestSuite) sendToCosmos(destination sdk.AccAddress, amount sdk.Int) error {
 	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
 	if err != nil {
 		return err
 	}
 
-	data := gravitytypes.PackSendToCosmos(testERC20contract)
+	data := gravitytypes.PackSendToCosmos(testERC20contract, destination, amount)
 
-	bz, err := ethClient.CallContract(context.Background(), ethereum.CallMsg{
+	_, err = ethClient.CallContract(context.Background(), ethereum.CallMsg{
 		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
 		To:   &gravityContract,
 		Gas:  0,
