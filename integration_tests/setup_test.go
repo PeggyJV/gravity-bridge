@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
@@ -727,4 +728,46 @@ func (s *IntegrationTestSuite) TestBasicChain() {
 	// this test verifies that the setup functions all operate as expected
 	s.Run("bring up basic chain", func() {
 	})
+}
+
+func (s *IntegrationTestSuite) deployERC20(denom string, name string, symbol string, decimals uint8) error {
+	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
+	if err != nil {
+		return err
+	}
+
+	data := gravitytypes.PackDeployERC20(denom, name, symbol, decimals)
+
+	_, err = ethClient.CallContract(context.Background(), ethereum.CallMsg{
+		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
+		To:   &gravityContract,
+		Gas:  0,
+		Data: data,
+	}, nil)
+	return err
+}
+
+func (s *IntegrationTestSuite) sendToCosmos(destination sdk.ValAddress, amount sdk.Int) error {
+	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
+	if err != nil {
+		return err
+	}
+
+	data := gravitytypes.PackSendToCosmos()
+
+	bz, err := ethClient.CallContract(context.Background(), ethereum.CallMsg{
+		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
+		To:   &gravityContract,
+		Gas:  0,
+		Data: types.ABIEncodedCellarTickInfoBytes(uint(0)),
+	}, nil)
+	if err != nil {
+		return nil, err
+	}
+	tr, err := types.BytesToABIEncodedTickRange(bz)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil
 }

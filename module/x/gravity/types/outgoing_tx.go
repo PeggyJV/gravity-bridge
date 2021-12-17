@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	gethcommon "github.com/ethereum/go-ethereum/common"
@@ -217,4 +218,21 @@ func packCall(abiString, method string, args []interface{}) []byte {
 		panic(sdkerrors.Wrap(err, "packing checkpoint"))
 	}
 	return crypto.Keccak256Hash(abiEncodedCall[4:]).Bytes()
+}
+
+func PackDeployERC20(denom string, name string, symbol string, decimals uint8) []byte {
+	return packCall(DeployERC20ABIJSON, "deployERC20", []interface{}{
+		denom,
+		name,
+		symbol,
+		decimals,
+	})
+}
+
+func PackSendToCosmos(tokenContract gethcommon.Address, destination gethcommon.Address, amount sdk.Int) []byte {
+	return packCall(SendToCosmosABIJSON, "sendToCosmos", []interface{}{
+		tokenContract,
+		destination,
+		amount,
+	})
 }

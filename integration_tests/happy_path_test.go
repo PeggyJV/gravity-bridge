@@ -10,9 +10,11 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 	s.Run("Bring up chain, and test the happy path", func() {
 		// Send a new DenomToERC20 request for a test erc20
 
+		sendToCosmosMsg := types.NewMsgS
+
 		sendToEthereumMsg := types.NewMsgSendToEthereum(
-			s.chain.validators[0].keyInfo.GetAddress(),
-			s.chain.validators[1].ethereumKey.address,
+			s.chain.validators[1].keyInfo.GetAddress(),
+			s.chain.validators[2].ethereumKey.address,
 			sdk.Coin{Denom: "DDS", Amount: sdk.NewInt(100)},
 			sdk.Coin{Denom: "DDS", Amount: sdk.NewInt(1)},
 		)
