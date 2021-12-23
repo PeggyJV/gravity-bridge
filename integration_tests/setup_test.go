@@ -5,9 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/crypto"
 	"math/big"
 	"os"
 	"path"
@@ -16,6 +13,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -780,7 +780,7 @@ func packCall(abiString, method string, args []interface{}) []byte {
 	if err != nil {
 		panic(sdkerrors.Wrap(err, "packing checkpoint"))
 	}
-	return crypto.Keccak256Hash(abiEncodedCall[4:]).Bytes()
+	return abiEncodedCall
 }
 
 func PackDeployERC20(denom string, name string, symbol string, decimals uint8) []byte {
@@ -793,9 +793,18 @@ func PackDeployERC20(denom string, name string, symbol string, decimals uint8) [
 }
 
 func PackSendToCosmos(tokenContract common.Address, destination sdk.AccAddress, amount sdk.Int) []byte {
+	destinationBytes, _ := byteArrayToFixByteArray(destination.Bytes())
 	return packCall(gravitytypes.SendToCosmosABIJSON, "sendToCosmos", []interface{}{
 		tokenContract,
-		destination.Bytes(),
-		amount,
+		destinationBytes,
+		amount.BigInt(),
 	})
+}
+
+func byteArrayToFixByteArray(b []byte) (out [32]byte, err error) {
+	if len(b) > 32 {
+		return out, fmt.Errorf("array too long")
+	}
+	copy(out[:], b)
+	return out, nil
 }
