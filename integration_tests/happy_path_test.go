@@ -2,6 +2,7 @@ package integration_tests
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
 	"time"
 )
@@ -9,7 +10,15 @@ import (
 func (s *IntegrationTestSuite) TestHappyPath() {
 	s.Run("Bring up chain, and test the happy path", func() {
 		err := s.approveERC20()
-		s.Require().NoError(err, "error approving balance for the gravity contract")
+		s.Require().NoError(err, "error approving spending balance for the gravity contract on behalf of the first validator")
+
+		allowance, err := s.getERC20AllowanceOf(common.HexToAddress(s.chain.validators[0].ethereumKey.address), gravityContract)
+		s.Require().NoError(err, "error getting allowance of gravity contract spending on behalf of first validator")
+		s.Require().Equal(UInt256Max().BigInt(), allowance.BigInt(), "spending allowance not set correctly, got: %s", allowance.String())
+
+		balance, err := s.getEthBalanceOf(common.HexToAddress(s.chain.validators[0].ethereumKey.address))
+		s.Require().NoError(err, "error getting first validator balance")
+		s.Require().Equal(sdk.NewUint(10000).BigInt(), balance.BigInt(), "balance was %s, expected 10000", balance.String())
 
 		err = s.sendToCosmos(s.chain.validators[0].keyInfo.GetAddress(), sdk.NewInt(200))
 		s.Require().NoError(err, "error sending test denom to cosmos")

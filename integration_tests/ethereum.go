@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	gravitytypes "github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"math/big"
 	"strings"
 )
 
@@ -63,6 +64,59 @@ const approveERC20ABIJSON = `
 ]
 `
 
+const balanceOfERC20ABIJSON = `
+[
+	{
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+]
+`
+
+const allowanceERC20ABIJSON = `
+[
+	{
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        }
+      ],
+      "name": "allowance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+]
+`
+
 func packCall(abiString, method string, args []interface{}) []byte {
 	encodedCall, err := abi.JSON(strings.NewReader(abiString))
 	if err != nil {
@@ -93,12 +147,35 @@ func PackSendToCosmos(tokenContract common.Address, destination sdk.AccAddress, 
 	})
 }
 
+func UInt256Max() sdk.Uint {
+	return sdk.RelativePow(sdk.NewUint(2), sdk.NewUint(255), sdk.OneUint())
+}
+
 func PackApproveERC20(spender common.Address) []byte {
-	u256max := sdk.RelativePow(sdk.NewUint(2), sdk.NewUint(255), sdk.OneUint())
 	return packCall(approveERC20ABIJSON, "approve", []interface{}{
 		spender,
-		u256max.BigInt(),
+		UInt256Max().BigInt(),
 	})
+}
+
+func PackBalanceOf(account common.Address) []byte {
+	return packCall(balanceOfERC20ABIJSON, "balanceOf", []interface{}{
+		account,
+	})
+}
+
+func PackAllowance(owner common.Address, spender common.Address) []byte {
+	return packCall(allowanceERC20ABIJSON, "allowance", []interface{}{
+		owner,
+		spender,
+	})
+}
+
+func UnpackEthUInt(bz []byte) sdk.Int {
+	output := big.NewInt(0)
+	output.SetBytes(bz)
+
+	return sdk.NewIntFromBigInt(output)
 }
 
 func byteArrayToFixByteArray(b []byte) (out [32]byte, err error) {

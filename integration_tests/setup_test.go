@@ -788,3 +788,49 @@ func (s *IntegrationTestSuite) sendToCosmos(destination sdk.AccAddress, amount s
 
 	return nil
 }
+
+func (s *IntegrationTestSuite) getEthBalanceOf(account common.Address) (*sdk.Int, error) {
+	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
+	if err != nil {
+		return nil, err
+	}
+
+	data := PackBalanceOf(account)
+
+	response, err := ethClient.CallContract(context.Background(), ethereum.CallMsg{
+		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
+		To:   &testERC20contract,
+		Gas:  0,
+		Data: data,
+	}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	balance := UnpackEthUInt(response)
+
+	return &balance, err
+}
+
+func (s *IntegrationTestSuite) getERC20AllowanceOf(owner common.Address, spender common.Address) (*sdk.Int, error) {
+	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
+	if err != nil {
+		return nil, err
+	}
+
+	data := PackAllowance(owner, spender)
+
+	response, err := ethClient.CallContract(context.Background(), ethereum.CallMsg{
+		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
+		To:   &testERC20contract,
+		Gas:  0,
+		Data: data,
+	}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	allowance := UnpackEthUInt(response)
+
+	return &allowance, err
+}
