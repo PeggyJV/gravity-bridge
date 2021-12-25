@@ -191,6 +191,9 @@ pub fn ethereum_event_messages(
         unordered_msgs.insert(logic_call.event_nonce, msg);
     }
     for valset in valsets {
+        // note that SignerSetTxExecutedEvent does not include reward amount or
+        // reward token, which is fine since we are not actually using them at the
+        // moment, but it is part of the contract-defined event
         let event = proto::SignerSetTxExecutedEvent {
             event_nonce: downcast_to_u64(valset.event_nonce.clone()).unwrap(),
             signer_set_tx_nonce: downcast_to_u64(valset.valset_nonce.clone()).unwrap(),

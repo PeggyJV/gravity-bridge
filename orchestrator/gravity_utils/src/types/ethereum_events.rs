@@ -86,11 +86,15 @@ pub trait EventNonceFilter: Sized {
 }
 
 /// A parsed struct representing the Ethereum event fired by the Gravity contract
-/// when the validator set is updated.
+/// when the validator set is updated. Reward amount and reward token are included
+/// as part of the contract-defined type, but currently they will always be zeroed
+/// out.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, Eq, PartialEq, Hash)]
 pub struct ValsetUpdatedEvent {
     pub valset_nonce: U256,
     pub event_nonce: U256,
+    pub reward_amount: U256,
+    pub reward_token: EthAddress,
     pub block_height: U256,
     pub members: Vec<ValsetMember>,
 }
@@ -141,6 +145,8 @@ impl FromLog for ValsetUpdatedEvent {
         Ok(ValsetUpdatedEvent {
             valset_nonce: event.new_valset_nonce,
             event_nonce: event.event_nonce,
+            reward_amount: event.reward_amount,
+            reward_token: event.reward_token,
             block_height: block_height_from_log(&input)?,
             members: validators,
         })
@@ -280,7 +286,7 @@ impl EventNonce for Erc20DeployedEvent {
 impl EventNonceFilter for Erc20DeployedEvent {}
 
 /// A parsed struct representing the Ethereum event fired when someone uses the Gravity
-/// contract to send an arbitrary logic call
+/// contract to send an arbitrary logic call.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, Eq, PartialEq, Hash)]
 pub struct LogicCallExecutedEvent {
     pub invalidation_id: Vec<u8>,
