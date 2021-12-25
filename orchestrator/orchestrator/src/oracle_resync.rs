@@ -112,7 +112,7 @@ pub async fn get_last_checked_block(
             match Erc20DeployedEvent::from_log(&event) {
                 Ok(deploy) => {
                     trace!(
-                        "{} deploy event nonce {} last event nonce",
+                        "{} ERC20 deploy event nonce, {} last event nonce",
                         deploy.event_nonce,
                         last_event_nonce
                     );
@@ -120,7 +120,7 @@ pub async fn get_last_checked_block(
                         return event.block_number.unwrap();
                     }
                 }
-                Err(e) => error!("Got ERC20Deployed event that we can't parse {}", e),
+                Err(e) => error!("Got ERC20DeployedEvent that we can't parse: {}", e),
             }
         }
 
@@ -128,7 +128,7 @@ pub async fn get_last_checked_block(
             match LogicCallExecutedEvent::from_log(&event) {
                 Ok(call) => {
                     trace!(
-                        "{} LogicCall event nonce {} last event nonce",
+                        "{} logic call event nonce, {} last event nonce",
                         call.event_nonce,
                         last_event_nonce
                     );
@@ -136,7 +136,7 @@ pub async fn get_last_checked_block(
                         return event.block_number.unwrap();
                     }
                 }
-                Err(e) => error!("Got ERC20Deployed event that we can't parse {}", e),
+                Err(e) => error!("Got LogicCallExecutedEvent that we can't parse: {}", e),
             }
         }
 
@@ -145,7 +145,7 @@ pub async fn get_last_checked_block(
             match SendToCosmosEvent::from_log(&event, &prefix.as_str()) {
                 Ok(send) => {
                     trace!(
-                        "{} send event nonce {} last event nonce",
+                        "{} send to Cosmos event nonce, {} last event nonce",
                         send.event_nonce,
                         last_event_nonce
                     );
@@ -153,7 +153,7 @@ pub async fn get_last_checked_block(
                         return event.block_number.unwrap();
                     }
                 }
-                Err(e) => error!("Got SendToCosmos event that we can't parse {}", e),
+                Err(e) => error!("Got SendToCosmosEvent that we can't parse: {}", e),
             }
         }
 
@@ -161,7 +161,7 @@ pub async fn get_last_checked_block(
             match TransactionBatchExecutedEvent::from_log(&event) {
                 Ok(batch) => {
                     trace!(
-                        "{} batch event nonce {} last event nonce",
+                        "{} transaction batch event nonce, {} last event nonce",
                         batch.event_nonce,
                         last_event_nonce
                     );
@@ -169,7 +169,7 @@ pub async fn get_last_checked_block(
                         return event.block_number.unwrap();
                     }
                 }
-                Err(e) => error!("Got batch event that we can't parse {}", e),
+                Err(e) => error!("Got TransactionBatchExecutedEvent that we can't parse: {}", e),
             }
         }
 
