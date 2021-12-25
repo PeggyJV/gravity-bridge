@@ -191,7 +191,7 @@ pub async fn get_last_checked_block(
                     let common_case =
                         valset.event_nonce == last_event_nonce && event.block_number.is_some();
                     trace!(
-                        "{} valset event nonce {} last event nonce",
+                        "{} valset updated event nonce, {} last event nonce",
                         valset.event_nonce,
                         last_event_nonce
                     );
@@ -204,7 +204,7 @@ pub async fn get_last_checked_block(
                         panic!("Could not find the last event relayed by {}, Last Event nonce is {} but no event matching that could be found!", our_cosmos_address, last_event_nonce)
                     }
                 }
-                Err(e) => error!("Got valset event that we can't parse {}", e),
+                Err(e) => error!("Got ValsetUpdatedEvent that we can't parse: {}", e),
             }
         }
 
