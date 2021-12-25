@@ -14,9 +14,6 @@ import (
 	"testing"
 	"time"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -750,6 +747,27 @@ func (s *IntegrationTestSuite) deployERC20(denom string, name string, symbol str
 	return err
 }
 
+func (s *IntegrationTestSuite) approveERC20() error {
+	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
+	if err != nil {
+		return err
+	}
+
+	data := PackApproveERC20(gravityContract)
+
+	_, err = ethClient.CallContract(context.Background(), ethereum.CallMsg{
+		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
+		To:   &testERC20contract,
+		Gas:  0,
+		Data: data,
+	}, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *IntegrationTestSuite) sendToCosmos(destination sdk.AccAddress, amount sdk.Int) error {
 	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
 	if err != nil {
@@ -769,42 +787,4 @@ func (s *IntegrationTestSuite) sendToCosmos(destination sdk.AccAddress, amount s
 	}
 
 	return nil
-}
-
-func packCall(abiString, method string, args []interface{}) []byte {
-	encodedCall, err := abi.JSON(strings.NewReader(abiString))
-	if err != nil {
-		panic(sdkerrors.Wrap(err, "bad ABI definition in code"))
-	}
-	abiEncodedCall, err := encodedCall.Pack(method, args...)
-	if err != nil {
-		panic(sdkerrors.Wrap(err, "packing checkpoint"))
-	}
-	return abiEncodedCall
-}
-
-func PackDeployERC20(denom string, name string, symbol string, decimals uint8) []byte {
-	return packCall(gravitytypes.DeployERC20ABIJSON, "deployERC20", []interface{}{
-		denom,
-		name,
-		symbol,
-		decimals,
-	})
-}
-
-func PackSendToCosmos(tokenContract common.Address, destination sdk.AccAddress, amount sdk.Int) []byte {
-	destinationBytes, _ := byteArrayToFixByteArray(destination.Bytes())
-	return packCall(gravitytypes.SendToCosmosABIJSON, "sendToCosmos", []interface{}{
-		tokenContract,
-		destinationBytes,
-		amount.BigInt(),
-	})
-}
-
-func byteArrayToFixByteArray(b []byte) (out [32]byte, err error) {
-	if len(b) > 32 {
-		return out, fmt.Errorf("array too long")
-	}
-	copy(out[:], b)
-	return out, nil
 }

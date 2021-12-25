@@ -8,7 +8,10 @@ import (
 
 func (s *IntegrationTestSuite) TestHappyPath() {
 	s.Run("Bring up chain, and test the happy path", func() {
-		err := s.sendToCosmos(s.chain.validators[0].keyInfo.GetAddress(), sdk.NewInt(200))
+		err := s.approveERC20()
+		s.Require().NoError(err, "error approving balance for the gravity contract")
+
+		err = s.sendToCosmos(s.chain.validators[0].keyInfo.GetAddress(), sdk.NewInt(200))
 		s.Require().NoError(err, "error sending test denom to cosmos")
 
 		sendToEthereumMsg := types.NewMsgSendToEthereum(

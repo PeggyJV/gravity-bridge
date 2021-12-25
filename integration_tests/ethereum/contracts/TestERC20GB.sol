@@ -1,7 +1,6 @@
 pragma solidity ^0.6.6;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-// One of three testing coins
 contract TestERC20GB is ERC20 {
     constructor() public ERC20("DollaryDoos", "DDS") {
         // the four test validators
