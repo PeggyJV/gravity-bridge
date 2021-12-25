@@ -34,12 +34,13 @@ pub async fn check_for_events(
     gravity_contract_address: EthAddress,
     cosmos_key: CosmosPrivateKey,
     starting_block: U64,
+    block_delay: U64,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) -> Result<U64, GravityError> {
     let prefix = contact.get_prefix();
     let our_cosmos_address = cosmos_key.to_address(&prefix).unwrap();
     let latest_block = get_block_number_with_retry(eth_client.clone()).await;
-    let latest_block = latest_block - get_block_delay(eth_client.clone()).await?;
+    let latest_block = latest_block - block_delay;
 
     metrics::set_ethereum_check_for_events_starting_block(starting_block.as_u64());
     metrics::set_ethereum_check_for_events_end_block(latest_block.as_u64());
