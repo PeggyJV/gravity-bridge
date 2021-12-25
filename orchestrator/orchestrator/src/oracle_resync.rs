@@ -81,12 +81,11 @@ pub async fn get_last_checked_block(
         let logic_call_events = eth_client.get_logs(&logic_call_filter).await;
         let send_to_cosmos_events = eth_client.get_logs(&send_to_cosmos_filter).await;
         let transaction_batch_events = eth_client.get_logs(&transaction_batch_filter).await;
-        let valset_updated_events = eth_client.get_logs(&valset_updated_filter).await;
-
         // valset update events have one special property that is useful to us in this handler:
         // a valset update event for nonce 0 is emitted in the contract constructor meaning once you
         // find that event you can exit the search with confidence that you have not missed any events
         // without searching the entire blockchain history
+        let valset_updated_events = eth_client.get_logs(&valset_updated_filter).await;
 
         if erc20_deployed_events.is_err()
             || logic_call_events.is_err()
