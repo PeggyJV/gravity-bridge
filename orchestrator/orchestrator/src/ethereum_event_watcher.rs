@@ -122,7 +122,7 @@ pub async fn check_for_events(
 
     for erc20_deployed_event in erc20_deployed_events.iter() {
         info!(
-            "Oracle observed ERC20 deploy with denom {} erc20 name {} and symbol {} and event_nonce {}",
+            "Oracle observed ERC20 deploy with denom {}, erc20 name {}, symbol {}, and event_nonce {}",
             erc20_deployed_event.cosmos_denom,
             erc20_deployed_event.name,
             erc20_deployed_event.symbol,
@@ -132,7 +132,7 @@ pub async fn check_for_events(
 
     for logic_call_event in logic_call_events.iter() {
         info!(
-            "Oracle observed logic call execution with invalidation_id {} invalidation_nonce {} and event_nonce {}",
+            "Oracle observed logic call execution with invalidation_id {}, invalidation_nonce {}, and event_nonce {}",
             bytes_to_hex_str(&logic_call_event.invalidation_id),
             logic_call_event.invalidation_nonce,
             logic_call_event.event_nonce
@@ -141,7 +141,7 @@ pub async fn check_for_events(
 
     for send_to_cosmos_event in send_to_cosmos_events.iter() {
         info!(
-            "Oracle observed deposit with ethereum sender {}, cosmos_reciever {}, amount {}, and event nonce {}",
+            "Oracle observed send to cosmos event with ethereum sender {}, cosmos receiver {}, amount {}, and event nonce {}",
             send_to_cosmos_event.sender,
             send_to_cosmos_event.destination,
             send_to_cosmos_event.amount,
@@ -160,7 +160,7 @@ pub async fn check_for_events(
 
     for valset_updated_event in valset_updated_events.iter() {
         info!(
-            "Oracle observed valset with valset_nonce {}, event_nonce {}, block_height {} and members {:?}",
+            "Oracle observed valset update with valset_nonce {}, event_nonce {}, block_height {}, and members {:?}",
             valset_updated_event.valset_nonce,
             valset_updated_event.event_nonce,
             valset_updated_event.block_height,
@@ -219,11 +219,16 @@ pub async fn check_for_events(
         let timeout = time::Duration::from_secs(30);
         contact.wait_for_next_block(timeout).await?;
 
+        // TODO(bolten): we are only waiting one block, is it possible if we are sending multiple
+        // events via the sender, they could be received over the block boundary and thus our new
+        // event nonce does not reflect full processing of the above events?
         let new_event_nonce = get_last_event_nonce(grpc_client, our_cosmos_address).await?;
         if new_event_nonce == last_event_nonce {
             return Err(GravityError::InvalidBridgeStateError(
                 format!("Claims did not process, trying to update but still on {}, trying again in a moment", last_event_nonce),
             ));
+        } else {
+            info!("Claims processed, new nonce: {}", new_event_nonce);
         }
     }
 
