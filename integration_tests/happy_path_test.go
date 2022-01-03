@@ -20,7 +20,8 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		s.Require().NoError(err, "error getting first validator balance")
 		s.Require().Equal(sdk.NewUint(10000).BigInt(), balance.BigInt(), "balance was %s, expected 10000", balance.String())
 
-		err = s.sendToCosmos(s.chain.validators[0].keyInfo.GetAddress(), sdk.NewInt(200))
+		// send from val 0 on eth to val 1 on cosmos
+		err = s.sendToCosmos(s.chain.validators[1].keyInfo.GetAddress(), sdk.NewInt(200))
 		s.Require().NoError(err, "error sending test denom to cosmos")
 
 		sendToEthereumMsg := types.NewMsgSendToEthereum(
