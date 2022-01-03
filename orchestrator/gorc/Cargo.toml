@@ -1,7 +1,7 @@
 [package]
 name = "gorc"
 authors = []
-version = "0.2.23"
+version = "0.3.0"
 edition = "2021"
 rust-version = "1.56"
 
@@ -19,7 +19,7 @@ orchestrator = { path = "../orchestrator" }
 relayer = { path = "../relayer" }
 
 deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="master"}
-ethers = { git = "https://github.com/gakonst/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
+ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
 clarity = "0.4.12"
 actix-rt = "2.5"
 rpassword = "5"
