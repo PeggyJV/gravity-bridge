@@ -34,12 +34,12 @@ contract CosmosERC20 is ERC20 {
 	// a totally accurate supply would require constant updates from the Cosmos
 	// side, while in theory this could be piggy-backed on some existing bridge
 	// operation it's a lot of complextiy to add so we chose to forgoe it.
-
+	
 	/**
 	 * @dev Returns the number of tokens not currently held by the gravity address
 	 *
 
-	 */
+	 */	
 	function totalSupply() public view virtual override returns (uint256) {
 		return MAX_UINT - balanceOf(gravity);
 	}
@@ -55,16 +55,16 @@ contract CosmosERC20 is ERC20 {
 	function setGravityContract(address _gravityAddress) external onlyGravity {
 
 		gravity = _gravityAddress;
-	}
+	 }
 
 	/**
-	 * @dev Overrides the decimal function in the base ERC20 contract.
+	 * @dev Overrides the decimal function in the base ERC20 contract. 
 	 * This override is needed to Ethereum wallets display tokens consistently
 	 * with how Cosmos wallets display the native version of the token.
 	 */
 
-	function decimals()public view override returns (uint8){
-		return cosmosDecimals;
-	}
+   function decimals()public view override returns (uint8){
+	   return cosmosDecimals;
+   }
 
 }
