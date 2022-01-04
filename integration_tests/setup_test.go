@@ -3,8 +3,10 @@ package integration_tests
 import (
 	"bytes"
 	"context"
+	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/big"
 	"os"
 	"path"
@@ -16,6 +18,8 @@ import (
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/cosmos/cosmos-sdk/server"
@@ -748,45 +752,11 @@ func (s *IntegrationTestSuite) deployERC20(denom string, name string, symbol str
 }
 
 func (s *IntegrationTestSuite) approveERC20() error {
-	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
-	if err != nil {
-		return err
-	}
-
-	data := PackApproveERC20(gravityContract)
-
-	_, err = ethClient.CallContract(context.Background(), ethereum.CallMsg{
-		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
-		To:   &testERC20contract,
-		Gas:  0,
-		Data: data,
-	}, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return s.SendEthTransaction(testERC20contract, PackApproveERC20(gravityContract))
 }
 
 func (s *IntegrationTestSuite) sendToCosmos(destination sdk.AccAddress, amount sdk.Int) error {
-	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
-	if err != nil {
-		return err
-	}
-
-	data := PackSendToCosmos(testERC20contract, destination, amount)
-
-	_, err = ethClient.CallContract(context.Background(), ethereum.CallMsg{
-		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
-		To:   &gravityContract,
-		Gas:  0,
-		Data: data,
-	}, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return s.SendEthTransaction(gravityContract, PackSendToCosmos(testERC20contract, destination, amount))
 }
 
 func (s *IntegrationTestSuite) getEthBalanceOf(account common.Address) (*sdk.Int, error) {
@@ -833,4 +803,54 @@ func (s *IntegrationTestSuite) getERC20AllowanceOf(owner common.Address, spender
 	allowance := UnpackEthUInt(response)
 
 	return &allowance, err
+}
+
+func (s *IntegrationTestSuite) SendEthTransaction(toAddress common.Address, data []byte) error {
+	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
+	if err != nil {
+		return err
+	}
+
+	privateKey, err := crypto.HexToECDSA(s.chain.validators[0].ethereumKey.privateKey[2:])
+	if err != nil {
+		return err
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("error casting public key to ECDSA")
+	}
+
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	nonce, err := ethClient.PendingNonceAt(context.Background(), fromAddress)
+	if err != nil {
+		return err
+	}
+
+	value := big.NewInt(0)
+	gasLimit := uint64(500000)
+	gasPrice, err := ethClient.SuggestGasPrice(context.Background())
+	if err != nil {
+		return err
+	}
+
+	tx := types.NewTransaction(nonce, toAddress, value, gasLimit, gasPrice, data)
+
+	chainID, err := ethClient.NetworkID(context.Background())
+	if err != nil {
+		return err
+	}
+
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
+	if err != nil {
+		return err
+	}
+
+	err = ethClient.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
