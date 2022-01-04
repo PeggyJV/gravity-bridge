@@ -2,13 +2,14 @@ package integration_tests
 
 import (
 	"fmt"
+	"math/big"
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	gravitytypes "github.com/peggyjv/gravity-bridge/module/x/gravity/types"
-	"math/big"
-	"strings"
 )
 
 type EthereumConfig struct {
@@ -147,14 +148,14 @@ func PackSendToCosmos(tokenContract common.Address, destination sdk.AccAddress, 
 	})
 }
 
-func UInt256Max() sdk.Uint {
-	return sdk.RelativePow(sdk.NewUint(2), sdk.NewUint(255), sdk.OneUint())
+func UInt256Max() *big.Int {
+	return new(big.Int).Sub(new(big.Int).Lsh(common.Big1, 256), common.Big1)
 }
 
 func PackApproveERC20(spender common.Address) []byte {
 	return packCall(approveERC20ABIJSON, "approve", []interface{}{
 		spender,
-		UInt256Max().BigInt(),
+		UInt256Max(),
 	})
 }
 

@@ -1,10 +1,11 @@
 package integration_tests
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
-	"time"
 )
 
 func (s *IntegrationTestSuite) TestHappyPath() {
@@ -14,7 +15,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 		allowance, err := s.getERC20AllowanceOf(common.HexToAddress(s.chain.validators[0].ethereumKey.address), gravityContract)
 		s.Require().NoError(err, "error getting allowance of gravity contract spending on behalf of first validator")
-		s.Require().Equal(UInt256Max().BigInt(), allowance.BigInt(), "spending allowance not set correctly, got: %s", allowance.String())
+		s.Require().Equal(UInt256Max(), allowance.BigInt(), "spending allowance not set correctly, got: %s", allowance.String())
 
 		balance, err := s.getEthBalanceOf(common.HexToAddress(s.chain.validators[0].ethereumKey.address))
 		s.Require().NoError(err, "error getting first validator balance")
