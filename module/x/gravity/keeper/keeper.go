@@ -562,3 +562,65 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 	)
 	return newContractCallTx
 }
+
+/////////////////
+// MIGRATE     //
+/////////////////
+
+// Clean up all state associated a previous gravity contract and set a new contract. This is intended to run in the upgrade handler.
+func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string, bridgeDeploymentHeight uint64) {
+
+	// Delete Any Outgoing TXs.
+
+	prefixStoreOtx := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.OutgoingTxKey})
+	iterOtx := prefixStoreOtx.ReverseIterator(nil, nil)
+	defer iterOtx.Close()
+	for ; iterOtx.Valid(); iterOtx.Next() {
+
+		var any cdctypes.Any
+		k.cdc.MustUnmarshal(iterOtx.Value(), &any)
+		var otx types.OutgoingTx
+		if err := k.cdc.UnpackAny(&any, &otx); err != nil {
+			panic(err)
+		}
+		// Delete any partial Eth Signatures handging around
+		prefixStoreSig := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.EthereumSignatureKey}, otx.GetStoreIndex()...))
+		iterSig := prefixStoreSig.Iterator(nil, nil)
+		defer iterSig.Close()
+
+		for ; iterSig.Valid(); iterSig.Next() {
+			prefixStoreSig.Delete(iterSig.Key())
+		}
+
+		prefixStoreOtx.Delete(iterOtx.Key())
+	}
+
+	//Reset the last observed signer set nonce
+	ctx.KVStore(k.storeKey).Set([]byte{types.LatestSignerSetTxNonceKey}, sdk.Uint64ToBigEndian(0))
+
+	prefixStoreEthereumEvent := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.EthereumEventVoteRecordKey})
+
+	//Delete all Ethereum Events
+
+	iterEvent := prefixStoreEthereumEvent.Iterator(nil, nil)
+	defer iterEvent.Close()
+	for ; iterEvent.Valid(); iterEvent.Next() {
+		prefixStoreEthereumEvent.Delete(iterEvent.Key())
+	}
+
+	//Rest the Ethereum Event Nonce to Zero
+	store := ctx.KVStore(k.storeKey)
+	store.Set([]byte{types.LastObservedEventNonceKey}, sdk.Uint64ToBigEndian(0))
+
+	// Set the Last oberved Ethereum Blockheight to zero
+	height := types.LatestEthereumBlockHeight{
+		EthereumHeight: (bridgeDeploymentHeight - 1),
+		CosmosHeight:   uint64(ctx.BlockHeight()),
+	}
+	store.Set([]byte{types.LastEthereumBlockHeightKey}, k.cdc.MustMarshal(&height))
+
+	// Update the bridge contract address
+	params := k.GetParams(ctx)
+	params.BridgeEthereumAddress = newBridgeAddress
+	k.setParams(ctx, params)
+}
