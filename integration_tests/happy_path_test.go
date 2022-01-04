@@ -26,14 +26,14 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		s.Require().NoError(err, "error sending test denom to cosmos")
 
 		sendToEthereumMsg := types.NewMsgSendToEthereum(
-			s.chain.validators[0].keyInfo.GetAddress(),
+			s.chain.validators[1].keyInfo.GetAddress(),
 			s.chain.validators[1].ethereumKey.address,
 			sdk.Coin{Denom: "DDS", Amount: sdk.NewInt(100)},
 			sdk.Coin{Denom: "DDS", Amount: sdk.NewInt(1)},
 		)
 
 		s.Require().Eventuallyf(func() bool {
-			val := s.chain.validators[0]
+			val := s.chain.validators[1]
 			keyring, err := val.keyring()
 			s.Require().NoError(err)
 			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", val.keyInfo.GetAddress())

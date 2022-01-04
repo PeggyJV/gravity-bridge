@@ -752,11 +752,11 @@ func (s *IntegrationTestSuite) deployERC20(denom string, name string, symbol str
 }
 
 func (s *IntegrationTestSuite) approveERC20() error {
-	return s.SendEthTransaction(testERC20contract, PackApproveERC20(gravityContract))
+	return s.SendEthTransaction(s.chain.validators[0], testERC20contract, PackApproveERC20(gravityContract))
 }
 
 func (s *IntegrationTestSuite) sendToCosmos(destination sdk.AccAddress, amount sdk.Int) error {
-	return s.SendEthTransaction(gravityContract, PackSendToCosmos(testERC20contract, destination, amount))
+	return s.SendEthTransaction(s.chain.validators[0], gravityContract, PackSendToCosmos(testERC20contract, destination, amount))
 }
 
 func (s *IntegrationTestSuite) getEthBalanceOf(account common.Address) (*sdk.Int, error) {
@@ -805,13 +805,13 @@ func (s *IntegrationTestSuite) getERC20AllowanceOf(owner common.Address, spender
 	return &allowance, err
 }
 
-func (s *IntegrationTestSuite) SendEthTransaction(toAddress common.Address, data []byte) error {
+func (s *IntegrationTestSuite) SendEthTransaction(validator *validator, toAddress common.Address, data []byte) error {
 	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
 	if err != nil {
 		return err
 	}
 
-	privateKey, err := crypto.HexToECDSA(s.chain.validators[0].ethereumKey.privateKey[2:])
+	privateKey, err := crypto.HexToECDSA(validator.ethereumKey.privateKey[2:])
 	if err != nil {
 		return err
 	}
