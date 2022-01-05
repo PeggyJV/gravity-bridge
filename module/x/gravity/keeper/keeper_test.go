@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -158,7 +159,7 @@ func TestStoreEventVoteRecord(t *testing.T) {
 
 	cctxe := &types.ContractCallExecutedEvent{
 		EventNonce:        2,
-		InvalidationScope:    []byte{0x1, 0x2},
+		InvalidationScope: []byte{0x1, 0x2},
 		InvalidationNonce: 1,
 		EthereumHeight:    11,
 	}
@@ -502,6 +503,147 @@ func TestKeeper_GetEthereumSignatures(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestKeeper_Migration(t *testing.T) {
+
+	input := CreateTestEnv(t)
+	gk := input.GravityKeeper
+	ctx := input.Context
+
+	stce := &types.SendToCosmosEvent{
+		EventNonce:     1,
+		TokenContract:  EthAddrs[0].Hex(),
+		EthereumSender: EthAddrs[0].Hex(),
+		CosmosReceiver: AccAddrs[0].String(),
+		EthereumHeight: 10,
+		Amount:         sdk.NewInt(1000000),
+	}
+	stcea, err := types.PackEvent(stce)
+	require.NoError(t, err)
+
+	evr := &types.EthereumEventVoteRecord{
+		Event: stcea,
+		Votes: []string{
+			ValAddrs[0].String(),
+			ValAddrs[1].String(),
+			ValAddrs[2].String(),
+		},
+		Accepted: false,
+	}
+
+	cctxe := &types.ContractCallExecutedEvent{
+		EventNonce:        2,
+		InvalidationScope: []byte{0x1, 0x2},
+		InvalidationNonce: 1,
+		EthereumHeight:    11,
+	}
+
+	cctxea, err := types.PackEvent(cctxe)
+	require.NoError(t, err)
+
+	evr2 := &types.EthereumEventVoteRecord{
+		Event: cctxea,
+		Votes: []string{
+			ValAddrs[2].String(),
+			ValAddrs[3].String(),
+			ValAddrs[4].String(),
+		},
+	}
+
+	//Put an outgoing transaction into the system
+
+	var (
+		now                 = time.Now().UTC()
+		mySender, _         = sdk.AccAddressFromBech32("cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn")
+		myReceiver          = common.HexToAddress("0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7")
+		myTokenContractAddr = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5") // Pickle
+		allVouchers         = sdk.NewCoins(
+			types.NewERC20Token(99999, myTokenContractAddr.Hex()).GravityCoin(),
+		)
+	)
+
+	// mint some voucher first
+	require.NoError(t, input.BankKeeper.MintCoins(ctx, types.ModuleName, allVouchers))
+	// set senders balance
+	input.AccountKeeper.NewAccountWithAddress(ctx, mySender)
+	require.NoError(t, fundAccount(ctx, input.BankKeeper, mySender, allVouchers))
+
+	// add some TX to the pool
+	input.AddSendToEthTxsToPool(t, ctx, myTokenContractAddr, mySender, myReceiver, 2, 3, 2, 1)
+
+	// when
+	ctx = ctx.WithBlockTime(now)
+
+	// tx batch size is 2, so that some of them stay behind
+	firstBatch := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
+
+	// then batch is persisted
+	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, firstBatch.GetStoreIndex())
+	require.NotNil(t, gotFirstBatch)
+
+	gk.setEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash(), evr)
+	gk.setLastObservedEventNonce(ctx, stce.GetEventNonce())
+	gk.setEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash(), evr2)
+	gk.setLastObservedEventNonce(ctx, cctxe.GetEventNonce())
+
+	stored := gk.GetEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash())
+	require.NotNil(t, stored)
+
+	ethAddr := common.HexToAddress("0x3146D2d6Eed46Afa423969f5dDC3152DfC359b09")
+
+	valAddr, err := sdk.ValAddressFromBech32("cosmosvaloper1jpz0ahls2chajf78nkqczdwwuqcu97w6z3plt4")
+	require.NoError(t, err)
+
+	{ // setup
+		batchTxConfirmation := &types.BatchTxConfirmation{
+			TokenContract:  "0x3146D2d6Eed46Afa423969f5dDC3152DfC359b09",
+			BatchNonce:     firstBatch.BatchNonce,
+			EthereumSigner: ethAddr.Hex(),
+			Signature:      []byte("fake-signature"),
+		}
+		key := gk.SetEthereumSignature(ctx, batchTxConfirmation, valAddr)
+		require.NotEmpty(t, key)
+	}
+
+	{ // validate
+		storeIndex := types.MakeBatchTxKey(ethAddr, firstBatch.BatchNonce)
+
+		{ // getEthereumSignature
+			got := gk.getEthereumSignature(ctx, storeIndex, valAddr)
+			require.Equal(t, []byte("fake-signature"), got)
+		}
+		{ // GetEthereumSignatures
+			got := gk.GetEthereumSignatures(ctx, storeIndex)
+			require.Len(t, got, 1)
+		}
+	}
+
+	nonce := gk.GetLastObservedEventNonce(ctx)
+	require.Equal(t, cctxe.GetEventNonce(), nonce)
+
+	gk.setLastObservedSignerSetTx(ctx, types.SignerSetTx{
+		Nonce:   1,
+		Height:  1,
+		Signers: nil,
+	})
+
+	gk.MigrateGravityContract(ctx, "0x5e175bE4d23Fa25604CE7848F60FB340894D5CDA", 1000)
+	stored2 := gk.GetEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash())
+	require.Nil(t, stored2)
+	nonce2 := gk.GetLastObservedEventNonce(ctx)
+	require.Equal(t, uint64(0), nonce2)
+
+	got := gk.GetLastObservedSignerSetTx(ctx)
+	require.Equal(t, got, &types.SignerSetTx{Nonce: 0x0, Height: 0x0, Signers: types.EthereumSigners(nil)})
+
+	{ // GetEthereumSignatures
+		storeIndex := types.MakeBatchTxKey(ethAddr, firstBatch.BatchNonce)
+
+		got := gk.GetEthereumSignatures(ctx, storeIndex)
+		require.Len(t, got, 0)
+	}
+
 }
 
 // TODO(levi) review/ensure coverage for:

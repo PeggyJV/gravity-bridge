@@ -619,6 +619,15 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string,
 	}
 	store.Set([]byte{types.LastEthereumBlockHeightKey}, k.cdc.MustMarshal(&height))
 
+	k.setLastObservedSignerSetTx(ctx, types.SignerSetTx{
+		Nonce:   0,
+		Height:  0,
+		Signers: nil,
+	})
+
+	// Set the batch Nonce to zero
+	store.Set([]byte{types.LastOutgoingBatchNonceKey}, sdk.Uint64ToBigEndian(0))
+
 	// Update the bridge contract address
 	params := k.GetParams(ctx)
 	params.BridgeEthereumAddress = newBridgeAddress
