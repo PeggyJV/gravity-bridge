@@ -597,7 +597,7 @@ func TestKeeper_Migration(t *testing.T) {
 
 	{ // setup
 		batchTxConfirmation := &types.BatchTxConfirmation{
-			TokenContract:  "0x3146D2d6Eed46Afa423969f5dDC3152DfC359b09",
+			TokenContract:  myTokenContractAddr.Hex(),
 			BatchNonce:     firstBatch.BatchNonce,
 			EthereumSigner: ethAddr.Hex(),
 			Signature:      []byte("fake-signature"),
@@ -607,7 +607,7 @@ func TestKeeper_Migration(t *testing.T) {
 	}
 
 	{ // validate
-		storeIndex := types.MakeBatchTxKey(ethAddr, firstBatch.BatchNonce)
+		storeIndex := gotFirstBatch.GetStoreIndex()
 
 		{ // getEthereumSignature
 			got := gk.getEthereumSignature(ctx, storeIndex, valAddr)
@@ -638,8 +638,7 @@ func TestKeeper_Migration(t *testing.T) {
 	require.Equal(t, got, &types.SignerSetTx{Nonce: 0x0, Height: 0x0, Signers: types.EthereumSigners(nil)})
 
 	{ // GetEthereumSignatures
-		storeIndex := types.MakeBatchTxKey(ethAddr, firstBatch.BatchNonce)
-
+		storeIndex := gotFirstBatch.GetStoreIndex()
 		got := gk.GetEthereumSignatures(ctx, storeIndex)
 		require.Len(t, got, 0)
 	}
