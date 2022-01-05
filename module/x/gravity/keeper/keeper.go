@@ -568,6 +568,9 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 /////////////////
 
 // Clean up all state associated a previous gravity contract and set a new contract. This is intended to run in the upgrade handler.
+// This implementation is partial at best. It doees not contain necessary functionality to freeze the bridge.
+// We will have yet to implement functionality to Migrate the Cosmos ERC20 tokens or any other ERC20 tokens bridged to the gravity contracts.
+// This just does keeper state cleanup if a new gravity contract has been deployed
 func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string, bridgeDeploymentHeight uint64) {
 
 	// Delete Any Outgoing TXs.
