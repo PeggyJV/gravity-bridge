@@ -572,7 +572,6 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 // We will have yet to implement functionality to Migrate the Cosmos ERC20 tokens or any other ERC20 tokens bridged to the gravity contracts.
 // This just does keeper state cleanup if a new gravity contract has been deployed
 func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string, bridgeDeploymentHeight uint64) {
-
 	// Delete Any Outgoing TXs.
 
 	prefixStoreOtx := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.OutgoingTxKey})
@@ -598,12 +597,13 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string,
 		prefixStoreOtx.Delete(iterOtx.Key())
 	}
 
-	//Reset the last observed signer set nonce
-	ctx.KVStore(k.storeKey).Set([]byte{types.LatestSignerSetTxNonceKey}, sdk.Uint64ToBigEndian(0))
+	// Reset the last observed signer set nonce
+	store := ctx.KVStore(k.storeKey)
+	store.Set([]byte{types.LatestSignerSetTxNonceKey}, sdk.Uint64ToBigEndian(0))
 
 	prefixStoreEthereumEvent := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.EthereumEventVoteRecordKey})
 
-	//Delete all Ethereum Events
+	// Delete all Ethereum Events
 
 	iterEvent := prefixStoreEthereumEvent.Iterator(nil, nil)
 	defer iterEvent.Close()
@@ -611,15 +611,28 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string,
 		prefixStoreEthereumEvent.Delete(iterEvent.Key())
 	}
 
-	//Rest the Ethereum Event Nonce to Zero
-	store := ctx.KVStore(k.storeKey)
-	store.Set([]byte{types.LastObservedEventNonceKey}, sdk.Uint64ToBigEndian(0))
+	// Reset all ethereum event nonces to zero
+	k.setLastObservedEventNonce(ctx, 0)
+	k.iterateEthereumEventVoteRecords(ctx, func(_ []byte, voteRecord *types.EthereumEventVoteRecord) bool {
+		for _, vote := range voteRecord.Votes {
+			val, err := sdk.ValAddressFromBech32(vote)
+
+			if err != nil {
+				panic(err)
+			}
+
+			k.setLastEventNonceByValidator(ctx, val, 0)
+		}
+
+		return true
+	})
 
 	// Set the Last oberved Ethereum Blockheight to zero
 	height := types.LatestEthereumBlockHeight{
 		EthereumHeight: (bridgeDeploymentHeight - 1),
 		CosmosHeight:   uint64(ctx.BlockHeight()),
 	}
+
 	store.Set([]byte{types.LastEthereumBlockHeightKey}, k.cdc.MustMarshal(&height))
 
 	k.setLastObservedSignerSetTx(ctx, types.SignerSetTx{

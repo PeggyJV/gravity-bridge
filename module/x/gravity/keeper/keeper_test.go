@@ -634,6 +634,10 @@ func TestKeeper_Migration(t *testing.T) {
 	nonce2 := gk.GetLastObservedEventNonce(ctx)
 	require.Equal(t, uint64(0), nonce2)
 
+	for _, val := range ValAddrs {
+		require.Equal(t, uint64(0), gk.getLastEventNonceByValidator(ctx, val))
+	}
+
 	got := gk.GetLastObservedSignerSetTx(ctx)
 	require.Equal(t, got, &types.SignerSetTx{Nonce: 0x0, Height: 0x0, Signers: types.EthereumSigners(nil)})
 
