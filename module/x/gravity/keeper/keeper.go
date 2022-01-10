@@ -601,16 +601,6 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string,
 	store := ctx.KVStore(k.storeKey)
 	store.Set([]byte{types.LatestSignerSetTxNonceKey}, sdk.Uint64ToBigEndian(0))
 
-	prefixStoreEthereumEvent := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.EthereumEventVoteRecordKey})
-
-	// Delete all Ethereum Events
-
-	iterEvent := prefixStoreEthereumEvent.Iterator(nil, nil)
-	defer iterEvent.Close()
-	for ; iterEvent.Valid(); iterEvent.Next() {
-		prefixStoreEthereumEvent.Delete(iterEvent.Key())
-	}
-
 	// Reset all ethereum event nonces to zero
 	k.setLastObservedEventNonce(ctx, 0)
 	k.iterateEthereumEventVoteRecords(ctx, func(_ []byte, voteRecord *types.EthereumEventVoteRecord) bool {
@@ -626,6 +616,14 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string,
 
 		return true
 	})
+
+	// Delete all Ethereum Events
+	prefixStoreEthereumEvent := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.EthereumEventVoteRecordKey})
+	iterEvent := prefixStoreEthereumEvent.Iterator(nil, nil)
+	defer iterEvent.Close()
+	for ; iterEvent.Valid(); iterEvent.Next() {
+		prefixStoreEthereumEvent.Delete(iterEvent.Key())
+	}
 
 	// Set the Last oberved Ethereum Blockheight to zero
 	height := types.LatestEthereumBlockHeight{

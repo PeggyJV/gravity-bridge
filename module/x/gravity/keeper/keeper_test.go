@@ -628,6 +628,10 @@ func TestKeeper_Migration(t *testing.T) {
 		Signers: nil,
 	})
 
+	for _, val := range ValAddrs {
+		gk.setLastEventNonceByValidator(ctx, val, nonce)
+	}
+
 	gk.MigrateGravityContract(ctx, "0x5e175bE4d23Fa25604CE7848F60FB340894D5CDA", 1000)
 	stored2 := gk.GetEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash())
 	require.Nil(t, stored2)
