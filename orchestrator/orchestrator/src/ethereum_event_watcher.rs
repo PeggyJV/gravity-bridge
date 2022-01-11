@@ -250,10 +250,8 @@ pub async fn check_for_events(
 /// 6 deep reorg every 53,272 years.
 ///
 pub async fn get_block_delay(eth_client: EthClient) -> Result<U64, GravityError> {
-    // TODO(bolten): technically we want the network id from net_version, but chain id
-    // should be the same for our use cases...when this PR is in a released version of
-    // ethers we can move back to net_version:
-    // https://github.com/gakonst/ethers-rs/pull/595
+    // TODO(bolten): get_net_version() exists on the version of ethers we are currently
+    // depending on, but it's broken, so we're relying on chain ID
     let chain_id_result = get_chain_id_with_retry(eth_client.clone()).await;
     let chain_id = downcast_to_u64(chain_id_result);
     if chain_id.is_none() {
@@ -266,11 +264,11 @@ pub async fn get_block_delay(eth_client: EthClient) -> Result<U64, GravityError>
     match chain_id.unwrap() {
         // Mainline Ethereum, Ethereum classic, or the Ropsten, Mordor testnets
         // all POW Chains
-        1 | 3 | 7 => Ok(6u8.into()),
-        // Rinkeby, Goerli, Dev, our own Gravity Ethereum testnet, and Kotti respectively
+        1 | 3 | 61 | 63 => Ok(13u8.into()),
+        // Rinkeby, Goerli, Dev, our own Gravity Ethereum testnet, Kotti, Hardhat respectively
         // all non-pow chains
-        4 | 5 | 2018 | 15 | 6 => Ok(0u8.into()),
+        4 | 5 | 2018 | 15 | 6 | 31337 => Ok(0u8.into()),
         // assume the safe option (POW) where we don't know
-        _ => Ok(6u8.into()),
+        _ => Ok(13u8.into()),
     }
 }
