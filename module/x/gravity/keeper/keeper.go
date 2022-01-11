@@ -614,7 +614,7 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string,
 			k.setLastEventNonceByValidator(ctx, val, 0)
 		}
 
-		return true
+		return false
 	})
 
 	// Delete all Ethereum Events
