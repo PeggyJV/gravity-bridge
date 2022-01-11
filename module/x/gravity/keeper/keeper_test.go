@@ -590,6 +590,9 @@ func TestKeeper_Migration(t *testing.T) {
 	stored := gk.GetEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash())
 	require.NotNil(t, stored)
 
+	stored2 := gk.GetEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash())
+	require.NotNil(t, stored2)
+
 	ethAddr := common.HexToAddress("0x3146D2d6Eed46Afa423969f5dDC3152DfC359b09")
 
 	valAddr, err := sdk.ValAddressFromBech32("cosmosvaloper1jpz0ahls2chajf78nkqczdwwuqcu97w6z3plt4")
@@ -633,8 +636,13 @@ func TestKeeper_Migration(t *testing.T) {
 	}
 
 	gk.MigrateGravityContract(ctx, "0x5e175bE4d23Fa25604CE7848F60FB340894D5CDA", 1000)
-	stored2 := gk.GetEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash())
-	require.Nil(t, stored2)
+
+	storedAfterMigrate := gk.GetEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash())
+	require.Nil(t, storedAfterMigrate)
+
+	stored2AfterMigrate := gk.GetEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash())
+	require.Nil(t, stored2AfterMigrate)
+
 	nonce2 := gk.GetLastObservedEventNonce(ctx)
 	require.Equal(t, uint64(0), nonce2)
 
