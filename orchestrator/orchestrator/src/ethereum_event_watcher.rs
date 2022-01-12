@@ -262,12 +262,15 @@ pub async fn get_block_delay(eth_client: EthClient) -> Result<U64, GravityError>
     }
 
     match chain_id.unwrap() {
-        // Mainline Ethereum, Ethereum classic, or the Ropsten, Mordor testnets
+        // Mainline Ethereum, Ethereum classic, or the Kotti, Ropsten, Mordor testnets
         // all POW Chains
         1 | 3 | 61 | 63 => Ok(13u8.into()),
-        // Rinkeby, Goerli, Dev, our own Gravity Ethereum testnet, Kotti, Hardhat respectively
+        // Dev, our own Gravity Ethereum testnet, Hardhat respectively
         // all non-pow chains
-        4 | 5 | 2018 | 15 | 6 | 31337 => Ok(0u8.into()),
+        2018 | 15 | 31337 => Ok(0u8.into()),
+        // Rinkeby, Goerli, and Kotti
+        // Clique (POA) Consensus
+        4 | 5 | 6 => Ok(10u8.into()),
         // assume the safe option (POW) where we don't know
         _ => Ok(13u8.into()),
     }
