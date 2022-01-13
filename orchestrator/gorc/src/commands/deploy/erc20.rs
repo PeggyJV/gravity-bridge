@@ -19,6 +19,9 @@ pub struct Erc20 {
 
     #[clap(short, long)]
     ethereum_key: String,
+
+    #[clap(short, long, default_value_t = 1.0)]
+    gas_multiplier: f64,
 }
 
 impl Runnable for Erc20 {
@@ -90,6 +93,7 @@ impl Erc20 {
             u8::try_from(res.erc20_decimals).unwrap(),
             contract_address,
             Some(timeout),
+            self.gas_multiplier,
             eth_client.clone(),
         )
         .await

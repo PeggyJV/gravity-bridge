@@ -14,6 +14,13 @@ pub fn downcast_to_f32(input: U256) -> Option<f32> {
     }
 }
 
+pub fn downcast_to_f64(input: U256) -> Option<f64> {
+    match panic::catch_unwind(|| input.as_u128() as f64) {
+        Ok(downcasted) => Some(downcasted),
+        Err(_) => None,
+    }
+}
+
 pub fn downcast_to_u64(input: U256) -> Option<u64> {
     match panic::catch_unwind(|| input.as_u64()) {
         Ok(downcasted) => Some(downcasted),

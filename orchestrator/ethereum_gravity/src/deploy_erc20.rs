@@ -5,7 +5,7 @@
 use crate::{types::EthClient, utils::get_gas_price};
 use ethers::prelude::*;
 use gravity_abi::gravity::*;
-use gravity_utils::error::GravityError;
+use gravity_utils::{error::GravityError, ethereum::downcast_to_f64};
 use std::{result::Result, time::Duration};
 
 /// Calls the Gravity ethereum contract to deploy the ERC20 representation of the given Cosmos asset
@@ -19,6 +19,7 @@ pub async fn deploy_erc20(
     decimals: u8,
     gravity_contract: Address,
     wait_timeout: Option<Duration>,
+    gas_multiplier: f64,
     eth_client: EthClient,
 ) -> Result<TxHash, GravityError> {
     let contract_call = Gravity::new(gravity_contract, eth_client.clone()).deploy_erc20(
@@ -28,7 +29,16 @@ pub async fn deploy_erc20(
         decimals,
     );
     let gas_price = get_gas_price(eth_client.clone()).await?;
-    let contract_call = contract_call.gas_price(gas_price);
+    let gas = contract_call.estimate_gas().await?;
+    let gas_as_f64 = downcast_to_f64(gas);
+    if gas_as_f64.is_none() {
+        return Err(GravityError::GravityContractError(format!("Gas estimate too large to downcast to f64: {}", gas)))
+    }
+    let gas = (gas_as_f64.unwrap() * gas_multiplier) as u128;
+
+    let contract_call = contract_call
+        .gas_price(gas_price)
+        .gas(gas);
 
     let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;
