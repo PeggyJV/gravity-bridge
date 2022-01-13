@@ -142,12 +142,38 @@ pub async fn get_gravity_id(
 /// Otherwise, just call eth_gasPrice.
 pub async fn get_gas_price(eth_client: EthClient) -> Result<U256, GravityError> {
     if let Ok(_) = std::env::var("ETHERSCAN_API_KEY") {
-        let etherscan_client = Client::new_from_env(Chain::Mainnet)?;
+        let chain = get_chain(eth_client.clone()).await?;
+        let etherscan_client = Client::new_from_env(chain)?;
         let etherscan_oracle = Etherscan::new(etherscan_client);
         return Ok(etherscan_oracle.fetch().await?);
     }
 
     Ok(eth_client.get_gas_price().await?)
+}
+
+pub async fn get_chain(eth_client: EthClient) -> Result<Chain, GravityError> {
+    let chain_id_result = eth_client.get_chainid().await?;
+    let chain_id = downcast_to_u64(chain_id_result);
+
+    if chain_id.is_none() {
+        return Err(GravityError::EthereumBadDataError(format!(
+            "Chain ID is larger than u64 max: {}",
+            chain_id_result
+        )));
+    }
+
+    // We're only currently looking for ETHERSCAN_API_KEY, so only support
+    // Ethereum networks. Returning mainnet as a default in absence of a better
+    // option. Strangely there is no function in ethers to convert from a chain
+    // ID to a Chain enum value.
+    Ok(match chain_id.unwrap() {
+        1 => Chain::Mainnet,
+        3 => Chain::Ropsten,
+        4 => Chain::Rinkeby,
+        5 => Chain::Goerli,
+        42 => Chain::Kovan,
+        _ => Chain::Mainnet,
+    })
 }
 
 /// Just a helper struct to represent the cost of actions on Ethereum
