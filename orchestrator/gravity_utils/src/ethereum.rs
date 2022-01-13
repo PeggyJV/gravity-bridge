@@ -39,6 +39,10 @@ pub fn format_eth_address(address: EthAddress) -> String {
     format!("0x{}", bytes_to_hex_str(address.as_bytes()))
 }
 
+pub fn format_eth_hash(hash: H256) -> String {
+    format!("0x{}", bytes_to_hex_str(hash.as_bytes()))
+}
+
 pub fn bytes_to_hex_str(bytes: &[u8]) -> String {
     bytes
         .iter()
