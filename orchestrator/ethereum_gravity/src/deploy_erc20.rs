@@ -36,9 +36,13 @@ pub async fn deploy_erc20(
     }
     let gas = (gas_as_f64.unwrap() * gas_multiplier) as u128;
 
+    // TODO(bolten): it seems like a bug in ethers will replace manually set gas limits with
+    // a gas estimate if no access list is defined for EIP1559 transactions, so we're forcing a
+    // legacy transaction here to allow for the multiplier to take effect
     let contract_call = contract_call
         .gas_price(gas_price)
-        .gas(gas);
+        .gas(gas)
+        .legacy();
 
     let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;
