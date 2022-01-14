@@ -86,18 +86,20 @@ pub trait EventNonceFilter: Sized {
 }
 
 /// A parsed struct representing the Ethereum event fired by the Gravity contract
-/// when the validator set is updated.
+/// when the validator set is updated. Reward amount and reward token are included
+/// as part of the contract-defined type, but currently they will always be zeroed
+/// out.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, Eq, PartialEq, Hash)]
 pub struct ValsetUpdatedEvent {
     pub valset_nonce: U256,
     pub event_nonce: U256,
+    pub reward_amount: U256,
+    pub reward_token: EthAddress,
     pub block_height: U256,
     pub members: Vec<ValsetMember>,
 }
 
 impl FromLog for ValsetUpdatedEvent {
-    /// This function is not an abi compatible bytes parser, but it's actually
-    /// not hard at all to extract data like this by hand.
     fn from_log(input: &Log) -> Result<ValsetUpdatedEvent, GravityError> {
         let event: ValsetUpdatedEventFilter = log_to_ethers_event(input)?;
         if event.powers.len() != event.validators.len() {
@@ -132,8 +134,7 @@ impl FromLog for ValsetUpdatedEvent {
         check.sort();
         check.reverse();
         // if the validator set is not sorted we're in a bad spot
-        // TODO(bolten): perhaps there is a better way to handle this than logging the event?
-        // what would the downstream effects of not returning a ValsetUpdatedEvent here?
+        // TODO(bolten): we often get warnings with the sorting of our bootstrapped valset, must figure out why
         if validators != check {
             warn!(
                 "Someone submitted an unsorted validator set, this means all updates will fail until someone feeds in this unsorted value by hand {:?} instead of {:?}",
@@ -144,6 +145,8 @@ impl FromLog for ValsetUpdatedEvent {
         Ok(ValsetUpdatedEvent {
             valset_nonce: event.new_valset_nonce,
             event_nonce: event.event_nonce,
+            reward_amount: event.reward_amount,
+            reward_token: event.reward_token,
             block_height: block_height_from_log(&input)?,
             members: validators,
         })
@@ -219,7 +222,6 @@ impl FromLogWithPrefix for SendToCosmosEvent {
     fn from_log(input: &Log, prefix: &str) -> Result<SendToCosmosEvent, GravityError> {
         let event: SendToCosmosEventFilter = log_to_ethers_event(input)?;
 
-        // TODO(bolten): verify this method of retrieval for Cosmos addresses works as expected
         Ok(SendToCosmosEvent {
             erc20: event.token_contract,
             sender: event.sender,
@@ -284,7 +286,7 @@ impl EventNonce for Erc20DeployedEvent {
 impl EventNonceFilter for Erc20DeployedEvent {}
 
 /// A parsed struct representing the Ethereum event fired when someone uses the Gravity
-/// contract to deploy a new ERC20 contract representing a Cosmos asset
+/// contract to send an arbitrary logic call.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, Eq, PartialEq, Hash)]
 pub struct LogicCallExecutedEvent {
     pub invalidation_id: Vec<u8>,
