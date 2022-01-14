@@ -59,7 +59,7 @@ pub async fn find_latest_valset(
                     let cosmos_chain_valset =
                         cosmos_gravity::query::get_valset(grpc_client, latest_eth_valset.nonce)
                             .await?;
-                    check_if_valsets_differ(cosmos_chain_valset, &latest_eth_valset);
+                    check_if_valsets_differ(cosmos_chain_valset, &latest_eth_valset)?;
                     return Ok(latest_eth_valset);
                 }
                 Err(e) => error!("Got valset event that we can't parse {}", e),
@@ -81,20 +81,19 @@ pub async fn find_latest_valset(
 /// The other (and far worse) way a disagreement here could occur is if validators are colluding to steal
 /// funds from the Gravity contract and have submitted a highjacking update. If slashing for off Cosmos chain
 /// Ethereum signatures is implemented you would put that handler here.
-fn check_if_valsets_differ(cosmos_valset: Option<Valset>, ethereum_valset: &Valset) {
+fn check_if_valsets_differ(
+    cosmos_valset: Option<Valset>,
+    ethereum_valset: &Valset,
+) -> Result<(), GravityError> {
     if cosmos_valset.is_none() && ethereum_valset.nonce == 0 {
         // bootstrapping case
-        return;
+        return Ok(());
     } else if cosmos_valset.is_none() {
         error!("Cosmos does not have a valset for nonce {} but that is the one on the Ethereum chain! Possible bridge highjacking!", ethereum_valset.nonce);
-        return;
+        return Ok(());
     }
     let cosmos_valset = cosmos_valset.unwrap();
     if cosmos_valset != *ethereum_valset {
-        // if this is not true then we have a logic error on the Cosmos chain
-        // or with our Ethereum search
-        assert_eq!(cosmos_valset.nonce, ethereum_valset.nonce);
-
         let mut c_valset = cosmos_valset.members;
         let mut e_valset = ethereum_valset.members.clone();
         c_valset.sort();
@@ -108,4 +107,6 @@ fn check_if_valsets_differ(cosmos_valset: Option<Valset>, ethereum_valset: &Vals
             error!("Validator sets for nonce {} Cosmos and Ethereum differ. Possible bridge highjacking!", ethereum_valset.nonce)
         }
     }
+
+    Ok(())
 }
