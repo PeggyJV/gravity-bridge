@@ -55,7 +55,8 @@ pub async fn send_to_cosmos(
 
     let contract_call = Gravity::new(gravity_contract, eth_client.clone())
         .send_to_cosmos(erc20, cosmos_dest_address_bytes_slice, amount)
-        .gas(SEND_TO_COSMOS_GAS_LIMIT);
+        .gas(SEND_TO_COSMOS_GAS_LIMIT)
+        .legacy();
 
     let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;
