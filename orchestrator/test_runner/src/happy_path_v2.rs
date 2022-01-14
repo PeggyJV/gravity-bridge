@@ -53,6 +53,7 @@ pub async fn happy_path_test_v2(
         6,
         gravity_address,
         Some(TOTAL_TIMEOUT),
+        1.0,
         eth_client.clone(),
     )
     .await
