@@ -3,10 +3,15 @@ package types
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGenesisStateValidate(t *testing.T) {
+	sdk.GetConfig().SetBech32PrefixForValidator("sommvaloper", "sommvaloperpub")
+	sdk.GetConfig().SetBech32PrefixForAccount("somm", "sommpub")
+	sdk.GetConfig().SetBech32PrefixForConsensusNode("sommcons", "sommconspub")
+
 	var nilByteSlice []byte
 	specs := map[string]struct {
 		src    *GenesisState
