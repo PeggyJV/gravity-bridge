@@ -159,6 +159,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		return false
 	})
 
+	// this will marshal into "dW51c2Vk" as []byte will be encoded as base64
 	for _, delegate := range delegates {
 		delegate.EthSignature = []byte("unused")
 	}

@@ -40,7 +40,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					ValidatorAddress:    "cosmosvaloper1jpz0ahls2chajf78nkqczdwwuqcu97w6z3plt4",
 					OrchestratorAddress: "cosmos1g0etv93428tvxqftnmj25jn06mz6dtdasj5nz7",
 					EthereumAddress:     "0x494eeff8848254C4fdd5B529FC6E751Ab34597A6",
-					EthSignature:        []byte("unused"),
+					EthSignature:        []byte("unused"), // this will marshal into "dW51c2Vk" as []byte will be encoded as base64
 				},
 			},
 		}, expErr: false},
