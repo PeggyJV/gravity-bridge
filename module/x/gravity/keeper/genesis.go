@@ -157,6 +157,10 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		return false
 	})
 
+	for _, delegate := range delegates {
+		delegate.EthSignature = []byte("unused")
+	}
+
 	return types.GenesisState{
 		Params:                     &p,
 		LastObservedEventNonce:     lastobserved,
