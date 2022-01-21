@@ -26,12 +26,10 @@ func TestGenesisStateValidate(t *testing.T) {
 			Params: DefaultParams(),
 			DelegateKeys: []*MsgDelegateKeys{
 				{
-					// note: the "valid" EthSignature here is simply the correct format, it is not a signature from a private key represented
-					// by the above cosmos address, but genesis isn't currently validating that anyway
-					ValidatorAddress:    "cosmosvaloper1jpz0ahls2chajf78nkqczdwwuqcu97w6z3plt4",
-					OrchestratorAddress: "cosmos1g0etv93428tvxqftnmj25jn06mz6dtdasj5nz7",
-					EthereumAddress:     "0x494eeff8848254C4fdd5B529FC6E751Ab34597A6",
-					EthSignature:        []byte("0x2471d20201d38a6d8f5301be45560161d770f8ca8642ac45a1eb5c82fd853a8670fb6f18aaedffd7fcf27bba62d29b782a1c12059ab43b79d7d2d727f596d7701c"),
+					ValidatorAddress:    "cosmosvaloper13yfm8as7y0mzsxqkfmk5jvgm45aez0u24jk95z",
+					OrchestratorAddress: "cosmos1h706wwrghfpydyh735aet8aluhf95dqj0psgyf",
+					EthereumAddress:     "0xFDb0aaBD40774BBF3068Bf29E8b0a6C88BE26F83",
+					EthSignature:        []byte("0xa2f643b5b919050eb4e200bae900d16fd28adca4d727fb7cc1c68f2517e601d0355340ee0913b1e3b5a5837fbd795857a004e0333913cfb7c59e159ff02115b01c"),
 				},
 			},
 		}, expErr: false},
@@ -39,9 +37,9 @@ func TestGenesisStateValidate(t *testing.T) {
 			Params: DefaultParams(),
 			DelegateKeys: []*MsgDelegateKeys{
 				{
-					ValidatorAddress:    "cosmosvaloper1jpz0ahls2chajf78nkqczdwwuqcu97w6z3plt4",
-					OrchestratorAddress: "cosmos1g0etv93428tvxqftnmj25jn06mz6dtdasj5nz7",
-					EthereumAddress:     "0x494eeff8848254C4fdd5B529FC6E751Ab34597A6",
+					ValidatorAddress:    "cosmosvaloper13yfm8as7y0mzsxqkfmk5jvgm45aez0u24jk95z",
+					OrchestratorAddress: "cosmos1h706wwrghfpydyh735aet8aluhf95dqj0psgyf",
+					EthereumAddress:     "0xFDb0aaBD40774BBF3068Bf29E8b0a6C88BE26F83",
 					EthSignature:        []byte("unused"), // this will marshal into "dW51c2Vk" as []byte will be encoded as base64
 				},
 			},
@@ -50,9 +48,9 @@ func TestGenesisStateValidate(t *testing.T) {
 			Params: DefaultParams(),
 			DelegateKeys: []*MsgDelegateKeys{
 				{
-					ValidatorAddress:    "cosmosvaloper1jpz0ahls2chajf78nkqczdwwuqcu97w6z3plt4",
-					OrchestratorAddress: "cosmos1g0etv93428tvxqftnmj25jn06mz6dtdasj5nz7",
-					EthereumAddress:     "0x494eeff8848254C4fdd5B529FC6E751Ab34597A6",
+					ValidatorAddress:    "cosmosvaloper13yfm8as7y0mzsxqkfmk5jvgm45aez0u24jk95z",
+					OrchestratorAddress: "cosmos1h706wwrghfpydyh735aet8aluhf95dqj0psgyf",
+					EthereumAddress:     "0xFDb0aaBD40774BBF3068Bf29E8b0a6C88BE26F83",
 					EthSignature:        nilByteSlice,
 				},
 			},
@@ -62,9 +60,9 @@ func TestGenesisStateValidate(t *testing.T) {
 			DelegateKeys: []*MsgDelegateKeys{
 				{
 					ValidatorAddress:    "cosmosvaloper1wrong",
-					OrchestratorAddress: "cosmos1g0etv93428tvxqftnmj25jn06mz6dtdasj5nz7",
-					EthereumAddress:     "0x494eeff8848254C4fdd5B529FC6E751Ab34597A6",
-					EthSignature:        []byte("0x2471d20201d38a6d8f5301be45560161d770f8ca8642ac45a1eb5c82fd853a8670fb6f18aaedffd7fcf27bba62d29b782a1c12059ab43b79d7d2d727f596d7701c"),
+					OrchestratorAddress: "cosmos1h706wwrghfpydyh735aet8aluhf95dqj0psgyf",
+					EthereumAddress:     "0xFDb0aaBD40774BBF3068Bf29E8b0a6C88BE26F83",
+					EthSignature:        []byte("0xa2f643b5b919050eb4e200bae900d16fd28adca4d727fb7cc1c68f2517e601d0355340ee0913b1e3b5a5837fbd795857a004e0333913cfb7c59e159ff02115b01c"),
 				},
 			},
 		}, expErr: true},
@@ -72,10 +70,10 @@ func TestGenesisStateValidate(t *testing.T) {
 			Params: DefaultParams(),
 			DelegateKeys: []*MsgDelegateKeys{
 				{
-					ValidatorAddress:    "cosmosvaloper1jpz0ahls2chajf78nkqczdwwuqcu97w6z3plt4",
+					ValidatorAddress:    "cosmosvaloper13yfm8as7y0mzsxqkfmk5jvgm45aez0u24jk95z",
 					OrchestratorAddress: "cosmos1wrong",
-					EthereumAddress:     "0x494eeff8848254C4fdd5B529FC6E751Ab34597A6",
-					EthSignature:        []byte("0x2471d20201d38a6d8f5301be45560161d770f8ca8642ac45a1eb5c82fd853a8670fb6f18aaedffd7fcf27bba62d29b782a1c12059ab43b79d7d2d727f596d7701c"),
+					EthereumAddress:     "0xFDb0aaBD40774BBF3068Bf29E8b0a6C88BE26F83",
+					EthSignature:        []byte("0xa2f643b5b919050eb4e200bae900d16fd28adca4d727fb7cc1c68f2517e601d0355340ee0913b1e3b5a5837fbd795857a004e0333913cfb7c59e159ff02115b01c"),
 				},
 			},
 		}, expErr: true},
@@ -83,10 +81,10 @@ func TestGenesisStateValidate(t *testing.T) {
 			Params: DefaultParams(),
 			DelegateKeys: []*MsgDelegateKeys{
 				{
-					ValidatorAddress:    "cosmosvaloper1jpz0ahls2chajf78nkqczdwwuqcu97w6z3plt4",
-					OrchestratorAddress: "cosmos1g0etv93428tvxqftnmj25jn06mz6dtdasj5nz7",
+					ValidatorAddress:    "cosmosvaloper13yfm8as7y0mzsxqkfmk5jvgm45aez0u24jk95z",
+					OrchestratorAddress: "cosmos1h706wwrghfpydyh735aet8aluhf95dqj0psgyf",
 					EthereumAddress:     "0xdeadbeef",
-					EthSignature:        []byte("0x2471d20201d38a6d8f5301be45560161d770f8ca8642ac45a1eb5c82fd853a8670fb6f18aaedffd7fcf27bba62d29b782a1c12059ab43b79d7d2d727f596d7701c"),
+					EthSignature:        []byte("0xa2f643b5b919050eb4e200bae900d16fd28adca4d727fb7cc1c68f2517e601d0355340ee0913b1e3b5a5837fbd795857a004e0333913cfb7c59e159ff02115b01c"),
 				},
 			},
 		}, expErr: true},
