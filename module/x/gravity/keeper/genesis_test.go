@@ -21,6 +21,7 @@ func TestExportAndImport(t *testing.T) {
 
 	keeper.setValidatorEthereumAddress(ctx, valAddr, ethAddr)
 	keeper.setEthereumOrchestratorAddress(ctx, ethAddr, orchAddr)
+	keeper.SetOrchestratorValidatorAddress(ctx, valAddr, orchAddr)
 
 	exportedGenesis := ExportGenesis(ctx, keeper)
 	newEnv := CreateTestEnv(t)
@@ -31,4 +32,5 @@ func TestExportAndImport(t *testing.T) {
 
 	assert.Equal(t, newKeeper.GetValidatorEthereumAddress(newCtx, valAddr), ethAddr)
 	assert.Equal(t, newKeeper.GetEthereumOrchestratorAddress(newCtx, ethAddr), orchAddr)
+	assert.Equal(t, newKeeper.GetOrchestratorValidatorAddress(newCtx, orchAddr), valAddr)
 }
