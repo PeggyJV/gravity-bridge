@@ -100,6 +100,13 @@ func (s GenesisState) ValidateBasic() error {
 	if err := s.Params.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "params")
 	}
+	if len(s.DelegateKeys) != 0 {
+		for _, delegateKey := range s.DelegateKeys {
+			if err := delegateKey.ValidateBasic(); err != nil {
+				return sdkerrors.Wrap(err, "delegates")
+			}
+		}
+	}
 	return nil
 }
 
