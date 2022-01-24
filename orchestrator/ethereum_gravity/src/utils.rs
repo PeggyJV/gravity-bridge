@@ -141,7 +141,7 @@ pub async fn get_gravity_id(
 /// If ETHERSCAN_API_KEY env var is set, we'll call out to Etherscan for a gas estimate.
 /// Otherwise, just call eth_gasPrice.
 pub async fn get_gas_price(eth_client: EthClient) -> Result<U256, GravityError> {
-    if let Ok(_) = std::env::var("ETHERSCAN_API_KEY") {
+    if std::env::var("ETHERSCAN_API_KEY").is_ok() {
         let chain = get_chain(eth_client.clone()).await?;
         let etherscan_client = Client::new_from_env(chain)?;
         let etherscan_oracle = Etherscan::new(etherscan_client);

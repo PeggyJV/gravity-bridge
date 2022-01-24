@@ -72,7 +72,7 @@ pub async fn happy_path_test(
     // Send a token 3 times
     for _ in 0u32..3 {
         test_erc20_deposit(
-            &contact,
+            contact,
             dest_cosmos_address,
             gravity_address,
             erc20_address,
@@ -87,7 +87,7 @@ pub async fn happy_path_test(
     // long enough. TODO check for an error on the cosmos send response
     submit_duplicate_erc20_send(
         1u64.into(),
-        &contact,
+        contact,
         erc20_address,
         1u64.into(),
         dest_cosmos_address,
@@ -97,7 +97,7 @@ pub async fn happy_path_test(
 
     // we test a batch by sending a transaction
     test_batch(
-        &contact,
+        contact,
         &mut grpc_client,
         dest_eth_address,
         gravity_address,
@@ -244,7 +244,7 @@ async fn test_erc20_deposit(
     amount: U256,
 ) {
     let amount_uint256 = Uint256::from_str(amount.to_string().as_str()).unwrap();
-    let start_coin = check_cosmos_balance("gravity", dest, &contact).await;
+    let start_coin = check_cosmos_balance("gravity", dest, contact).await;
     info!(
         "Sending to Cosmos from {} to {} with amount {}",
         *MINER_ADDRESS, dest, amount
@@ -253,7 +253,7 @@ async fn test_erc20_deposit(
     let tx_id = send_to_cosmos(
         erc20_address,
         gravity_address,
-        amount.clone(),
+        amount,
         dest,
         Some(TOTAL_TIMEOUT),
         (*MINER_CLIENT).clone(),
@@ -265,7 +265,7 @@ async fn test_erc20_deposit(
     match tokio::time::timeout(TOTAL_TIMEOUT, async {
         match (
             start_coin.clone(),
-            check_cosmos_balance("gravity", dest, &contact).await,
+            check_cosmos_balance("gravity", dest, contact).await,
         ) {
             (Some(start_coin), Some(end_coin)) => {
                 if start_coin.amount + amount_uint256.clone() == end_coin.amount
@@ -275,7 +275,6 @@ async fn test_erc20_deposit(
                         "Successfully bridged ERC20 {}{} to Cosmos! Balance is now {}{}",
                         amount, start_coin.denom, end_coin.amount, end_coin.denom
                     );
-                    return;
                 }
             }
             (None, Some(end_coin)) => {
@@ -284,7 +283,6 @@ async fn test_erc20_deposit(
                         "Successfully bridged ERC20 {}{} to Cosmos! Balance is now {}{}",
                         amount, end_coin.denom, end_coin.amount, end_coin.denom
                     );
-                    return;
                 } else {
                     panic!("Failed to bridge ERC20!")
                 }
@@ -317,7 +315,7 @@ async fn test_batch(
     let dest_cosmos_address = dest_cosmos_private_key
         .to_address(&contact.get_prefix())
         .unwrap();
-    let coin = check_cosmos_balance("gravity", dest_cosmos_address, &contact)
+    let coin = check_cosmos_balance("gravity", dest_cosmos_address, contact)
         .await
         .unwrap();
     let token_name = coin.denom;
@@ -341,7 +339,7 @@ async fn test_batch(
         },
         bridge_denom_fee.clone(),
         (10f64, "footoken".to_string()),
-        &contact,
+        contact,
         1.0,
     )
     .await
@@ -353,7 +351,7 @@ async fn test_batch(
         requester_cosmos_private_key,
         token_name.clone(),
         (10f64, "footoken".to_string()),
-        &contact,
+        contact,
         1.0,
     )
     .await
@@ -437,7 +435,7 @@ async fn submit_duplicate_erc20_send(
     receiver: CosmosAddress,
     keys: &[ValidatorKeys],
 ) {
-    let start_coin = check_cosmos_balance("gravity", receiver, &contact)
+    let start_coin = check_cosmos_balance("gravity", receiver, contact)
         .await
         .expect("Did not find coins!");
 
@@ -473,7 +471,7 @@ async fn submit_duplicate_erc20_send(
         trace!("Submitted duplicate sendToCosmos event: {:?}", res);
     }
 
-    if let Some(end_coin) = check_cosmos_balance("gravity", receiver, &contact).await {
+    if let Some(end_coin) = check_cosmos_balance("gravity", receiver, contact).await {
         if start_coin.amount == end_coin.amount && start_coin.denom == end_coin.denom {
             info!("Successfully failed to duplicate ERC20!");
         } else {

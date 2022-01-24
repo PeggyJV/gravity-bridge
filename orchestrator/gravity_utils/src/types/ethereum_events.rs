@@ -27,7 +27,7 @@ fn log_to_ethers_event<T: EthLogDecode>(log: &Log) -> Result<T, ethers::abi::Err
 // our event model structs use U256 to represent block height, but Logs provide it
 // to us as a U64 (strangely, no direct conversion from U64, so we have to do this type dance)
 fn block_height_from_log(log: &Log) -> Result<U256, GravityError> {
-    match log.block_number.clone() {
+    match log.block_number {
         Some(block_height) => Ok(block_height.as_u64().into()),
         None => Err(GravityError::InvalidEventLogError(format!(
             "Log does not have block number, we only search logs already in blocks? {:?}",
@@ -147,7 +147,7 @@ impl FromLog for ValsetUpdatedEvent {
             event_nonce: event.event_nonce,
             reward_amount: event.reward_amount,
             reward_token: event.reward_token,
-            block_height: block_height_from_log(&input)?,
+            block_height: block_height_from_log(input)?,
             members: validators,
         })
     }
@@ -185,7 +185,7 @@ impl FromLog for TransactionBatchExecutedEvent {
 
         Ok(TransactionBatchExecutedEvent {
             batch_nonce: event.batch_nonce,
-            block_height: block_height_from_log(&input)?,
+            block_height: block_height_from_log(input)?,
             erc20: event.token,
             event_nonce: event.event_nonce,
         })
@@ -228,7 +228,7 @@ impl FromLogWithPrefix for SendToCosmosEvent {
             destination: CosmosAddress::from_slice(&event.destination[12..32], prefix)?,
             amount: event.amount,
             event_nonce: event.event_nonce,
-            block_height: block_height_from_log(&input)?,
+            block_height: block_height_from_log(input)?,
         })
     }
 }
@@ -272,7 +272,7 @@ impl FromLog for Erc20DeployedEvent {
             symbol: event.symbol,
             decimals: event.decimals,
             event_nonce: event.event_nonce,
-            block_height: block_height_from_log(&input)?,
+            block_height: block_height_from_log(input)?,
         })
     }
 }
@@ -305,7 +305,7 @@ impl FromLog for LogicCallExecutedEvent {
             invalidation_nonce: event.invalidation_nonce,
             return_data: event.return_data.to_vec(),
             event_nonce: event.event_nonce,
-            block_height: block_height_from_log(&input)?,
+            block_height: block_height_from_log(input)?,
         })
     }
 }

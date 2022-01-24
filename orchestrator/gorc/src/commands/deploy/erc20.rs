@@ -65,10 +65,8 @@ impl Erc20 {
             .expect("Could not retrieve chain ID");
         let chain_id =
             downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
-        let eth_client = SignerMiddleware::new(
-            provider,
-            ethereum_wallet.clone().with_chain_id(chain_id),
-        );
+        let eth_client =
+            SignerMiddleware::new(provider, ethereum_wallet.clone().with_chain_id(chain_id));
         let eth_client = Arc::new(eth_client);
         let mut grpc = connections.grpc.clone().unwrap();
 

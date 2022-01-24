@@ -27,6 +27,7 @@ use gravity_utils::{
 use std::{result::Result, time};
 use tonic::transport::Channel;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn check_for_events(
     eth_client: EthClient,
     contact: &Contact,
