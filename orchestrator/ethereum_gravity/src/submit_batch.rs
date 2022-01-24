@@ -142,14 +142,17 @@ pub fn build_submit_batch_contract_call(
 
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
         .submit_batch(
-            ValsetArgs{
+            ValsetArgs {
                 validators: current_addresses,
-                powers:current_powers,
+                powers: current_powers,
                 valset_nonce: current_valset_nonce.into(),
                 reward_amount: U256::zero(),
                 reward_token: H160::zero(),
             },
-            sig_data.iter().map(|sig_data| sig_data.to_val_sig()).collect(),
+            sig_data
+                .iter()
+                .map(|sig_data| sig_data.to_val_sig())
+                .collect(),
             amounts,
             destinations,
             fees,

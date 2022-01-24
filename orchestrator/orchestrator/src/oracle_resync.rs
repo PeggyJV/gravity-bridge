@@ -169,7 +169,10 @@ pub async fn get_last_checked_block(
                         return event.block_number.unwrap();
                     }
                 }
-                Err(e) => error!("Got TransactionBatchExecutedEvent that we can't parse: {}", e),
+                Err(e) => error!(
+                    "Got TransactionBatchExecutedEvent that we can't parse: {}",
+                    e
+                ),
             }
         }
 

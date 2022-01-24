@@ -123,7 +123,10 @@ pub async fn eth_oracle_main_loop(
     let block_delay = match get_block_delay(eth_client.clone()).await {
         Ok(block_delay) => block_delay,
         Err(e) => {
-            error!("Error encountered when retrieving block delay, cannot continue: {}", e);
+            error!(
+                "Error encountered when retrieving block delay, cannot continue: {}",
+                e
+            );
             exit(1);
         }
     };
