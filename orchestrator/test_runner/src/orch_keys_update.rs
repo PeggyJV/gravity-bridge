@@ -77,7 +77,7 @@ pub async fn orch_keys_update(
         );
         // send in the new delegate keys signed by the validator address
         update_gravity_delegate_addresses(
-            &contact,
+            contact,
             ethereum_wallet.address(),
             cosmos_address,
             k.validator_key,

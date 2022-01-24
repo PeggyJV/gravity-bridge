@@ -1,3 +1,4 @@
+#![allow(clippy::needless_question_mark)]
 use crate::error::GravityError;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -53,7 +54,7 @@ pub fn bytes_to_hex_str(bytes: &[u8]) -> String {
 pub fn hex_str_to_bytes(s: &str) -> Result<Vec<u8>, GravityError> {
     let s = match s.strip_prefix("0x") {
         Some(s) => s,
-        None => &s,
+        None => s,
     };
     let bytes = s
         .as_bytes()

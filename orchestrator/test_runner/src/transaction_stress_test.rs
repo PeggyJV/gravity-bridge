@@ -173,7 +173,7 @@ pub async fn transaction_stress_test(
                 send_coin,
                 send_fee,
                 (0f64, "".to_string()),
-                &contact,
+                contact,
                 1.0,
             );
             futs.push(res);
@@ -195,7 +195,7 @@ pub async fn transaction_stress_test(
             keys[0].validator_key,
             denom,
             (0f64, "".to_string()),
-            &contact,
+            contact,
             1.0,
         )
         .await

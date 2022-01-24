@@ -55,13 +55,7 @@ pub async fn send_erc20_bulk(
     let miner_balance = get_erc20_balance(erc20, eth_client.address(), eth_client.clone())
         .await
         .unwrap();
-    assert!(
-        miner_balance
-            > amount
-                .clone()
-                .checked_mul(destinations.len().into())
-                .unwrap()
-    );
+    assert!(miner_balance > amount.checked_mul(destinations.len().into()).unwrap());
 
     let mut nonce = eth_client
         .get_transaction_count(eth_client.address(), None)
@@ -82,7 +76,7 @@ pub async fn send_erc20_bulk(
             gas_price: None,
             value: Some(0u32.into()),
             data: Some(data),
-            nonce: Some(nonce.clone()),
+            nonce: Some(nonce),
         };
 
         let tx = eth_client.send_transaction(tx, None);
@@ -102,7 +96,7 @@ pub async fn send_erc20_bulk(
         let new_balance = get_erc20_balance(erc20, *address, eth_client.clone())
             .await
             .unwrap();
-        assert!(new_balance >= amount.clone());
+        assert!(new_balance >= amount);
     }
 }
 
@@ -123,9 +117,9 @@ pub async fn send_eth_bulk(amount: U256, destinations: &[EthAddress], eth_client
             to: Some(NameOrAddress::Address(*address)),
             gas: Some(24_000u64.into()),
             gas_price: Some(1_000_000_000u64.into()),
-            value: Some(amount.clone()),
+            value: Some(amount),
             data: Some(Vec::new().into()),
-            nonce: Some(nonce.clone()),
+            nonce: Some(nonce),
         };
 
         let tx = eth_client.send_transaction(tx, None);

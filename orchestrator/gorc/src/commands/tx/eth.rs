@@ -110,7 +110,7 @@ impl Runnable for SendToCosmos {
             let res = send_to_cosmos(
                 erc20_contract,
                 contract_address,
-                amount.clone(),
+                amount,
                 to_cosmos_addr,
                 Some(TIMEOUT),
                 eth_client.clone(),

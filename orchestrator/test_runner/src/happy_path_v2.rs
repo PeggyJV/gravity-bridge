@@ -90,7 +90,7 @@ pub async fn happy_path_test_v2(
                 "Successfully adopted {} token contract of {}",
                 token_to_send_to_eth, erc20
             );
-            Some(erc20.clone())
+            Some(erc20)
         }
         Err(_) => {
             panic!(
