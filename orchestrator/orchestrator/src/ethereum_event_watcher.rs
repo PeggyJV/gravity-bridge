@@ -38,10 +38,15 @@ pub async fn check_for_events(
     block_delay: U64,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) -> Result<U64, GravityError> {
+    info!("Checking for events");
     let prefix = contact.get_prefix();
     let our_cosmos_address = cosmos_key.to_address(&prefix).unwrap();
     let latest_block = get_block_number_with_retry(eth_client.clone()).await;
+    info!("Latest block: {}", latest_block);
     let latest_block = latest_block - block_delay;
+    info!("Block delay: {}", block_delay);
+    info!("Latest block after subtracting delay: {}", latest_block);
+    info!("Starting block: {}", starting_block);
 
     metrics::set_ethereum_check_for_events_starting_block(starting_block.as_u64());
     metrics::set_ethereum_check_for_events_end_block(latest_block.as_u64());

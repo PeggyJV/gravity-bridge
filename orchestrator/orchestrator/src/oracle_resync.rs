@@ -25,6 +25,7 @@ pub async fn get_last_checked_block(
     eth_client: EthClient,
     blocks_to_search: u64,
 ) -> U64 {
+    info!("Searching for last checked block");
     // TODO(bolten): original version of this used a 120 second timeout when querying
     // the eth chain, should we replicate that in eth_client?
     let mut grpc_client = grpc_client;
@@ -39,6 +40,8 @@ pub async fn get_last_checked_block(
     if last_event_nonce == 0u8.into() {
         last_event_nonce = 1u8.into();
     }
+
+    info!("Last event nonce: {}", last_event_nonce);
 
     let filter_gravity_contract_address = ValueOrArray::Value(gravity_contract_address);
 
@@ -61,6 +64,9 @@ pub async fn get_last_checked_block(
     let mut end_search_block = get_block_number_with_retry(eth_client.clone()).await;
     let blocks_to_search: U64 = blocks_to_search.into();
 
+    info!("End search block: {}", end_search_block);
+    info!("Blocks to search: {}", blocks_to_search);
+
     while end_search_block > 0u8.into() {
         info!(
             "Oracle is resyncing, looking back into the history to find our last event nonce {}, on block {}",
@@ -69,6 +75,8 @@ pub async fn get_last_checked_block(
 
         let start_search_block = end_search_block.saturating_sub(blocks_to_search);
         let search_range = start_search_block..end_search_block;
+
+        info!("Inside the loop, range: {} to {}", start_search_block, end_search_block);
 
         // select uses an inclusive version of the range
         erc20_deployed_filter = erc20_deployed_filter.select(search_range.clone());

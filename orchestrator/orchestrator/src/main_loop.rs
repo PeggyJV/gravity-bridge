@@ -138,6 +138,7 @@ pub async fn eth_oracle_main_loop(
         blocks_to_search,
     )
     .await;
+    info!("Last check block is: {}", last_checked_block);
     info!("Oracle resync complete, Oracle now operational");
     let mut grpc_client = grpc_client;
 
