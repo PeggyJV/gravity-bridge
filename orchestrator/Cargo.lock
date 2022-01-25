@@ -1478,7 +1478,7 @@ dependencies = [
 [[package]]
 name = "deep_space"
 version = "2.4.7"
-source = "git+https://github.com/iqlusioninc/deep_space/?branch=master#c6b31f758a4d4542f1272815be130e0904e2854d"
+source = "git+https://github.com/iqlusioninc/deep_space/?branch=master#7b94f1bc2b6e6847ec8ead62e5eb48638774c3b0"
 dependencies = [
  "base64 0.13.0",
  "bech32 0.8.0",
