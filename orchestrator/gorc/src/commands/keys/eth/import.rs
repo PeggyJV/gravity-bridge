@@ -1,6 +1,6 @@
 use super::show::ShowEthKeyCmd;
 use crate::application::APP;
-use abscissa_core::{Application, clap::Parser, Command, Runnable};
+use abscissa_core::{clap::Parser, Application, Command, Runnable};
 use k256::{pkcs8::ToPrivateKey, SecretKey};
 
 use signatory::FsKeyStore;

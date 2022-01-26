@@ -1,5 +1,5 @@
 use crate::{application::APP, prelude::*};
-use abscissa_core::{Application, clap::Parser, Command, Runnable};
+use abscissa_core::{clap::Parser, Application, Command, Runnable};
 use ethers::{prelude::Signer, utils::keccak256};
 use gravity_proto::gravity as proto;
 use std::time::Duration;

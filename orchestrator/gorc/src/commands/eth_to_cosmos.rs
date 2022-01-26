@@ -1,5 +1,5 @@
 use crate::application::APP;
-use abscissa_core::{status_err, Application, clap::Parser, Command, Runnable};
+use abscissa_core::{clap::Parser, status_err, Application, Command, Runnable};
 use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::erc20_utils::get_erc20_balance;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
