@@ -1,12 +1,12 @@
 use super::show::ShowCosmosKeyCmd;
 use crate::application::APP;
-use abscissa_core::{Application, Clap, Command, Runnable};
+use abscissa_core::{Application, clap::Parser, Command, Runnable};
 use k256::pkcs8::ToPrivateKey;
 use signatory::FsKeyStore;
 use std::path;
 
 /// Recover a Cosmos Key
-#[derive(Command, Debug, Default, Clap)]
+#[derive(Command, Debug, Default, Parser)]
 pub struct RecoverCosmosKeyCmd {
     pub args: Vec<String>,
 
