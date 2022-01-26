@@ -100,7 +100,7 @@ impl Erc20 {
         println!("We have deployed ERC20 contract at tx hash {}, waiting to see if the Cosmos chain choses to adopt it",
             format_eth_hash(res));
 
-        match tokio::time::timeout(Duration::from_secs(100), async {
+        match tokio::time::timeout(Duration::from_secs(300), async {
             loop {
                 let req = DenomToErc20Request {
                     denom: denom.clone(),
