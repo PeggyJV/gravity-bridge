@@ -1,10 +1,10 @@
 //! `eth subcommands` subcommand
 
 use crate::{application::APP, prelude::*};
-use abscissa_core::{Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, Command, Runnable};
 
 /// Query Eth chain
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub enum Eth {
     Balance(Balance),
 
@@ -18,7 +18,7 @@ impl Runnable for Eth {
     }
 }
 
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub struct Balance {
     free: Vec<String>,
 
@@ -38,7 +38,7 @@ impl Runnable for Balance {
     }
 }
 
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub struct Contract {
     #[clap(short, long)]
     help: bool,
