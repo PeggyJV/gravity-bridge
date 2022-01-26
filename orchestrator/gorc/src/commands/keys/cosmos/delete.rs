@@ -1,10 +1,10 @@
 use crate::application::APP;
-use abscissa_core::{Application, Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, Application, Command, Runnable};
 use signatory::FsKeyStore;
 use std::path::Path;
 
 /// Delete a Cosmos Key
-#[derive(Command, Debug, Default, Clap)]
+#[derive(Command, Debug, Default, Parser)]
 pub struct DeleteCosmosKeyCmd {
     pub args: Vec<String>,
 }

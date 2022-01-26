@@ -1,7 +1,7 @@
 //! `eth subcommands` subcommand
 
 use crate::{application::APP, prelude::*, utils::*};
-use abscissa_core::{Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, Command, Runnable};
 use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::erc20_utils::get_erc20_balance;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
@@ -14,7 +14,7 @@ use gravity_utils::{
 use std::sync::Arc;
 
 /// Create transactions in Eth chain
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub enum Eth {
     SendToCosmos(SendToCosmos),
 
@@ -25,7 +25,7 @@ impl Runnable for Eth {
     fn run(&self) {}
 }
 
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub struct SendToCosmos {
     free: Vec<String>,
 
@@ -128,7 +128,7 @@ impl Runnable for SendToCosmos {
     }
 }
 
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub struct Send {
     free: Vec<String>,
 

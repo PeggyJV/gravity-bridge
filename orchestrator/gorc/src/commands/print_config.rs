@@ -1,9 +1,9 @@
 use crate::application::APP;
 use crate::config::GorcConfig;
-use abscissa_core::{Application, Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, Application, Command, Runnable};
 
 /// Command for printing configurations
-#[derive(Command, Debug, Default, Clap)]
+#[derive(Command, Debug, Default, Parser)]
 pub struct PrintConfigCmd {
     #[clap(short, long)]
     show_default: bool,

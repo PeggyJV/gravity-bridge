@@ -1,10 +1,10 @@
 use crate::application::APP;
-use abscissa_core::{Application, Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, Application, Command, Runnable};
 use signatory::FsKeyStore;
 use std::path;
 
 /// Delete an Eth Key
-#[derive(Command, Debug, Default, Clap)]
+#[derive(Command, Debug, Default, Parser)]
 pub struct DeleteEthKeyCmd {
     pub args: Vec<String>,
 }

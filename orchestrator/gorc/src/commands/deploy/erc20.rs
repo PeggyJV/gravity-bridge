@@ -1,5 +1,5 @@
 use crate::{application::APP, prelude::*};
-use abscissa_core::{Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, Command, Runnable};
 use ethereum_gravity::deploy_erc20::deploy_erc20;
 use ethers::prelude::*;
 use gravity_proto::gravity::{DenomToErc20ParamsRequest, DenomToErc20Request};
@@ -13,7 +13,7 @@ use std::{sync::Arc, time::Duration};
 use tokio::time::sleep as delay_for;
 
 /// Deploy Erc20
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub struct Erc20 {
     args: Vec<String>,
 

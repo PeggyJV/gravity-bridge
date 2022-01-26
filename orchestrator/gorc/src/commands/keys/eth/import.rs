@@ -1,13 +1,13 @@
 use super::show::ShowEthKeyCmd;
 use crate::application::APP;
-use abscissa_core::{Application, Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, Application, Command, Runnable};
 use k256::{pkcs8::ToPrivateKey, SecretKey};
 
 use signatory::FsKeyStore;
 use std::path;
 
 ///Import an Eth Key
-#[derive(Command, Debug, Default, Clap)]
+#[derive(Command, Debug, Default, Parser)]
 pub struct ImportEthKeyCmd {
     pub args: Vec<String>,
 
