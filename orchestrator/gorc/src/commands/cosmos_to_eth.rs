@@ -1,5 +1,5 @@
 use crate::application::APP;
-use abscissa_core::{status_err, Application, Clap, Command, Runnable};
+use abscissa_core::{status_err, Application, clap::Parser, Command, Runnable};
 use clarity::Uint256;
 use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
 use deep_space::coin::Coin;
@@ -11,7 +11,7 @@ use std::{process::exit, time::Duration};
 const TIMEOUT: Duration = Duration::from_secs(60);
 
 /// This command, send Cosmos to Ethereum
-#[derive(Command, Debug, Default, Clap)]
+#[derive(Command, Debug, Default, Parser)]
 pub struct CosmosToEthCmd {
     pub args: Vec<String>,
 

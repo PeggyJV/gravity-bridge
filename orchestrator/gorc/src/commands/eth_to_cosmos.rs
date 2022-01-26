@@ -1,5 +1,5 @@
 use crate::application::APP;
-use abscissa_core::{status_err, Application, Clap, Command, Runnable};
+use abscissa_core::{status_err, Application, clap::Parser, Command, Runnable};
 use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::erc20_utils::get_erc20_balance;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
@@ -14,7 +14,7 @@ use std::{sync::Arc, time::Duration};
 const TIMEOUT: Duration = Duration::from_secs(60);
 
 /// This command send Ethereum to Cosmos
-#[derive(Command, Debug, Default, Clap)]
+#[derive(Command, Debug, Default, Parser)]
 pub struct EthToCosmosCmd {
     pub args: Vec<String>,
 }
