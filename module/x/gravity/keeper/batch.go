@@ -81,6 +81,12 @@ func (k Keeper) getBatchTimeoutHeight(ctx sdk.Context) uint64 {
 // It deletes all the transactions in the batch, then cancels all earlier batches
 func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, nonce uint64) {
 	otx := k.GetOutgoingTx(ctx, types.MakeBatchTxKey(tokenContract, nonce))
+	if otx == nil {
+		k.Logger(ctx).Error("Failed to clean batches",
+			"token contract", tokenContract.Hex(),
+			"nonce", nonce)
+		return
+	}
 	batchTx, _ := otx.(*types.BatchTx)
 	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		// If the iterated batches nonce is lower than the one that was just executed, cancel it
