@@ -85,8 +85,8 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		// If the iterated batches nonce is lower than the one that was just executed, cancel it
 		btx, _ := otx.(*types.BatchTx)
-		if (btx.BatchNonce < batchTx.BatchNonce) && (batchTx.TokenContract == tokenContract.Hex()) {
-			k.CancelBatchTx(ctx, tokenContract, btx.BatchNonce)
+		if (btx.BatchNonce < batchTx.BatchNonce) && (btx.TokenContract == batchTx.TokenContract) {
+			k.CancelBatchTx(ctx, btx)
 		}
 		return false
 	})
@@ -125,10 +125,7 @@ func (k Keeper) GetBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr commo
 }
 
 // CancelBatchTx releases all TX in the batch and deletes the batch
-func (k Keeper) CancelBatchTx(ctx sdk.Context, tokenContract common.Address, nonce uint64) {
-	otx := k.GetOutgoingTx(ctx, types.MakeBatchTxKey(tokenContract, nonce))
-	batch, _ := otx.(*types.BatchTx)
-
+func (k Keeper) CancelBatchTx(ctx sdk.Context, batch *types.BatchTx) {
 	// free transactions from batch and reindex them
 	for _, tx := range batch.Transactions {
 		k.setUnbatchedSendToEthereum(ctx, tx)
@@ -143,8 +140,8 @@ func (k Keeper) CancelBatchTx(ctx sdk.Context, tokenContract common.Address, non
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
 			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
-			sdk.NewAttribute(types.AttributeKeyOutgoingBatchID, fmt.Sprint(nonce)),
-			sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(nonce)),
+			sdk.NewAttribute(types.AttributeKeyOutgoingBatchID, fmt.Sprint(batch.BatchNonce)),
+			sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(batch.BatchNonce)),
 		),
 	)
 }
