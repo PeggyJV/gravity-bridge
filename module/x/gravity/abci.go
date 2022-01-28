@@ -165,7 +165,7 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 		btx, _ := otx.(*types.BatchTx)
 
 		if btx.Timeout < ethereumHeight {
-			k.CancelBatchTx(ctx, common.HexToAddress(btx.TokenContract), btx.BatchNonce)
+			k.CancelBatchTx(ctx, btx)
 		}
 
 		return false
