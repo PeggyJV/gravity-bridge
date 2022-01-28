@@ -19,13 +19,116 @@ type msgServer struct {
 	Keeper
 }
 
+var _ types.MsgServer = msgServer{}
+
 // NewMsgServerImpl returns an implementation of the gov MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-var _ types.MsgServer = msgServer{}
+func (k msgServer) SendToEVM(ctx context.Context, evm *types.MsgSendToEVM) (*types.MsgSendToEVMResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (k msgServer) CancelSendToEVM(ctx context.Context, evm *types.MsgCancelSendToEVM) (*types.MsgCancelSendToEVMResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (k msgServer) RequestEVMBatchTx(ctx context.Context, tx *types.MsgRequestEVMBatchTx) (*types.MsgRequestEVMBatchTxResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (k msgServer) SubmitEVMTxConfirmation(ctx context.Context, confirmation *types.MsgSubmitEVMTxConfirmation) (*types.MsgSubmitEVMTxConfirmationResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (k msgServer) SubmitEVMEvent(ctx context.Context, event *types.MsgSubmitEVMEvent) (*types.MsgSubmitEVMEventResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (k msgServer) SetDelegateChainKeys(c context.Context, msg *types.MsgDelegateChainKeys) (*types.MsgDelegateChainKeysResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	orchAddr, err := sdk.AccAddressFromBech32(msg.OrchestratorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	ethAddr := common.HexToAddress(msg.EvmAddress)
+
+	// ensure that the validator exists
+	if k.Keeper.StakingKeeper.Validator(ctx, valAddr) == nil {
+		return nil, sdkerrors.Wrap(stakingtypes.ErrNoValidatorFound, valAddr.String())
+	}
+
+	// check if the Ethereum address is currently not used
+	validators := k.getValidatorsByEthereumAddress(ctx, ethAddr)
+	if len(validators) > 0 {
+		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "ethereum address %s in use", ethAddr)
+	}
+
+	// check if the orchestrator address is currently not used
+	ethAddrs := k.getEthereumAddressesByOrchestrator(ctx, orchAddr)
+	if len(ethAddrs) > 0 {
+		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "orchestrator address %s in use", orchAddr)
+	}
+
+	valAccAddr := sdk.AccAddress(valAddr)
+	valAccSeq, err := k.accountKeeper.GetSequence(ctx, valAccAddr)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "failed to get sequence for validator account %s", valAccAddr)
+	}
+
+	var nonce uint64
+	if valAccSeq > 0 {
+		nonce = valAccSeq - 1
+	}
+
+	signMsgBz := k.cdc.MustMarshal(&types.DelegateKeysSignMsg{
+		ValidatorAddress: valAddr.String(),
+		// We decrement since we process the message after the ante-handler which
+		// increments the nonce.
+		Nonce: nonce,
+	})
+
+	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
+
+	if err = types.ValidateEVMSignature(hash, msg.EvmSignature, ethAddr); err != nil {
+		return nil, sdkerrors.Wrapf(
+			types.ErrDelegateKeys,
+			"failed to validate delegate keys signature for Ethereum address %X; %s ;%d",
+			ethAddr, err, nonce,
+		)
+	}
+
+	k.SetOrchestratorValidatorAddress(ctx, valAddr, orchAddr)
+	k.setValidatorEthereumAddress(ctx, valAddr, ethAddr)
+	k.setEthereumOrchestratorAddress(ctx, ethAddr, orchAddr)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, msg.Type()),
+			sdk.NewAttribute(types.AttributeKeySetOrchestratorAddr, orchAddr.String()),
+			sdk.NewAttribute(types.AttributeKeySetEthereumAddr, ethAddr.Hex()),
+			sdk.NewAttribute(types.AttributeKeyValidatorAddr, valAddr.String()),
+		),
+	)
+
+	return &types.MsgDelegateChainKeysResponse{}, nil
+
+}
 
 func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys) (*types.MsgDelegateKeysResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
@@ -79,7 +182,7 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 
 	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
 
-	if err = types.ValidateEthereumSignature(hash, msg.EthSignature, ethAddr); err != nil {
+	if err = types.ValidateEVMSignature(hash, msg.EthSignature, ethAddr); err != nil {
 		return nil, sdkerrors.Wrapf(
 			types.ErrDelegateKeys,
 			"failed to validate delegate keys signature for Ethereum address %X; %s ;%d",
@@ -136,7 +239,7 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "eth address does not match signer eth address")
 	}
 
-	if err = types.ValidateEthereumSignature(checkpoint, confirmation.GetSignature(), ethAddress); err != nil {
+	if err = types.ValidateEVMSignature(checkpoint, confirmation.GetSignature(), ethAddress); err != nil {
 		k.Logger(ctx).Error("error validating signature",
 			"eth addr", ethAddress.String(),
 			"gravityID", gravityID,

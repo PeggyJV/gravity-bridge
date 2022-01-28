@@ -48,10 +48,10 @@ func TestMsgServer_SubmitEthereumSignature(t *testing.T) {
 	// setup for GetOutgoingTx
 	signerSetTx := gk.CreateSignerSetTx(ctx)
 
-	// setup for ValidateEthereumSignature
+	// setup for ValidateEVMSignature
 	gravityId := gk.getGravityID(ctx)
 	checkpoint := signerSetTx.GetCheckpoint([]byte(gravityId))
-	signature, err := types.NewEthereumSignature(checkpoint, ethPrivKey)
+	signature, err := types.NewEVMSignature(checkpoint, ethPrivKey)
 	require.NoError(t, err)
 
 	signerSetTxConfirmation := &types.SignerSetTxConfirmation{
@@ -331,7 +331,7 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 	signMsgBz := env.Marshaler.MustMarshal(&ethMsg)
 	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
 
-	sig, err := types.NewEthereumSignature(hash, ethPrivKey)
+	sig, err := types.NewEVMSignature(hash, ethPrivKey)
 	require.NoError(t, err)
 
 	msg := &types.MsgDelegateKeys{
@@ -387,11 +387,11 @@ func TestEthVerify(t *testing.T) {
 	fmt.Println("MESSAGE BYTES TO SIGN:", hexutil.Encode(signMsgBz))
 	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
 
-	sig, err := types.NewEthereumSignature(hash, privKey)
+	sig, err := types.NewEVMSignature(hash, privKey)
 	sig[64] += 27 // change the V value
 	require.NoError(t, err)
 
-	err = types.ValidateEthereumSignature(hash, sig, address)
+	err = types.ValidateEVMSignature(hash, sig, address)
 	require.NoError(t, err)
 
 	// replace gorcSig with what the following command produces:

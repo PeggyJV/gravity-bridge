@@ -75,7 +75,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 /////////////////////////////
 
 // incrementLatestSignerSetTxNonce sets the latest valset nonce
-func (k Keeper) incrementLatestSignerSetTxNonce(ctx sdk.Context) uint64 {
+func (k Keeper) incrementLatestSignerSetTxNonce(ctx sdk.Context, chainID *uint32) uint64 {
 	current := k.GetLatestSignerSetTxNonce(ctx)
 	next := current + 1
 	ctx.KVStore(k.storeKey).Set([]byte{types.LatestSignerSetTxNonceKey}, sdk.Uint64ToBigEndian(next))
@@ -161,7 +161,7 @@ func (k Keeper) iterateEthereumSignatures(ctx sdk.Context, storeIndex []byte, cb
 /////////////////////////
 
 // SetOrchestratorValidatorAddress sets the Orchestrator key for a given validator.
-func (k Keeper) SetOrchestratorValidatorAddress(ctx sdk.Context, val sdk.ValAddress, orchAddr sdk.AccAddress) {
+func (k Keeper) SetOrchestratorValidatorAddress(ctx sdk.Context, val sdk.ValAddress, orchAddr sdk.AccAddress, chainID *uint32) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.MakeOrchestratorValidatorAddressKey(orchAddr)
 
@@ -247,8 +247,8 @@ func (k Keeper) getEthereumAddressesByOrchestrator(ctx sdk.Context, orch sdk.Acc
 
 // CreateSignerSetTx gets the current signer set from the staking keeper, increments the nonce,
 // creates the signer set tx object, emits an event and sets the signer set in state
-func (k Keeper) CreateSignerSetTx(ctx sdk.Context) *types.SignerSetTx {
-	nonce := k.incrementLatestSignerSetTxNonce(ctx)
+func (k Keeper) CreateSignerSetTx(ctx sdk.Context, chainID *uint32) *types.SignerSetTx {
+	nonce := k.incrementLatestSignerSetTxNonce(ctx, chainID)
 	currSignerSet := k.CurrentSignerSet(ctx)
 	newSignerSetTx := types.NewSignerSetTx(nonce, uint64(ctx.BlockHeight()), currSignerSet)
 
@@ -284,7 +284,7 @@ func (k Keeper) CreateSignerSetTx(ctx sdk.Context) *types.SignerSetTx {
 // implementations are involved.
 func (k Keeper) CurrentSignerSet(ctx sdk.Context) types.EthereumSigners {
 	validators := k.StakingKeeper.GetBondedValidatorsByPower(ctx)
-	ethereumSigners := make([]*types.EthereumSigner, 0)
+	ethereumSigners := make([]*types.EVMSigner, 0)
 	var totalPower uint64
 	for _, validator := range validators {
 		val := validator.GetOperator()
@@ -292,7 +292,7 @@ func (k Keeper) CurrentSignerSet(ctx sdk.Context) types.EthereumSigners {
 		p := uint64(k.StakingKeeper.GetLastValidatorPower(ctx, val))
 
 		if ethAddr := k.GetValidatorEthereumAddress(ctx, val); ethAddr.Hex() != "0x0000000000000000000000000000000000000000" {
-			es := &types.EthereumSigner{Power: p, EthereumAddress: ethAddr.Hex()}
+			es := &types.EVMSigner{Power: p, EthereumAddress: ethAddr.Hex()}
 			ethereumSigners = append(ethereumSigners, es)
 			totalPower += p
 		}

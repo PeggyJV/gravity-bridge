@@ -80,7 +80,7 @@ func TestSignerSetConfirmSig(t *testing.T) {
 			require.NoError(t, err)
 
 			// when
-			err = ValidateEthereumSignature(hashBytes, sigBytes, common.HexToAddress(spec.srcETHAddr))
+			err = ValidateEVMSignature(hashBytes, sigBytes, common.HexToAddress(spec.srcETHAddr))
 			if spec.expErr {
 				assert.Error(t, err)
 				return
