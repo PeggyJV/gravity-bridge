@@ -354,3 +354,29 @@ func TestPoolTxRefund(t *testing.T) {
 	balances := input.BankKeeper.GetAllBalances(ctx, mySender)
 	require.Equal(t, sdk.NewInt(104), balances.AmountOf(myDenom))
 }
+
+func TestEmptyBatch(t *testing.T) {
+	input := CreateTestEnv(t)
+	ctx := input.Context
+
+	var (
+		now                 = time.Now().UTC()
+		mySender, _         = sdk.AccAddressFromBech32("cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn")
+		myTokenContractAddr = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5") // Pickle
+		allVouchers         = sdk.NewCoins(
+			types.NewERC20Token(99999, myTokenContractAddr.Hex()).GravityCoin(),
+		)
+	)
+
+	// mint some voucher first
+	require.NoError(t, input.BankKeeper.MintCoins(ctx, types.ModuleName, allVouchers))
+	// set senders balance
+	input.AccountKeeper.NewAccountWithAddress(ctx, mySender)
+	require.NoError(t, fundAccount(ctx, input.BankKeeper, mySender, allVouchers))
+
+	// no transactions should be included in this batch
+	ctx = ctx.WithBlockTime(now)
+	batchTx := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
+
+	require.Nil(t, batchTx)
+}
