@@ -36,6 +36,11 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, contractAddress common.Address, ma
 		return len(selectedStes) == maxElements
 	})
 
+	// do not create batches that would contain no transactions, even if they are requested
+	if len(selectedStes) == 0 {
+		return nil
+	}
+
 	batch := &types.BatchTx{
 		BatchNonce:    k.incrementLastOutgoingBatchNonce(ctx),
 		Timeout:       k.getBatchTimeoutHeight(ctx),
