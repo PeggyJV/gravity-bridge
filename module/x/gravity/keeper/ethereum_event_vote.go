@@ -59,7 +59,7 @@ func (k Keeper) recordEventVote(
 // TryEventVoteRecord checks if an event vote record has enough votes to be applied to the consensus state
 // and has not already been marked Observed, then calls processEthereumEvent to actually apply it to the state,
 // and then marks it Observed and emits an event.
-func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.EthereumEventVoteRecord) {
+func (k Keeper) TryEventVoteRecord(ctx sdk.Context, chainID uint32, eventVoteRecord *types.EthereumEventVoteRecord) {
 	// If the event vote record has not yet been Observed, sum up the votes and see if it is ready to apply to the state.
 	// This conditional stops the event vote record from accidentally being applied twice.
 	if !eventVoteRecord.Accepted {
@@ -101,7 +101,7 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.Ether
 					sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
 					sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
 					sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID,
-						string(types.MakeEthereumEventVoteRecordKey(event.GetEventNonce(), event.Hash()))),
+						string(types.MakeEVMEventVoteRecordKey(chainID, event.GetEventNonce(), event.Hash()))),
 					sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(event.GetEventNonce())),
 				))
 
@@ -126,23 +126,23 @@ func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent)
 			"ethereum event vote record failed",
 			"cause", err.Error(),
 			"event type", fmt.Sprintf("%T", event),
-			"id", types.MakeEthereumEventVoteRecordKey(event.GetEventNonce(), event.Hash()),
+			"id", types.MakeEVMEventVoteRecordKey(event.GetEventNonce(), event.Hash()),
 			"nonce", fmt.Sprint(event.GetEventNonce()),
 		)
 	} else {
 		ctx.EventManager().EmitEvents(xCtx.EventManager().Events()) // copy events to original context
-		commit() // persist transient storage
+		commit()                                                    // persist transient storage
 	}
 }
 
 // setEthereumEventVoteRecord sets the attestation in the store
 func (k Keeper) setEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte, eventVoteRecord *types.EthereumEventVoteRecord) {
-	ctx.KVStore(k.storeKey).Set(types.MakeEthereumEventVoteRecordKey(eventNonce, claimHash), k.cdc.MustMarshal(eventVoteRecord))
+	ctx.KVStore(k.storeKey).Set(types.MakeEVMEventVoteRecordKey(eventNonce, claimHash), k.cdc.MustMarshal(eventVoteRecord))
 }
 
 // GetEthereumEventVoteRecord return a vote record given a nonce
 func (k Keeper) GetEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte) *types.EthereumEventVoteRecord {
-	if bz := ctx.KVStore(k.storeKey).Get(types.MakeEthereumEventVoteRecordKey(eventNonce, claimHash)); bz == nil {
+	if bz := ctx.KVStore(k.storeKey).Get(types.MakeEVMEventVoteRecordKey(eventNonce, claimHash)); bz == nil {
 		return nil
 	} else {
 		var out types.EthereumEventVoteRecord
@@ -171,7 +171,7 @@ func (k Keeper) GetEthereumEventVoteRecordMapping(ctx sdk.Context) (out map[uint
 
 // iterateEthereumEventVoteRecords iterates through all attestations
 func (k Keeper) iterateEthereumEventVoteRecords(ctx sdk.Context, cb func([]byte, *types.EthereumEventVoteRecord) bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.EthereumEventVoteRecordKey})
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.EVMEventVoteRecordKey})
 	iter := store.Iterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
@@ -199,7 +199,7 @@ func (k Keeper) GetLastObservedEventNonce(ctx sdk.Context) uint64 {
 // the store
 func (k Keeper) GetLastObservedEthereumBlockHeight(ctx sdk.Context) types.LatestEthereumBlockHeight {
 	store := ctx.KVStore(k.storeKey)
-	bytes := store.Get([]byte{types.LastEthereumBlockHeightKey})
+	bytes := store.Get([]byte{types.LastEVMBlockHeightKey})
 
 	if len(bytes) == 0 {
 		return types.LatestEthereumBlockHeight{
@@ -219,7 +219,7 @@ func (k Keeper) SetLastObservedEthereumBlockHeight(ctx sdk.Context, ethereumHeig
 		EthereumHeight: ethereumHeight,
 		CosmosHeight:   uint64(ctx.BlockHeight()),
 	}
-	store.Set([]byte{types.LastEthereumBlockHeightKey}, k.cdc.MustMarshal(&height))
+	store.Set([]byte{types.LastEVMBlockHeightKey}, k.cdc.MustMarshal(&height))
 }
 
 // setLastObservedEventNonce sets the latest observed event nonce

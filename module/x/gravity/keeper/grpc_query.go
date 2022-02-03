@@ -387,7 +387,7 @@ func (k Keeper) UnbatchedSendToEthereums(c context.Context, req *types.Unbatched
 	ctx := sdk.UnwrapSDKContext(c)
 	res := &types.UnbatchedSendToEthereumsResponse{}
 
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEthereumKey})
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEVMKey})
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var ste types.SendToEthereum
 		k.cdc.MustUnmarshal(value, &ste)

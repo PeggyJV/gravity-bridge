@@ -103,15 +103,15 @@ func (k Keeper) cancelSendToEthereum(ctx sdk.Context, id uint64, s string) error
 }
 
 func (k Keeper) setUnbatchedSendToEthereum(ctx sdk.Context, ste *types.SendToEthereum) {
-	ctx.KVStore(k.storeKey).Set(types.MakeSendToEthereumKey(ste.Id, ste.Erc20Fee), k.cdc.MustMarshal(ste))
+	ctx.KVStore(k.storeKey).Set(types.MakeSendToEVMKey(ste.Id, ste.Erc20Fee), k.cdc.MustMarshal(ste))
 }
 
 func (k Keeper) deleteUnbatchedSendToEthereum(ctx sdk.Context, id uint64, fee types.ERC20Token) {
-	ctx.KVStore(k.storeKey).Delete(types.MakeSendToEthereumKey(id, fee))
+	ctx.KVStore(k.storeKey).Delete(types.MakeSendToEVMKey(id, fee))
 }
 
 func (k Keeper) iterateUnbatchedSendToEthereumsByContract(ctx sdk.Context, contract common.Address, cb func(*types.SendToEthereum) bool) {
-	iter := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.SendToEthereumKey}, contract.Bytes()...)).ReverseIterator(nil, nil)
+	iter := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.SendToEVMKey}, contract.Bytes()...)).ReverseIterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var ste types.SendToEthereum
@@ -123,7 +123,7 @@ func (k Keeper) iterateUnbatchedSendToEthereumsByContract(ctx sdk.Context, contr
 }
 
 func (k Keeper) IterateUnbatchedSendToEthereums(ctx sdk.Context, cb func(*types.SendToEthereum) bool) {
-	iter := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEthereumKey}).ReverseIterator(nil, nil)
+	iter := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEVMKey}).ReverseIterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var ste types.SendToEthereum
@@ -145,13 +145,13 @@ func (k Keeper) getUnbatchedSendToEthereums(ctx sdk.Context) []*types.SendToEthe
 
 func (k Keeper) incrementLastSendToEthereumIDKey(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get([]byte{types.LastSendToEthereumIDKey})
+	bz := store.Get([]byte{types.LastSendToEVMIDKey})
 	var id uint64 = 0
 	if bz != nil {
 		id = binary.BigEndian.Uint64(bz)
 	}
 	newId := id + 1
 	bz = sdk.Uint64ToBigEndian(newId)
-	store.Set([]byte{types.LastSendToEthereumIDKey}, bz)
+	store.Set([]byte{types.LastSendToEVMIDKey}, bz)
 	return newId
 }
