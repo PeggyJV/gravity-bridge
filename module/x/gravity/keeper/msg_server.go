@@ -112,7 +112,7 @@ func (k msgServer) SetDelegateChainKeys(c context.Context, msg *types.MsgDelegat
 		)
 	}
 
-	k.SetOrchestratorValidatorAddress(ctx, valAddr, orchAddr)
+	k.SetOrchestratorValidatorAddress(ctx, valAddr, orchAddr, msg.ChainId)
 	k.setValidatorEthereumAddress(ctx, valAddr, ethAddr)
 	k.setEthereumOrchestratorAddress(ctx, ethAddr, orchAddr)
 
@@ -301,7 +301,7 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, fmt.Sprintf("%T", event)),
 			// TODO: maybe return something better here? is this the right string representation?
-			sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID, string(types.MakeEthereumEventVoteRecordKey(event.GetEventNonce(), event.Hash()))),
+			sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID, string(types.MakeEVMEventVoteRecordKey(event.GetEventNonce(), event.Hash()))),
 		),
 	)
 

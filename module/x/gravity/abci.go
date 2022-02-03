@@ -159,9 +159,9 @@ func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper) {
 //    here is the Ethereum block height at the time of the last Deposit or Withdraw to be observed. It's very important we do not
 //    project, if we do a slowdown on ethereum could cause a double spend. Instead timeouts will *only* occur after the timeout period
 //    AND any deposit or withdraw has occurred to update the Ethereum block height.
-func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
+func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	ethereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight
-	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, chainID, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		btx, _ := otx.(*types.BatchTx)
 
 		if btx.Timeout < ethereumHeight {
@@ -181,18 +181,18 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 //    here is the Ethereum block height at the time of the last Deposit or Withdraw to be observed. It's very important we do not
 //    project, if we do a slowdown on ethereum could cause a double spend. Instead timeouts will *only* occur after the timeout period
 //    AND any deposit or withdraw has occurred to update the Ethereum block height.
-func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper) {
+func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	ethereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight
-	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, chainID, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		cctx, _ := otx.(*types.ContractCallTx)
 		if cctx.Timeout < ethereumHeight {
-			k.DeleteOutgoingTx(ctx, cctx.GetStoreIndex())
+			k.DeleteOutgoingTx(ctx, chainID, cctx.GetStoreIndex())
 		}
 		return true
 	})
 }
 
-func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
+func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	params := k.GetParams(ctx)
 	maxHeight := uint64(0)
 	if uint64(ctx.BlockHeight()) > params.SignedBatchesWindow {
@@ -257,7 +257,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 
 	for _, otx := range usotxs {
 		// SLASH BONDED VALIDATORS who didn't sign batch txs
-		signatures := k.GetEthereumSignatures(ctx, otx.GetStoreIndex())
+		signatures := k.GetEthereumSignatures(ctx, chainID, otx.GetStoreIndex())
 		for _, valInfo := range valInfos {
 			// Don't slash validators who joined after outgoingtx is created
 			if valInfo.exist && valInfo.sigs.StartHeight < int64(otx.GetCosmosHeight()) {
