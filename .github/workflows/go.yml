@@ -27,4 +27,8 @@ jobs:
             ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('module/go.sum') }}
       - name: Run Go tests
-        run: cd module && make test
+        run: cd module && make test-cov
+      - uses: codecov/codecov-action@v2
+        with:
+          file: ./coverage.txt
+          fail_ci_if_error: true
