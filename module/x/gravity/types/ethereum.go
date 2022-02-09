@@ -63,7 +63,7 @@ func NewSDKIntERC20Token(amount sdk.Int, contract common.Address) ERC20Token {
 
 // GravityCoin returns the gravity representation of the ERC20
 func (e ERC20Token) GravityCoin() sdk.Coin {
-	return sdk.Coin{Amount: e.Amount, Denom: strings.Join([]string{GravityDenomPrefix, e.Contract}, GravityDenomSeparator)}
+	return sdk.Coin{Amount: e.Amount, Denom: strings.Join([]string{GravityDenomPrefix, strings.ToLower(e.Contract)}, GravityDenomSeparator)}
 }
 
 func GravityDenomToERC20(denom string) (string, error) {

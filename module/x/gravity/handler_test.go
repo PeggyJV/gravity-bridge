@@ -79,6 +79,52 @@ func TestHandleMsgSendToEthereum(t *testing.T) {
 	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, finalAmount3)}, balance4)
 }
 
+func TestHandleMsgCancelSendToEthereum(t *testing.T) {
+	var (
+		userCosmosAddr, _               = sdk.AccAddressFromBech32("cosmos1990z7dqsvh8gthw9pa5sn4wuy2xrsd80mg5z6y")
+		blockTime                       = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
+		blockHeight           int64     = 200
+		denom                           = "gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"
+		startingCoinAmount, _           = sdk.NewIntFromString("150000000000000000000") // 150 ETH worth, required to reach above u64 limit (which is about 18 ETH)
+		sendAmount, _                   = sdk.NewIntFromString("50000000000000000000")  // 50 ETH
+		feeAmount, _                    = sdk.NewIntFromString("5000000000000000000")   // 5 ETH
+		startingCoins         sdk.Coins = sdk.Coins{sdk.NewCoin(denom, startingCoinAmount)}
+		sendingCoin           sdk.Coin  = sdk.NewCoin(denom, sendAmount)
+		feeCoin               sdk.Coin  = sdk.NewCoin(denom, feeAmount)
+		ethDestination                  = "0x3c9289da00b02dC623d0D8D907619890301D26d4"
+	)
+
+	// we start by depositing some funds into the users balance to send
+	input := keeper.CreateTestEnv(t)
+	ctx := input.Context
+	h := gravity.NewHandler(input.GravityKeeper)
+	input.BankKeeper.MintCoins(ctx, types.ModuleName, startingCoins)
+	input.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, userCosmosAddr, startingCoins) // 150
+	balance1 := input.BankKeeper.GetAllBalances(ctx, userCosmosAddr)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, startingCoinAmount)}, balance1) // 150
+
+	// send some coins
+	msg := &types.MsgSendToEthereum{
+		Sender:            userCosmosAddr.String(),
+		EthereumRecipient: ethDestination,
+		Amount:            sendingCoin,
+		BridgeFee:         feeCoin}
+	ctx = ctx.WithBlockTime(blockTime).WithBlockHeight(blockHeight)
+	_, err := h(ctx, msg) // send 55
+	require.NoError(t, err)
+	balance2 := input.BankKeeper.GetAllBalances(ctx, userCosmosAddr)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, startingCoinAmount.Sub(sendAmount).Sub(feeAmount))}, balance2)
+
+	cancelMsg := &types.MsgCancelSendToEthereum{
+		Sender: userCosmosAddr.String(),
+		Id:     1,
+	}
+	_, err = h(ctx, cancelMsg) // cancel send
+	require.NoError(t, err)
+	balance3 := input.BankKeeper.GetAllBalances(ctx, userCosmosAddr)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, startingCoinAmount)}.String(), balance3.String())
+}
+
 func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 	var (
 		myOrchestratorAddr sdk.AccAddress = make([]byte, app.MaxAddrLen)
