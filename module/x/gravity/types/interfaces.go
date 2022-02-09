@@ -15,7 +15,6 @@ type EthereumTxConfirmation interface {
 	GetSignature() []byte
 	GetStoreIndex() []byte
 	Validate() error
-	ChainID() uint32
 }
 
 // EthereumEvent represents a event from the gravity contract
@@ -27,7 +26,6 @@ type EthereumEvent interface {
 	GetEthereumHeight() uint64
 	Hash() tmbytes.HexBytes
 	Validate() error
-	ChainID() uint32
 }
 
 type OutgoingTx interface {
@@ -40,5 +38,4 @@ type OutgoingTx interface {
 	GetCheckpoint([]byte) []byte
 	GetStoreIndex() []byte
 	GetCosmosHeight() uint64
-	GetChainID() uint32
 }

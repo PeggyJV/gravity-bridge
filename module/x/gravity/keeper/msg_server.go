@@ -119,7 +119,7 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	otx := k.GetOutgoingTx(ctx, msg.ChainID(), confirmation.GetStoreIndex())
+	otx := k.GetOutgoingTx(ctx, msg.ChainIDOrDefault(), confirmation.GetStoreIndex())
 	if otx == nil {
 		k.Logger(ctx).Error(
 			"no outgoing tx",
@@ -155,11 +155,11 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 		))
 	}
 	// TODO: should validators be able to overwrite their signatures?
-	if k.getEthereumSignature(ctx, msg.ChainID(), confirmation.GetStoreIndex(), val) != nil {
+	if k.getEthereumSignature(ctx, msg.ChainIDOrDefault(), confirmation.GetStoreIndex(), val) != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "signature duplicate")
 	}
 
-	key := k.SetEthereumSignature(ctx, msg.ChainID(), confirmation, val)
+	key := k.SetEthereumSignature(ctx, msg.ChainIDOrDefault(), confirmation, val)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -187,7 +187,7 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 	}
 
 	// Add the claim to the store
-	_, err = k.recordEventVote(ctx, msg.ChainID(), event, val)
+	_, err = k.recordEventVote(ctx, msg.ChainIDOrDefault(), event, val)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "create event vote record")
 	}
@@ -198,7 +198,7 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, fmt.Sprintf("%T", event)),
 			// TODO: maybe return something better here? is this the right string representation?
-			sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID, string(types.MakeEVMEventVoteRecordKey(msg.ChainID(), event.GetEventNonce(), event.Hash()))),
+			sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID, string(types.MakeEVMEventVoteRecordKey(msg.ChainIDOrDefault(), event.GetEventNonce(), event.Hash()))),
 		),
 	)
 
@@ -213,7 +213,7 @@ func (k msgServer) SendToEthereum(c context.Context, msg *types.MsgSendToEthereu
 		return nil, err
 	}
 
-	txID, err := k.createSendToEthereum(ctx, msg.ChainID(), sender, msg.EthereumRecipient, msg.Amount, msg.BridgeFee)
+	txID, err := k.createSendToEthereum(ctx, msg.ChainIDOrDefault(), sender, msg.EthereumRecipient, msg.Amount, msg.BridgeFee)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func (k msgServer) SendToEthereum(c context.Context, msg *types.MsgSendToEthereu
 			types.EventTypeBridgeWithdrawalReceived,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
-			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(msg.ChainID()))),
+			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(msg.ChainIDOrDefault()))),
 			sdk.NewAttribute(types.AttributeKeyOutgoingTXID, strconv.Itoa(int(txID))),
 			sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(txID)),
 		),
@@ -244,12 +244,12 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 
 	// Check if the denom is a gravity coin, if not, check if there is a deployed ERC20 representing it.
 	// If not, error out
-	_, tokenContract, err := k.DenomToERC20Lookup(ctx, msg.ChainID(), msg.Denom)
+	_, tokenContract, err := k.DenomToERC20Lookup(ctx, msg.ChainIDOrDefault(), msg.Denom)
 	if err != nil {
 		return nil, err
 	}
 
-	batchID := k.BuildBatchTx(ctx, msg.ChainID(), tokenContract, BatchTxSize)
+	batchID := k.BuildBatchTx(ctx, msg.ChainIDOrDefault(), tokenContract, BatchTxSize)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -266,7 +266,7 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 func (k msgServer) CancelSendToEthereum(c context.Context, msg *types.MsgCancelSendToEthereum) (*types.MsgCancelSendToEthereumResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	err := k.Keeper.cancelSendToEthereum(ctx, msg.ChainID(), msg.Id, msg.Sender)
+	err := k.Keeper.cancelSendToEthereum(ctx, msg.ChainIDOrDefault(), msg.Id, msg.Sender)
 	if err != nil {
 		return nil, err
 	}
