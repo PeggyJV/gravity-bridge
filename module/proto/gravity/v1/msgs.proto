@@ -12,140 +12,66 @@ option go_package = "github.com/peggyjv/gravity-bridge/module/x/gravity/types";
 
 // Msg defines the state transitions possible within gravity
 service Msg {
-  rpc SendToEVM(MsgSendToEVM) returns (MsgSendToEVMResponse) {}
-  rpc CancelSendToEVM(MsgCancelSendToEVM) returns (MsgCancelSendToEVMResponse) {
-  }
-  rpc RequestEVMBatchTx(MsgRequestEVMBatchTx)
-      returns (MsgRequestEVMBatchTxResponse) {}
-  rpc SubmitEVMTxConfirmation(MsgSubmitEVMTxConfirmation)
-      returns (MsgSubmitEVMTxConfirmationResponse) {}
-  rpc SubmitEVMEvent(MsgSubmitEVMEvent) returns (MsgSubmitEVMEventResponse) {}
-  rpc SetDelegateChainKeys(MsgDelegateChainKeys)
-      returns (MsgDelegateChainKeysResponse) {}
-
-  // deprecated endpoints
-  rpc SendToEthereum(MsgSendToEthereum) returns (MsgSendToEthereumResponse) {
-    option deprecated = true;
-  }
+  rpc SetDelegateKeys(MsgDelegateKeys) returns (MsgDelegateKeysResponse) {}
+  rpc SendToEthereum(MsgSendToEthereum) returns (MsgSendToEthereumResponse) {}
   rpc CancelSendToEthereum(MsgCancelSendToEthereum)
-      returns (MsgCancelSendToEthereumResponse) {
-    option deprecated = true;
-  }
-  rpc RequestBatchTx(MsgRequestBatchTx) returns (MsgRequestBatchTxResponse) {
-    option deprecated = true;
-  }
+      returns (MsgCancelSendToEthereumResponse) {}
+  rpc RequestBatchTx(MsgRequestBatchTx) returns (MsgRequestBatchTxResponse) {}
   rpc SubmitEthereumTxConfirmation(MsgSubmitEthereumTxConfirmation)
-      returns (MsgSubmitEthereumTxConfirmationResponse) {
-    option deprecated = true;
-  }
+      returns (MsgSubmitEthereumTxConfirmationResponse) {}
   rpc SubmitEthereumEvent(MsgSubmitEthereumEvent)
-      returns (MsgSubmitEthereumEventResponse) {
-    option deprecated = true;
-  }
-  rpc SetDelegateKeys(MsgDelegateKeys) returns (MsgDelegateKeysResponse) {
-    option deprecated = true;
-  }
+      returns (MsgSubmitEthereumEventResponse) {}
 }
 
 // MsgSendToEthereum submits a SendToEthereum attempt to bridge an asset over to
 // Ethereum. The SendToEthereum will be stored and then included in a batch and
 // then submitted to Ethereum.
 message MsgSendToEthereum {
-  option deprecated = true;
   string sender = 1;
   string ethereum_recipient = 2;
   cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
   cosmos.base.v1beta1.Coin bridge_fee = 4 [ (gogoproto.nullable) = false ];
+  optional uint32 chain_id = 5;
 }
 
 // MsgSendToEthereumResponse returns the SendToEthereum transaction ID which
 // will be included in the batch tx.
 message MsgSendToEthereumResponse {
-  option deprecated = true;
   uint64 id = 1;
 }
-
-// MsgSendToEVM submits a SendToEVM attempt to bridge an asset over to
-// an EVM chain. The SendToEVM will be stored and then included in a batch and
-// then submitted to the chain.
-message MsgSendToEVM {
-  uint32 chain = 1;
-  string sender = 2;
-  string ethereum_recipient = 3;
-  cosmos.base.v1beta1.Coin amount = 4 [ (gogoproto.nullable) = false ];
-  cosmos.base.v1beta1.Coin bridge_fee = 5 [ (gogoproto.nullable) = false ];
-}
-
-// MsgSendToEVMResponse returns the SendToEVM transaction ID which
-// will be included in the batch tx.
-message MsgSendToEVMResponse { uint64 id = 1; }
 
 // MsgCancelSendToEthereum allows the sender to cancel its own outgoing
 // SendToEthereum tx and receive a refund of the tokens and bridge fees. This tx
 // will only succeed if the SendToEthereum tx hasn't been batched to be
 // processed and relayed to Ethereum.
 message MsgCancelSendToEthereum {
-  option deprecated = true;
   uint64 id = 1;
   string sender = 2;
+  optional uint32 chain_id = 3;
 }
 
-message MsgCancelSendToEthereumResponse { option deprecated = true; }
-
-// MsgCancelSendToEVM allows the sender to cancel its own outgoing
-// SendToEVM tx and receive a refund of the tokens and bridge fees. This tx
-// will only succeed if the SendToEVM tx hasn't been batched to be
-// processed and relayed to the EVM chain.
-message MsgCancelSendToEVM {
-  uint32 chain_id = 1;
-  uint64 id = 2;
-  string sender = 3;
-}
-
-message MsgCancelSendToEVMResponse {}
+message MsgCancelSendToEthereumResponse {}
 
 // MsgRequestBatchTx requests a batch of transactions with a given coin
 // denomination to send across the bridge to Ethereum.
 message MsgRequestBatchTx {
-  option deprecated = true;
   string denom = 1;
   string signer = 2;
+  optional uint32 chain_id = 3;
 }
 
-message MsgRequestBatchTxResponse { option deprecated = true; }
-
-// MsgRequestEVMBatchTx requests a batch of transactions with a given coin
-// denomination to send across the bridge to an EVM chain.
-message MsgRequestEVMBatchTx {
-  uint32 chain_id = 1;
-  string denom = 2;
-  string signer = 3;
-}
-
-message MsgRequestEVMBatchTxResponse {}
+message MsgRequestBatchTxResponse {}
 
 // MsgSubmitEthereumTxConfirmation submits an ethereum signature for a given
 // validator
 message MsgSubmitEthereumTxConfirmation {
   option (gogoproto.goproto_getters) = false;
-  option deprecated = true;
 
   // TODO: can we make this take an array?
   google.protobuf.Any confirmation = 1
       [ (cosmos_proto.accepts_interface) = "EthereumTxConfirmation" ];
   string signer = 2;
-}
-
-// MsgSubmitEVMTxConfirmation submits an ethereum signature for a given
-// validator
-message MsgSubmitEVMTxConfirmation {
-  option (gogoproto.goproto_getters) = false;
-
-  uint32 chain_id = 1;
-  // TODO: can we make this take an array?
-  google.protobuf.Any confirmation = 2
-      [ (cosmos_proto.accepts_interface) = "EthereumTxConfirmation" ];
-  string signer = 3;
+  optional uint32 chain_id = 3;
 }
 
 // ContractCallTxConfirmation is a signature on behalf of a validator for a
@@ -173,60 +99,32 @@ message SignerSetTxConfirmation {
   bytes signature = 3;
 }
 
-message MsgSubmitEthereumTxConfirmationResponse { option deprecated = true; }
-
-message MsgSubmitEVMTxConfirmationResponse {}
+message MsgSubmitEthereumTxConfirmationResponse {}
 
 // MsgSubmitEthereumEvent
 message MsgSubmitEthereumEvent {
   option (gogoproto.goproto_getters) = false;
-  option deprecated = true;
 
   google.protobuf.Any event = 1
       [ (cosmos_proto.accepts_interface) = "EthereumEvent" ];
   string signer = 2;
+  optional uint32 chain_id = 3;
 }
 
-// MsgSubmitEVMEvent
-message MsgSubmitEVMEvent {
-  option (gogoproto.goproto_getters) = false;
+message MsgSubmitEthereumEventResponse {}
 
-  uint32 chain_id = 1;
-  google.protobuf.Any event = 2
-      [ (cosmos_proto.accepts_interface) = "EVMEvent" ];
-  string signer = 3;
-}
-
-message MsgSubmitEthereumEventResponse { option deprecated = true; }
-
-message MsgSubmitEVMEventResponse {}
 
 // MsgDelegateKeys allows validators to delegate their voting responsibilities
 // to a given orchestrator address. This key is then used as an optional
 // authentication method for attesting events from Ethereum.
 message MsgDelegateKeys {
-  option deprecated = true;
   string validator_address = 1;
   string orchestrator_address = 2;
   string ethereum_address = 3;
   bytes eth_signature = 4;
 }
 
-// MsgDelegateChainKeys allows validators to delegate their voting
-// responsibilities to a given orchestrator address for a given chain. This key
-// is then used as an optional authentication method for attesting events from
-// EVM based chains.
-message MsgDelegateChainKeys {
-  uint32 chain_id = 1;
-  string validator_address = 2;
-  string orchestrator_address = 3;
-  string evm_address = 4;
-  bytes evm_signature = 5;
-}
-
-message MsgDelegateKeysResponse { option deprecated = true; }
-
-message MsgDelegateChainKeysResponse {}
+message MsgDelegateKeysResponse {}
 
 // DelegateKeysSignMsg defines the message structure an operator is expected to
 // sign when submitting a MsgDelegateKeys message. The resulting signature
@@ -245,8 +143,6 @@ message DelegateKeysSignMsg {
 // address.
 message SendToCosmosEvent {
   option (gogoproto.equal) = true;
-  option deprecated = true;
-
   uint64 event_nonce = 1;
   string token_contract = 2;
   string amount = 3 [
@@ -256,45 +152,17 @@ message SendToCosmosEvent {
   string ethereum_sender = 4;
   string cosmos_receiver = 5;
   uint64 ethereum_height = 6;
-}
-
-// EVMToCosmosEvent is submitted when the SendToCosmosEvent is emitted by they
-// gravity contract. ERC20 representation coins are minted to the cosmosreceiver
-// address.
-message EVMToCosmosEvent {
-  option (gogoproto.equal) = true;
-
-  uint32 chain_id = 1;
-  uint64 event_nonce = 2;
-  string token_contract = 3;
-  string amount = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
-  string ethereum_sender = 5;
-  string cosmos_receiver = 6;
-  uint64 evm_height = 7;
+  uint32 chain_id = 7;
 }
 
 // BatchExecutedEvent claims that a batch of BatchTxExecutedal operations on the
 // bridge contract was executed successfully on ETH
 message BatchExecutedEvent {
-  option deprecated = true;
-
   string token_contract = 1;
   uint64 event_nonce = 2;
   uint64 ethereum_height = 3;
   uint64 batch_nonce = 4;
-}
-
-// EVMBatchExecutedEvent claims that a batch of BatchTxExecuted operations on
-// the bridge contract was executed successfully on the EVM chain
-message EVMBatchExecutedEvent {
-  uint32 chain_id = 1;
-  string token_contract = 2;
-  uint64 event_nonce = 3;
-  uint64 evm_height = 4;
-  uint64 batch_nonce = 5;
+  uint32 chain_id = 5;
 }
 
 // ContractCallExecutedEvent describes a contract call that has been
@@ -303,33 +171,18 @@ message EVMBatchExecutedEvent {
 // NOTE: bytes.HexBytes is supposed to "help" with json encoding/decoding
 // investigate?
 message ContractCallExecutedEvent {
-  option deprecated = true;
-
   uint64 event_nonce = 1;
   bytes invalidation_scope = 2
       [ (gogoproto.casttype) =
             "github.com/tendermint/tendermint/libs/bytes.HexBytes" ];
   uint64 invalidation_nonce = 3;
   uint64 ethereum_height = 4;
-}
-
-// EVMContractCallExecutedEvent describes a contract call that has been
-// successfully executed on the EVM chain.
-message EVMContractCallExecutedEvent {
-  uint32 chain_id = 1;
-  uint64 event_nonce = 2;
-  bytes invalidation_scope = 3
-      [ (gogoproto.casttype) =
-            "github.com/tendermint/tendermint/libs/bytes.HexBytes" ];
-  uint64 invalidation_nonce = 4;
-  uint64 ethereum_height = 5;
+  uint32 chain_id = 5;
 }
 
 // ERC20DeployedEvent is submitted when an ERC20 contract
 // for a Cosmos SDK coin has been deployed on Ethereum.
 message ERC20DeployedEvent {
-  option deprecated = true;
-
   uint64 event_nonce = 1;
   string cosmos_denom = 2;
   string token_contract = 3;
@@ -337,38 +190,15 @@ message ERC20DeployedEvent {
   string erc20_symbol = 5;
   uint64 erc20_decimals = 6;
   uint64 ethereum_height = 7;
-}
-
-// ERC20DeployedToEVMEvent is submitted when an ERC20 contract
-// for a Cosmos SDK coin has been deployed on Ethereum.
-message ERC20DeployedToEVMEvent {
-  uint32 chain_id = 1;
-  uint64 event_nonce = 2;
-  string cosmos_denom = 3;
-  string token_contract = 4;
-  string erc20_name = 5;
-  string erc20_symbol = 6;
-  uint64 erc20_decimals = 7;
-  uint64 evm_height = 8;
+  uint32 chain_id = 8;
 }
 
 // This informs the Cosmos module that a validator
 // set has been updated.
 message SignerSetTxExecutedEvent {
-  option deprecated = true;
-
   uint64 event_nonce = 1;
   uint64 signer_set_tx_nonce = 2;
   uint64 ethereum_height = 3;
   repeated EVMSigner members = 4;
-}
-
-// This informs the Cosmos module that a validator
-// set has been updated.
-message EVMSignerSetTxExecutedEvent {
-  uint32 chain_id = 1;
-  uint64 event_nonce = 2;
-  uint64 signer_set_tx_nonce = 3;
-  uint64 evm_height = 4;
-  repeated EVMSigner members = 5;
+  uint32 chain_id = 5;
 }

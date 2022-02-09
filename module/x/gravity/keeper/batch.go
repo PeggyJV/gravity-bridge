@@ -24,13 +24,13 @@ const BatchTxSize = 100
 func (k Keeper) BuildBatchTx(ctx sdk.Context, chainID uint32, contractAddress common.Address, maxElements int) *types.BatchTx {
 	// if there is a more profitable batch for this token type do not create a new batch
 	if lastBatch := k.getLastOutgoingBatchByTokenType(ctx, chainID, contractAddress); lastBatch != nil {
-		if lastBatch.GetFees().GTE(k.getBatchFeesByTokenType(ctx, contractAddress, maxElements)) {
+		if lastBatch.GetFees().GTE(k.getBatchFeesByTokenType(ctx, chainID, contractAddress, maxElements)) {
 			return nil
 		}
 	}
 
 	var selectedStes []*types.SendToEthereum
-	k.iterateUnbatchedSendToEthereumsByContract(ctx, contractAddress, func(ste *types.SendToEthereum) bool {
+	k.iterateUnbatchedSendToEthereumsByContract(ctx, chainID, contractAddress, func(ste *types.SendToEthereum) bool {
 		selectedStes = append(selectedStes, ste)
 		k.deleteUnbatchedSendToEthereum(ctx, ste.Id, ste.Erc20Fee)
 		return len(selectedStes) == maxElements
@@ -38,7 +38,7 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, chainID uint32, contractAddress co
 
 	batch := &types.BatchTx{
 		BatchNonce:    k.incrementLastOutgoingBatchNonce(ctx, chainID),
-		Timeout:       k.getBatchTimeoutHeight(ctx),
+		Timeout:       k.getBatchTimeoutHeight(ctx, chainID),
 		Transactions:  selectedStes,
 		TokenContract: contractAddress.Hex(),
 		Height:        uint64(ctx.BlockHeight()),
@@ -63,7 +63,7 @@ func (k Keeper) getBatchTimeoutHeight(ctx sdk.Context, chainID uint32) uint64 {
 	currentCosmosHeight := ctx.BlockHeight()
 	// we store the last observed Cosmos and Ethereum heights, we do not concern ourselves if these values are zero because
 	// no batch can be produced if the last Ethereum block height is not first populated by a deposit event.
-	heights := k.GetLastObservedEVMBlockHeight(ctx)
+	heights := k.GetLastObservedEVMBlockHeight(ctx, chainID)
 	if heights.CosmosHeight == 0 || heights.EthereumHeight == 0 {
 		return 0
 	}
@@ -80,13 +80,13 @@ func (k Keeper) getBatchTimeoutHeight(ctx sdk.Context, chainID uint32) uint64 {
 // batchTxExecuted is run when the Cosmos chain detects that a batch has been executed on Ethereum
 // It deletes all the transactions in the batch, then cancels all earlier batches
 func (k Keeper) batchTxExecuted(ctx sdk.Context, chainID uint32, tokenContract common.Address, nonce uint64) {
-	otx := k.GetOutgoingTx(ctx, chainID, types.MakeBatchTxKey(tokenContract, nonce))
+	otx := k.GetOutgoingTx(ctx, chainID, types.MakeBatchTxKey(chainID, tokenContract, nonce))
 	batchTx, _ := otx.(*types.BatchTx)
 	k.IterateOutgoingTxsByType(ctx, chainID, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		// If the iterated batches nonce is lower than the one that was just executed, cancel it
 		btx, _ := otx.(*types.BatchTx)
 		if (btx.BatchNonce < batchTx.BatchNonce) && (batchTx.TokenContract == tokenContract.Hex()) {
-			k.CancelBatchTx(ctx, tokenContract, btx.BatchNonce)
+			k.CancelBatchTx(ctx, chainID, tokenContract, btx.BatchNonce)
 		}
 		return false
 	})
@@ -97,10 +97,10 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, chainID uint32, tokenContract c
 // have if created. This info is both presented to relayers for the purpose of determining
 // when to request batches and also used by the batch creation process to decide not to create
 // a new batch
-func (k Keeper) getBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr common.Address, maxElements int) sdk.Int {
+func (k Keeper) getBatchFeesByTokenType(ctx sdk.Context, chainID uint32, tokenContractAddr common.Address, maxElements int) sdk.Int {
 	feeAmount := sdk.ZeroInt()
 	i := 0
-	k.iterateUnbatchedSendToEthereumsByContract(ctx, tokenContractAddr, func(tx *types.SendToEthereum) bool {
+	k.iterateUnbatchedSendToEthereumsByContract(ctx, chainID, tokenContractAddr, func(tx *types.SendToEthereum) bool {
 		feeAmount = feeAmount.Add(tx.Erc20Fee.Amount)
 		i++
 		return i == maxElements
@@ -113,10 +113,10 @@ func (k Keeper) getBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr commo
 // have if created. This info is both presented to relayers for the purpose of determining
 // when to request batches and also used by the batch creation process to decide not to create
 // a new batch
-func (k Keeper) GetBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr common.Address, maxElements int) sdk.Int {
+func (k Keeper) GetBatchFeesByTokenType(ctx sdk.Context, chainID uint32, tokenContractAddr common.Address, maxElements int) sdk.Int {
 	feeAmount := sdk.ZeroInt()
 	i := 0
-	k.iterateUnbatchedSendToEthereumsByContract(ctx, tokenContractAddr, func(tx *types.SendToEthereum) bool {
+	k.iterateUnbatchedSendToEthereumsByContract(ctx, chainID, tokenContractAddr, func(tx *types.SendToEthereum) bool {
 		feeAmount = feeAmount.Add(tx.Erc20Fee.Amount)
 		i++
 		return i == maxElements

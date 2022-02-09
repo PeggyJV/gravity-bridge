@@ -17,24 +17,30 @@ import (
 // clients listening to the chain and creating transactions
 // based on the events (i.e. orchestrators)
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
-	cleanupTimedOutBatchTxs(ctx, k)
-	cleanupTimedOutContractCallTxs(ctx, k)
-	createSignerSetTxs(ctx, k)
-	createBatchTxs(ctx, k)
-	pruneSignerSetTxs(ctx, k)
+	params := k.GetParams(ctx)
+	for _, chainID := range params.ChainIds {
+		cleanupTimedOutBatchTxs(ctx, k, chainID)
+		cleanupTimedOutContractCallTxs(ctx, k, chainID)
+		createSignerSetTxs(ctx, k, chainID)
+		createBatchTxs(ctx, k, chainID)
+		pruneSignerSetTxs(ctx, k, chainID)
+	}
 }
 
 // EndBlocker is called at the end of every block
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
-	outgoingTxSlashing(ctx, k)
-	eventVoteRecordTally(ctx, k)
+	params := k.GetParams(ctx)
+	for _, chainID := range params.ChainIds {
+		outgoingTxSlashing(ctx, k, chainID)
+		eventVoteRecordTally(ctx, k, chainID)
+	}
 }
 
-func createBatchTxs(ctx sdk.Context, k keeper.Keeper) {
-	// TODO: this needs some more work, is super naieve
+func createBatchTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
+	// TODO: this needs some more work, it is super naive
 	if ctx.BlockHeight()%10 == 0 {
 		cm := map[string]bool{}
-		k.IterateUnbatchedSendToEthereums(ctx, func(ste *types.SendToEthereum) bool {
+		k.IterateUnbatchedSendToEthereums(ctx, chainID, func(ste *types.SendToEthereum) bool {
 			cm[ste.Erc20Token.Contract] = true
 			return false
 		})
@@ -47,27 +53,27 @@ func createBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 
 		for _, c := range contracts {
 			// NOTE: this doesn't emit events which would be helpful for client processes
-			k.BuildBatchTx(ctx, common.HexToAddress(c), 100)
+			k.BuildBatchTx(ctx, chainID, common.HexToAddress(c), 100)
 		}
 	}
 }
 
-func createSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
+func createSignerSetTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	// Auto signerset tx creation.
 	// 1. If there are no signer set requests, create a new one.
 	// 2. If there is at least one validator who started unbonding in current block. (we persist last unbonded block height in hooks.go)
 	//      This will make sure the unbonding validator has to provide an ethereum signature to a new signer set tx
 	//	    that excludes him before he completely Unbonds.  Otherwise he will be slashed
 	// 3. If power change between validators of Current signer set and latest signer set request is > 5%
-	latestSignerSetTx := k.GetLatestSignerSetTx(ctx)
+	latestSignerSetTx := k.GetLatestSignerSetTx(ctx, chainID)
 	if latestSignerSetTx == nil {
-		k.CreateSignerSetTx(ctx)
+		k.CreateSignerSetTx(ctx, chainID)
 		return
 	}
 
-	lastUnbondingHeight := k.GetLastUnbondingBlockHeight(ctx)
+	lastUnbondingHeight := k.GetLastUnbondingBlockHeight(ctx, chainID)
 	blockHeight := uint64(ctx.BlockHeight())
-	powerDiff := types.EthereumSigners(k.CurrentSignerSet(ctx)).PowerDiff(latestSignerSetTx.Signers)
+	powerDiff := types.EVMSigners(k.CurrentSignerSet(ctx)).PowerDiff(latestSignerSetTx.Signers)
 
 	shouldCreate := (lastUnbondingHeight == blockHeight) || (powerDiff > 0.05)
 	k.Logger(ctx).Info(
@@ -80,11 +86,11 @@ func createSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 	)
 
 	if shouldCreate {
-		k.CreateSignerSetTx(ctx)
+		k.CreateSignerSetTx(ctx, chainID)
 	}
 }
 
-func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
+func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	params := k.GetParams(ctx)
 	// Validator set pruning
 	// prune all validator sets with a nonce less than the
@@ -92,14 +98,14 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 	//
 	// Only prune valsets after the signed valsets window has passed
 	// so that slashing can occur the block before we remove them
-	lastObserved := k.GetLastObservedSignerSetTx(ctx)
+	lastObserved := k.GetLastObservedSignerSetTx(ctx, chainID)
 	currentBlock := uint64(ctx.BlockHeight())
 	tooEarly := currentBlock < params.SignedSignerSetTxsWindow
 	if lastObserved != nil && !tooEarly {
 		earliestToPrune := currentBlock - params.SignedSignerSetTxsWindow
-		for _, set := range k.GetSignerSetTxs(ctx) {
+		for _, set := range k.GetSignerSetTxs(ctx, chainID) {
 			if set.Nonce < lastObserved.Nonce && set.Height < earliestToPrune {
-				k.DeleteOutgoingTx(ctx, set.GetStoreIndex())
+				k.DeleteOutgoingTx(ctx, chainID, set.GetStoreIndex())
 			}
 		}
 	}
@@ -108,12 +114,12 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 // Iterate over all attestations currently being voted on in order of nonce and
 // "Observe" those who have passed the threshold. Break the loop once we see
 // an attestation that has not passed the threshold
-func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper) {
-	attmap := k.GetEthereumEventVoteRecordMapping(ctx)
+func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
+	eventVoteRecordMapping := k.GetEthereumEventVoteRecordMapping(ctx, chainID)
 
 	// We make a slice with all the event nonces that are in the attestation mapping
-	keys := make([]uint64, 0, len(attmap))
-	for k := range attmap {
+	keys := make([]uint64, 0, len(eventVoteRecordMapping))
+	for k := range eventVoteRecordMapping {
 		keys = append(keys, k)
 	}
 	// Then we sort it
@@ -126,7 +132,7 @@ func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper) {
 		// This iterates over all attestations at a particular event nonce.
 		// They are ordered by when the first attestation at the event nonce was received.
 		// This order is not important.
-		for _, att := range attmap[nonce] {
+		for _, eventVoteRecord := range eventVoteRecordMapping[nonce] {
 			// We check if the event nonce is exactly 1 higher than the last attestation that was
 			// observed. If it is not, we just move on to the next nonce. This will skip over all
 			// attestations that have already been observed.
@@ -143,8 +149,8 @@ func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper) {
 			// we skip the other attestations and move on to the next nonce again.
 			// If no attestation becomes observed, when we get to the next nonce, every attestation in
 			// it will be skipped. The same will happen for every nonce after that.
-			if nonce == uint64(k.GetLastObservedEventNonce(ctx))+1 {
-				k.TryEventVoteRecord(ctx, att)
+			if nonce == uint64(k.GetLastObservedEventNonce(ctx, chainID))+1 {
+				k.TryEventVoteRecord(ctx, chainID, eventVoteRecord)
 			}
 		}
 	}
@@ -160,12 +166,12 @@ func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper) {
 //    project, if we do a slowdown on ethereum could cause a double spend. Instead timeouts will *only* occur after the timeout period
 //    AND any deposit or withdraw has occurred to update the Ethereum block height.
 func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
-	ethereumHeight := k.GetLastObservedEVMBlockHeight(ctx).EthereumHeight
+	ethereumHeight := k.GetLastObservedEVMBlockHeight(ctx, chainID).EthereumHeight
 	k.IterateOutgoingTxsByType(ctx, chainID, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		btx, _ := otx.(*types.BatchTx)
 
 		if btx.Timeout < ethereumHeight {
-			k.CancelBatchTx(ctx, common.HexToAddress(btx.TokenContract), btx.BatchNonce)
+			k.CancelBatchTx(ctx, chainID, common.HexToAddress(btx.TokenContract), btx.BatchNonce)
 		}
 
 		return false
@@ -182,7 +188,7 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 //    project, if we do a slowdown on ethereum could cause a double spend. Instead timeouts will *only* occur after the timeout period
 //    AND any deposit or withdraw has occurred to update the Ethereum block height.
 func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
-	ethereumHeight := k.GetLastObservedEVMBlockHeight(ctx).EthereumHeight
+	ethereumHeight := k.GetLastObservedEVMBlockHeight(ctx, chainID).EthereumHeight
 	k.IterateOutgoingTxsByType(ctx, chainID, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		cctx, _ := otx.(*types.ContractCallTx)
 		if cctx.Timeout < ethereumHeight {
@@ -201,7 +207,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 		return
 	}
 
-	usotxs := k.GetUnSlashedOutgoingTxs(ctx, maxHeight)
+	usotxs := k.GetUnSlashedOutgoingTxs(ctx, chainID, maxHeight)
 	if len(usotxs) == 0 {
 		return
 	}
@@ -324,6 +330,6 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 		}
 
 		// then we set the latest slashed outgoing tx block
-		k.SetLastSlashedOutgoingTxBlockHeight(ctx, otx.GetCosmosHeight())
+		k.SetLastSlashedOutgoingTxBlockHeight(ctx, chainID, otx.GetCosmosHeight())
 	}
 }

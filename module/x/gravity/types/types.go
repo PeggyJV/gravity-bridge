@@ -16,18 +16,18 @@ import (
 //////////////////////////////////////
 
 // ValidateBasic performs stateless checks on validity
-func (b *EthereumSigner) ValidateBasic() error {
+func (b *EVMSigner) ValidateBasic() error {
 	if !common.IsHexAddress(b.EthereumAddress) {
 		return sdkerrors.Wrap(ErrInvalid, "ethereum address")
 	}
 	return nil
 }
 
-// EthereumSigners is the sorted set of validator data for Ethereum bridge MultiSig set
-type EthereumSigners []*EthereumSigner
+// EVMSigners is the sorted set of validator data for Ethereum bridge MultiSig set
+type EVMSigners []*EVMSigner
 
 // Sort sorts the validators by power
-func (b EthereumSigners) Sort() {
+func (b EVMSigners) Sort() {
 	sort.Slice(b, func(i, j int) bool {
 		if b[i].Power == b[j].Power {
 			// Secondary sort on eth address in case powers are equal
@@ -38,7 +38,7 @@ func (b EthereumSigners) Sort() {
 }
 
 // Hash takes the sha256sum of a representation of the signer set
-func (b EthereumSigners) Hash() []byte {
+func (b EVMSigners) Hash() []byte {
 	b.Sort()
 	var out bytes.Buffer
 	for _, s := range b {
@@ -62,7 +62,7 @@ func (b EthereumSigners) Hash() []byte {
 // if the total on chain voting power increases by 1% due to inflation, we shouldn't have to generate a new validator
 // set, after all the validators retained their relative percentages during inflation and normalized Gravity bridge power
 // shows no difference.
-func (b EthereumSigners) PowerDiff(c EthereumSigners) float64 {
+func (b EVMSigners) PowerDiff(c EVMSigners) float64 {
 	// loop over b and initialize the map with their powers
 	powers := map[string]int64{}
 	for _, bv := range b {
@@ -96,7 +96,7 @@ func absInt(x int64) int64 {
 }
 
 // TotalPower returns the total power in the bridge validator set
-func (b EthereumSigners) TotalPower() (out uint64) {
+func (b EVMSigners) TotalPower() (out uint64) {
 	for _, v := range b {
 		out += v.Power
 	}
@@ -104,7 +104,7 @@ func (b EthereumSigners) TotalPower() (out uint64) {
 }
 
 // GetPowers returns only the power values for all members
-func (b EthereumSigners) GetPowers() []uint64 {
+func (b EVMSigners) GetPowers() []uint64 {
 	r := make([]uint64, len(b))
 	for i := range b {
 		r[i] = b[i].Power
@@ -113,9 +113,9 @@ func (b EthereumSigners) GetPowers() []uint64 {
 }
 
 // NewSignerSetTx returns a new valset
-func NewSignerSetTx(nonce, height uint64, members EthereumSigners) *SignerSetTx {
+func NewSignerSetTx(nonce, height uint64, members EVMSigners) *SignerSetTx {
 	members.Sort()
-	var mem []*EthereumSigner
+	var mem []*EVMSigner
 	for _, val := range members {
 		mem = append(mem, val)
 	}

@@ -98,7 +98,7 @@ func (sse *SignerSetTxExecutedEvent) Hash() tmbytes.HexBytes {
 			sdk.Uint64ToBigEndian(sse.EventNonce),
 			sdk.Uint64ToBigEndian(sse.SignerSetTxNonce),
 			sdk.Uint64ToBigEndian(sse.EthereumHeight),
-			EthereumSigners(sse.Members).Hash(),
+			EVMSigners(sse.Members).Hash(),
 		},
 		[]byte{},
 	)

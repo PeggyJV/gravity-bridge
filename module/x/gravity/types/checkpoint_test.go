@@ -72,7 +72,7 @@ func TestContractCallTxCheckpoint(t *testing.T) {
 }
 
 func TestValsetCheckpoint(t *testing.T) {
-	src := NewSignerSetTx(0, 0, EthereumSigners{{
+	src := NewSignerSetTx(0, 0, EVMSigners{{
 		Power:           6667,
 		EthereumAddress: "0xc783df8a850f42e7F7e57013759C285caa701eB6",
 	}})

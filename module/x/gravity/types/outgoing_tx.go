@@ -37,15 +37,15 @@ type ABIEncodedValsetArgs struct {
 
 // TODO: do we need a prefix byte for the different types?
 func (sstx *SignerSetTx) GetStoreIndex() []byte {
-	return MakeSignerSetTxKey(sstx.Nonce)
+	return MakeSignerSetTxKey(sstx.ChainID(), sstx.Nonce)
 }
 
 func (btx *BatchTx) GetStoreIndex() []byte {
-	return MakeBatchTxKey(gethcommon.HexToAddress(btx.TokenContract), btx.BatchNonce)
+	return MakeBatchTxKey(btx.ChainID(), gethcommon.HexToAddress(btx.TokenContract), btx.BatchNonce)
 }
 
 func (cctx *ContractCallTx) GetStoreIndex() []byte {
-	return MakeContractCallTxKey(cctx.InvalidationScope, cctx.InvalidationNonce)
+	return MakeContractCallTxKey(cctx.ChainID(), cctx.InvalidationScope, cctx.InvalidationNonce)
 }
 
 ///////////////////
@@ -217,4 +217,20 @@ func packCall(abiString, method string, args []interface{}) []byte {
 		panic(sdkerrors.Wrap(err, "packing checkpoint"))
 	}
 	return crypto.Keccak256Hash(abiEncodedCall[4:]).Bytes()
+}
+
+////////////////
+// GetChainID //
+////////////////
+
+func (sstx *SignerSetTx) GetChainID() uint32 {
+	return sstx.ChainID()
+}
+
+func (btx *BatchTx) GetChainID() uint32 {
+	return btx.ChainID()
+}
+
+func (cctx *ContractCallTx) GetChainID() uint32 {
+	return cctx.ChainID()
 }

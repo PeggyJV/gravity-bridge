@@ -14,6 +14,7 @@ import (
 
 func (k Keeper) recordEventVote(
 	ctx sdk.Context,
+	chainID uint32,
 	event types.EthereumEvent,
 	val sdk.ValAddress,
 ) (*types.EthereumEventVoteRecord, error) {
@@ -21,7 +22,7 @@ func (k Keeper) recordEventVote(
 	// We check the event nonce in processEthereumEvent as well,
 	// but checking it here gives individual eth signers a chance to retry,
 	// and prevents validators from submitting two claims with the same nonce
-	lastEventNonce := k.getLastEventNonceByValidator(ctx, val)
+	lastEventNonce := k.getLastEventNonceByValidator(ctx, chainID, val)
 	expectedNonce := lastEventNonce + 1
 	if event.GetEventNonce() != expectedNonce {
 		return nil, sdkerrors.Wrapf(types.ErrInvalid,
@@ -33,7 +34,7 @@ func (k Keeper) recordEventVote(
 	}
 
 	// Tries to get an EthereumEventVoteRecord with the same eventNonce and event as the event that was submitted.
-	eventVoteRecord := k.GetEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash())
+	eventVoteRecord := k.GetEthereumEventVoteRecord(ctx, chainID, event.GetEventNonce(), event.Hash())
 
 	// If it does not exist, create a new one.
 	if eventVoteRecord == nil {
@@ -50,8 +51,8 @@ func (k Keeper) recordEventVote(
 	// Add the validator's vote to this EthereumEventVoteRecord
 	eventVoteRecord.Votes = append(eventVoteRecord.Votes, val.String())
 
-	k.setEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash(), eventVoteRecord)
-	k.setLastEventNonceByValidator(ctx, val, event.GetEventNonce())
+	k.setEthereumEventVoteRecord(ctx, chainID, event.GetEventNonce(), event.Hash(), eventVoteRecord)
+	k.setLastEventNonceByValidator(ctx, chainID, val, event.GetEventNonce())
 
 	return eventVoteRecord, nil
 }
@@ -81,19 +82,19 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, chainID uint32, eventVoteRec
 			// If the power of all the validators that have voted on the attestation is higher or equal to the threshold,
 			// process the attestation, set Observed to true, and break
 			if eventVotePower.GTE(requiredPower) {
-				lastEventNonce := k.GetLastObservedEventNonce(ctx)
+				lastEventNonce := k.GetLastObservedEventNonce(ctx, chainID)
 				// this check is performed at the next level up so this should never panic
 				// outside of programmer error.
 				if event.GetEventNonce() != lastEventNonce+1 {
 					panic("attempting to apply events to state out of order")
 				}
-				k.setLastObservedEventNonce(ctx, event.GetEventNonce())
-				k.SetLastObservedEthereumBlockHeight(ctx, event.GetEthereumHeight())
+				k.setLastObservedEventNonce(ctx, chainID, event.GetEventNonce())
+				k.SetLastObservedEthereumBlockHeight(ctx, chainID, event.GetEthereumHeight())
 
 				eventVoteRecord.Accepted = true
-				k.setEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash(), eventVoteRecord)
+				k.setEthereumEventVoteRecord(ctx, chainID, event.GetEventNonce(), event.Hash(), eventVoteRecord)
 
-				k.processEthereumEvent(ctx, event)
+				k.processEthereumEvent(ctx, chainID, event)
 				ctx.EventManager().EmitEvent(sdk.NewEvent(
 					types.EventTypeObservation,
 					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
@@ -115,7 +116,7 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, chainID uint32, eventVoteRec
 }
 
 // processEthereumEvent actually applies the attestation to the consensus state
-func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent) {
+func (k Keeper) processEthereumEvent(ctx sdk.Context, chainID uint32, event types.EthereumEvent) {
 	// then execute in a new Tx so that we can store state on failure
 	xCtx, commit := ctx.CacheContext()
 	if err := k.Handle(xCtx, event); err != nil { // execute with a transient storage
@@ -126,7 +127,7 @@ func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent)
 			"ethereum event vote record failed",
 			"cause", err.Error(),
 			"event type", fmt.Sprintf("%T", event),
-			"id", types.MakeEVMEventVoteRecordKey(event.GetEventNonce(), event.Hash()),
+			"id", types.MakeEVMEventVoteRecordKey(chainID, event.GetEventNonce(), event.Hash()),
 			"nonce", fmt.Sprint(event.GetEventNonce()),
 		)
 	} else {
@@ -136,13 +137,13 @@ func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent)
 }
 
 // setEthereumEventVoteRecord sets the attestation in the store
-func (k Keeper) setEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte, eventVoteRecord *types.EthereumEventVoteRecord) {
-	ctx.KVStore(k.storeKey).Set(types.MakeEVMEventVoteRecordKey(eventNonce, claimHash), k.cdc.MustMarshal(eventVoteRecord))
+func (k Keeper) setEthereumEventVoteRecord(ctx sdk.Context, chainID uint32, eventNonce uint64, claimHash []byte, eventVoteRecord *types.EthereumEventVoteRecord) {
+	ctx.KVStore(k.storeKey).Set(types.MakeEVMEventVoteRecordKey(chainID, eventNonce, claimHash), k.cdc.MustMarshal(eventVoteRecord))
 }
 
 // GetEthereumEventVoteRecord return a vote record given a nonce
-func (k Keeper) GetEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte) *types.EthereumEventVoteRecord {
-	if bz := ctx.KVStore(k.storeKey).Get(types.MakeEVMEventVoteRecordKey(eventNonce, claimHash)); bz == nil {
+func (k Keeper) GetEthereumEventVoteRecord(ctx sdk.Context, chainID uint32, eventNonce uint64, claimHash []byte) *types.EthereumEventVoteRecord {
+	if bz := ctx.KVStore(k.storeKey).Get(types.MakeEVMEventVoteRecordKey(chainID, eventNonce, claimHash)); bz == nil {
 		return nil
 	} else {
 		var out types.EthereumEventVoteRecord

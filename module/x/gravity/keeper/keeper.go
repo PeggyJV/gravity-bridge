@@ -162,7 +162,7 @@ func (k Keeper) iterateEthereumSignatures(ctx sdk.Context, chainID uint32, store
 /////////////////////////
 
 // SetOrchestratorValidatorAddress sets the Orchestrator key for a given validator.
-func (k Keeper) SetOrchestratorValidatorAddress(ctx sdk.Context, val sdk.ValAddress, orchAddr sdk.AccAddress, chainID uint32) {
+func (k Keeper) SetOrchestratorValidatorAddress(ctx sdk.Context, val sdk.ValAddress, orchAddr sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.MakeOrchestratorValidatorAddressKey(orchAddr)
 
@@ -283,7 +283,7 @@ func (k Keeper) CreateSignerSetTx(ctx sdk.Context, chainID uint32) *types.Signer
 // total voting power. This is an acceptable rounding error since floating
 // point may cause consensus problems if different floating point unit
 // implementations are involved.
-func (k Keeper) CurrentSignerSet(ctx sdk.Context) types.EthereumSigners {
+func (k Keeper) CurrentSignerSet(ctx sdk.Context) types.EVMSigners {
 	validators := k.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	ethereumSigners := make([]*types.EVMSigner, 0)
 	var totalPower uint64

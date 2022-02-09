@@ -17,6 +17,7 @@ message EthereumEventVoteRecord {
       [ (cosmos_proto.accepts_interface) = "EthereumEvent" ];
   repeated string votes = 2;
   bool accepted = 3;
+  uint32 chain_id = 4;
 }
 
 // LatestEthereumBlockHeight defines the latest observed ethereum block height
@@ -24,6 +25,7 @@ message EthereumEventVoteRecord {
 message LatestEthereumBlockHeight {
   uint64 ethereum_height = 1;
   uint64 cosmos_height = 2;
+  uint32 chain_id = 3;
 }
 
 // EthereumSigner represents a cosmos validator with its corresponding bridge
@@ -31,6 +33,7 @@ message LatestEthereumBlockHeight {
 message EVMSigner {
   uint64 power = 1;
   string ethereum_address = 2;
+  uint32 chain_id = 3;
 }
 
 // SignerSetTx is the Ethereum Bridge multisig set that relays
@@ -41,7 +44,8 @@ message SignerSetTx {
   uint64 nonce = 1;
   uint64 height = 2;
   repeated EVMSigner signers = 3
-      [ (gogoproto.castrepeated) = "EthereumSigners" ];
+      [ (gogoproto.castrepeated) = "EVMSigners" ];
+  uint32 chain_id = 4;
 }
 
 // BatchTx represents a batch of transactions going from Cosmos to Ethereum.
@@ -53,6 +57,7 @@ message BatchTx {
   repeated SendToEthereum transactions = 3;
   string token_contract = 4;
   uint64 height = 5;
+  uint32 chain_id = 6;
 }
 
 // SendToEthereum represents an individual SendToEthereum from Cosmos to
@@ -63,6 +68,7 @@ message SendToEthereum {
   string ethereum_recipient = 3;
   ERC20Token erc20_token = 4 [ (gogoproto.nullable) = false ];
   ERC20Token erc20_fee = 5 [ (gogoproto.nullable) = false ];
+  uint32 chain_id = 6;
 }
 
 // ContractCallTx represents an individual arbitrary logic call transaction
@@ -76,6 +82,7 @@ message ContractCallTx {
   repeated ERC20Token tokens = 6 [ (gogoproto.nullable) = false ];
   repeated ERC20Token fees = 7 [ (gogoproto.nullable) = false ];
   uint64 height = 8;
+  uint32 chain_id = 9;
 }
 
 message ERC20Token {
@@ -84,6 +91,7 @@ message ERC20Token {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
+  uint32 chain_id = 3;
 }
 
 message IDSet { repeated uint64 ids = 1; }
