@@ -103,15 +103,15 @@ func (k Keeper) cancelSendToEthereum(ctx sdk.Context, id uint64, s string) error
 }
 
 func (k Keeper) setUnbatchedSendToEthereum(ctx sdk.Context, ste *types.SendToEthereum) {
-	ctx.KVStore(k.storeKey).Set(types.MakeSendToEVMKey(ste.Id, ste.Erc20Fee), k.cdc.MustMarshal(ste))
+	ctx.KVStore(k.storeKey).Set(types.MakeSendToEVMKeyForEvent(chainID, ste.Id, ste.Erc20Fee), k.cdc.MustMarshal(ste))
 }
 
 func (k Keeper) deleteUnbatchedSendToEthereum(ctx sdk.Context, id uint64, fee types.ERC20Token) {
-	ctx.KVStore(k.storeKey).Delete(types.MakeSendToEVMKey(id, fee))
+	ctx.KVStore(k.storeKey).Delete(types.MakeSendToEVMKeyForEvent(id, fee))
 }
 
-func (k Keeper) iterateUnbatchedSendToEthereumsByContract(ctx sdk.Context, contract common.Address, cb func(*types.SendToEthereum) bool) {
-	iter := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.SendToEVMKey}, contract.Bytes()...)).ReverseIterator(nil, nil)
+func (k Keeper) iterateUnbatchedSendToEthereumsByContract(ctx sdk.Context, chainID uint32, contract common.Address, cb func(*types.SendToEthereum) bool) {
+	iter := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeSendToEVMKeyForContract(chainID, contract)).ReverseIterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var ste types.SendToEthereum
@@ -122,8 +122,8 @@ func (k Keeper) iterateUnbatchedSendToEthereumsByContract(ctx sdk.Context, contr
 	}
 }
 
-func (k Keeper) IterateUnbatchedSendToEthereums(ctx sdk.Context, cb func(*types.SendToEthereum) bool) {
-	iter := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEVMKey}).ReverseIterator(nil, nil)
+func (k Keeper) IterateUnbatchedSendToEthereums(ctx sdk.Context, chainID uint32, cb func(*types.SendToEthereum) bool) {
+	iter := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeSendToEVMKey(chainID)).ReverseIterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var ste types.SendToEthereum
@@ -134,24 +134,24 @@ func (k Keeper) IterateUnbatchedSendToEthereums(ctx sdk.Context, cb func(*types.
 	}
 }
 
-func (k Keeper) getUnbatchedSendToEthereums(ctx sdk.Context) []*types.SendToEthereum {
+func (k Keeper) getUnbatchedSendToEthereums(ctx sdk.Context, chainID uint32) []*types.SendToEthereum {
 	var out []*types.SendToEthereum
-	k.IterateUnbatchedSendToEthereums(ctx, func(ste *types.SendToEthereum) bool {
+	k.IterateUnbatchedSendToEthereums(ctx, chainID, func(ste *types.SendToEthereum) bool {
 		out = append(out, ste)
 		return false
 	})
 	return out
 }
 
-func (k Keeper) incrementLastSendToEthereumIDKey(ctx sdk.Context) uint64 {
+func (k Keeper) incrementLastSendToEthereumIDKey(ctx sdk.Context, chainID uint32) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get([]byte{types.LastSendToEVMIDKey})
+	bz := store.Get(types.MakeLastSendToEVMIDKey(chainID))
 	var id uint64 = 0
 	if bz != nil {
 		id = binary.BigEndian.Uint64(bz)
 	}
 	newId := id + 1
 	bz = sdk.Uint64ToBigEndian(newId)
-	store.Set([]byte{types.LastSendToEVMIDKey}, bz)
+	store.Set(types.MakeLastSendToEVMIDKey(chainID), bz)
 	return newId
 }

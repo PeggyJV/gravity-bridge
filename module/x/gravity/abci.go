@@ -160,7 +160,7 @@ func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper) {
 //    project, if we do a slowdown on ethereum could cause a double spend. Instead timeouts will *only* occur after the timeout period
 //    AND any deposit or withdraw has occurred to update the Ethereum block height.
 func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
-	ethereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight
+	ethereumHeight := k.GetLastObservedEVMBlockHeight(ctx).EthereumHeight
 	k.IterateOutgoingTxsByType(ctx, chainID, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		btx, _ := otx.(*types.BatchTx)
 
@@ -182,7 +182,7 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 //    project, if we do a slowdown on ethereum could cause a double spend. Instead timeouts will *only* occur after the timeout period
 //    AND any deposit or withdraw has occurred to update the Ethereum block height.
 func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
-	ethereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight
+	ethereumHeight := k.GetLastObservedEVMBlockHeight(ctx).EthereumHeight
 	k.IterateOutgoingTxsByType(ctx, chainID, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		cctx, _ := otx.(*types.ContractCallTx)
 		if cctx.Timeout < ethereumHeight {

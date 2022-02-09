@@ -25,7 +25,7 @@ func (k Keeper) Params(c context.Context, req *types.ParamsRequest) (*types.Para
 func (k Keeper) LatestSignerSetTx(c context.Context, req *types.LatestSignerSetTxRequest) (*types.SignerSetTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.OutgoingTxKey}, types.SignerSetTxPrefixByte))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OutgoingTxKeyPrefixWithPrefixByte(types.SignerSetTxPrefixByte))
 	iter := store.ReverseIterator(nil, nil)
 	defer iter.Close()
 
@@ -387,7 +387,7 @@ func (k Keeper) UnbatchedSendToEthereums(c context.Context, req *types.Unbatched
 	ctx := sdk.UnwrapSDKContext(c)
 	res := &types.UnbatchedSendToEthereumsResponse{}
 
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.SendToEVMKey})
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeSendToEVMKey(chainID))
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var ste types.SendToEthereum
 		k.cdc.MustUnmarshal(value, &ste)

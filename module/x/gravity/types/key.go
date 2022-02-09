@@ -26,9 +26,9 @@ const (
 const (
 	_ = byte(iota)
 	// Key Delegation
-	ValidatorEVMAddressKey
-	OrchestratorValidatorAddressKey
-	EVMOrchestratorAddressKey
+	ValidatorToEVMAddressKey
+	OrchestratorToValidatorAddressKey
+	EVMToOrchestratorAddressKey
 
 	// Core types
 	EVMSignatureKey
@@ -41,7 +41,6 @@ const (
 	LastObservedEventNonceKey
 	LatestSignerSetTxNonceKey
 	LastSlashedOutgoingTxBlockKey
-	LastSlashedSignerSetTxNonceKey
 	LastOutgoingBatchNonceKey
 
 	// LastSendToEVMIDKey indexes the lastTxPoolID
@@ -59,6 +58,7 @@ const (
 	// LastUnBondingBlockHeightKey indexes the last validator unbonding block height
 	LastUnBondingBlockHeightKey
 
+	// LastObservedSignerSetKey index the last observed signer set
 	LastObservedSignerSetKey
 )
 
@@ -87,32 +87,36 @@ func BigEndianToUint32(bz []byte) uint32 {
 // prefix
 // [0xe8][0001][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
 func MakeOrchestratorValidatorAddressKey(orc sdk.AccAddress) []byte {
-	return bytes.Join([][]byte{{OrchestratorValidatorAddressKey}, orc.Bytes()}, []byte{})
+	return bytes.Join([][]byte{{OrchestratorToValidatorAddressKey}, orc.Bytes()}, []byte{})
 }
 
-// MakeValidatorEVMAddressKey returns the following key format
+// MakeValidatorEVMAddressKeyForValidator returns the following key format
 // prefix              cosmos-validator
 // [0x0][0001][cosmosvaloper1ahx7f8wyertuus9r20284ej0asrs085case3kn]
-func MakeValidatorEVMAddressKey(validator sdk.ValAddress) []byte {
-	return bytes.Join([][]byte{{ValidatorEVMAddressKey}, validator.Bytes()}, []byte{})
+func MakeValidatorEVMAddressKeyForValidator(validator sdk.ValAddress) []byte {
+	return bytes.Join([][]byte{{ValidatorToEVMAddressKey}, validator.Bytes()}, []byte{})
 }
 
 // MakeEVMOrchestratorAddressKey returns the following key format
 // prefix              cosmos-validator
 // [0x0][0001][cosmosvaloper1ahx7f8wyertuus9r20284ej0asrs085case3kn]
 func MakeEVMOrchestratorAddressKey(eth common.Address) []byte {
-	return bytes.Join([][]byte{{EVMOrchestratorAddressKey}, eth.Bytes()}, []byte{})
+	return bytes.Join([][]byte{{EVMToOrchestratorAddressKey}, eth.Bytes()}, []byte{})
 }
 
 /////////////////////////
 // Etheruem Signatures //
 /////////////////////////
 
-// MakeEVMSignatureKey returns the following key format
+// MakeEVMSignatureKeyForValidator returns the following key format
 // prefix   nonce                    validator-address
 // [0x0][0 0 0 0 0 0 0 1][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
-func MakeEVMSignatureKey(chainID uint32, storeIndex []byte, validator sdk.ValAddress) []byte {
+func MakeEVMSignatureKeyForValidator(chainID uint32, storeIndex []byte, validator sdk.ValAddress) []byte {
 	return bytes.Join([][]byte{{EVMSignatureKey}, Uint32ToBigEndian(chainID), storeIndex, validator.Bytes()}, []byte{})
+}
+
+func EVMSignatureKeyStoreIndexPrefix(chainID uint32, storeIndex []byte) []byte {
+	return bytes.Join([][]byte{{EVMSignatureKey}, Uint32ToBigEndian(chainID), storeIndex}, []byte{})
 }
 
 /////////////////////////////////
@@ -121,6 +125,10 @@ func MakeEVMSignatureKey(chainID uint32, storeIndex []byte, validator sdk.ValAdd
 
 func MakeEVMEventVoteRecordKey(chainID uint32, eventNonce uint64, claimHash []byte) []byte {
 	return bytes.Join([][]byte{{EVMEventVoteRecordKey}, Uint32ToBigEndian(chainID), sdk.Uint64ToBigEndian(eventNonce), claimHash}, []byte{})
+}
+
+func EVMEventVoteRecordPrefix(chainID uint32) []byte {
+	return bytes.Join([][]byte{{EVMEventVoteRecordKey}, Uint32ToBigEndian(chainID)}, []byte{})
 }
 
 //////////////////
@@ -132,13 +140,29 @@ func MakeOutgoingTxKey(chainID uint32, storeIndex []byte) []byte {
 	return bytes.Join([][]byte{{OutgoingTxKey}, Uint32ToBigEndian(chainID), storeIndex}, []byte{})
 }
 
+func OutgoingTxKeyPrefixWithPrefixByte(chainID uint32, prefix byte) []byte {
+	return bytes.Join([][]byte{{OutgoingTxKey}, Uint32ToBigEndian(chainID), {prefix}}, []byte{})
+}
+
+func OutgoingTxKeyPrefix(chainID uint32) []byte {
+	return bytes.Join([][]byte{{OutgoingTxKey}, Uint32ToBigEndian(chainID)}, []byte{})
+}
+
 //////////////////////
 // Send To Etheruem //
 //////////////////////
 
-func MakeSendToEVMKey(chainID uint32, id uint64, fee ERC20Token) []byte {
+func MakeSendToEVMKey(chainID uint32) []byte {
+	return bytes.Join([][]byte{{SendToEVMKey}, Uint32ToBigEndian(chainID)}, []byte{})
+}
+
+func MakeSendToEVMKeyForContract(chainID uint32, contract common.Address) []byte {
+	return bytes.Join([][]byte{MakeSendToEVMKey(chainID), contract.Bytes()}, []byte{})
+}
+
+func MakeSendToEVMKeyForEvent(chainID uint32, id uint64, fee ERC20Token) []byte {
 	amount := make([]byte, 32)
-	return bytes.Join([][]byte{{SendToEVMKey}, Uint32ToBigEndian(chainID), common.HexToAddress(fee.Contract).Bytes(), fee.Amount.BigInt().FillBytes(amount), sdk.Uint64ToBigEndian(id)}, []byte{})
+	return bytes.Join([][]byte{MakeSendToEVMKeyForContract(chainID, common.HexToAddress(fee.Contract)), fee.Amount.BigInt().FillBytes(amount), sdk.Uint64ToBigEndian(id)}, []byte{})
 }
 
 func MakeLastEventNonceByValidatorKey(chainID uint32, validator sdk.ValAddress) []byte {
@@ -151,6 +175,10 @@ func MakeDenomToERC20Key(chainID uint32, denom string) []byte {
 
 func MakeERC20ToDenomKey(chainID uint32, erc20 string) []byte {
 	return bytes.Join([][]byte{{ERC20ToDenomKey}, Uint32ToBigEndian(chainID), []byte(erc20)}, []byte{})
+}
+
+func MakeERC20ToDenomKeyPrefix(chainID uint32) []byte {
+	return bytes.Join([][]byte{{ERC20ToDenomKey}, Uint32ToBigEndian(chainID)}, []byte{})
 }
 
 func MakeSignerSetTxKey(chainID uint32, nonce uint64) []byte {
@@ -167,4 +195,42 @@ func MakeContractCallTxKey(chainID uint32, invalscope []byte, invalnonce uint64)
 
 func MakeLatestSignerSetTxNonceKey(chainID uint32) []byte {
 	return bytes.Join([][]byte{{LatestSignerSetTxNonceKey}, Uint32ToBigEndian(chainID)}, []byte{})
+}
+
+func MakeLastSlashedOutgoingTxBlockKey(chainID uint32) []byte {
+	return bytes.Join([][]byte{{LastSlashedOutgoingTxBlockKey}, Uint32ToBigEndian(chainID)}, []byte{})
+}
+
+func MakeLastOutgoingBatchNonceKey(chainID uint32) []byte {
+	return bytes.Join([][]byte{{LastOutgoingBatchNonceKey}, Uint32ToBigEndian(chainID)}, []byte{})
+}
+
+func MakeLastObservedEventNonceKey(chainID uint32) []byte {
+	return bytes.Join([][]byte{{LastObservedEventNonceKey}, Uint32ToBigEndian(chainID)}, []byte{})
+}
+
+func MakeLastSendToEVMIDKey(chainID uint32) []byte {
+	return bytes.Join([][]byte{{LastSendToEVMIDKey}, Uint32ToBigEndian(chainID)}, []byte{})
+}
+
+func MakeLastEVMBlockHeightKey(chainID uint32) []byte {
+	return bytes.Join([][]byte{{LastEVMBlockHeightKey}, Uint32ToBigEndian(chainID)}, []byte{})
+}
+
+func MakeLastUnBondingBlockHeightKey(chainID uint32) []byte {
+	return bytes.Join([][]byte{{LastUnBondingBlockHeightKey}, Uint32ToBigEndian(chainID)}, []byte{})
+}
+
+func MakeLastObservedSignerSetKey(chainID uint32) []byte {
+	return bytes.Join([][]byte{{LastObservedSignerSetKey}, Uint32ToBigEndian(chainID)}, []byte{})
+}
+
+// Prefix conversions
+
+func ValidatorToEVMAddressKeyPrefix() []byte {
+	return []byte{ValidatorToEVMAddressKey}
+}
+
+func EVMToOrchestratorAddressKeyPrefix() []byte {
+	return []byte{EVMToOrchestratorAddressKey}
 }

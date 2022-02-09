@@ -76,8 +76,8 @@ func (k Keeper) ERC20ToDenomLookup(ctx sdk.Context, tokenContract string) (bool,
 }
 
 // iterateERC20ToDenom iterates over erc20 to denom relations
-func (k Keeper) iterateERC20ToDenom(ctx sdk.Context, cb func([]byte, *types.ERC20ToDenom) bool) {
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.ERC20ToDenomKey})
+func (k Keeper) iterateERC20ToDenom(ctx sdk.Context, chainID uint32, cb func([]byte, *types.ERC20ToDenom) bool) {
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeERC20ToDenomKeyPrefix(chainID))
 	iter := prefixStore.Iterator(nil, nil)
 	defer iter.Close()
 
