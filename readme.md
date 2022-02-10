@@ -1,5 +1,10 @@
 ![Gravity Bridge](./gravity-bridge.svg)
+<br />
 
+<p align="center">
+  <a href="https://github.com/PeggyJV/gravity-bridge/actions/workflows/go.yml"><img label="Go Test Status" src="https://github.com/PeggyJV/gravity-bridge/actions/workflows/go.yml/badge.svg" /></a>
+  <a href="https://codecov.io/gh/PeggyJV/gravity-bridge"><img label="Code Coverage" src="https://codecov.io/gh/PeggyJV/gravity-bridge/branch/cronos/graph/badge.svg" /></a>
+</p>
 Gravity bridge is Cosmos <-> Ethereum bridge designed to run on the [Cosmos Hub](https://github.com/cosmos/gaia) focused on maximum design simplicity and efficiency.
 
 Gravity can transfer ERC20 assets originating on Ethereum to a Cosmos based chain and back to Ethereum.
