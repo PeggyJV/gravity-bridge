@@ -216,16 +216,8 @@ jobs:
       fail-fast: false
       matrix:
         test_type: [
-          # working tests
-            "OrchestratorKeys",
-            "ArbitraryLogic"
+            "HappyPath",
         ]
-          # non-working tests
-#            "ValidatorOut",
-#            "BatchStress",
-#            "ValsetStress",
-#            "HappyPath",
-#            "V2HappyPath",
 
     steps:
       - name: Set up Go 1.16
@@ -284,6 +276,6 @@ jobs:
       - name: rename contract deployer image
         run: docker tag ${{ steps.meta-solidity.outputs.tags }} solidity:prebuilt
       - name: build go test binary
-        run: cd testnet && go test -c
+        run: cd integration_tests && go test -c
       - name: Run all up ci test
-        run: ./testnet/testnet.test -test.run Test${{ matrix.test_type }} -test.failfast -test.v
+        run: ./integration_tests/integration_tests.test -test.run Test${{ matrix.test_type }} -test.failfast -test.v
