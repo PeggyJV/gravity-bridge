@@ -113,10 +113,26 @@ func (s GenesisState) ValidateBasic() error {
 	return nil
 }
 
+// ValidateBasic validates genesis state by looping through the params and
+// calling their validation functions
+func (s GenesisStateMultiChain) ValidateBasic() error {
+	if err := s.Params.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "params")
+	}
+	if len(s.DelegateKeys) != 0 {
+		for _, delegateKey := range s.DelegateKeys {
+			if err := delegateKey.ValidateBasic(); err != nil {
+				return sdkerrors.Wrap(err, "delegates")
+			}
+		}
+	}
+	return nil
+}
+
 // DefaultGenesisState returns empty genesis state
 // TODO: set some better defaults here
-func DefaultGenesisState() *GenesisState {
-	return &GenesisState{
+func DefaultGenesisState() *GenesisStateMultiChain {
+	return &GenesisStateMultiChain{
 		Params: DefaultParams(),
 	}
 }
