@@ -88,12 +88,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 				return false
 			}
 			return true
-		}, 10*time.Second, time.Millisecond, "unable to send to ethereum")
+		}, 105*time.Second, 10*time.Second, "unable to send to ethereum")
 
-		// Send some test token to cosmos
-
-		// Validate updated balances
-
-		// send some test token across the bridge
 	})
 }
