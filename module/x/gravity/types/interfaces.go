@@ -26,6 +26,7 @@ type EthereumEvent interface {
 	GetEthereumHeight() uint64
 	Hash() tmbytes.HexBytes
 	Validate() error
+	ChainID() uint32
 }
 
 type OutgoingTx interface {

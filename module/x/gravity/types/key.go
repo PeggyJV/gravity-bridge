@@ -217,8 +217,8 @@ func MakeLastEVMBlockHeightKey(chainID uint32) []byte {
 	return bytes.Join([][]byte{{LastEVMBlockHeightKey}, Uint32ToBigEndian(chainID)}, []byte{})
 }
 
-func MakeLastUnBondingBlockHeightKey(chainID uint32) []byte {
-	return bytes.Join([][]byte{{LastUnBondingBlockHeightKey}, Uint32ToBigEndian(chainID)}, []byte{})
+func MakeLastUnBondingBlockHeightKey() []byte {
+	return bytes.Join([][]byte{{LastUnBondingBlockHeightKey}}, []byte{})
 }
 
 func MakeLastObservedSignerSetKey(chainID uint32) []byte {

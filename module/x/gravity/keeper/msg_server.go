@@ -119,7 +119,12 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	otx := k.GetOutgoingTx(ctx, msg.ChainIDOrDefault(), confirmation.GetStoreIndex())
+	chainID := types.ChainIDOrDefault(msg.GetChainId())
+	if !k.chainIDsContains(ctx, chainID) {
+		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
+	}
+
+	otx := k.GetOutgoingTx(ctx, chainID, confirmation.GetStoreIndex())
 	if otx == nil {
 		k.Logger(ctx).Error(
 			"no outgoing tx",
@@ -155,11 +160,11 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 		))
 	}
 	// TODO: should validators be able to overwrite their signatures?
-	if k.getEthereumSignature(ctx, msg.ChainIDOrDefault(), confirmation.GetStoreIndex(), val) != nil {
+	if k.getEthereumSignature(ctx, chainID, confirmation.GetStoreIndex(), val) != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "signature duplicate")
 	}
 
-	key := k.SetEthereumSignature(ctx, msg.ChainIDOrDefault(), confirmation, val)
+	key := k.SetEthereumSignature(ctx, chainID, confirmation, val)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -186,8 +191,13 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 		return nil, err
 	}
 
+	chainID := types.ChainIDOrDefault(msg.GetChainId())
+	if !k.chainIDsContains(ctx, chainID) {
+		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
+	}
+
 	// Add the claim to the store
-	_, err = k.recordEventVote(ctx, msg.ChainIDOrDefault(), event, val)
+	_, err = k.recordEventVote(ctx, event, val)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "create event vote record")
 	}
@@ -198,7 +208,7 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, fmt.Sprintf("%T", event)),
 			// TODO: maybe return something better here? is this the right string representation?
-			sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID, string(types.MakeEVMEventVoteRecordKey(msg.ChainIDOrDefault(), event.GetEventNonce(), event.Hash()))),
+			sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID, string(types.MakeEVMEventVoteRecordKey(chainID, event.GetEventNonce(), event.Hash()))),
 		),
 	)
 
@@ -213,7 +223,12 @@ func (k msgServer) SendToEthereum(c context.Context, msg *types.MsgSendToEthereu
 		return nil, err
 	}
 
-	txID, err := k.createSendToEthereum(ctx, msg.ChainIDOrDefault(), sender, msg.EthereumRecipient, msg.Amount, msg.BridgeFee)
+	chainID := types.ChainIDOrDefault(msg.GetChainId())
+	if !k.chainIDsContains(ctx, chainID) {
+		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
+	}
+
+	txID, err := k.createSendToEthereum(ctx, chainID, sender, msg.EthereumRecipient, msg.Amount, msg.BridgeFee)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +238,7 @@ func (k msgServer) SendToEthereum(c context.Context, msg *types.MsgSendToEthereu
 			types.EventTypeBridgeWithdrawalReceived,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
-			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(msg.ChainIDOrDefault()))),
+			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(chainID))),
 			sdk.NewAttribute(types.AttributeKeyOutgoingTXID, strconv.Itoa(int(txID))),
 			sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(txID)),
 		),
@@ -242,14 +257,19 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 	// TODO: limit this to only orchestrators and validators?
 	ctx := sdk.UnwrapSDKContext(c)
 
+	chainID := types.ChainIDOrDefault(msg.GetChainId())
+	if !k.chainIDsContains(ctx, chainID) {
+		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
+	}
+
 	// Check if the denom is a gravity coin, if not, check if there is a deployed ERC20 representing it.
 	// If not, error out
-	_, tokenContract, err := k.DenomToERC20Lookup(ctx, msg.ChainIDOrDefault(), msg.Denom)
+	_, tokenContract, err := k.DenomToERC20Lookup(ctx, chainID, msg.Denom)
 	if err != nil {
 		return nil, err
 	}
 
-	batchID := k.BuildBatchTx(ctx, msg.ChainIDOrDefault(), tokenContract, BatchTxSize)
+	batchID := k.BuildBatchTx(ctx, chainID, tokenContract, BatchTxSize)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -257,6 +277,7 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 			sdk.NewAttribute(sdk.AttributeKeyModule, msg.Type()),
 			sdk.NewAttribute(types.AttributeKeyContract, tokenContract.Hex()),
 			sdk.NewAttribute(types.AttributeKeyBatchNonce, fmt.Sprint(batchID.BatchNonce)),
+			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(chainID))),
 		),
 	)
 
@@ -266,7 +287,12 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 func (k msgServer) CancelSendToEthereum(c context.Context, msg *types.MsgCancelSendToEthereum) (*types.MsgCancelSendToEthereumResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	err := k.Keeper.cancelSendToEthereum(ctx, msg.ChainIDOrDefault(), msg.Id, msg.Sender)
+	chainID := types.ChainIDOrDefault(msg.GetChainId())
+	if !k.chainIDsContains(ctx, chainID) {
+		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
+	}
+
+	err := k.Keeper.cancelSendToEthereum(ctx, chainID, msg.Id, msg.Sender)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +302,7 @@ func (k msgServer) CancelSendToEthereum(c context.Context, msg *types.MsgCancelS
 			types.EventTypeBridgeWithdrawCanceled,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
-			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
+			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(chainID))),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

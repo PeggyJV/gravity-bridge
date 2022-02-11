@@ -26,7 +26,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 	switch event := eve.(type) {
 	case *types.SendToCosmosEvent:
 		// Check if coin is Cosmos-originated asset and get denom
-		isCosmosOriginated, denom := k.ERC20ToDenomLookup(ctx, event.TokenContract)
+		isCosmosOriginated, denom := k.ERC20ToDenomLookup(ctx, event.ChainID(), event.TokenContract)
 		addr, _ := sdk.AccAddressFromBech32(event.CosmosReceiver)
 		coins := sdk.Coins{sdk.NewCoin(denom, event.Amount)}
 
@@ -48,7 +48,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 		return nil
 
 	case *types.BatchExecutedEvent:
-		k.batchTxExecuted(ctx, common.HexToAddress(event.TokenContract), event.BatchNonce)
+		k.batchTxExecuted(ctx, event.ChainID(), common.HexToAddress(event.TokenContract), event.BatchNonce)
 		k.AfterBatchExecutedEvent(ctx, *event)
 		return nil
 
@@ -58,7 +58,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 		}
 
 		// add to denom-erc20 mapping
-		k.setCosmosOriginatedDenomToERC20(ctx, event.CosmosDenom, event.TokenContract)
+		k.setCosmosOriginatedDenomToERC20(ctx, event.ChainID(), event.CosmosDenom, event.TokenContract)
 		k.AfterERC20DeployedEvent(ctx, *event)
 		return nil
 
@@ -70,7 +70,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 		// TODO here we should check the contents of the validator set against
 		// the store, if they differ we should take some action to indicate to the
 		// user that bridge highjacking has occurred
-		k.setLastObservedSignerSetTx(ctx, types.SignerSetTx{
+		k.setLastObservedSignerSetTx(ctx, event.ChainID(), types.SignerSetTx{
 			Nonce:   event.SignerSetTxNonce,
 			Signers: event.Members,
 		})
@@ -83,7 +83,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 }
 
 func (k Keeper) verifyERC20DeployedEvent(ctx sdk.Context, event *types.ERC20DeployedEvent) error {
-	if existingERC20, exists := k.getCosmosOriginatedERC20(ctx, event.CosmosDenom); exists {
+	if existingERC20, exists := k.getCosmosOriginatedERC20(ctx, event.ChainID(), event.CosmosDenom); exists {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"ERC20 token %s already exists for denom %s", existingERC20.Hex(), event.CosmosDenom,

@@ -217,7 +217,7 @@ func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, toke
 	for i, id := range ids {
 		amount := types.NewERC20Token(uint64(i+100), tokenContract.Hex()).GravityCoin()
 		fee := types.NewERC20Token(id, tokenContract.Hex()).GravityCoin()
-		_, err := input.GravityKeeper.createSendToEthereum(ctx, sender, receiver.Hex(), amount, fee)
+		_, err := input.GravityKeeper.createSendToEthereum(ctx, types.EthereumChainID, sender, receiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}
 }

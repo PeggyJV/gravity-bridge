@@ -103,13 +103,13 @@ func (k Keeper) GetLatestSignerSetTx(ctx sdk.Context, chainID uint32) *types.Sig
 //////////////////////////////
 
 // setLastUnbondingBlockHeight sets the last unbonding block height
-func (k Keeper) setLastUnbondingBlockHeight(ctx sdk.Context, chainID uint32, unbondingBlockHeight uint64) {
-	ctx.KVStore(k.storeKey).Set(types.MakeLastUnBondingBlockHeightKey(chainID), sdk.Uint64ToBigEndian(unbondingBlockHeight))
+func (k Keeper) setLastUnbondingBlockHeight(ctx sdk.Context, unbondingBlockHeight uint64) {
+	ctx.KVStore(k.storeKey).Set(types.MakeLastUnBondingBlockHeightKey(), sdk.Uint64ToBigEndian(unbondingBlockHeight))
 }
 
 // GetLastUnbondingBlockHeight returns the last unbonding block height
-func (k Keeper) GetLastUnbondingBlockHeight(ctx sdk.Context, chainID uint32) uint64 {
-	if bz := ctx.KVStore(k.storeKey).Get(types.MakeLastUnBondingBlockHeightKey(chainID)); len(bz) == 0 {
+func (k Keeper) GetLastUnbondingBlockHeight(ctx sdk.Context) uint64 {
+	if bz := ctx.KVStore(k.storeKey).Get(types.MakeLastUnBondingBlockHeightKey()); len(bz) == 0 {
 		return 0
 	} else {
 		return binary.BigEndian.Uint64(bz)
@@ -343,6 +343,18 @@ func (k Keeper) getBridgeChainID(ctx sdk.Context) uint64 {
 	var a uint64
 	k.paramSpace.Get(ctx, types.ParamsStoreKeyBridgeContractChainID, &a)
 	return a
+}
+
+func (k Keeper) chainIDsContains(ctx sdk.Context, chainID uint32) bool {
+	var cids []uint32
+	k.paramSpace.Get(ctx, types.ParamStoreKeyChainIDs, &cids)
+	for _, cid := range cids {
+		if chainID == cid {
+			return true
+		}
+	}
+
+	return false
 }
 
 // getGravityID returns the GravityID the GravityID is essentially a salt value

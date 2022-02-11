@@ -32,7 +32,7 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, chainID uint32, contractAddress co
 	var selectedStes []*types.SendToEthereum
 	k.iterateUnbatchedSendToEthereumsByContract(ctx, chainID, contractAddress, func(ste *types.SendToEthereum) bool {
 		selectedStes = append(selectedStes, ste)
-		k.deleteUnbatchedSendToEthereum(ctx, ste.Id, ste.Erc20Fee)
+		k.deleteUnbatchedSendToEthereum(ctx, chainID, ste.Id, ste.Erc20Fee)
 		return len(selectedStes) == maxElements
 	})
 
@@ -131,7 +131,7 @@ func (k Keeper) CancelBatchTx(ctx sdk.Context, chainID uint32, tokenContract com
 
 	// free transactions from batch and reindex them
 	for _, tx := range batch.Transactions {
-		k.setUnbatchedSendToEthereum(ctx, tx)
+		k.setUnbatchedSendToEthereum(ctx, chainID, tx)
 	}
 
 	// Delete batch since it is finished

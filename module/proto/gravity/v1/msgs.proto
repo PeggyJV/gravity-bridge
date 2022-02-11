@@ -81,6 +81,7 @@ message ContractCallTxConfirmation {
   uint64 invalidation_nonce = 2;
   string ethereum_signer = 3;
   bytes signature = 4;
+  optional uint32 chain_id = 5;
 }
 
 // BatchTxConfirmation is a signature on behalf of a validator for a BatchTx.
@@ -89,6 +90,7 @@ message BatchTxConfirmation {
   uint64 batch_nonce = 2;
   string ethereum_signer = 3;
   bytes signature = 4;
+  optional uint32 chain_id = 5;
 }
 
 // SignerSetTxConfirmation is a signature on behalf of a validator for a
@@ -97,6 +99,7 @@ message SignerSetTxConfirmation {
   uint64 signer_set_nonce = 1;
   string ethereum_signer = 2;
   bytes signature = 3;
+  optional uint32 chain_id = 4;
 }
 
 message MsgSubmitEthereumTxConfirmationResponse {}

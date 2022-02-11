@@ -74,8 +74,8 @@ message Params {
 
   string gravity_id = 1;
   string contract_source_hash = 2;
-  string bridge_ethereum_address = 4;
-  uint64 bridge_chain_id = 5;
+  string bridge_ethereum_address = 4 [deprecated=true];
+  uint64 bridge_chain_id = 5 [deprecated=true];
   uint64 signed_signer_set_txs_window = 6;
   uint64 signed_batches_window = 7;
   uint64 ethereum_signatures_window = 8;
@@ -107,6 +107,8 @@ message Params {
 // TODO: this need to be audited and potentially simplified using the new
 // interfaces
 message GenesisState {
+  option deprecated = true;
+
   Params params = 1;
   uint64 last_observed_event_nonce = 2;
   repeated google.protobuf.Any outgoing_txs = 3;
@@ -115,6 +117,22 @@ message GenesisState {
   repeated MsgDelegateKeys delegate_keys = 10;
   repeated ERC20ToDenom erc20_to_denoms = 11;
   repeated SendToEthereum unbatched_send_to_ethereum_txs = 12;
+}
+
+message GenesisStateMultiChain {
+  Params params = 1;
+  repeated MsgDelegateKeys delegate_keys = 2;
+  repeated ChainGenesisState chain_genesis_states = 3;
+}
+
+message ChainGenesisState {
+  uint32 chainID = 1;
+  uint64 last_observed_event_nonce = 2;
+  repeated google.protobuf.Any outgoing_txs = 3;
+  repeated google.protobuf.Any confirmations = 4;
+  repeated EthereumEventVoteRecord evm_event_vote_records = 5;
+  repeated ERC20ToDenom erc20_to_denoms = 6;
+  repeated SendToEthereum unbatched_send_to_evm_txs = 7;
 }
 
 // This records the relationship between an ERC20 token and the denom

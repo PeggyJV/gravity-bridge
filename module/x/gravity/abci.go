@@ -71,7 +71,7 @@ func createSignerSetTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 		return
 	}
 
-	lastUnbondingHeight := k.GetLastUnbondingBlockHeight(ctx, chainID)
+	lastUnbondingHeight := k.GetLastUnbondingBlockHeight(ctx)
 	blockHeight := uint64(ctx.BlockHeight())
 	powerDiff := types.EVMSigners(k.CurrentSignerSet(ctx)).PowerDiff(latestSignerSetTx.Signers)
 

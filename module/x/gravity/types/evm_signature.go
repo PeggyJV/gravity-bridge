@@ -34,15 +34,15 @@ func (u *BatchTxConfirmation) GetSigner() common.Address {
 ///////////////////
 
 func (sstx *SignerSetTxConfirmation) GetStoreIndex() []byte {
-	return MakeSignerSetTxKey(sstx.SignerSetNonce)
+	return MakeSignerSetTxKey(ChainIDOrDefault(sstx.GetChainId()), sstx.SignerSetNonce)
 }
 
 func (btx *BatchTxConfirmation) GetStoreIndex() []byte {
-	return MakeBatchTxKey(common.HexToAddress(btx.TokenContract), btx.BatchNonce)
+	return MakeBatchTxKey(ChainIDOrDefault(btx.GetChainId()), common.HexToAddress(btx.TokenContract), btx.BatchNonce)
 }
 
 func (cctx *ContractCallTxConfirmation) GetStoreIndex() []byte {
-	return MakeContractCallTxKey(cctx.InvalidationScope, cctx.InvalidationNonce)
+	return MakeContractCallTxKey(ChainIDOrDefault(cctx.GetChainId()), cctx.InvalidationScope, cctx.InvalidationNonce)
 }
 
 //////////////

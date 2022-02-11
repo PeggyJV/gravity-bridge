@@ -14,7 +14,6 @@ import (
 
 func (k Keeper) recordEventVote(
 	ctx sdk.Context,
-	chainID uint32,
 	event types.EthereumEvent,
 	val sdk.ValAddress,
 ) (*types.EthereumEventVoteRecord, error) {
@@ -22,7 +21,7 @@ func (k Keeper) recordEventVote(
 	// We check the event nonce in processEthereumEvent as well,
 	// but checking it here gives individual eth signers a chance to retry,
 	// and prevents validators from submitting two claims with the same nonce
-	lastEventNonce := k.getLastEventNonceByValidator(ctx, chainID, val)
+	lastEventNonce := k.getLastEventNonceByValidator(ctx, event.ChainID(), val)
 	expectedNonce := lastEventNonce + 1
 	if event.GetEventNonce() != expectedNonce {
 		return nil, sdkerrors.Wrapf(types.ErrInvalid,
@@ -34,7 +33,7 @@ func (k Keeper) recordEventVote(
 	}
 
 	// Tries to get an EthereumEventVoteRecord with the same eventNonce and event as the event that was submitted.
-	eventVoteRecord := k.GetEthereumEventVoteRecord(ctx, chainID, event.GetEventNonce(), event.Hash())
+	eventVoteRecord := k.GetEthereumEventVoteRecord(ctx, event.ChainID(), event.GetEventNonce(), event.Hash())
 
 	// If it does not exist, create a new one.
 	if eventVoteRecord == nil {
@@ -51,8 +50,8 @@ func (k Keeper) recordEventVote(
 	// Add the validator's vote to this EthereumEventVoteRecord
 	eventVoteRecord.Votes = append(eventVoteRecord.Votes, val.String())
 
-	k.setEthereumEventVoteRecord(ctx, chainID, event.GetEventNonce(), event.Hash(), eventVoteRecord)
-	k.setLastEventNonceByValidator(ctx, chainID, val, event.GetEventNonce())
+	k.setEthereumEventVoteRecord(ctx, event.ChainID(), event.GetEventNonce(), event.Hash(), eventVoteRecord)
+	k.setLastEventNonceByValidator(ctx, event.ChainID(), val, event.GetEventNonce())
 
 	return eventVoteRecord, nil
 }

@@ -65,6 +65,9 @@ var (
 	//  ParamStoreUnbondSlashingSignerSetTxsWindow stores unbond slashing valset window
 	ParamStoreUnbondSlashingSignerSetTxsWindow = []byte("UnbondSlashingSignerSetTxsWindow")
 
+	//  ParamStoreKeyChainIDs stores the array of active chain IDs for this bridge
+	ParamStoreKeyChainIDs = []byte("ChainIDs")
+
 	// Ensure that params implements the proper interface
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -134,6 +137,7 @@ func DefaultParams() *Params {
 		SlashFractionEthereumSignature:            sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		SlashFractionConflictingEthereumSignature: sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		UnbondSlashingSignerSetTxsWindow:          10000,
+		ChainIds:                                  []uint32{1},
 	}
 }
 
@@ -184,6 +188,9 @@ func (p Params) ValidateBasic() error {
 	if err := validateUnbondSlashingSignerSetTxsWindow(p.UnbondSlashingSignerSetTxsWindow); err != nil {
 		return sdkerrors.Wrap(err, "unbond slashing signersettx window")
 	}
+	if err := validateChainIDs(p.ChainIds); err != nil {
+		return sdkerrors.Wrap(err, "chain IDs")
+	}
 
 	return nil
 }
@@ -212,6 +219,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionEthereumSignature, &p.SlashFractionEthereumSignature, validateSlashFractionEthereumSignature),
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionConflictingEthereumSignature, &p.SlashFractionConflictingEthereumSignature, validateSlashFractionConflictingEthereumSignature),
 		paramtypes.NewParamSetPair(ParamStoreUnbondSlashingSignerSetTxsWindow, &p.UnbondSlashingSignerSetTxsWindow, validateUnbondSlashingSignerSetTxsWindow),
+		paramtypes.NewParamSetPair(ParamStoreKeyChainIDs, &p.ChainIds, validateChainIDs),
 	}
 }
 
@@ -355,6 +363,14 @@ func validateSlashFractionEthereumSignature(i interface{}) error {
 func validateSlashFractionConflictingEthereumSignature(i interface{}) error {
 	// TODO: do we want to set some bounds on this value?
 	if _, ok := i.(sdk.Dec); !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
+func validateChainIDs(i interface{}) error {
+	// TODO: do we want to set some bounds on this value?
+	if _, ok := i.([]uint32); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
