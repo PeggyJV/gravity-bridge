@@ -344,15 +344,22 @@ func (s *IntegrationTestSuite) initGenesis() {
 	appGenState[genutiltypes.ModuleName] = bz
 
 	// set contract addr
-	var gravityGenState gravitytypes.GenesisState
+	var gravityGenState gravitytypes.GenesisStateMultiChain
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
 	gravityGenState.Params.GravityId = "gravitytest"
+	gravityGenState.Params.ChainIds = []uint32{1}
 	gravityGenState.Params.BridgeEthereumAddress = gravityContract.String()
-	gravityGenState.Erc20ToDenoms = append(gravityGenState.Erc20ToDenoms,
-		&gravitytypes.ERC20ToDenom{
-			Erc20: testERC20contract.Hex(),
-			Denom: "DDS",
-		})
+	gravityGenState.ChainGenesisStates = []*gravitytypes.ChainGenesisState{
+		{
+			ChainID: gravitytypes.EthereumChainID,
+			Erc20ToDenoms: []*gravitytypes.ERC20ToDenom{
+				{
+					Erc20: testERC20contract.Hex(),
+					Denom: "DDS",
+				},
+			},
+		},
+	}
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)
 	appGenState[gravitytypes.ModuleName] = bz
