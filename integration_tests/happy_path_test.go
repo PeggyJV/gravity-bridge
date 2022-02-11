@@ -63,6 +63,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		s.T().Logf("sending to ethereum")
 
 		sendToEthereumMsg := types.NewMsgSendToEthereum(
+			types.EthereumChainID,
 			s.chain.validators[1].keyInfo.GetAddress(),
 			s.chain.validators[1].ethereumKey.address,
 			sdk.Coin{Denom: DENOM, Amount: sdk.NewInt(100)},

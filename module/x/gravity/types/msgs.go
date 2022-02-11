@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -151,12 +150,13 @@ func (msg *MsgSubmitEthereumTxConfirmation) UnpackInterfaces(unpacker cdctypes.A
 }
 
 // NewMsgSendToEthereum returns a new MsgSendToEthereum
-func NewMsgSendToEthereum(sender sdk.AccAddress, destAddress string, send sdk.Coin, bridgeFee sdk.Coin) *MsgSendToEthereum {
+func NewMsgSendToEthereum(chainID uint32, sender sdk.AccAddress, destAddress string, send sdk.Coin, bridgeFee sdk.Coin) *MsgSendToEthereum {
 	return &MsgSendToEthereum{
 		Sender:            sender.String(),
 		EthereumRecipient: destAddress,
 		Amount:            send,
 		BridgeFee:         bridgeFee,
+		XChainId:          &MsgSendToEthereum_ChainId{ChainId: chainID},
 	}
 }
 
@@ -209,10 +209,11 @@ func (msg MsgSendToEthereum) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgRequestBatchTx returns a new msgRequestBatch
-func NewMsgRequestBatchTx(denom string, signer sdk.AccAddress) *MsgRequestBatchTx {
+func NewMsgRequestBatchTx(chainID uint32, denom string, signer sdk.AccAddress) *MsgRequestBatchTx {
 	return &MsgRequestBatchTx{
-		Denom:  denom,
-		Signer: signer.String(),
+		Denom:    denom,
+		Signer:   signer.String(),
+		XChainId: &MsgRequestBatchTx_ChainId{ChainId: chainID},
 	}
 }
 
@@ -249,10 +250,11 @@ func (msg MsgRequestBatchTx) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCancelSendToEthereum returns a new MsgCancelSendToEthereum
-func NewMsgCancelSendToEthereum(id uint64, orchestrator sdk.AccAddress) *MsgCancelSendToEthereum {
+func NewMsgCancelSendToEthereum(chainID uint32, id uint64, orchestrator sdk.AccAddress) *MsgCancelSendToEthereum {
 	return &MsgCancelSendToEthereum{
-		Id:     id,
-		Sender: orchestrator.String(),
+		Id:       id,
+		Sender:   orchestrator.String(),
+		XChainId: &MsgCancelSendToEthereum_ChainId{ChainId: chainID},
 	}
 }
 

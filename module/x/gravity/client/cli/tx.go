@@ -36,9 +36,9 @@ func GetTxCmd(storeKey string) *cobra.Command {
 
 func CmdSendToEthereum() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "send-to-ethereum [ethereum-reciever] [send-coins] [fee-coins]",
+		Use:     "send-to-ethereum [ethereum-reciever] [send-coins] [fee-coins] [chain-id]",
 		Aliases: []string{"send", "transfer"},
-		Args:    cobra.ExactArgs(3),
+		Args:    cobra.MaximumNArgs(4),
 		Short:   "Send tokens from cosmos chain to connected ethereum chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -66,7 +66,12 @@ func CmdSendToEthereum() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgSendToEthereum(from, common.HexToAddress(args[0]).Hex(), sendCoin, feeCoin)
+			chainID, err := strconv.Atoi(args[3])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgSendToEthereum(uint32(chainID), from, common.HexToAddress(args[0]).Hex(), sendCoin, feeCoin)
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
