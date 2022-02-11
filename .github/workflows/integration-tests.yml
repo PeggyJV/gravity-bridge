@@ -164,6 +164,7 @@ jobs:
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   integration-tests:
+    environment: CI
     runs-on: ubuntu-latest
     needs: [ rust-build, go-build, solidity-build ]
     strategy:
