@@ -216,7 +216,7 @@ jobs:
   integration-tests:
     environment: CI
     runs-on: ubuntu-latest
-    needs: [ rust-build, go-build, solidity-build, hardhat-build ]
+    needs: [ rust-build, go-build, hardhat-build ]
     strategy:
       fail-fast: false
       matrix:
@@ -254,11 +254,6 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-orchestrator
-      - name: docker contract deployer metadata
-        id: meta-solidity
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-solidity
       - name: docker hardhat metadata
         id: meta-hardhat
         uses: docker/metadata-action@v3
@@ -272,10 +267,8 @@ jobs:
         run: docker pull ${{ steps.meta-orchestrator.outputs.tags }}
       - name: rename orchestrator image
         run: docker tag ${{ steps.meta-gravity.outputs.tags }} orchestrator:prebuilt
-      - name: pull contract deployer image
-        run: docker pull ${{ steps.meta-solidity.outputs.tags }}
-      - name: rename contract deployer image
-        run: docker tag ${{ steps.meta-solidity.outputs.tags }} solidity:prebuilt
+      - name: pull hardhat image
+        run: docker pull ${{ steps.meta-hardhat.outputs.tags }}
       - name: rename hardhat image
         run: docker tag ${{ steps.meta-hardhat.outputs.tags }} ethereum:prebuilt
       - name: build go test binary
