@@ -58,7 +58,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			s.T().Logf("balance not found, received %v", res.Balances)
 
 			return false
-		}, 105*time.Second, 1*time.Second, "new vote period never seen")
+		}, 105*time.Second, 10*time.Second, "balance never found on cosmos")
 
 		s.T().Logf("sending to ethereum")
 
