@@ -3,6 +3,7 @@
 //! the 'Orchestrator' runs not only these two roles but also the untrusted role of a relayer, that does not need any permissions
 //! and has its own crate and binary so that anyone may run it.
 
+use crate::ethereum_event_watcher::get_block_delay;
 use crate::metrics;
 use crate::{
     ethereum_event_watcher::check_for_events, metrics::metrics_main_loop,
@@ -27,6 +28,7 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::ethereum::bytes_to_hex_str;
 use relayer::main_loop::relayer_main_loop;
 use std::convert::TryInto;
+use std::process::exit;
 use std::{net, time::Duration};
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
@@ -118,6 +120,16 @@ pub async fn eth_oracle_main_loop(
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
+    let block_delay = match get_block_delay(eth_client.clone()).await {
+        Ok(block_delay) => block_delay,
+        Err(e) => {
+            error!(
+                "Error encountered when retrieving block delay, cannot continue: {}",
+                e
+            );
+            exit(1);
+        }
+    };
     let mut last_checked_block = get_last_checked_block(
         grpc_client.clone(),
         our_cosmos_address,
@@ -136,7 +148,7 @@ pub async fn eth_oracle_main_loop(
                 let latest_cosmos_block = contact.get_chain_status().await;
                 match (latest_eth_block, latest_cosmos_block) {
                     (Ok(latest_eth_block), Ok(ChainStatus::Moving { block_height })) => {
-                        metrics::set_cosmos_block_height(block_height.clone());
+                        metrics::set_cosmos_block_height(block_height);
                         metrics::set_ethereum_block_height(latest_eth_block.as_u64());
                         trace!(
                             "Latest Eth block {} Latest Cosmos block {}",
@@ -177,7 +189,8 @@ pub async fn eth_oracle_main_loop(
                     &mut grpc_client,
                     gravity_contract_address,
                     cosmos_key,
-                    last_checked_block.clone(),
+                    last_checked_block,
+                    block_delay,
                     msg_sender.clone(),
                 )
                 .await
@@ -186,10 +199,11 @@ pub async fn eth_oracle_main_loop(
                     Err(e) => {
                         metrics::ETHEREUM_EVENT_CHECK_FAILURES.inc();
                         error!("Failed to get events for block range, Check your Eth node and Cosmos gRPC {:?}", e);
-                        if let gravity_utils::error::GravityError::CosmosGrpcError(err) = e {
-                            if let CosmosGrpcError::TransactionFailed { tx: _, time: _ } = err {
-                                delay_for(Duration::from_secs(10)).await;
-                            }
+                        if let gravity_utils::error::GravityError::CosmosGrpcError(
+                            CosmosGrpcError::TransactionFailed { tx: _, time: _ },
+                        ) = e
+                        {
+                            delay_for(Duration::from_secs(10)).await;
                         }
                     }
                 }
@@ -228,7 +242,7 @@ pub async fn eth_signer_main_loop(
                 let latest_cosmos_block = contact.get_chain_status().await;
                 match (latest_eth_block, latest_cosmos_block) {
                     (Ok(latest_eth_block), Ok(ChainStatus::Moving { block_height })) => {
-                        metrics::set_cosmos_block_height(block_height.clone());
+                        metrics::set_cosmos_block_height(block_height);
                         metrics::set_ethereum_block_height(latest_eth_block.as_u64());
                         trace!(
                             "Latest Eth block {} Latest Cosmos block {}",

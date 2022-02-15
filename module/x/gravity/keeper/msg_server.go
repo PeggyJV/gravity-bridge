@@ -250,6 +250,9 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 	}
 
 	batchID := k.BuildBatchTx(ctx, tokenContract, BatchTxSize)
+	if batchID == nil {
+		return nil, fmt.Errorf("no suitable batch to create")
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

@@ -36,6 +36,11 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, contractAddress common.Address, ma
 		return len(selectedStes) == maxElements
 	})
 
+	// do not create batches that would contain no transactions, even if they are requested
+	if len(selectedStes) == 0 {
+		return nil
+	}
+
 	batch := &types.BatchTx{
 		BatchNonce:    k.incrementLastOutgoingBatchNonce(ctx),
 		Timeout:       k.getBatchTimeoutHeight(ctx),
@@ -81,12 +86,18 @@ func (k Keeper) getBatchTimeoutHeight(ctx sdk.Context) uint64 {
 // It deletes all the transactions in the batch, then cancels all earlier batches
 func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, nonce uint64) {
 	otx := k.GetOutgoingTx(ctx, types.MakeBatchTxKey(tokenContract, nonce))
+	if otx == nil {
+		k.Logger(ctx).Error("Failed to clean batches",
+			"token contract", tokenContract.Hex(),
+			"nonce", nonce)
+		return
+	}
 	batchTx, _ := otx.(*types.BatchTx)
 	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		// If the iterated batches nonce is lower than the one that was just executed, cancel it
 		btx, _ := otx.(*types.BatchTx)
-		if (btx.BatchNonce < batchTx.BatchNonce) && (batchTx.TokenContract == tokenContract.Hex()) {
-			k.CancelBatchTx(ctx, tokenContract, btx.BatchNonce)
+		if (btx.BatchNonce < batchTx.BatchNonce) && (btx.TokenContract == batchTx.TokenContract) {
+			k.CancelBatchTx(ctx, btx)
 		}
 		return false
 	})
@@ -125,10 +136,7 @@ func (k Keeper) GetBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr commo
 }
 
 // CancelBatchTx releases all TX in the batch and deletes the batch
-func (k Keeper) CancelBatchTx(ctx sdk.Context, tokenContract common.Address, nonce uint64) {
-	otx := k.GetOutgoingTx(ctx, types.MakeBatchTxKey(tokenContract, nonce))
-	batch, _ := otx.(*types.BatchTx)
-
+func (k Keeper) CancelBatchTx(ctx sdk.Context, batch *types.BatchTx) {
 	// free transactions from batch and reindex them
 	for _, tx := range batch.Transactions {
 		k.setUnbatchedSendToEthereum(ctx, tx)
@@ -143,8 +151,8 @@ func (k Keeper) CancelBatchTx(ctx sdk.Context, tokenContract common.Address, non
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
 			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
-			sdk.NewAttribute(types.AttributeKeyOutgoingBatchID, fmt.Sprint(nonce)),
-			sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(nonce)),
+			sdk.NewAttribute(types.AttributeKeyOutgoingBatchID, fmt.Sprint(batch.BatchNonce)),
+			sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(batch.BatchNonce)),
 		),
 	)
 }

@@ -5,9 +5,9 @@ mod recover;
 mod rename;
 mod show;
 
-use abscissa_core::{Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, Command, Runnable};
 
-#[derive(Command, Debug, Clap, Runnable)]
+#[derive(Command, Debug, Parser, Runnable)]
 pub enum CosmosKeysCmd {
     Add(add::AddCosmosKeyCmd),
 

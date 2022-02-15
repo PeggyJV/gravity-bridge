@@ -13,14 +13,14 @@ mod tests;
 mod tx;
 
 use crate::config::GorcConfig;
-use abscissa_core::{Clap, Command, Configurable, FrameworkError, Runnable};
+use abscissa_core::{clap::Parser, Command, Configurable, FrameworkError, Runnable};
 use std::path::PathBuf;
 
 /// Gorc Configuration Filename
 pub const CONFIG_FILE: &str = "gorc.toml";
 
 /// Gorc Subcommands
-#[derive(Command, Debug, Clap, Runnable)]
+#[derive(Command, Debug, Parser, Runnable)]
 pub enum GorcCmd {
     CosmosToEth(cosmos_to_eth::CosmosToEthCmd),
 
@@ -50,7 +50,7 @@ pub enum GorcCmd {
 }
 
 /// Entry point for the application. It needs to be a struct to allow using subcommands!
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 #[clap(author, about, version)]
 pub struct EntryPoint {
     #[clap(subcommand)]
@@ -97,8 +97,6 @@ impl Configurable<GorcConfig> for EntryPoint {
     /// This can be safely deleted if you don't want to override config
     /// settings from command-line options.
     fn process_config(&self, config: GorcConfig) -> Result<GorcConfig, FrameworkError> {
-        match &self.cmd {
-            _ => Ok(config),
-        }
+        Ok(config)
     }
 }

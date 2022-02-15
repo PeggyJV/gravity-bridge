@@ -1,10 +1,6 @@
 use crate::{
     types::{EthClient, EthSignerMiddleware},
-    utils::{
-        get_logic_call_nonce,
-        get_gas_price,
-        GasCost,
-    },
+    utils::{get_gas_price, get_logic_call_nonce, GasCost},
 };
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
@@ -163,18 +159,19 @@ pub fn build_send_logic_call_contract_call(
         .collect();
     let invalidation_id = vec_u8_to_fixed_32(call.invalidation_id.clone())?;
 
-
-
     let contract_call = Gravity::new(gravity_contract_address, eth_client.clone())
         .submit_logic_call(
-            ValsetArgs{
+            ValsetArgs {
                 validators: current_addresses,
-                powers:current_powers,
+                powers: current_powers,
                 valset_nonce: current_valset_nonce.into(),
                 reward_amount: U256::zero(),
                 reward_token: H160::zero(),
             },
-            sig_data.iter().map(|sig_data| sig_data.to_val_sig()).collect(),
+            sig_data
+                .iter()
+                .map(|sig_data| sig_data.to_val_sig())
+                .collect(),
             LogicCallArgs {
                 transfer_amounts,
                 transfer_token_contracts,

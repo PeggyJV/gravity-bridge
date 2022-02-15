@@ -1,5 +1,5 @@
 use crate::application::APP;
-use abscissa_core::{status_err, Application, Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, status_err, Application, Command, Runnable};
 use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::erc20_utils::get_erc20_balance;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
@@ -14,7 +14,7 @@ use std::{sync::Arc, time::Duration};
 const TIMEOUT: Duration = Duration::from_secs(60);
 
 /// This command send Ethereum to Cosmos
-#[derive(Command, Debug, Default, Clap)]
+#[derive(Command, Debug, Default, Parser)]
 pub struct EthToCosmosCmd {
     pub args: Vec<String>,
 }
@@ -53,10 +53,8 @@ impl Runnable for EthToCosmosCmd {
                 .expect("Could not retrieve chain ID");
             let chain_id =
                 downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
-            let eth_client = SignerMiddleware::new(
-                provider,
-                ethereum_wallet.clone().with_chain_id(chain_id),
-            );
+            let eth_client =
+                SignerMiddleware::new(provider, ethereum_wallet.clone().with_chain_id(chain_id));
             let eth_client = Arc::new(eth_client);
             let cosmos_dest = self.args.get(3).expect("cosmos destination is required");
             let cosmos_dest: CosmosAddress = cosmos_dest.parse().unwrap();
@@ -64,7 +62,7 @@ impl Runnable for EthToCosmosCmd {
             check_for_eth(ethereum_address, eth_client.clone()).await;
 
             let init_amount = self.args.get(4).expect("amount is required");
-            let amount: U256 = init_amount.parse().unwrap();
+            let amount = U256::from_dec_str(init_amount).expect("cannot parse amount as U256");
 
             let erc20_balance =
                 get_erc20_balance(erc20_address, ethereum_address, eth_client.clone())
@@ -72,8 +70,8 @@ impl Runnable for EthToCosmosCmd {
                     .expect("Failed to get balance, check ERC20 contract address");
 
             let times = self.args.get(5).expect("times is required");
-            let times_usize = times.parse::<usize>().expect("cannot parse times");
-            let times_u256 = U256::from_dec_str(times).expect("cannot parse times");
+            let times_usize = times.parse::<usize>().expect("cannot parse times as usize");
+            let times_u256 = U256::from_dec_str(times).expect("cannot parse times as U256");
 
             if erc20_balance == 0u8.into() {
                 panic!(

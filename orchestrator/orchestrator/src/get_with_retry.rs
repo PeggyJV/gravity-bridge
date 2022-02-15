@@ -38,11 +38,11 @@ pub async fn get_last_event_nonce_with_retry(
     res.unwrap()
 }
 
-/// gets the net version, no matter how long it takes
+/// gets the chain ID, no matter how long it takes
 pub async fn get_chain_id_with_retry(eth_client: EthClient) -> U256 {
     let mut res = eth_client.get_chainid().await;
     while res.is_err() {
-        error!("Failed to get net version! Is your Eth node working?");
+        error!("Failed to get chain ID! Is your Eth node working?");
         delay_for(RETRY_TIME).await;
         res = eth_client.get_chainid().await;
     }

@@ -1,9 +1,9 @@
 use crate::application::APP;
-use abscissa_core::{Application, Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, Application, Command, Runnable};
 use std::path;
 
 /// Rename a Cosmos Key
-#[derive(Command, Debug, Default, Clap)]
+#[derive(Command, Debug, Default, Parser)]
 pub struct RenameCosmosKeyCmd {
     pub args: Vec<String>,
 

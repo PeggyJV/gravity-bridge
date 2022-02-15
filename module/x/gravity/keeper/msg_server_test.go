@@ -210,6 +210,9 @@ func TestMsgServer_CancelSendToEthereum(t *testing.T) {
 }
 
 func TestMsgServer_RequestBatchTx(t *testing.T) {
+	ethPrivKey, err := ethCrypto.GenerateKey()
+	require.NoError(t, err)
+
 	var (
 		env = CreateTestEnv(t)
 		ctx = env.Context
@@ -217,7 +220,75 @@ func TestMsgServer_RequestBatchTx(t *testing.T) {
 
 		orcAddr1, _ = sdk.AccAddressFromBech32("cosmos1dg55rtevlfxh46w88yjpdd08sqhh5cc3xhkcej")
 		valAddr1    = sdk.ValAddress(orcAddr1)
-		//ethAddr1    = crypto.PubkeyToAddress(ethPrivKey.PublicKey)
+		ethAddr1    = crypto.PubkeyToAddress(ethPrivKey.PublicKey)
+
+		orcAddr2, _ = sdk.AccAddressFromBech32("cosmos164knshrzuuurf05qxf3q5ewpfnwzl4gj4m4dfy")
+		valAddr2    = sdk.ValAddress(orcAddr2)
+
+		orcAddr3, _ = sdk.AccAddressFromBech32("cosmos193fw83ynn76328pty4yl7473vg9x86alq2cft7")
+		valAddr3    = sdk.ValAddress(orcAddr3)
+
+		testDenom = "stake"
+
+		balance = sdk.Coin{
+			Denom:  testDenom,
+			Amount: sdk.NewInt(10000),
+		}
+		amount = sdk.Coin{
+			Denom:  testDenom,
+			Amount: sdk.NewInt(1000),
+		}
+		fee = sdk.Coin{
+			Denom:  testDenom,
+			Amount: sdk.NewInt(10),
+		}
+	)
+
+	{ // setup for getSignerValidator
+		gk.StakingKeeper = NewStakingKeeperMock(valAddr1, valAddr2, valAddr3)
+		gk.SetOrchestratorValidatorAddress(ctx, valAddr1, orcAddr1)
+	}
+
+	{ // add balance to bank
+		err = env.AddBalanceToBank(ctx, orcAddr1, sdk.Coins{balance})
+		require.NoError(t, err)
+	}
+
+	// create denom in keeper
+	gk.setCosmosOriginatedDenomToERC20(ctx, testDenom, "testcontractstring")
+
+	// setup for GetValidatorEthereumAddress
+	gk.setValidatorEthereumAddress(ctx, valAddr1, ethAddr1)
+
+	msgServer := NewMsgServerImpl(gk)
+
+	msg := &types.MsgSendToEthereum{
+		Sender:            orcAddr1.String(),
+		EthereumRecipient: ethAddr1.String(),
+		Amount:            amount,
+		BridgeFee:         fee,
+	}
+
+	_, err = msgServer.SendToEthereum(sdk.WrapSDKContext(ctx), msg)
+	require.NoError(t, err)
+
+	requestMsg := &types.MsgRequestBatchTx{
+		Signer: orcAddr1.String(),
+		Denom:  testDenom,
+	}
+
+	_, err = msgServer.RequestBatchTx(sdk.WrapSDKContext(ctx), requestMsg)
+	require.NoError(t, err)
+}
+
+func TestMsgServer_RequestEmptyBatchTx(t *testing.T) {
+	var (
+		env = CreateTestEnv(t)
+		ctx = env.Context
+		gk  = env.GravityKeeper
+
+		orcAddr1, _ = sdk.AccAddressFromBech32("cosmos1dg55rtevlfxh46w88yjpdd08sqhh5cc3xhkcej")
+		valAddr1    = sdk.ValAddress(orcAddr1)
 
 		orcAddr2, _ = sdk.AccAddressFromBech32("cosmos164knshrzuuurf05qxf3q5ewpfnwzl4gj4m4dfy")
 		valAddr2    = sdk.ValAddress(orcAddr2)
@@ -244,7 +315,8 @@ func TestMsgServer_RequestBatchTx(t *testing.T) {
 	}
 
 	_, err := msgServer.RequestBatchTx(sdk.WrapSDKContext(ctx), msg)
-	require.NoError(t, err)
+
+	require.Error(t, err)
 }
 
 func TestMsgServer_SubmitEthereumEvent(t *testing.T) {

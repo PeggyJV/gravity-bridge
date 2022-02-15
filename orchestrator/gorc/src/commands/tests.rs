@@ -1,7 +1,7 @@
-use abscissa_core::{Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, Command, Runnable};
 
 /// Run tests against configured chains
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub enum TestsCmd {
     Runner(Runner),
 }
@@ -13,7 +13,7 @@ impl Runnable for TestsCmd {
     }
 }
 
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub struct Runner {
     free: Vec<String>,
 

@@ -131,7 +131,7 @@ pub fn ethereum_event_messages(
     let mut unordered_msgs = BTreeMap::new();
     for deposit in deposits {
         let event = proto::SendToCosmosEvent {
-            event_nonce: downcast_to_u64(deposit.event_nonce.clone()).unwrap(),
+            event_nonce: downcast_to_u64(deposit.event_nonce).unwrap(),
             ethereum_height: downcast_to_u64(deposit.block_height).unwrap(),
             token_contract: format_eth_address(deposit.erc20),
             amount: deposit.amount.to_string(),
@@ -147,8 +147,8 @@ pub fn ethereum_event_messages(
     }
     for batch in batches {
         let event = proto::BatchExecutedEvent {
-            event_nonce: downcast_to_u64(batch.event_nonce.clone()).unwrap(),
-            batch_nonce: downcast_to_u64(batch.batch_nonce.clone()).unwrap(),
+            event_nonce: downcast_to_u64(batch.event_nonce).unwrap(),
+            batch_nonce: downcast_to_u64(batch.batch_nonce).unwrap(),
             ethereum_height: downcast_to_u64(batch.block_height).unwrap(),
             token_contract: format_eth_address(batch.erc20),
         };
@@ -161,7 +161,7 @@ pub fn ethereum_event_messages(
     }
     for deploy in erc20_deploys {
         let event = proto::Erc20DeployedEvent {
-            event_nonce: downcast_to_u64(deploy.event_nonce.clone()).unwrap(),
+            event_nonce: downcast_to_u64(deploy.event_nonce).unwrap(),
             ethereum_height: downcast_to_u64(deploy.block_height).unwrap(),
             cosmos_denom: deploy.cosmos_denom,
             token_contract: format_eth_address(deploy.erc20_address),
@@ -178,7 +178,7 @@ pub fn ethereum_event_messages(
     }
     for logic_call in logic_calls {
         let event = proto::ContractCallExecutedEvent {
-            event_nonce: downcast_to_u64(logic_call.event_nonce.clone()).unwrap(),
+            event_nonce: downcast_to_u64(logic_call.event_nonce).unwrap(),
             ethereum_height: downcast_to_u64(logic_call.block_height).unwrap(),
             invalidation_id: logic_call.invalidation_id,
             invalidation_nonce: downcast_to_u64(logic_call.invalidation_nonce).unwrap(),
@@ -191,9 +191,12 @@ pub fn ethereum_event_messages(
         unordered_msgs.insert(logic_call.event_nonce, msg);
     }
     for valset in valsets {
+        // note that SignerSetTxExecutedEvent does not include reward amount or
+        // reward token, which is fine since we are not actually using them at the
+        // moment, but it is part of the contract-defined event
         let event = proto::SignerSetTxExecutedEvent {
-            event_nonce: downcast_to_u64(valset.event_nonce.clone()).unwrap(),
-            signer_set_tx_nonce: downcast_to_u64(valset.valset_nonce.clone()).unwrap(),
+            event_nonce: downcast_to_u64(valset.event_nonce).unwrap(),
+            signer_set_tx_nonce: downcast_to_u64(valset.valset_nonce).unwrap(),
             ethereum_height: downcast_to_u64(valset.block_height).unwrap(),
             members: valset.members.iter().map(|v| v.into()).collect(),
         };
@@ -207,7 +210,7 @@ pub fn ethereum_event_messages(
 
     let mut msgs = Vec::new();
     for (i, _) in unordered_msgs.clone().iter() {
-        msgs.push(unordered_msgs.remove_entry(&i).unwrap().1);
+        msgs.push(unordered_msgs.remove_entry(i).unwrap().1);
     }
 
     msgs

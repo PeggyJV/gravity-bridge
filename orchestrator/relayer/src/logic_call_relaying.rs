@@ -22,12 +22,16 @@ pub async fn relay_logic_calls(
     timeout: Duration,
     eth_gas_price_multiplier: f32,
 ) {
-    let latest_calls = get_latest_logic_calls(grpc_client).await;
-    debug!("Latest Logic calls {:?}", latest_calls);
-    if latest_calls.is_err() {
-        return;
-    }
-    let latest_calls = latest_calls.unwrap();
+    let latest_calls = match get_latest_logic_calls(grpc_client).await {
+        Ok(calls) => {
+            debug!("Latest Logic calls {:?}", calls);
+            calls
+        }
+        Err(err) => {
+            error!("Error while retrieving latest logic calls: {:?}", err);
+            return;
+        }
+    };
     let mut oldest_signed_call: Option<LogicCall> = None;
     let mut oldest_signatures: Option<Vec<LogicCallConfirmResponse>> = None;
     for call in latest_calls {
@@ -111,12 +115,12 @@ pub async fn relay_logic_calls(
         let gas_price_as_f32 = downcast_to_f32(cost.gas_price).unwrap(); // if the total cost isn't greater, this isn't
 
         info!(
-                "We have detected latest LogicCall {} but latest on Ethereum is {} This LogicCall is estimated to cost {} Gas / {:.4} ETH to submit",
-                latest_cosmos_call_nonce,
-                latest_ethereum_call,
-                cost.gas_price.clone(),
-                total_cost / one_eth_f32(),
-            );
+            "We have detected latest LogicCall {} but latest on Ethereum is {} This LogicCall is estimated to cost {} Gas / {:.4} ETH to submit",
+            latest_cosmos_call_nonce,
+            latest_ethereum_call,
+            cost.gas_price.clone(),
+            total_cost / one_eth_f32(),
+        );
 
         cost.gas_price = ((gas_price_as_f32 * eth_gas_price_multiplier) as u128).into();
 

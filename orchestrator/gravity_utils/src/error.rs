@@ -1,6 +1,5 @@
 //! for things that don't belong in the cosmos or ethereum libraries but also don't belong
 //! in a function specific library
-
 use clarity::Error as ClarityError;
 use deep_space::error::AddressError as CosmosAddressError;
 use deep_space::error::CosmosGrpcError;
@@ -112,7 +111,7 @@ impl fmt::Display for GravityError {
             GravityError::ParseIntError(val) => write!(f, "Failed to parse integer: {}", val),
             GravityError::FromUtf8Error(val) => {
                 write!(f, "Failed to parse bytes to UTF-8: {}", val)
-            },
+            }
             GravityError::OverflowError(val) => write!(f, "Overflow error: {}", val),
         }
     }

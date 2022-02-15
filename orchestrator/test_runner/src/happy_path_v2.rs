@@ -53,6 +53,7 @@ pub async fn happy_path_test_v2(
         6,
         gravity_address,
         Some(TOTAL_TIMEOUT),
+        1.0,
         eth_client.clone(),
     )
     .await
@@ -89,7 +90,7 @@ pub async fn happy_path_test_v2(
                 "Successfully adopted {} token contract of {}",
                 token_to_send_to_eth, erc20
             );
-            Some(erc20.clone())
+            Some(erc20)
         }
         Err(_) => {
             panic!(

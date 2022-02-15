@@ -1,7 +1,7 @@
 //! `eth subcommands` subcommand
 
 use crate::{application::APP, prelude::*, utils::*};
-use abscissa_core::{Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, Command, Runnable};
 use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::erc20_utils::get_erc20_balance;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
@@ -14,7 +14,7 @@ use gravity_utils::{
 use std::sync::Arc;
 
 /// Create transactions in Eth chain
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub enum Eth {
     SendToCosmos(SendToCosmos),
 
@@ -25,7 +25,7 @@ impl Runnable for Eth {
     fn run(&self) {}
 }
 
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub struct SendToCosmos {
     free: Vec<String>,
 
@@ -80,15 +80,13 @@ impl Runnable for SendToCosmos {
                 .expect("Could not retrieve chain ID");
             let chain_id =
                 downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
-            let eth_client = SignerMiddleware::new(
-                provider,
-                ethereum_wallet.clone().with_chain_id(chain_id),
-            );
+            let eth_client =
+                SignerMiddleware::new(provider, ethereum_wallet.clone().with_chain_id(chain_id));
             let eth_client = Arc::new(eth_client);
             check_for_eth(eth_client.address(), eth_client.clone()).await;
 
-            let amount = U256::from_dec_str(erc20_amount.as_str())
-                .expect("Could not parse amount to U256");
+            let amount =
+                U256::from_dec_str(erc20_amount.as_str()).expect("Could not parse amount to U256");
 
             let erc20_balance =
                 get_erc20_balance(erc20_contract, eth_client.address(), eth_client.clone())
@@ -112,7 +110,7 @@ impl Runnable for SendToCosmos {
             let res = send_to_cosmos(
                 erc20_contract,
                 contract_address,
-                amount.clone(),
+                amount,
                 to_cosmos_addr,
                 Some(TIMEOUT),
                 eth_client.clone(),
@@ -130,7 +128,7 @@ impl Runnable for SendToCosmos {
     }
 }
 
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub struct Send {
     free: Vec<String>,
 

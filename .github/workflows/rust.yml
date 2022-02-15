@@ -15,13 +15,13 @@ jobs:
     strategy:
       matrix:
         rust:
-        - stable
+          - stable
     steps:
       - name: Checkout branch
         uses: actions/checkout@v2
       - name: Setup toolchain
         uses: actions-rs/toolchain@v1
-        with: 
+        with:
           toolchain: ${{ matrix.rust }}
       - name: Set up Rust caches
         uses: actions/cache@v2
@@ -36,3 +36,27 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('orchestrator/Cargo.lock') }}
       - name: Run Orchestrator unit tests
         run: cd orchestrator && cargo test --all --verbose
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v2
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Run Rust fmt
+        run: cd orchestrator && cargo fmt
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v2
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Run Carglo Clippy
+        run: cd orchestrator && cargo clippy

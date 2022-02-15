@@ -27,6 +27,7 @@ use gravity_utils::{
 use std::{result::Result, time};
 use tonic::transport::Channel;
 
+#[allow(clippy::too_many_arguments)]
 pub async fn check_for_events(
     eth_client: EthClient,
     contact: &Contact,
@@ -34,12 +35,13 @@ pub async fn check_for_events(
     gravity_contract_address: EthAddress,
     cosmos_key: CosmosPrivateKey,
     starting_block: U64,
+    block_delay: U64,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) -> Result<U64, GravityError> {
     let prefix = contact.get_prefix();
     let our_cosmos_address = cosmos_key.to_address(&prefix).unwrap();
     let latest_block = get_block_number_with_retry(eth_client.clone()).await;
-    let latest_block = latest_block - get_block_delay(eth_client.clone()).await?;
+    let latest_block = latest_block - block_delay;
 
     metrics::set_ethereum_check_for_events_starting_block(starting_block.as_u64());
     metrics::set_ethereum_check_for_events_end_block(latest_block.as_u64());
@@ -121,7 +123,7 @@ pub async fn check_for_events(
 
     for erc20_deployed_event in erc20_deployed_events.iter() {
         info!(
-            "Oracle observed ERC20 deploy with denom {} erc20 name {} and symbol {} and event_nonce {}",
+            "Oracle observed ERC20 deploy with denom {}, erc20 name {}, symbol {}, and event_nonce {}",
             erc20_deployed_event.cosmos_denom,
             erc20_deployed_event.name,
             erc20_deployed_event.symbol,
@@ -131,7 +133,7 @@ pub async fn check_for_events(
 
     for logic_call_event in logic_call_events.iter() {
         info!(
-            "Oracle observed logic call execution with invalidation_id {} invalidation_nonce {} and event_nonce {}",
+            "Oracle observed logic call execution with invalidation_id {}, invalidation_nonce {}, and event_nonce {}",
             bytes_to_hex_str(&logic_call_event.invalidation_id),
             logic_call_event.invalidation_nonce,
             logic_call_event.event_nonce
@@ -140,7 +142,7 @@ pub async fn check_for_events(
 
     for send_to_cosmos_event in send_to_cosmos_events.iter() {
         info!(
-            "Oracle observed deposit with ethereum sender {}, cosmos_reciever {}, amount {}, and event nonce {}",
+            "Oracle observed send to cosmos event with ethereum sender {}, cosmos receiver {}, amount {}, and event nonce {}",
             send_to_cosmos_event.sender,
             send_to_cosmos_event.destination,
             send_to_cosmos_event.amount,
@@ -159,7 +161,7 @@ pub async fn check_for_events(
 
     for valset_updated_event in valset_updated_events.iter() {
         info!(
-            "Oracle observed valset with valset_nonce {}, event_nonce {}, block_height {} and members {:?}",
+            "Oracle observed valset update with valset_nonce {}, event_nonce {}, block_height {}, and members {:?}",
             valset_updated_event.valset_nonce,
             valset_updated_event.event_nonce,
             valset_updated_event.block_height,
@@ -218,11 +220,16 @@ pub async fn check_for_events(
         let timeout = time::Duration::from_secs(30);
         contact.wait_for_next_block(timeout).await?;
 
+        // TODO(bolten): we are only waiting one block, is it possible if we are sending multiple
+        // events via the sender, they could be received over the block boundary and thus our new
+        // event nonce does not reflect full processing of the above events?
         let new_event_nonce = get_last_event_nonce(grpc_client, our_cosmos_address).await?;
         if new_event_nonce == last_event_nonce {
             return Err(GravityError::InvalidBridgeStateError(
                 format!("Claims did not process, trying to update but still on {}, trying again in a moment", last_event_nonce),
             ));
+        } else {
+            info!("Claims processed, new nonce: {}", new_event_nonce);
         }
     }
 
@@ -250,10 +257,8 @@ pub async fn check_for_events(
 /// 6 deep reorg every 53,272 years.
 ///
 pub async fn get_block_delay(eth_client: EthClient) -> Result<U64, GravityError> {
-    // TODO(bolten): technically we want the network id from net_version, but chain id
-    // should be the same for our use cases...when this PR is in a released version of
-    // ethers we can move back to net_version:
-    // https://github.com/gakonst/ethers-rs/pull/595
+    // TODO(bolten): get_net_version() exists on the version of ethers we are currently
+    // depending on, but it's broken, so we're relying on chain ID
     let chain_id_result = get_chain_id_with_retry(eth_client.clone()).await;
     let chain_id = downcast_to_u64(chain_id_result);
     if chain_id.is_none() {
@@ -264,13 +269,16 @@ pub async fn get_block_delay(eth_client: EthClient) -> Result<U64, GravityError>
     }
 
     match chain_id.unwrap() {
-        // Mainline Ethereum, Ethereum classic, or the Ropsten, Mordor testnets
+        // Mainline Ethereum, Ethereum classic, or Ropsten, Mordor testnets
         // all POW Chains
-        1 | 3 | 7 => Ok(6u8.into()),
-        // Rinkeby, Goerli, Dev, our own Gravity Ethereum testnet, and Kotti respectively
+        1 | 3 | 61 | 63 => Ok(13u8.into()),
+        // Dev, our own Gravity Ethereum testnet, Hardhat
         // all non-pow chains
-        4 | 5 | 2018 | 15 | 6 => Ok(0u8.into()),
+        2018 | 15 | 31337 => Ok(0u8.into()),
+        // Rinkeby, Goerli, Kotti
+        // Clique (POA) Consensus
+        4 | 5 | 6 => Ok(10u8.into()),
         // assume the safe option (POW) where we don't know
-        _ => Ok(6u8.into()),
+        _ => Ok(13u8.into()),
     }
 }

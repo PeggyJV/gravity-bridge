@@ -1,3 +1,4 @@
+#![allow(clippy::needless_question_mark)]
 use crate::error::GravityError;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -9,6 +10,13 @@ pub fn downcast_to_f32(input: U256) -> Option<f32> {
     // would care about downcasting from a U256, and Rust will
     // gracefully saturate the cast
     match panic::catch_unwind(|| input.as_u128() as f32) {
+        Ok(downcasted) => Some(downcasted),
+        Err(_) => None,
+    }
+}
+
+pub fn downcast_to_f64(input: U256) -> Option<f64> {
+    match panic::catch_unwind(|| input.as_u128() as f64) {
         Ok(downcasted) => Some(downcasted),
         Err(_) => None,
     }
@@ -32,6 +40,10 @@ pub fn format_eth_address(address: EthAddress) -> String {
     format!("0x{}", bytes_to_hex_str(address.as_bytes()))
 }
 
+pub fn format_eth_hash(hash: H256) -> String {
+    format!("0x{}", bytes_to_hex_str(hash.as_bytes()))
+}
+
 pub fn bytes_to_hex_str(bytes: &[u8]) -> String {
     bytes
         .iter()
@@ -42,7 +54,7 @@ pub fn bytes_to_hex_str(bytes: &[u8]) -> String {
 pub fn hex_str_to_bytes(s: &str) -> Result<Vec<u8>, GravityError> {
     let s = match s.strip_prefix("0x") {
         Some(s) => s,
-        None => &s,
+        None => s,
     };
     let bytes = s
         .as_bytes()

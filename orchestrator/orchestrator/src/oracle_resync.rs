@@ -42,8 +42,6 @@ pub async fn get_last_checked_block(
 
     let filter_gravity_contract_address = ValueOrArray::Value(gravity_contract_address);
 
-    // TODO(bolten): there might be a cleaner way to get these event ABI signature strings
-    // from the generated ABI files, should look into that
     let mut erc20_deployed_filter = Filter::new()
         .address(filter_gravity_contract_address.clone())
         .event(&Erc20DeployedEventFilter::abi_signature());
@@ -83,12 +81,11 @@ pub async fn get_last_checked_block(
         let logic_call_events = eth_client.get_logs(&logic_call_filter).await;
         let send_to_cosmos_events = eth_client.get_logs(&send_to_cosmos_filter).await;
         let transaction_batch_events = eth_client.get_logs(&transaction_batch_filter).await;
-        let valset_updated_events = eth_client.get_logs(&valset_updated_filter).await;
-
         // valset update events have one special property that is useful to us in this handler:
         // a valset update event for nonce 0 is emitted in the contract constructor meaning once you
         // find that event you can exit the search with confidence that you have not missed any events
         // without searching the entire blockchain history
+        let valset_updated_events = eth_client.get_logs(&valset_updated_filter).await;
 
         if erc20_deployed_events.is_err()
             || logic_call_events.is_err()
@@ -115,7 +112,7 @@ pub async fn get_last_checked_block(
             match Erc20DeployedEvent::from_log(&event) {
                 Ok(deploy) => {
                     trace!(
-                        "{} deploy event nonce {} last event nonce",
+                        "{} ERC20 deploy event nonce, {} last event nonce",
                         deploy.event_nonce,
                         last_event_nonce
                     );
@@ -123,7 +120,7 @@ pub async fn get_last_checked_block(
                         return event.block_number.unwrap();
                     }
                 }
-                Err(e) => error!("Got ERC20Deployed event that we can't parse {}", e),
+                Err(e) => error!("Got ERC20DeployedEvent that we can't parse: {}", e),
             }
         }
 
@@ -131,7 +128,7 @@ pub async fn get_last_checked_block(
             match LogicCallExecutedEvent::from_log(&event) {
                 Ok(call) => {
                     trace!(
-                        "{} LogicCall event nonce {} last event nonce",
+                        "{} logic call event nonce, {} last event nonce",
                         call.event_nonce,
                         last_event_nonce
                     );
@@ -139,16 +136,16 @@ pub async fn get_last_checked_block(
                         return event.block_number.unwrap();
                     }
                 }
-                Err(e) => error!("Got ERC20Deployed event that we can't parse {}", e),
+                Err(e) => error!("Got LogicCallExecutedEvent that we can't parse: {}", e),
             }
         }
 
         for event in send_to_cosmos_events {
             let prefix = our_cosmos_address.get_prefix();
-            match SendToCosmosEvent::from_log(&event, &prefix.as_str()) {
+            match SendToCosmosEvent::from_log(&event, prefix.as_str()) {
                 Ok(send) => {
                     trace!(
-                        "{} send event nonce {} last event nonce",
+                        "{} send to Cosmos event nonce, {} last event nonce",
                         send.event_nonce,
                         last_event_nonce
                     );
@@ -156,7 +153,7 @@ pub async fn get_last_checked_block(
                         return event.block_number.unwrap();
                     }
                 }
-                Err(e) => error!("Got SendToCosmos event that we can't parse {}", e),
+                Err(e) => error!("Got SendToCosmosEvent that we can't parse: {}", e),
             }
         }
 
@@ -164,7 +161,7 @@ pub async fn get_last_checked_block(
             match TransactionBatchExecutedEvent::from_log(&event) {
                 Ok(batch) => {
                     trace!(
-                        "{} batch event nonce {} last event nonce",
+                        "{} transaction batch event nonce, {} last event nonce",
                         batch.event_nonce,
                         last_event_nonce
                     );
@@ -172,7 +169,10 @@ pub async fn get_last_checked_block(
                         return event.block_number.unwrap();
                     }
                 }
-                Err(e) => error!("Got batch event that we can't parse {}", e),
+                Err(e) => error!(
+                    "Got TransactionBatchExecutedEvent that we can't parse: {}",
+                    e
+                ),
             }
         }
 
@@ -194,7 +194,7 @@ pub async fn get_last_checked_block(
                     let common_case =
                         valset.event_nonce == last_event_nonce && event.block_number.is_some();
                     trace!(
-                        "{} valset event nonce {} last event nonce",
+                        "{} valset updated event nonce, {} last event nonce",
                         valset.event_nonce,
                         last_event_nonce
                     );
@@ -207,7 +207,7 @@ pub async fn get_last_checked_block(
                         panic!("Could not find the last event relayed by {}, Last Event nonce is {} but no event matching that could be found!", our_cosmos_address, last_event_nonce)
                     }
                 }
-                Err(e) => error!("Got valset event that we can't parse {}", e),
+                Err(e) => error!("Got ValsetUpdatedEvent that we can't parse: {}", e),
             }
         }
 

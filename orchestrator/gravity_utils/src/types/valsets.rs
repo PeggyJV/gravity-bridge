@@ -12,7 +12,6 @@ use std::{
     collections::{HashMap, HashSet},
     fmt, str,
 };
-use gravity_abi::gravity::ValsetArgs;
 
 /// The total power in the Gravity bridge is normalized to u32 max every
 /// time a validator set is created. This value of up to u32 max is then
@@ -150,7 +149,6 @@ impl Valset {
         for member in self.members.iter() {
             if let Some(eth_address) = member.eth_address {
                 if let Some(sig) = signatures_hashmap.get(&eth_address) {
-                    assert_eq!(sig.get_eth_address(), eth_address);
                     let sig_hash = u8_slice_to_fixed_32(signed_message)?;
                     let recover_key = sig.get_signature().recover(sig_hash)?;
                     if recover_key == sig.get_eth_address() {

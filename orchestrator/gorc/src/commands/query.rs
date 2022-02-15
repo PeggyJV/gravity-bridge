@@ -4,10 +4,10 @@ mod cosmos;
 
 mod eth;
 
-use abscissa_core::{Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, Command, Runnable};
 
 /// Query state on either ethereum or cosmos chains
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub enum QueryCmd {
     #[clap(subcommand)]
     Cosmos(cosmos::Cosmos),

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -21,10 +23,10 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 	for _, evr := range data.EthereumEventVoteRecords {
 		event, err := types.UnpackEvent(evr.Event)
 		if err != nil {
-			panic("couldn't cast to event")
+			panic(fmt.Sprintf("couldn't cast to event: %s", err))
 		}
 		if err := event.Validate(); err != nil {
-			panic("invalid event in genesis")
+			panic(fmt.Sprintf("invalid event in genesis: %s", err))
 		}
 		k.setEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash(), evr)
 	}
@@ -50,7 +52,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 	// reset delegate keys in state
 	for _, keys := range data.DelegateKeys {
 		if err := keys.ValidateBasic(); err != nil {
-			panic("Invalid delegate key in Genesis!")
+			panic(fmt.Sprintf("Invalid delegate key in Genesis: %s", err))
 		}
 
 		val, _ := sdk.ValAddressFromBech32(keys.ValidatorAddress)
@@ -73,7 +75,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 	for _, ota := range data.OutgoingTxs {
 		otx, err := types.UnpackOutgoingTx(ota)
 		if err != nil {
-			panic("invalid outgoing tx any in genesis file")
+			panic(fmt.Sprintf("invalid outgoing tx any in genesis file: %s", err))
 		}
 		k.SetOutgoingTx(ctx, otx)
 	}
@@ -82,7 +84,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 	for _, confa := range data.Confirmations {
 		conf, err := types.UnpackConfirmation(confa)
 		if err != nil {
-			panic("invalid etheruem signature in genesis")
+			panic(fmt.Sprintf("invalid etheruem signature in genesis: %s", err))
 		}
 		// TODO: not currently an easy way to get the validator address from the
 		// etherum address here. once we implement the third index for keys
@@ -156,6 +158,11 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 		})
 		return false
 	})
+
+	// this will marshal into "dW51c2Vk" as []byte will be encoded as base64
+	for _, delegate := range delegates {
+		delegate.EthSignature = []byte("unused")
+	}
 
 	return types.GenesisState{
 		Params:                     &p,

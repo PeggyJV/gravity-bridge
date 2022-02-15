@@ -26,7 +26,6 @@ pub async fn send_eth_valset_update(
 ) -> Result<(), GravityError> {
     let old_nonce = old_valset.nonce;
     let new_nonce = new_valset.nonce;
-    assert!(new_nonce > old_nonce);
 
     info!(
         "Ordering signatures and submitting validator set {} -> {} update to Ethereum",
@@ -131,22 +130,24 @@ pub fn build_valset_update_contract_call(
     let contract = Gravity::new(gravity_contract_address, eth_client.clone());
     Ok(contract
         .update_valset(
-            ValsetArgs{
+            ValsetArgs {
                 validators: new_addresses,
-                powers:new_powers,
+                powers: new_powers,
                 valset_nonce: new_valset.nonce.into(),
                 reward_amount: U256::zero(),
                 reward_token: H160::zero(),
             },
-            ValsetArgs{
+            ValsetArgs {
                 validators: old_addresses,
-                powers:old_powers,
+                powers: old_powers,
                 valset_nonce: old_valset.nonce.into(),
                 reward_amount: U256::zero(),
                 reward_token: H160::zero(),
             },
-            sig_data.iter().map(|sig_data| sig_data.to_val_sig()).collect(),
-
+            sig_data
+                .iter()
+                .map(|sig_data| sig_data.to_val_sig())
+                .collect(),
         )
         .from(eth_client.address())
         .value(U256::zero()))

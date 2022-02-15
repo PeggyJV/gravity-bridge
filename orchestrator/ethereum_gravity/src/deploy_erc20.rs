@@ -5,7 +5,10 @@
 use crate::{types::EthClient, utils::get_gas_price};
 use ethers::prelude::*;
 use gravity_abi::gravity::*;
-use gravity_utils::error::GravityError;
+use gravity_utils::{
+    error::GravityError,
+    ethereum::{downcast_to_f64, format_eth_hash},
+};
 use std::{result::Result, time::Duration};
 
 /// Calls the Gravity ethereum contract to deploy the ERC20 representation of the given Cosmos asset
@@ -19,6 +22,7 @@ pub async fn deploy_erc20(
     decimals: u8,
     gravity_contract: Address,
     wait_timeout: Option<Duration>,
+    gas_multiplier: f64,
     eth_client: EthClient,
 ) -> Result<TxHash, GravityError> {
     let contract_call = Gravity::new(gravity_contract, eth_client.clone()).deploy_erc20(
@@ -28,17 +32,31 @@ pub async fn deploy_erc20(
         decimals,
     );
     let gas_price = get_gas_price(eth_client.clone()).await?;
-    let contract_call = contract_call.gas_price(gas_price);
+    let gas = contract_call.estimate_gas().await?;
+    let gas_as_f64 = downcast_to_f64(gas);
+    if gas_as_f64.is_none() {
+        return Err(GravityError::GravityContractError(format!(
+            "Gas estimate too large to downcast to f64: {}",
+            gas
+        )));
+    }
+    let gas = (gas_as_f64.unwrap() * gas_multiplier) as u128;
+
+    // TODO(bolten): it seems like a bug in ethers will replace manually set gas limits with
+    // a gas estimate if no access list is defined for EIP1559 transactions, so we're forcing a
+    // legacy transaction here to allow for the multiplier to take effect
+    let contract_call = contract_call.gas_price(gas_price).gas(gas).legacy();
 
     let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;
-    info!("Deploying ERC-20 with tx hash {}", tx_hash);
+    info!("Deploying ERC-20 with tx hash {}", format_eth_hash(tx_hash));
     // TODO(bolten): ethers interval default is 7s, this mirrors what web30 was doing, should we adjust?
     // additionally we are mirroring only waiting for 1 confirmation by leaving that as default
     let pending_tx = pending_tx.interval(Duration::from_secs(1));
     let potential_error = GravityError::GravityContractError(format!(
         "Did not receive transaction receipt when deploying ERC-20 {}: {}",
-        erc20_symbol, tx_hash
+        erc20_symbol,
+        format_eth_hash(tx_hash)
     ));
 
     if let Some(timeout) = wait_timeout {

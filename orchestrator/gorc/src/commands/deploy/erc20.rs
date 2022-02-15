@@ -1,11 +1,11 @@
 use crate::{application::APP, prelude::*};
-use abscissa_core::{Clap, Command, Runnable};
+use abscissa_core::{clap::Parser, Command, Runnable};
 use ethereum_gravity::deploy_erc20::deploy_erc20;
 use ethers::prelude::*;
 use gravity_proto::gravity::{DenomToErc20ParamsRequest, DenomToErc20Request};
 use gravity_utils::{
     connection_prep::{check_for_eth, create_rpc_connections},
-    ethereum::downcast_to_u64,
+    ethereum::{downcast_to_u64, format_eth_hash},
 };
 use std::convert::TryFrom;
 use std::process::exit;
@@ -13,12 +13,15 @@ use std::{sync::Arc, time::Duration};
 use tokio::time::sleep as delay_for;
 
 /// Deploy Erc20
-#[derive(Command, Debug, Clap)]
+#[derive(Command, Debug, Parser)]
 pub struct Erc20 {
     args: Vec<String>,
 
     #[clap(short, long)]
     ethereum_key: String,
+
+    #[clap(short, long, default_value_t = 1.0)]
+    gas_multiplier: f64,
 }
 
 impl Runnable for Erc20 {
@@ -62,10 +65,8 @@ impl Erc20 {
             .expect("Could not retrieve chain ID");
         let chain_id =
             downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
-        let eth_client = SignerMiddleware::new(
-            provider,
-            ethereum_wallet.clone().with_chain_id(chain_id),
-        );
+        let eth_client =
+            SignerMiddleware::new(provider, ethereum_wallet.clone().with_chain_id(chain_id));
         let eth_client = Arc::new(eth_client);
         let mut grpc = connections.grpc.clone().unwrap();
 
@@ -90,14 +91,16 @@ impl Erc20 {
             u8::try_from(res.erc20_decimals).unwrap(),
             contract_address,
             Some(timeout),
+            self.gas_multiplier,
             eth_client.clone(),
         )
         .await
         .expect("Could not deploy ERC20");
 
-        println!("We have deployed ERC20 contract {}, waiting to see if the Cosmos chain choses to adopt it", res);
+        println!("We have deployed ERC20 contract at tx hash {}, waiting to see if the Cosmos chain choses to adopt it",
+            format_eth_hash(res));
 
-        match tokio::time::timeout(Duration::from_secs(100), async {
+        match tokio::time::timeout(Duration::from_secs(300), async {
             loop {
                 let req = DenomToErc20Request {
                     denom: denom.clone(),
