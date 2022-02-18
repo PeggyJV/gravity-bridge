@@ -180,7 +180,7 @@ pub fn ethereum_event_messages(
         let event = proto::ContractCallExecutedEvent {
             event_nonce: downcast_to_u64(logic_call.event_nonce).unwrap(),
             ethereum_height: downcast_to_u64(logic_call.block_height).unwrap(),
-            invalidation_id: logic_call.invalidation_id,
+            invalidation_scope: logic_call.invalidation_id,
             invalidation_nonce: downcast_to_u64(logic_call.invalidation_nonce).unwrap(),
         };
         let msg = proto::MsgSubmitEthereumEvent {
