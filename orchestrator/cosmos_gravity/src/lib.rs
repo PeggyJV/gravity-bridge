@@ -7,6 +7,7 @@
 extern crate log;
 
 pub mod build;
+pub mod crypto;
 pub mod query;
 pub mod send;
 pub mod utils;

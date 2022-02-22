@@ -41,3 +41,15 @@ gorc = { path = "./gorc" }
 relayer = { path = "./relayer" }
 gravity_abi_build = { path = "./gravity_abi_build" }
 gravity_abi = { path = "./gravity_abi" }
+
+[features]
+ethermint = [
+    "orchestrator/ethermint",
+    "cosmos_gravity/ethermint",
+    "relayer/ethermint",
+    "gorc/ethermint",
+    "register_delegate_keys/ethermint",
+]
+
+[patch.crates-io]
+deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }

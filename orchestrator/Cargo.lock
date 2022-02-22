@@ -782,9 +782,9 @@ checksum = "2dabbe35f96fb9507f7330793dc490461b2962659ac5d427181e451a623751d1"
 
 [[package]]
 name = "bech32"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c7f7096bc256f5e5cb960f60dfc4f4ef979ca65abe7fb9d5a4f77150d3783d4"
+checksum = "cf9ff0bbfd639f15c74af777d81383cf53efb7c93613f6cab67c6c11e05bbf8b"
 
 [[package]]
 name = "bincode"
@@ -809,6 +809,27 @@ dependencies = [
  "sha2 0.9.8",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "bitcoin"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a41df6ad9642c5c15ae312dd3d074de38fd3eb7cc87ad4ce10f90292a83fe4d"
+dependencies = [
+ "bech32 0.8.1",
+ "bitcoin_hashes",
+ "secp256k1 0.20.3",
+ "serde",
+]
+
+[[package]]
+name = "bitcoin_hashes"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "006cc91e1a1d99819bc5b8214be3555c1f0611b169f527a1fdc54ed1f2b745b0"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -1094,7 +1115,7 @@ dependencies = [
  "num-bigint 0.4.0",
  "num-traits",
  "num256",
- "secp256k1 0.20.1",
+ "secp256k1 0.20.3",
  "serde",
  "serde-rlp",
  "serde_bytes",
@@ -1441,10 +1462,10 @@ dependencies = [
 [[package]]
 name = "deep_space"
 version = "2.4.7"
-source = "git+https://github.com/iqlusioninc/deep_space/?branch=master#5fb0457ed49aed262e3f18eece038146cf62e321"
+source = "git+https://github.com/iqlusioninc/deep_space/?branch=master#e35f52f5e2456a8abd26b1afe6e5cc33508c050b"
 dependencies = [
  "base64 0.13.0",
- "bech32 0.8.0",
+ "bech32 0.8.1",
  "bytes 1.1.0",
  "cosmos-sdk-proto",
  "hmac 0.11.0",
@@ -1458,12 +1479,13 @@ dependencies = [
  "rand 0.8.4",
  "ripemd160",
  "rust_decimal",
- "secp256k1 0.20.1",
+ "secp256k1 0.20.3",
  "serde",
  "serde_derive",
  "serde_json",
  "sha2 0.9.8",
  "tendermint-proto",
+ "tiny-keccak",
  "tokio 1.13.0",
  "tonic",
  "unicode-normalization",
@@ -2172,8 +2194,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fc3cb4d91f53b50155bdcfd23f6a4c39ae1969c2ae85982b135750cccaf5fce"
 dependencies = [
  "cfg-if 1.0.0",
+ "js-sys",
  "libc",
  "wasi 0.9.0+wasi-snapshot-preview1",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -2203,7 +2227,7 @@ checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 
 [[package]]
 name = "gorc"
-version = "0.3.8"
+version = "0.3.9"
 dependencies = [
  "abscissa_core",
  "abscissa_tokio",
@@ -2307,12 +2331,14 @@ name = "gravity_utils"
 version = "0.1.0"
 dependencies = [
  "actix",
+ "bitcoin",
  "clarity",
  "cosmos-sdk-proto",
  "deep_space 2.4.7",
  "ethers",
  "gravity_abi",
  "gravity_proto",
+ "hdpath",
  "log",
  "num-bigint 0.4.0",
  "num256",
@@ -2322,6 +2348,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "sha3",
+ "tiny-bip39",
  "tokio 1.13.0",
  "tonic",
  "url",
@@ -2385,6 +2412,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
 
 [[package]]
+name = "hdpath"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72adf5a17a0952ecfcddf8d46d071271d5ee52e78443f07ba0b2dcfe3063a132"
+dependencies = [
+ "bitcoin",
+ "byteorder",
+]
+
+[[package]]
 name = "heck"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2426,6 +2463,16 @@ dependencies = [
  "rand_core 0.6.2",
  "sha2 0.9.8",
  "zeroize",
+]
+
+[[package]]
+name = "hmac"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "126888268dcc288495a26bf004b38c5fdbb31682f992c84ceb046a1f0fe38840"
+dependencies = [
+ "crypto-mac 0.8.0",
+ "digest 0.9.0",
 ]
 
 [[package]]
@@ -3331,6 +3378,15 @@ checksum = "acbf547ad0c65e31259204bd90935776d1c693cec2f4ff7abb7a1bbbd40dfe58"
 
 [[package]]
 name = "pbkdf2"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "216eaa586a190f0a738f2f918511eecfa90f13295abec0e457cdebcceda80cbd"
+dependencies = [
+ "crypto-mac 0.8.0",
+]
+
+[[package]]
+name = "pbkdf2"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b3b8c0d71734018084da0c0354193a5edfb81b20d2d57a92c5b154aefc554a4a"
@@ -3985,6 +4041,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e3bad0ee36814ca07d7968269dd4b7ec89ec2da10c4bb613928d3077083c232"
 
 [[package]]
+name = "rustc-hash"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
+
+[[package]]
 name = "rustc-hex"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4104,11 +4166,12 @@ dependencies = [
 
 [[package]]
 name = "secp256k1"
-version = "0.20.1"
+version = "0.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "733b114f058f260c0af7591434eef4272ae1a8ec2751766d3cb89c6df8d5e450"
+checksum = "97d03ceae636d0fed5bae6a7f4f664354c5f4fcedf6eef053fef17e49f837d0a"
 dependencies = [
  "secp256k1-sys 0.4.0",
+ "serde",
 ]
 
 [[package]]
@@ -4707,6 +4770,25 @@ dependencies = [
  "quote",
  "standback",
  "syn",
+]
+
+[[package]]
+name = "tiny-bip39"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffc59cb9dfc85bb312c3a78fd6aa8a8582e310b0fa885d5bb877f6dcc601839d"
+dependencies = [
+ "anyhow",
+ "hmac 0.8.1",
+ "once_cell",
+ "pbkdf2 0.4.0",
+ "rand 0.7.3",
+ "rustc-hash",
+ "sha2 0.9.8",
+ "thiserror",
+ "unicode-normalization",
+ "wasm-bindgen",
+ "zeroize",
 ]
 
 [[package]]

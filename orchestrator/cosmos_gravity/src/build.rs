@@ -1,4 +1,3 @@
-use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
 use deep_space::Msg;
 use ethereum_gravity::types::EthClient;
@@ -12,6 +11,8 @@ use gravity_utils::message_signatures::{
 };
 use gravity_utils::types::*;
 use std::collections::BTreeMap;
+
+use crate::crypto::PrivateKey as CosmosPrivateKey;
 
 pub async fn signer_set_tx_confirmation_messages(
     contact: &Contact,

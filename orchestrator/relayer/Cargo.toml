@@ -19,7 +19,7 @@ gravity_abi = { path = "../gravity_abi" }
 gravity_utils = { path = "../gravity_utils" }
 gravity_proto = { path = "../gravity_proto" }
 
-deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="master"}
+deep_space = "2.4.7"
 ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
 serde_derive = "1.0"
 clarity = "0.4.11"
@@ -34,6 +34,8 @@ tokio = "1.4"
 tonic = "0.4"
 openssl-probe = "0.1"
 
-
 [dev-dependencies]
 actix = "0.12"
+
+[features]
+ethermint = ["cosmos_gravity/ethermint"]

@@ -1,3 +1,4 @@
+use cosmos_gravity::crypto::DEFAULT_HD_PATH;
 use ethers::signers::LocalWallet as EthWallet;
 use serde::{Deserialize, Serialize};
 use signatory::FsKeyStore;
@@ -32,7 +33,7 @@ impl GorcConfig {
         EthWallet::from(self.load_secret_key(name))
     }
 
-    pub fn load_deep_space_key(&self, name: String) -> deep_space::private_key::PrivateKey {
+    pub fn load_deep_space_key(&self, name: String) -> cosmos_gravity::crypto::PrivateKey {
         let key = self.load_secret_key(name).to_bytes();
         let key = deep_space::utils::bytes_to_hex_str(&key);
         key.parse().expect("Could not parse private key")
@@ -101,7 +102,7 @@ pub struct CosmosSection {
 impl Default for CosmosSection {
     fn default() -> Self {
         Self {
-            key_derivation_path: "m/44'/118'/0'/0/0".to_owned(),
+            key_derivation_path: DEFAULT_HD_PATH.to_owned(),
             grpc: "http://localhost:9090".to_owned(),
             prefix: "cosmos".to_owned(),
             gas_price: GasPrice::default(),
