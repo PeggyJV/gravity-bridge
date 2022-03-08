@@ -820,14 +820,6 @@ func parseContractAddress(s string) (string, error) {
 	return s, nil
 }
 
-func parseCount(s string) (int64, error) {
-	count, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("count %s not a valid int, please input a valid count", s)
-	}
-	return count, nil
-}
-
 func parseNonce(s string) (uint64, error) {
 	nonce, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {

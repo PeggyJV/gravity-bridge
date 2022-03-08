@@ -31,7 +31,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -527,33 +526,4 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 	persistentPeers = strings.Join(addressesIPs, ",")
 
 	return appGenTxs, persistentPeers, nil
-}
-
-func validateAccountPresentInGenesis(
-	appGenesisState map[string]json.RawMessage, genBalIterator authtypes.GenesisAccountIterator,
-	addr sdk.Address, coins sdk.Coins, cdc codec.Codec,
-) error {
-
-	accountIsInGenesis := false
-
-	genBalIterator.IterateGenesisAccounts(cdc, appGenesisState,
-		func(acc authtypes.AccountI) (stop bool) {
-			accAddress := acc.GetAddress()
-
-			// ensure that account is in genesis
-			if accAddress.Equals(addr) {
-				// ensure account contains enough funds of default bond denom
-				accountIsInGenesis = true
-				return true
-			}
-
-			return false
-		},
-	)
-
-	if !accountIsInGenesis {
-		return fmt.Errorf("account %s does not have a balance in the genesis state", addr)
-	}
-
-	return nil
 }

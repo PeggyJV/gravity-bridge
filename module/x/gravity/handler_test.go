@@ -10,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 
-	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/peggyjv/gravity-bridge/module/app"
 	"github.com/peggyjv/gravity-bridge/module/x/gravity"
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/keeper"
@@ -287,8 +286,10 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 }
 
 func TestMsgSetDelegateAddresses(t *testing.T) {
-	ethPrivKey, err := ethCrypto.GenerateKey()
-	ethPrivKey2, err := ethCrypto.GenerateKey()
+	ethPrivKey, err := crypto.GenerateKey()
+	require.NoError(t, err)
+	ethPrivKey2, err := crypto.GenerateKey()
+	require.NoError(t, err)
 
 	var (
 		ethAddress                    = crypto.PubkeyToAddress(ethPrivKey.PublicKey)
