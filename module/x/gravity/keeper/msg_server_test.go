@@ -9,14 +9,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
 )
 
 func TestMsgServer_SubmitEthereumSignature(t *testing.T) {
-	ethPrivKey, err := ethCrypto.GenerateKey()
+	ethPrivKey, err := crypto.GenerateKey()
 	require.NoError(t, err)
 
 	var (
@@ -75,7 +74,7 @@ func TestMsgServer_SubmitEthereumSignature(t *testing.T) {
 }
 
 func TestMsgServer_SendToEthereum(t *testing.T) {
-	ethPrivKey, err := ethCrypto.GenerateKey()
+	ethPrivKey, err := crypto.GenerateKey()
 	require.NoError(t, err)
 
 	var (
@@ -139,7 +138,7 @@ func TestMsgServer_SendToEthereum(t *testing.T) {
 }
 
 func TestMsgServer_CancelSendToEthereum(t *testing.T) {
-	ethPrivKey, err := ethCrypto.GenerateKey()
+	ethPrivKey, err := crypto.GenerateKey()
 	require.NoError(t, err)
 
 	var (
@@ -210,7 +209,7 @@ func TestMsgServer_CancelSendToEthereum(t *testing.T) {
 }
 
 func TestMsgServer_RequestBatchTx(t *testing.T) {
-	ethPrivKey, err := ethCrypto.GenerateKey()
+	ethPrivKey, err := crypto.GenerateKey()
 	require.NoError(t, err)
 
 	var (
@@ -320,7 +319,7 @@ func TestMsgServer_RequestEmptyBatchTx(t *testing.T) {
 }
 
 func TestMsgServer_SubmitEthereumEvent(t *testing.T) {
-	ethPrivKey, err := ethCrypto.GenerateKey()
+	ethPrivKey, err := crypto.GenerateKey()
 	require.NoError(t, err)
 
 	var (
@@ -373,7 +372,7 @@ func TestMsgServer_SubmitEthereumEvent(t *testing.T) {
 }
 
 func TestMsgServer_SetDelegateKeys(t *testing.T) {
-	ethPrivKey, err := ethCrypto.GenerateKey()
+	ethPrivKey, err := crypto.GenerateKey()
 	require.NoError(t, err)
 
 	var (
