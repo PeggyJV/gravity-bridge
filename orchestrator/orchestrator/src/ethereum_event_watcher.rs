@@ -6,7 +6,7 @@ use crate::get_with_retry::get_chain_id_with_retry;
 use crate::metrics;
 use cosmos_gravity::build;
 use cosmos_gravity::query::get_last_event_nonce;
-use deep_space::private_key::PrivateKey as CosmosPrivateKey;
+use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use deep_space::{Contact, Msg};
 use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;

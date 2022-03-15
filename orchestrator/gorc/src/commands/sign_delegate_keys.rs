@@ -7,7 +7,6 @@ use std::time::Duration;
 /// Sign delegate keys command
 #[derive(Command, Debug, Default, Parser)]
 pub struct SignDelegateKeysCmd {
-    #[clap(short, long)]
     pub args: Vec<String>,
 }
 

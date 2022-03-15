@@ -1,4 +1,3 @@
-use deep_space::private_key::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
 use deep_space::Msg;
 use ethereum_gravity::types::EthClient;
@@ -12,6 +11,8 @@ use gravity_utils::message_signatures::{
 };
 use gravity_utils::types::*;
 use std::collections::BTreeMap;
+
+use crate::crypto::PrivateKey as CosmosPrivateKey;
 
 pub async fn signer_set_tx_confirmation_messages(
     contact: &Contact,
@@ -180,7 +181,7 @@ pub fn ethereum_event_messages(
         let event = proto::ContractCallExecutedEvent {
             event_nonce: downcast_to_u64(logic_call.event_nonce).unwrap(),
             ethereum_height: downcast_to_u64(logic_call.block_height).unwrap(),
-            invalidation_id: logic_call.invalidation_id,
+            invalidation_scope: logic_call.invalidation_id,
             invalidation_nonce: downcast_to_u64(logic_call.invalidation_nonce).unwrap(),
         };
         let msg = proto::MsgSubmitEthereumEvent {

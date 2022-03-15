@@ -17,7 +17,7 @@ gravity_utils = {path = "../gravity_utils"}
 gravity_proto = {path = "../gravity_proto/"}
 orchestrator = {path = "../orchestrator/"}
 
-deep_space ={git="https://github.com/iqlusioninc/deep_space/", branch="master"}
+deep_space = "2.4.7"
 serde_derive = "1.0"
 clarity = "0.4.11"
 docopt = "1"
@@ -36,3 +36,6 @@ rand = "0.8"
 tonic = "0.4"
 futures = "0.3.18"
 hex = "0.4.3"
+
+[features]
+ethermint = ["cosmos_gravity/ethermint", "orchestrator/ethermint"]

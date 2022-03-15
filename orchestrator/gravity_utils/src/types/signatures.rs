@@ -105,7 +105,7 @@ mod tests {
                 eth_address: "0x479FFc856Cdfa0f5D1AE6Fa61915b01351A7773D"
                     .parse()
                     .unwrap(),
-                v: 0u64.into(),
+                v: 0u64,
                 r: 0u64.into(),
                 s: 0u64.into(),
             },
@@ -114,7 +114,7 @@ mod tests {
                 eth_address: "0x6db48cBBCeD754bDc760720e38E456144e83269b"
                     .parse()
                     .unwrap(),
-                v: 0u64.into(),
+                v: 0u64,
                 r: 0u64.into(),
                 s: 0u64.into(),
             },
@@ -123,7 +123,7 @@ mod tests {
                 eth_address: "0x0A7254b318dd742A3086882321C27779B4B642a6"
                     .parse()
                     .unwrap(),
-                v: 0u64.into(),
+                v: 0u64,
                 r: 0u64.into(),
                 s: 0u64.into(),
             },
@@ -132,7 +132,7 @@ mod tests {
                 eth_address: "0x454330deAaB759468065d08F2b3B0562caBe1dD1"
                     .parse()
                     .unwrap(),
-                v: 0u64.into(),
+                v: 0u64,
                 r: 0u64.into(),
                 s: 0u64.into(),
             },
@@ -141,7 +141,7 @@ mod tests {
                 eth_address: "0x8E91960d704Df3fF24ECAb78AB9df1B5D9144140"
                     .parse()
                     .unwrap(),
-                v: 0u64.into(),
+                v: 0u64,
                 r: 0u64.into(),
                 s: 0u64.into(),
             },
@@ -150,7 +150,7 @@ mod tests {
                 eth_address: "0x3511A211A6759d48d107898302042d1301187BA9"
                     .parse()
                     .unwrap(),
-                v: 0u64.into(),
+                v: 0u64,
                 r: 0u64.into(),
                 s: 0u64.into(),
             },
@@ -159,7 +159,7 @@ mod tests {
                 eth_address: "0xF14879a175A2F1cEFC7c616f35b6d9c2b0Fd8326"
                     .parse()
                     .unwrap(),
-                v: 0u64.into(),
+                v: 0u64,
                 r: 0u64.into(),
                 s: 0u64.into(),
             },
@@ -168,7 +168,7 @@ mod tests {
                 eth_address: "0x37A0603dA2ff6377E5C7f75698dabA8EE4Ba97B8"
                     .parse()
                     .unwrap(),
-                v: 0u64.into(),
+                v: 0u64,
                 r: 0u64.into(),
                 s: 0u64.into(),
             },

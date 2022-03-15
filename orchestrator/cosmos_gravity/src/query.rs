@@ -103,7 +103,7 @@ fn extract_valid_batches(batches: Vec<BatchTx>) -> Vec<TransactionBatch> {
     for batch in batches {
         match TransactionBatch::from_proto(batch.clone()) {
             Ok(valid_batch) => valid_batches.push(valid_batch),
-            Err(e) => warn!("{}, skipping invalid batch: {:?}", e, batch)
+            Err(e) => warn!("{}, skipping invalid batch: {:?}", e, batch),
         }
     }
     valid_batches
@@ -198,21 +198,19 @@ pub async fn get_oldest_unsigned_logic_call(
 fn extract_valid_batches_test() {
     let erc20_addr = "0x0635FF793Edf48cf5dB294916720A78e6e490E40".to_string();
     let token_contract = "0xC26eFfa98B8A2632141562Ae7E34953Cfe5B4888".to_string();
-    let transactions = vec![
-        SendToEthereum {
-            id: 1,
-            sender: "cosmos1g0etv93428tvxqftnmj25jn06mz6dtdasj5nz7".to_string(),
-            ethereum_recipient: "0x64D110e00064F2b428476cD64295d8E35836ffd6".to_string(),
-            erc20_token: Some(gravity_proto::gravity::Erc20Token {
-                contract: erc20_addr.clone(),
-                amount: "1".to_string(),
-            }),
-            erc20_fee: Some(gravity_proto::gravity::Erc20Token {
-                contract: erc20_addr.clone(),
-                amount: "1".to_string(),
-            })
-        }
-    ];
+    let transactions = vec![SendToEthereum {
+        id: 1,
+        sender: "cosmos1g0etv93428tvxqftnmj25jn06mz6dtdasj5nz7".to_string(),
+        ethereum_recipient: "0x64D110e00064F2b428476cD64295d8E35836ffd6".to_string(),
+        erc20_token: Some(gravity_proto::gravity::Erc20Token {
+            contract: erc20_addr.clone(),
+            amount: "1".to_string(),
+        }),
+        erc20_fee: Some(gravity_proto::gravity::Erc20Token {
+            contract: erc20_addr,
+            amount: "1".to_string(),
+        }),
+    }];
 
     let valid_batch = BatchTx {
         batch_nonce: 1,
@@ -226,14 +224,14 @@ fn extract_valid_batches_test() {
         batch_nonce: 2,
         timeout: 3,
         transactions: Vec::new(),
-        token_contract: token_contract.clone(),
+        token_contract,
         height: 2,
     };
 
-    let valid_batches = extract_valid_batches(vec![valid_batch.clone(), invalid_batch.clone()]);
+    let valid_batches = extract_valid_batches(vec![valid_batch, invalid_batch.clone()]);
     assert_eq!(valid_batches.len(), 1);
     assert_eq!(valid_batches.get(0).unwrap().nonce, 1);
 
-    let should_be_empty = extract_valid_batches(vec![invalid_batch.clone()]);
+    let should_be_empty = extract_valid_batches(vec![invalid_batch]);
     assert_eq!(should_be_empty.len(), 0);
 }
