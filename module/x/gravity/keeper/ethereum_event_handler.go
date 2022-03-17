@@ -41,8 +41,14 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 			}
 		}
 
-		if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
-			return err
+		if recipientModule, ok := k.ModuleAccounts[event.CosmosReceiver]; ok {
+			if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, recipientModule, coins); err != nil {
+				return err
+			}
+		} else {
+			if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
+				return err
+			}
 		}
 		k.AfterSendToCosmosEvent(ctx, *event)
 		return nil

@@ -34,6 +34,7 @@ type Keeper struct {
 	SlashingKeeper types.SlashingKeeper
 	PowerReduction sdk.Int
 	hooks          types.GravityHooks
+	ModuleAccounts map[string]string
 }
 
 // NewKeeper returns a new instance of the gravity keeper
@@ -46,6 +47,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	slashingKeeper types.SlashingKeeper,
 	powerReduction sdk.Int,
+	moduleAccounts map[string]string,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -61,6 +63,7 @@ func NewKeeper(
 		bankKeeper:     bankKeeper,
 		SlashingKeeper: slashingKeeper,
 		PowerReduction: powerReduction,
+		ModuleAccounts: moduleAccounts,
 	}
 
 	return k

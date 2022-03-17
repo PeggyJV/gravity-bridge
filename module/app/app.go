@@ -410,6 +410,7 @@ func NewGravityApp(
 		app.bankKeeper,
 		app.slashingKeeper,
 		sdk.DefaultPowerReduction,
+		app.ModuleAccountNames(),
 	)
 
 	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
@@ -616,6 +617,16 @@ func (app *Gravity) ModuleAccountAddrs() map[string]bool {
 	}
 
 	return modAccAddrs
+}
+
+// ModuleAccountNames returns a map of module account address to module name
+func (app *Gravity) ModuleAccountNames() map[string]string {
+	modAccNames := make(map[string]string)
+	for acc := range maccPerms {
+		modAccNames[authtypes.NewModuleAddress(acc).String()] = acc
+	}
+
+	return modAccNames
 }
 
 // BlockedAddrs returns all the app's module account addresses that are not
