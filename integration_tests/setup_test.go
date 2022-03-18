@@ -42,10 +42,9 @@ import (
 
 const (
 	testDenom           = "testgb"
-	initBalanceStr      = "110000000000utestgb,100000000000testgb"
+	initBalanceStr      = "1000000000000testgb"
 	minGasPrice         = "2"
 	ethChainID     uint = 15
-	bondDenom           = "utestgb"
 )
 
 func MNEMONICS() []string {
@@ -59,7 +58,7 @@ func MNEMONICS() []string {
 
 var (
 	stakeAmount, _    = sdk.NewIntFromString("100000000000")
-	stakeAmountCoin   = sdk.NewCoin(bondDenom, stakeAmount)
+	stakeAmountCoin   = sdk.NewCoin(testDenom, stakeAmount)
 	gravityContract   = common.HexToAddress("0x04C89607413713Ec9775E14b954286519d836FEf")
 	testERC20contract = common.HexToAddress("0x4C4a2f8c81640e47606d3fd77B353E87Ba015584")
 )
@@ -260,30 +259,16 @@ func (s *IntegrationTestSuite) initGenesis() {
 
 	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
 		Description: "The native staking token of the test gravity bridge network",
-		Display:     "testgb",
-		Base:        bondDenom,
-		DenomUnits: []*banktypes.DenomUnit{
-			{
-				Denom:    bondDenom,
-				Exponent: 0,
-				Aliases: []string{
-					"tgb",
-				},
-			},
-			{
-				Denom:    "testgb",
-				Exponent: 6,
-			},
-		},
-	})
-	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
-		Description: "An example stable token",
 		Display:     testDenom,
 		Base:        testDenom,
+		Name:        testDenom,
 		DenomUnits: []*banktypes.DenomUnit{
 			{
 				Denom:    testDenom,
 				Exponent: 0,
+				Aliases: []string{
+					"tgb",
+				},
 			},
 		},
 	})
@@ -295,7 +280,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	// set crisis denom
 	var crisisGenState crisistypes.GenesisState
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState))
-	crisisGenState.ConstantFee.Denom = bondDenom
+	crisisGenState.ConstantFee.Denom = testDenom
 	bz, err = cdc.MarshalJSON(&crisisGenState)
 	s.Require().NoError(err)
 	appGenState[crisistypes.ModuleName] = bz
@@ -303,7 +288,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	// set staking bond denom
 	var stakingGenState stakingtypes.GenesisState
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakingGenState))
-	stakingGenState.Params.BondDenom = bondDenom
+	stakingGenState.Params.BondDenom = testDenom
 	bz, err = cdc.MarshalJSON(&stakingGenState)
 	s.Require().NoError(err)
 	appGenState[stakingtypes.ModuleName] = bz
@@ -311,7 +296,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	// set mint denom
 	var mintGenState minttypes.GenesisState
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState))
-	mintGenState.Params.MintDenom = bondDenom
+	mintGenState.Params.MintDenom = testDenom
 	bz, err = cdc.MarshalJSON(&mintGenState)
 	s.Require().NoError(err)
 	appGenState[minttypes.ModuleName] = bz
