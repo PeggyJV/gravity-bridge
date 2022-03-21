@@ -183,6 +183,7 @@ func byteArrayToFixByteArray(b []byte) (out [32]byte, err error) {
 	if len(b) > 32 {
 		return out, fmt.Errorf("array too long")
 	}
-	copy(out[:], b)
+
+	copy(out[12:], b)
 	return out, nil
 }

@@ -2,6 +2,7 @@ package integration_tests
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,13 +27,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		s.Require().NoError(err, "error getting first validator balance")
 		s.Require().Equal(sdk.NewUint(10000).BigInt(), balance.BigInt(), "balance was %s, expected 10000", balance.String())
 
-		// send from val 0 on eth to val 1 on cosmos
-		s.T().Logf("sending to cosmos")
-		err = s.sendToCosmos(s.chain.validators[1].keyInfo.GetAddress(), sdk.NewInt(200))
-		s.Require().NoError(err, "error sending test denom to cosmos")
-
-		s.Require().Eventuallyf(func() bool {
-			val := s.chain.validators[0]
+		for _, val := range s.chain.validators {
 			kb, err := val.keyring()
 			s.Require().NoError(err)
 			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", val.keyInfo.GetAddress())
@@ -43,13 +38,63 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 				&banktypes.QueryAllBalancesRequest{
 					Address: s.chain.validators[1].keyInfo.GetAddress().String(),
 				})
+			s.Require().NoError(err)
+			s.T().Logf("balances for %s: %s", val.keyInfo.GetAddress().String(), res.Balances)
+		}
+
+		// send from val 0 on eth to val 1 on cosmos
+		s.T().Logf("sending to cosmos")
+		err = s.sendToCosmos(s.chain.validators[1].keyInfo.GetAddress(), sdk.NewInt(200))
+		s.Require().NoError(err, "error sending test denom to cosmos")
+
+		for _, val := range s.chain.validators {
+			kb, err := val.keyring()
+			s.Require().NoError(err)
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", val.keyInfo.GetAddress())
+			s.Require().NoError(err)
+
+			queryClient := banktypes.NewQueryClient(clientCtx)
+			res, err := queryClient.AllBalances(context.Background(),
+				&banktypes.QueryAllBalancesRequest{
+					Address: s.chain.validators[1].keyInfo.GetAddress().String(),
+				})
+			s.Require().NoError(err)
+			s.T().Logf("balances for %s: %s", val.keyInfo.GetAddress().String(), res.Balances)
+		}
+
+		s.Require().Eventuallyf(func() bool {
+			val := s.chain.validators[0]
+			kb, err := val.keyring()
+			s.Require().NoError(err)
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", val.keyInfo.GetAddress())
+			s.Require().NoError(err)
+
+			bankQueryClient := banktypes.NewQueryClient(clientCtx)
+			res, err := bankQueryClient.AllBalances(context.Background(),
+				&banktypes.QueryAllBalancesRequest{
+					Address: s.chain.validators[1].keyInfo.GetAddress().String(),
+				})
 			if err != nil {
 				return false
 			}
 
+			gbQueryClient := types.NewQueryClient(clientCtx)
+			denomRes, err := gbQueryClient.DenomToERC20(context.Background(),
+				&types.DenomToERC20Request{
+					Denom: DENOM,
+				})
+			if err != nil {
+				s.T().Logf("error querying denom %s, %e", DENOM, err)
+				return false
+			}
+
 			for _, coin := range res.Balances {
-				if coin.Denom == DENOM {
-					if coin.Amount == sdk.NewInt(100) {
+				if !strings.Contains(coin.Denom, "gravity") {
+					continue
+				}
+				denomAddr := strings.TrimPrefix(coin.Denom, "gravity")
+				if common.HexToAddress(denomAddr) == common.HexToAddress(denomRes.Erc20) {
+					if coin.Amount.Equal(sdk.NewInt(200)) {
 						return true
 					}
 				}
