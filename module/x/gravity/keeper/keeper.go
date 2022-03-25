@@ -25,16 +25,16 @@ import (
 
 // Keeper maintains the link to storage and exposes getter/setter methods for the various parts of the state machine
 type Keeper struct {
-	StakingKeeper  types.StakingKeeper
-	storeKey       sdk.StoreKey
-	paramSpace     paramtypes.Subspace
-	cdc            codec.Codec
-	accountKeeper  types.AccountKeeper
-	bankKeeper     types.BankKeeper
-	SlashingKeeper types.SlashingKeeper
-	PowerReduction sdk.Int
-	hooks          types.GravityHooks
-	ModuleAccounts map[string]string
+	StakingKeeper         types.StakingKeeper
+	storeKey              sdk.StoreKey
+	paramSpace            paramtypes.Subspace
+	cdc                   codec.Codec
+	accountKeeper         types.AccountKeeper
+	bankKeeper            types.BankKeeper
+	SlashingKeeper        types.SlashingKeeper
+	PowerReduction        sdk.Int
+	hooks                 types.GravityHooks
+	AllowedModuleAccounts map[string]string
 }
 
 // NewKeeper returns a new instance of the gravity keeper
@@ -47,7 +47,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	slashingKeeper types.SlashingKeeper,
 	powerReduction sdk.Int,
-	moduleAccounts map[string]string,
+	allowedModuleAccounts map[string]string,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -55,15 +55,15 @@ func NewKeeper(
 	}
 
 	k := Keeper{
-		cdc:            cdc,
-		paramSpace:     paramSpace,
-		storeKey:       storeKey,
-		accountKeeper:  accKeeper,
-		StakingKeeper:  stakingKeeper,
-		bankKeeper:     bankKeeper,
-		SlashingKeeper: slashingKeeper,
-		PowerReduction: powerReduction,
-		ModuleAccounts: moduleAccounts,
+		cdc:                   cdc,
+		paramSpace:            paramSpace,
+		storeKey:              storeKey,
+		accountKeeper:         accKeeper,
+		StakingKeeper:         stakingKeeper,
+		bankKeeper:            bankKeeper,
+		SlashingKeeper:        slashingKeeper,
+		PowerReduction:        powerReduction,
+		AllowedModuleAccounts: allowedModuleAccounts,
 	}
 
 	return k

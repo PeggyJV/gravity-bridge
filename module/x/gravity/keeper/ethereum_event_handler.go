@@ -41,7 +41,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 			}
 		}
 
-		if recipientModule, ok := k.ModuleAccounts[event.CosmosReceiver]; ok {
+		if recipientModule, ok := k.AllowedModuleAccounts[event.CosmosReceiver]; ok {
 			if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, recipientModule, coins); err != nil {
 				return err
 			}
