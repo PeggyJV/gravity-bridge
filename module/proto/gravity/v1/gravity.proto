@@ -91,6 +91,7 @@ message IDSet { repeated uint64 ids = 1; }
 message CommunityPoolEthereumSpendProposal {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
 
   string title = 1;
   string description = 2;
