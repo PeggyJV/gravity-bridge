@@ -18,7 +18,7 @@ func (k Keeper) HandleCommunityPoolEthereumSpendProposal(ctx sdk.Context, p *typ
 	// NOTE the community pool isn't a module account, however its coins
 	// are held in the distribution module account. Thus the community pool
 	// must be reduced separately from the createSendToEthereum calls
-	newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(p.Amount...))
+	newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(p.Amount))
 	if negative {
 		return distributiontypes.ErrBadDistribution
 	}
@@ -26,15 +26,9 @@ func (k Keeper) HandleCommunityPoolEthereumSpendProposal(ctx sdk.Context, p *typ
 	feePool.CommunityPool = newPool
 	sender := authtypes.NewModuleAddress(distributiontypes.ModuleName)
 
-	for _, coin := range p.Amount {
-		// TODO(bolten): currently just setting fees for these to zero. Given that an individual
-		// createSendToEthereum could fail  and thus the proposal would end up in a half-complete state,
-		// should we restrict proposals to only allowing one denom?
-		_, err := k.createSendToEthereum(ctx, sender, p.Recipient, coin, sdk.NewCoin(coin.Denom, sdk.NewInt(0)))
-
-		if err != nil {
-			return err
-		}
+	_, err := k.createSendToEthereum(ctx, sender, p.Recipient, p.Amount, p.BridgeFee)
+	if err != nil {
+		return err
 	}
 
 	k.DistributionKeeper.SetFeePool(ctx, feePool)

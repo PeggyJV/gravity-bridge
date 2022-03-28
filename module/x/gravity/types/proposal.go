@@ -24,8 +24,8 @@ func init() {
 
 // NewCommunityPoolEthereumSpendProposal creates a new community pool spend proposal.
 //nolint:interfacer
-func NewCommunityPoolEthereumSpendProposal(title, description string, recipient sdk.AccAddress, amount sdk.Coins) *CommunityPoolEthereumSpendProposal {
-	return &CommunityPoolEthereumSpendProposal{title, description, recipient.String(), amount}
+func NewCommunityPoolEthereumSpendProposal(title, description string, recipient sdk.AccAddress, amount sdk.Coin, bridgeFee sdk.Coin) *CommunityPoolEthereumSpendProposal {
+	return &CommunityPoolEthereumSpendProposal{title, description, recipient.String(), amount, bridgeFee}
 }
 
 // GetTitle returns the title of a community pool Ethereum spend proposal.
@@ -48,11 +48,17 @@ func (csp *CommunityPoolEthereumSpendProposal) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
-	if !csp.Amount.IsValid() {
-		return ErrInvalidProposalAmount
-	}
+
 	if !common.IsHexAddress(csp.Recipient) {
-		return ErrInvalidProposalRecipient
+		return ErrInvalidEthereumProposalRecipient
+	}
+
+	if !csp.Amount.IsValid() {
+		return ErrInvalidEthereumProposalAmount
+	}
+
+	if !csp.BridgeFee.IsValid() {
+		return ErrInvalidEthereumProposalBridgeFee
 	}
 
 	return nil
@@ -66,6 +72,7 @@ func (csp CommunityPoolEthereumSpendProposal) String() string {
   Description: %s
   Recipient:   %s
   Amount:      %s
-`, csp.Title, csp.Description, csp.Recipient, csp.Amount))
+  Bridge Fee:  %s
+`, csp.Title, csp.Description, csp.Recipient, csp.Amount, csp.BridgeFee))
 	return b.String()
 }

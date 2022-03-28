@@ -96,8 +96,6 @@ message CommunityPoolEthereumSpendProposal {
   string title = 1;
   string description = 2;
   string recipient = 3;
-  repeated cosmos.base.v1beta1.Coin amount = 4 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  cosmos.base.v1beta1.Coin amount = 4 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin bridge_fee = 5 [ (gogoproto.nullable) = false ];
 }
