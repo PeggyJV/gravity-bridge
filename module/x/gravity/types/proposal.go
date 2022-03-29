@@ -53,7 +53,7 @@ func (csp *CommunityPoolEthereumSpendProposal) ValidateBasic() error {
 		return ErrInvalidEthereumProposalRecipient
 	}
 
-	if !csp.Amount.IsValid() {
+	if !csp.Amount.IsValid() || csp.Amount.IsZero() {
 		return ErrInvalidEthereumProposalAmount
 	}
 
