@@ -61,6 +61,10 @@ func (csp *CommunityPoolEthereumSpendProposal) ValidateBasic() error {
 		return ErrInvalidEthereumProposalBridgeFee
 	}
 
+	if csp.Amount.Denom != csp.BridgeFee.Denom {
+		return ErrEthereumProposalDenomMismatch
+	}
+
 	return nil
 }
 
