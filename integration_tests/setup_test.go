@@ -333,11 +333,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
 	gravityGenState.Params.GravityId = "gravitytest"
 	gravityGenState.Params.BridgeEthereumAddress = gravityContract.String()
-	gravityGenState.Erc20ToDenoms = append(gravityGenState.Erc20ToDenoms,
-		&gravitytypes.ERC20ToDenom{
-			Erc20: testERC20contract.Hex(),
-			Denom: "DDS",
-		})
+
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)
 	appGenState[gravitytypes.ModuleName] = bz
