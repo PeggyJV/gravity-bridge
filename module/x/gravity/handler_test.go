@@ -2,6 +2,7 @@ package gravity_test
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 	"time"
 
@@ -86,7 +87,8 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		myValAddr                         = sdk.ValAddress(myOrchestratorAddr) // revisit when proper mapping is impl in keeper
 		myNonce                           = uint64(1)
 		anyETHAddr                        = "0xf9613b532673Cc223aBa451dFA8539B87e1F666D"
-		tokenETHAddr                      = "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"
+		tokenETHAddr                      = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e").Hex()
+		denom                             = fmt.Sprintf("gravity%s", tokenETHAddr)
 		myBlockTime                       = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
 		amountA, _                        = sdk.NewIntFromString("50000000000000000000")  // 50 ETH
 		amountB, _                        = sdk.NewIntFromString("100000000000000000000") // 100 ETH
@@ -128,7 +130,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 	// and vouchers added to the account
 
 	balance := bk.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewCoin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", amountA)}, balance)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, amountA)}, balance)
 
 	// Test to reject duplicate deposit
 	// when
@@ -138,7 +140,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 	// then
 	require.Error(t, err)
 	balance = bk.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewCoin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", amountA)}, balance)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, amountA)}, balance)
 
 	// Test to reject skipped nonce
 
@@ -163,7 +165,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 	gravity.EndBlocker(ctx, gk)
 	// then
 	balance = bk.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewCoin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", amountA)}, balance)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, amountA)}, balance)
 
 	// Test to finally accept consecutive nonce
 	sendToCosmosEvent = &types.SendToCosmosEvent{
@@ -186,7 +188,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	balance = bk.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewCoin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", amountB)}, balance)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, amountB)}, balance)
 }
 
 func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
@@ -200,7 +202,8 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		valAddr3             = sdk.ValAddress(orchestratorAddr3) // revisit when proper mapping is impl in keeper
 		myNonce              = uint64(1)
 		anyETHAddr           = "0xf9613b532673Cc223aBa451dFA8539B87e1F666D"
-		tokenETHAddr         = "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"
+		tokenETHAddr         = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e").Hex()
+		denom                = fmt.Sprintf("gravity%s", tokenETHAddr)
 		myBlockTime          = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
 	)
 	input := keeper.CreateTestEnv(t)
@@ -257,7 +260,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	require.NotNil(t, a1)
 	// and vouchers not yet added to the account
 	balance1 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
-	require.NotEqual(t, sdk.Coins{sdk.NewInt64Coin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", 12)}, balance1)
+	require.NotEqual(t, sdk.Coins{sdk.NewInt64Coin(denom, 12)}, balance1)
 
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
@@ -270,7 +273,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	require.NotNil(t, a2)
 	// and vouchers now added to the account
 	balance2 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", 12)}, balance2)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(denom, 12)}, balance2)
 
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
@@ -283,7 +286,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	require.NotNil(t, a3)
 	// and no additional added to the account
 	balance3 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", 12)}, balance3)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(denom, 12)}, balance3)
 }
 
 func TestMsgSetDelegateAddresses(t *testing.T) {

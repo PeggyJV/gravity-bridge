@@ -50,7 +50,7 @@ func EthereumAddrLessThan(e, o string) bool {
 func NewERC20Token(amount uint64, contract string) ERC20Token {
 	return ERC20Token{
 		Amount:   sdk.NewIntFromUint64(amount),
-		Contract: contract,
+		Contract: common.HexToAddress(contract).Hex(),
 	}
 }
 
