@@ -37,9 +37,6 @@ pub enum GorcCmd {
 
     PrintConfig(print_config::PrintConfigCmd),
 
-    #[clap(subcommand)]
-    Query(query::QueryCmd),
-
     SignDelegateKeys(sign_delegate_keys::SignDelegateKeysCmd),
 
     #[clap(subcommand)]
