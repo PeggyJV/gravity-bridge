@@ -7,10 +7,7 @@ mod eth_to_cosmos;
 mod keys;
 mod orchestrator;
 mod print_config;
-mod query;
 mod sign_delegate_keys;
-mod tests;
-mod tx;
 
 use crate::config::GorcConfig;
 use abscissa_core::{clap::Parser, Command, Configurable, FrameworkError, Runnable};
@@ -38,12 +35,6 @@ pub enum GorcCmd {
     PrintConfig(print_config::PrintConfigCmd),
 
     SignDelegateKeys(sign_delegate_keys::SignDelegateKeysCmd),
-
-    #[clap(subcommand)]
-    Tests(tests::TestsCmd),
-
-    #[clap(subcommand)]
-    Tx(tx::TxCmd),
 }
 
 /// Entry point for the application. It needs to be a struct to allow using subcommands!
