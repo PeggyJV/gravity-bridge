@@ -2,7 +2,6 @@ package integration_tests
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,8 +12,6 @@ import (
 
 func (s *IntegrationTestSuite) TestHappyPath() {
 	s.Run("Bring up chain, and test the happy path", func() {
-		const DENOM = "DDS"
-
 		s.T().Logf("approving Gravity to spend ERC 20")
 		err := s.approveERC20()
 		s.Require().NoError(err, "error approving spending balance for the gravity contract on behalf of the first validator")
@@ -62,6 +59,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			s.T().Logf("balances for %s: %s", val.keyInfo.GetAddress().String(), res.Balances)
 		}
 
+		var gravityDenom string
 		s.Require().Eventuallyf(func() bool {
 			val := s.chain.validators[0]
 			kb, err := val.keyring()
@@ -79,24 +77,20 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			}
 
 			gbQueryClient := types.NewQueryClient(clientCtx)
-			denomRes, err := gbQueryClient.DenomToERC20(context.Background(),
-				&types.DenomToERC20Request{
-					Denom: DENOM,
+			denomRes, err := gbQueryClient.ERC20ToDenom(context.Background(),
+				&types.ERC20ToDenomRequest{
+					Erc20: testERC20contract.String(),
 				})
 			if err != nil {
-				s.T().Logf("error querying denom %s, %e", DENOM, err)
+				s.T().Logf("error querying ERC20 denom %s, %e", testERC20contract.String(), err)
 				return false
 			}
+			s.Require().False(denomRes.CosmosOriginated, "ERC20-originated denom marked as cosmos originated")
+			gravityDenom = denomRes.Denom
 
 			for _, coin := range res.Balances {
-				if !strings.Contains(coin.Denom, "gravity") {
-					continue
-				}
-				denomAddr := strings.TrimPrefix(coin.Denom, "gravity")
-				if common.HexToAddress(denomAddr) == common.HexToAddress(denomRes.Erc20) {
-					if coin.Amount.Equal(sdk.NewInt(200)) {
-						return true
-					}
+				if coin.Denom == gravityDenom && coin.Amount.Equal(sdk.NewInt(200)) {
+					return true
 				}
 			}
 
@@ -110,8 +104,8 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		sendToEthereumMsg := types.NewMsgSendToEthereum(
 			s.chain.validators[1].keyInfo.GetAddress(),
 			s.chain.validators[1].ethereumKey.address,
-			sdk.Coin{Denom: DENOM, Amount: sdk.NewInt(100)},
-			sdk.Coin{Denom: DENOM, Amount: sdk.NewInt(1)},
+			sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(100)},
+			sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(1)},
 		)
 
 		s.Require().Eventuallyf(func() bool {
