@@ -23,14 +23,14 @@ func TestHandleMsgSendToEthereum(t *testing.T) {
 		userCosmosAddr, _               = sdk.AccAddressFromBech32("cosmos1990z7dqsvh8gthw9pa5sn4wuy2xrsd80mg5z6y")
 		blockTime                       = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
 		blockHeight           int64     = 200
-		denom                           = "gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"
+		denom                           = types.GravityDenom(common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"))
 		startingCoinAmount, _           = sdk.NewIntFromString("150000000000000000000") // 150 ETH worth, required to reach above u64 limit (which is about 18 ETH)
 		sendAmount, _                   = sdk.NewIntFromString("50000000000000000000")  // 50 ETH
 		feeAmount, _                    = sdk.NewIntFromString("5000000000000000000")   // 5 ETH
 		startingCoins         sdk.Coins = sdk.Coins{sdk.NewCoin(denom, startingCoinAmount)}
 		sendingCoin           sdk.Coin  = sdk.NewCoin(denom, sendAmount)
 		feeCoin               sdk.Coin  = sdk.NewCoin(denom, feeAmount)
-		ethDestination                  = "0x3c9289da00b02dC623d0D8D907619890301D26d4"
+		ethDestination                  = common.HexToAddress("0x3c9289da00b02dC623d0D8D907619890301D26d4").Hex()
 	)
 
 	// we start by depositing some funds into the users balance to send
@@ -86,7 +86,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		myCosmosAddr, _                   = sdk.AccAddressFromBech32("cosmos16ahjkfqxpp6lvfy9fpfnfjg39xr96qett0alj5")
 		myValAddr                         = sdk.ValAddress(myOrchestratorAddr) // revisit when proper mapping is impl in keeper
 		myNonce                           = uint64(1)
-		anyETHAddr                        = "0xf9613b532673Cc223aBa451dFA8539B87e1F666D"
+		anyETHAddr                        = common.HexToAddress("0xf9613b532673Cc223aBa451dFA8539B87e1F666D").Hex()
 		tokenETHAddr                      = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e").Hex()
 		denom                             = fmt.Sprintf("gravity%s", tokenETHAddr)
 		myBlockTime                       = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
@@ -201,7 +201,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		valAddr2             = sdk.ValAddress(orchestratorAddr2) // revisit when proper mapping is impl in keeper
 		valAddr3             = sdk.ValAddress(orchestratorAddr3) // revisit when proper mapping is impl in keeper
 		myNonce              = uint64(1)
-		anyETHAddr           = "0xf9613b532673Cc223aBa451dFA8539B87e1F666D"
+		anyETHAddr           = common.HexToAddress("0xf9613b532673Cc223aBa451dFA8539B87e1F666D").Hex()
 		tokenETHAddr         = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e").Hex()
 		denom                = fmt.Sprintf("gravity%s", tokenETHAddr)
 		myBlockTime          = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)

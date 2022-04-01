@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	ethCrypto "github.com/ethereum/go-ethereum/crypto"
@@ -93,7 +94,8 @@ func TestMsgServer_SendToEthereum(t *testing.T) {
 		orcAddr3, _ = sdk.AccAddressFromBech32("cosmos193fw83ynn76328pty4yl7473vg9x86alq2cft7")
 		valAddr3    = sdk.ValAddress(orcAddr3)
 
-		testDenom = "stake"
+		testDenom    = "stake"
+		testContract = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
 
 		balance = sdk.Coin{
 			Denom:  testDenom,
@@ -120,7 +122,7 @@ func TestMsgServer_SendToEthereum(t *testing.T) {
 	}
 
 	// create denom in keeper
-	gk.setCosmosOriginatedDenomToERC20(ctx, testDenom, "testcontractstring")
+	gk.setCosmosOriginatedDenomToERC20(ctx, testDenom, testContract)
 
 	// setup for GetValidatorEthereumAddress
 	gk.setValidatorEthereumAddress(ctx, valAddr1, ethAddr1)
@@ -157,7 +159,8 @@ func TestMsgServer_CancelSendToEthereum(t *testing.T) {
 		orcAddr3, _ = sdk.AccAddressFromBech32("cosmos193fw83ynn76328pty4yl7473vg9x86alq2cft7")
 		valAddr3    = sdk.ValAddress(orcAddr3)
 
-		testDenom = "stake"
+		testDenom    = "stake"
+		testContract = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
 
 		balance = sdk.Coin{
 			Denom:  testDenom,
@@ -184,7 +187,7 @@ func TestMsgServer_CancelSendToEthereum(t *testing.T) {
 	}
 
 	// create denom in keeper
-	gk.setCosmosOriginatedDenomToERC20(ctx, testDenom, "testcontractstring")
+	gk.setCosmosOriginatedDenomToERC20(ctx, testDenom, testContract)
 
 	// setup for GetValidatorEthereumAddress
 	gk.setValidatorEthereumAddress(ctx, valAddr1, ethAddr1)
@@ -205,6 +208,7 @@ func TestMsgServer_CancelSendToEthereum(t *testing.T) {
 		Id:     response.Id,
 		Sender: orcAddr1.String(),
 	}
+
 	_, err = msgServer.CancelSendToEthereum(sdk.WrapSDKContext(ctx), cancelMsg)
 	require.NoError(t, err)
 }
@@ -228,7 +232,8 @@ func TestMsgServer_RequestBatchTx(t *testing.T) {
 		orcAddr3, _ = sdk.AccAddressFromBech32("cosmos193fw83ynn76328pty4yl7473vg9x86alq2cft7")
 		valAddr3    = sdk.ValAddress(orcAddr3)
 
-		testDenom = "stake"
+		testDenom    = "stake"
+		testContract = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
 
 		balance = sdk.Coin{
 			Denom:  testDenom,
@@ -255,7 +260,7 @@ func TestMsgServer_RequestBatchTx(t *testing.T) {
 	}
 
 	// create denom in keeper
-	gk.setCosmosOriginatedDenomToERC20(ctx, testDenom, "testcontractstring")
+	gk.setCosmosOriginatedDenomToERC20(ctx, testDenom, testContract)
 
 	// setup for GetValidatorEthereumAddress
 	gk.setValidatorEthereumAddress(ctx, valAddr1, ethAddr1)
@@ -296,7 +301,8 @@ func TestMsgServer_RequestEmptyBatchTx(t *testing.T) {
 		orcAddr3, _ = sdk.AccAddressFromBech32("cosmos193fw83ynn76328pty4yl7473vg9x86alq2cft7")
 		valAddr3    = sdk.ValAddress(orcAddr3)
 
-		testDenom = "stake"
+		testDenom    = "stake"
+		testContract = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
 	)
 
 	{ // setup for getSignerValidator
@@ -305,7 +311,7 @@ func TestMsgServer_RequestEmptyBatchTx(t *testing.T) {
 	}
 
 	// create denom in keeper
-	gk.setCosmosOriginatedDenomToERC20(ctx, testDenom, "testcontractstring")
+	gk.setCosmosOriginatedDenomToERC20(ctx, testDenom, testContract)
 
 	msgServer := NewMsgServerImpl(gk)
 
@@ -337,6 +343,8 @@ func TestMsgServer_SubmitEthereumEvent(t *testing.T) {
 
 		orcAddr3, _ = sdk.AccAddressFromBech32("cosmos193fw83ynn76328pty4yl7473vg9x86alq2cft7")
 		valAddr3    = sdk.ValAddress(orcAddr3)
+
+		testContract = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
 	)
 
 	{ // setup for getSignerValidator
@@ -351,7 +359,7 @@ func TestMsgServer_SubmitEthereumEvent(t *testing.T) {
 
 	sendToCosmosEvent := &types.SendToCosmosEvent{
 		EventNonce:     1,
-		TokenContract:  "test-token-contract-string",
+		TokenContract:  testContract.Hex(),
 		Amount:         sdk.NewInt(1000),
 		EthereumSender: ethAddr1.String(),
 		CosmosReceiver: orcAddr1.String(),

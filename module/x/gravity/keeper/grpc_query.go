@@ -299,7 +299,7 @@ func (k Keeper) BatchTxFees(c context.Context, req *types.BatchTxFeesRequest) (*
 
 func (k Keeper) ERC20ToDenom(c context.Context, req *types.ERC20ToDenomRequest) (*types.ERC20ToDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	cosmosOriginated, denom := k.ERC20ToDenomLookup(ctx, req.Erc20)
+	cosmosOriginated, denom := k.ERC20ToDenomLookup(ctx, common.HexToAddress(req.Erc20))
 	res := &types.ERC20ToDenomResponse{
 		Denom:            denom,
 		CosmosOriginated: cosmosOriginated,
