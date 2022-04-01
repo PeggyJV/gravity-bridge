@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"bytes"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -29,11 +27,10 @@ func migrateCosmosOriginatedERC20ToDenom(store storetypes.KVStore) error {
 
 	for ; iter.Valid(); iter.Next() {
 		oldKey := iter.Key()
-		contractString := string(bytes.TrimPrefix(oldKey, []byte{ERC20ToDenomKey}))
-		newKey := MakeNewERC20ToDenomKey(common.HexToAddress(contractString))
+		newKey := common.HexToAddress(string(oldKey)).Bytes()
 
 		prefixStore.Delete(oldKey)
-		prefixStore.Set([]byte(newKey), iter.Value())
+		prefixStore.Set(newKey, iter.Value())
 	}
 
 	return nil

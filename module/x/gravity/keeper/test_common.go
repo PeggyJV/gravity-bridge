@@ -201,16 +201,17 @@ var (
 
 // TestInput stores the various keepers required to test gravity
 type TestInput struct {
-	GravityKeeper  Keeper
-	AccountKeeper  authkeeper.AccountKeeper
-	StakingKeeper  stakingkeeper.Keeper
-	SlashingKeeper slashingkeeper.Keeper
-	DistKeeper     distrkeeper.Keeper
-	BankKeeper     bankkeeper.BaseKeeper
-	GovKeeper      govkeeper.Keeper
-	Context        sdk.Context
-	Marshaler      codec.Codec
-	LegacyAmino    *codec.LegacyAmino
+	GravityKeeper   Keeper
+	AccountKeeper   authkeeper.AccountKeeper
+	StakingKeeper   stakingkeeper.Keeper
+	SlashingKeeper  slashingkeeper.Keeper
+	DistKeeper      distrkeeper.Keeper
+	BankKeeper      bankkeeper.BaseKeeper
+	GovKeeper       govkeeper.Keeper
+	Context         sdk.Context
+	Marshaler       codec.Codec
+	LegacyAmino     *codec.LegacyAmino
+	GravityStoreKey *sdk.KVStoreKey
 }
 
 func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, tokenContract gethcommon.Address, sender sdk.AccAddress, receiver gethcommon.Address, ids ...uint64) {
@@ -434,16 +435,17 @@ func CreateTestEnv(t *testing.T) TestInput {
 	k.setParams(ctx, TestingGravityParams)
 
 	return TestInput{
-		GravityKeeper:  k,
-		AccountKeeper:  accountKeeper,
-		BankKeeper:     bankKeeper,
-		StakingKeeper:  stakingKeeper,
-		SlashingKeeper: slashingKeeper,
-		DistKeeper:     distKeeper,
-		GovKeeper:      govKeeper,
-		Context:        ctx,
-		Marshaler:      marshaler,
-		LegacyAmino:    cdc,
+		GravityKeeper:   k,
+		AccountKeeper:   accountKeeper,
+		BankKeeper:      bankKeeper,
+		StakingKeeper:   stakingKeeper,
+		SlashingKeeper:  slashingKeeper,
+		DistKeeper:      distKeeper,
+		GovKeeper:       govKeeper,
+		Context:         ctx,
+		Marshaler:       marshaler,
+		LegacyAmino:     cdc,
+		GravityStoreKey: gravityKey,
 	}
 }
 

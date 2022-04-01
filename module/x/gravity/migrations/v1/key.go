@@ -48,6 +48,10 @@ const (
 	LastObservedSignerSetKey
 )
 
+func MakeOldERC20ToDenomKey(erc20 string) []byte {
+	return append([]byte{ERC20ToDenomKey}, []byte(erc20)...)
+}
+
 func MakeNewERC20ToDenomKey(erc20 common.Address) []byte {
 	return append([]byte{ERC20ToDenomKey}, erc20.Bytes()...)
 }
