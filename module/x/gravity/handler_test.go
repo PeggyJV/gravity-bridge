@@ -2,7 +2,6 @@ package gravity_test
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 	"time"
 
@@ -86,9 +85,9 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		myCosmosAddr, _                   = sdk.AccAddressFromBech32("cosmos16ahjkfqxpp6lvfy9fpfnfjg39xr96qett0alj5")
 		myValAddr                         = sdk.ValAddress(myOrchestratorAddr) // revisit when proper mapping is impl in keeper
 		myNonce                           = uint64(1)
-		anyETHAddr                        = common.HexToAddress("0xf9613b532673Cc223aBa451dFA8539B87e1F666D").Hex()
-		tokenETHAddr                      = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e").Hex()
-		denom                             = fmt.Sprintf("gravity%s", tokenETHAddr)
+		anyETHAddr                        = common.HexToAddress("0xf9613b532673Cc223aBa451dFA8539B87e1F666D")
+		tokenETHAddr                      = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e")
+		denom                             = types.GravityDenom(tokenETHAddr)
 		myBlockTime                       = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
 		amountA, _                        = sdk.NewIntFromString("50000000000000000000")  // 50 ETH
 		amountB, _                        = sdk.NewIntFromString("100000000000000000000") // 100 ETH
@@ -103,14 +102,14 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 
 	myErc20 := types.ERC20Token{
 		Amount:   amountA,
-		Contract: tokenETHAddr,
+		Contract: tokenETHAddr.Hex(),
 	}
 
 	sendToCosmosEvent := &types.SendToCosmosEvent{
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EthereumSender: anyETHAddr,
+		EthereumSender: anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 
@@ -148,7 +147,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		EventNonce:     uint64(3),
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EthereumSender: anyETHAddr,
+		EthereumSender: anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 
@@ -172,7 +171,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		EventNonce:     uint64(2),
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EthereumSender: anyETHAddr,
+		EthereumSender: anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 
@@ -201,9 +200,9 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		valAddr2             = sdk.ValAddress(orchestratorAddr2) // revisit when proper mapping is impl in keeper
 		valAddr3             = sdk.ValAddress(orchestratorAddr3) // revisit when proper mapping is impl in keeper
 		myNonce              = uint64(1)
-		anyETHAddr           = common.HexToAddress("0xf9613b532673Cc223aBa451dFA8539B87e1F666D").Hex()
-		tokenETHAddr         = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e").Hex()
-		denom                = fmt.Sprintf("gravity%s", tokenETHAddr)
+		anyETHAddr           = common.HexToAddress("0xf9613b532673Cc223aBa451dFA8539B87e1F666D")
+		tokenETHAddr         = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e")
+		denom                = types.GravityDenom(tokenETHAddr)
 		myBlockTime          = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
 	)
 	input := keeper.CreateTestEnv(t)
@@ -216,14 +215,14 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 
 	myErc20 := types.ERC20Token{
 		Amount:   sdk.NewInt(12),
-		Contract: tokenETHAddr,
+		Contract: tokenETHAddr.Hex(),
 	}
 
 	ethClaim1 := &types.SendToCosmosEvent{
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EthereumSender: anyETHAddr,
+		EthereumSender: anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 	ethClaim1a, err := types.PackEvent(ethClaim1)
@@ -233,7 +232,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EthereumSender: anyETHAddr,
+		EthereumSender: anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 	ethClaim2a, err := types.PackEvent(ethClaim2)
@@ -243,7 +242,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EthereumSender: anyETHAddr,
+		EthereumSender: anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 	ethClaim3a, err := types.PackEvent(ethClaim3)
