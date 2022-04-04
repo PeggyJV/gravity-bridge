@@ -213,6 +213,10 @@ func (k msgServer) SendToEthereum(c context.Context, msg *types.MsgSendToEthereu
 		return nil, err
 	}
 
+	// ensure the denoms provided in the message will map correctly if they are gravity denoms
+	types.NormalizeCoinDenom(&msg.Amount)
+	types.NormalizeCoinDenom(&msg.BridgeFee)
+
 	txID, err := k.createSendToEthereum(ctx, sender, msg.EthereumRecipient, msg.Amount, msg.BridgeFee)
 	if err != nil {
 		return nil, err
@@ -243,8 +247,8 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// Check if the denom is a gravity coin, if not, check if there is a deployed ERC20 representing it.
-	// If not, error out
-	_, tokenContract, err := k.DenomToERC20Lookup(ctx, msg.Denom)
+	// If not, error out. Normalizes the format of the input denom if it's a gravity denom.
+	_, tokenContract, err := k.DenomToERC20Lookup(ctx, types.NormalizeDenom(msg.Denom))
 	if err != nil {
 		return nil, err
 	}

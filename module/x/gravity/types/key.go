@@ -141,8 +141,8 @@ func MakeDenomToERC20Key(denom string) []byte {
 	return append([]byte{DenomToERC20Key}, []byte(denom)...)
 }
 
-func MakeERC20ToDenomKey(erc20 string) []byte {
-	return append([]byte{ERC20ToDenomKey}, []byte(erc20)...)
+func MakeERC20ToDenomKey(erc20 common.Address) []byte {
+	return append([]byte{ERC20ToDenomKey}, erc20.Bytes()...)
 }
 
 func MakeSignerSetTxKey(nonce uint64) []byte {

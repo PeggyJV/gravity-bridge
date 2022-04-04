@@ -201,22 +201,23 @@ var (
 
 // TestInput stores the various keepers required to test gravity
 type TestInput struct {
-	GravityKeeper  Keeper
-	AccountKeeper  authkeeper.AccountKeeper
-	StakingKeeper  stakingkeeper.Keeper
-	SlashingKeeper slashingkeeper.Keeper
-	DistKeeper     distrkeeper.Keeper
-	BankKeeper     bankkeeper.BaseKeeper
-	GovKeeper      govkeeper.Keeper
-	Context        sdk.Context
-	Marshaler      codec.Codec
-	LegacyAmino    *codec.LegacyAmino
+	GravityKeeper   Keeper
+	AccountKeeper   authkeeper.AccountKeeper
+	StakingKeeper   stakingkeeper.Keeper
+	SlashingKeeper  slashingkeeper.Keeper
+	DistKeeper      distrkeeper.Keeper
+	BankKeeper      bankkeeper.BaseKeeper
+	GovKeeper       govkeeper.Keeper
+	Context         sdk.Context
+	Marshaler       codec.Codec
+	LegacyAmino     *codec.LegacyAmino
+	GravityStoreKey *sdk.KVStoreKey
 }
 
 func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, tokenContract gethcommon.Address, sender sdk.AccAddress, receiver gethcommon.Address, ids ...uint64) {
 	for i, id := range ids {
-		amount := types.NewERC20Token(uint64(i+100), tokenContract.Hex()).GravityCoin()
-		fee := types.NewERC20Token(id, tokenContract.Hex()).GravityCoin()
+		amount := types.NewERC20Token(uint64(i+100), tokenContract).GravityCoin()
+		fee := types.NewERC20Token(id, tokenContract).GravityCoin()
 		_, err := input.GravityKeeper.createSendToEthereum(ctx, sender, receiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}
@@ -434,16 +435,17 @@ func CreateTestEnv(t *testing.T) TestInput {
 	k.setParams(ctx, TestingGravityParams)
 
 	return TestInput{
-		GravityKeeper:  k,
-		AccountKeeper:  accountKeeper,
-		BankKeeper:     bankKeeper,
-		StakingKeeper:  stakingKeeper,
-		SlashingKeeper: slashingKeeper,
-		DistKeeper:     distKeeper,
-		GovKeeper:      govKeeper,
-		Context:        ctx,
-		Marshaler:      marshaler,
-		LegacyAmino:    cdc,
+		GravityKeeper:   k,
+		AccountKeeper:   accountKeeper,
+		BankKeeper:      bankKeeper,
+		StakingKeeper:   stakingKeeper,
+		SlashingKeeper:  slashingKeeper,
+		DistKeeper:      distKeeper,
+		GovKeeper:       govKeeper,
+		Context:         ctx,
+		Marshaler:       marshaler,
+		LegacyAmino:     cdc,
+		GravityStoreKey: gravityKey,
 	}
 }
 

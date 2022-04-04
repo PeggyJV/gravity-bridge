@@ -102,7 +102,7 @@ func addDenomToERC20Relation(tv *testingVars) {
 	require.NoError(tv.t, err)
 	assert.True(tv.t, isCosmosOriginated)
 
-	isCosmosOriginated, gotDenom := tv.input.GravityKeeper.ERC20ToDenomLookup(tv.ctx, tv.erc20)
+	isCosmosOriginated, gotDenom := tv.input.GravityKeeper.ERC20ToDenomLookup(tv.ctx, common.HexToAddress(tv.erc20))
 	assert.True(tv.t, isCosmosOriginated)
 
 	assert.Equal(tv.t, tv.denom, gotDenom)
