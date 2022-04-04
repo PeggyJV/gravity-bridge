@@ -5,6 +5,9 @@ use std::path;
 
 /// Rename an Eth Key
 #[derive(Command, Debug, Default, Parser)]
+#[clap(
+    long_about = "DESCRIPTION \n\n Rename an Eth key.\n This command will rename an Eth key in the keystore. It takes the existing keyname and new keyname."
+)]
 pub struct RenameEthKeyCmd {
     pub args: Vec<String>,
 

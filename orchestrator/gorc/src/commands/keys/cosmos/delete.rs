@@ -5,6 +5,9 @@ use std::path::Path;
 
 /// Delete a Cosmos Key
 #[derive(Command, Debug, Default, Parser)]
+#[clap(
+    long_about = "DESCRIPTION \n\n Delete a Cosmos Key.\n This command deletes a Cosmos key from your keystore when provided with the keyname."
+)]
 pub struct DeleteCosmosKeyCmd {
     pub args: Vec<String>,
 }

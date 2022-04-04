@@ -8,6 +8,9 @@ use std::path;
 
 ///Import an Eth Key
 #[derive(Command, Debug, Default, Parser)]
+#[clap(
+    long_about = "DESCRIPTION \n\n Import an external Eth key.\n This command will recover a Eth key, storing it in the keystore. \n It takes a keyname and bip39-mnemonic."
+)]
 pub struct ImportEthKeyCmd {
     pub args: Vec<String>,
 

@@ -4,6 +4,9 @@ use std::path;
 
 /// Rename a Cosmos Key
 #[derive(Command, Debug, Default, Parser)]
+#[clap(
+    long_about = "DESCRIPTION \n\n Rename a Cosmos key.\n This command will rename a Cosmos key in the keystore. It takes the existing keyname and new keyname."
+)]
 pub struct RenameCosmosKeyCmd {
     pub args: Vec<String>,
 

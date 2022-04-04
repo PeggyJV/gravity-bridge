@@ -5,6 +5,9 @@ use std::path::Path;
 
 /// List all Cosmos Keys
 #[derive(Command, Debug, Default, Parser)]
+#[clap(
+    long_about = "DESCRIPTION \n\n List all Cosmos keys in keystore.\n This command lists all Cosmos keys and their addresses from the keystore."
+)]
 pub struct ListCosmosKeyCmd {}
 
 // Entry point for `gorc keys cosmos list`

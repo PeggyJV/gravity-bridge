@@ -5,6 +5,9 @@ use std::path;
 
 /// Delete an Eth Key
 #[derive(Command, Debug, Default, Parser)]
+#[clap(
+    long_about = "DESCRIPTION \n\n Delete an Eth Key.\n This command deletes an Eth key from your keystore when provided with the keyname."
+)]
 pub struct DeleteEthKeyCmd {
     pub args: Vec<String>,
 }
