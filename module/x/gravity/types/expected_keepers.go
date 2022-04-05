@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -46,4 +47,9 @@ type SlashingKeeper interface {
 // functionality.
 type AccountKeeper interface {
 	GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, error)
+}
+
+type DistributionKeeper interface {
+	GetFeePool(ctx sdk.Context) (feePool distributiontypes.FeePool)
+	SetFeePool(ctx sdk.Context, feePool distributiontypes.FeePool)
 }
