@@ -1,6 +1,12 @@
 package v1
 
-import "github.com/ethereum/go-ethereum/common"
+import (
+	"bytes"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+)
 
 const (
 	// StoreKey to be used when creating the KVStore
@@ -54,4 +60,12 @@ func MakeOldERC20ToDenomKey(erc20 string) []byte {
 
 func MakeNewERC20ToDenomKey(erc20 common.Address) []byte {
 	return append([]byte{ERC20ToDenomKey}, erc20.Bytes()...)
+}
+
+func MakeOutgoingTxKey(storeIndex []byte) []byte {
+	return append([]byte{OutgoingTxKey}, storeIndex...)
+}
+
+func MakeContractCallTxKey(invalscope []byte, invalnonce uint64) []byte {
+	return bytes.Join([][]byte{{types.ContractCallTxPrefixByte}, invalscope, sdk.Uint64ToBigEndian(invalnonce)}, []byte{})
 }
