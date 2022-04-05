@@ -81,6 +81,7 @@ import (
 	"github.com/gorilla/mux"
 	gravityparams "github.com/peggyjv/gravity-bridge/module/app/params"
 	"github.com/peggyjv/gravity-bridge/module/x/gravity"
+	gravityclient "github.com/peggyjv/gravity-bridge/module/x/gravity/client"
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/keeper"
 	gravitytypes "github.com/peggyjv/gravity-bridge/module/x/gravity/types"
 	"github.com/rakyll/statik/fs"
@@ -124,6 +125,7 @@ var (
 			distrclient.ProposalHandler,
 			upgradeclient.ProposalHandler,
 			upgradeclient.CancelProposalHandler,
+			gravityclient.ProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
