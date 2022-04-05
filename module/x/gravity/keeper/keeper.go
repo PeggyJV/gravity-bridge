@@ -403,6 +403,26 @@ func (k Keeper) GetUnbondingvalidators(unbondingVals []byte) stakingtypes.ValAdd
 	return unbondingValidators
 }
 
+// This gets the timeout height in Ethereum blocks for expiring old batches and contract calls.
+func (k Keeper) getTimeoutHeight(ctx sdk.Context) uint64 {
+	params := k.GetParams(ctx)
+	currentCosmosHeight := ctx.BlockHeight()
+	// we store the last observed Cosmos and Ethereum heights, we do not concern ourselves if these values are zero because
+	// no batch can be produced if the last Ethereum block height is not first populated by a deposit event.
+	heights := k.GetLastObservedEthereumBlockHeight(ctx)
+	if heights.CosmosHeight == 0 || heights.EthereumHeight == 0 {
+		return 0
+	}
+	// we project how long it has been in milliseconds since the last Ethereum block height was observed
+	projectedMillis := (uint64(currentCosmosHeight) - heights.CosmosHeight) * params.AverageBlockTime
+	// we convert that projection into the current Ethereum height using the average Ethereum block time in millis
+	projectedCurrentEthereumHeight := (projectedMillis / params.AverageEthereumBlockTime) + heights.EthereumHeight
+	// we convert our target time for block timeouts (lets say 12 hours) into a number of blocks to
+	// place on top of our projection of the current Ethereum block height.
+	blocksToAdd := params.TargetEthTxTimeout / params.AverageEthereumBlockTime
+	return projectedCurrentEthereumHeight + blocksToAdd
+}
+
 /////////////////
 // OUTGOING TX //
 /////////////////
@@ -516,7 +536,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 		InvalidationScope: invalidationScope,
 		Address:           address.String(),
 		Payload:           payload,
-		Timeout:           params.TargetEthTxTimeout,
+		Timeout:           k.getTimeoutHeight(ctx),
 		Tokens:            tokens,
 		Fees:              fees,
 		Height:            uint64(ctx.BlockHeight()),
