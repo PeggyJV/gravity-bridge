@@ -24,8 +24,8 @@ func init() {
 
 // NewCommunityPoolEthereumSpendProposal creates a new community pool spend proposal.
 //nolint:interfacer
-func NewCommunityPoolEthereumSpendProposal(title, description string, recipient sdk.AccAddress, amount sdk.Coin, bridgeFee sdk.Coin) *CommunityPoolEthereumSpendProposal {
-	return &CommunityPoolEthereumSpendProposal{title, description, recipient.String(), amount, bridgeFee}
+func NewCommunityPoolEthereumSpendProposal(title, description string, recipient string, amount sdk.Coin, bridgeFee sdk.Coin) *CommunityPoolEthereumSpendProposal {
+	return &CommunityPoolEthereumSpendProposal{title, description, recipient, amount, bridgeFee}
 }
 
 // GetTitle returns the title of a community pool Ethereum spend proposal.
