@@ -8,11 +8,6 @@ import (
 )
 
 func (k Keeper) HandleCommunityPoolEthereumSpendProposal(ctx sdk.Context, p *types.CommunityPoolEthereumSpendProposal) error {
-	// TODO(bolten): is this implicitly called elsewhere?
-	if err := p.ValidateBasic(); err != nil {
-		return err
-	}
-
 	feePool := k.DistributionKeeper.GetFeePool(ctx)
 
 	// NOTE the community pool isn't a module account, however its coins
@@ -26,12 +21,13 @@ func (k Keeper) HandleCommunityPoolEthereumSpendProposal(ctx sdk.Context, p *typ
 	feePool.CommunityPool = newPool
 	sender := authtypes.NewModuleAddress(distributiontypes.ModuleName)
 
-	_, err := k.createSendToEthereum(ctx, sender, p.Recipient, p.Amount, p.BridgeFee)
+	txID, err := k.createSendToEthereum(ctx, sender, p.Recipient, p.Amount, p.BridgeFee)
 	if err != nil {
 		return err
 	}
 
 	k.DistributionKeeper.SetFeePool(ctx, feePool)
+	k.Logger(ctx).Info("transfer from the community pool created as unbatched send to Ethereum", "tx ID", txID, "amount", p.Amount.String(), "recipient", p.Recipient)
 
 	return nil
 }
