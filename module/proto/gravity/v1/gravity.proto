@@ -98,3 +98,17 @@ message CommunityPoolEthereumSpendProposal {
   cosmos.base.v1beta1.Coin amount = 4 [ (gogoproto.nullable) = false ];
   cosmos.base.v1beta1.Coin bridge_fee = 5 [ (gogoproto.nullable) = false ];
 }
+
+// This format of the community spend Ethereum proposal is specifically for
+// the CLI to allow simple text serialization.
+message CommunityPoolEthereumSpendProposalForCLI {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = true;
+
+  string title = 1 [ (gogoproto.moretags) = "yaml:\"title\"" ];
+  string description = 2 [ (gogoproto.moretags) = "yaml:\"description\"" ];
+  string recipient = 3 [ (gogoproto.moretags) = "yaml:\"recipient\"" ];
+  string amount = 4 [ (gogoproto.moretags) = "yaml:\"amount\"" ];
+  string bridge_fee = 5 [ (gogoproto.moretags) = "yaml:\"bridge_fee\"" ];
+  string deposit = 6 [ (gogoproto.moretags) = "yaml:\"deposit\"" ];
+}
