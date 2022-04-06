@@ -12,11 +12,33 @@ const TIMEOUT: Duration = Duration::from_secs(60);
 
 /// This command, send Cosmos to Ethereum
 #[derive(Command, Debug, Default, Parser)]
+#[clap(
+    long_about = "DESCRIPTION \n\n Send Cosmos token to Eth chain.\n This command sends Cosmos token to the Eth chain via the Gravity bridge. \n This command takes the Gravity denom, tx amount, Cosmos keyname, Eth destination, number of times \n transaction should be made and if the transaction should be made immediately or wait for the next \n batch."
+)]
 pub struct CosmosToEthCmd {
-    pub args: Vec<String>,
-
+    /// Gravity denom
     #[clap(short, long)]
-    pub flag_no_batch: bool,
+    gravity_denom: String,
+
+    /// Tx amount.
+    #[clap(short, long)]
+    amount: String,
+
+    /// Cosmos keyname.
+    #[clap(short, long)]
+    cosmos_key: String,
+
+    /// Ethereum address
+    #[clap(short, long)]
+    eth_dest: String,
+
+    /// The number of times transactions should repeat itself, default is 1.
+    #[clap(short, long, default_value = "1")]
+    times: String,
+
+    /// Boolean, True if you want to wait until someone requests a batch for this token type and False if you want to request a batch to push transaction along immediately.
+    #[clap(short = 'f', long)]
+    pub wait_for_batch: bool,
 }
 
 pub fn one_eth() -> f64 {
@@ -45,14 +67,14 @@ pub fn print_eth(input: Uint256) -> String {
 impl Runnable for CosmosToEthCmd {
     fn run(&self) {
         let config = APP.config();
-        let gravity_denom = self.args.get(0).expect("denom is required");
+        let gravity_denom = self.gravity_denom.clone();
         let gravity_denom = gravity_denom.to_string();
         let is_cosmos_originated = !gravity_denom.starts_with("gravity");
 
-        let amount = self.args.get(1).expect("amount is required");
+        let amount = self.amount.clone();
         let amount: Uint256 = amount.parse().expect("cannot parse amount");
 
-        let cosmos_key = self.args.get(2).expect("name is required");
+        let cosmos_key = self.cosmos_key.clone();
         let cosmos_key = config.load_deep_space_key(cosmos_key.to_string());
 
         let cosmos_prefix = config.cosmos.prefix.trim();
@@ -98,7 +120,7 @@ impl Runnable for CosmosToEthCmd {
             denom: gravity_denom.clone(),
         };
 
-        let eth_dest = self.args.get(3).expect("ethereum destination is required");
+        let eth_dest = self.eth_dest.clone();
         let eth_dest: EthAddress = eth_dest.parse().expect("cannot parse ethereum address");
         check_for_fee_denom(&gravity_denom, cosmos_address, &contact).await;
 
@@ -115,7 +137,7 @@ impl Runnable for CosmosToEthCmd {
 
         println!("Cosmos balances {:?}", balances);
 
-        let times = self.args.get(4).expect("times is required");
+        let times = self.times.clone();
         let times = times.parse::<usize>().expect("cannot parse times");
 
         match found {
@@ -159,7 +181,7 @@ impl Runnable for CosmosToEthCmd {
             }
         }
 
-        if !self.flag_no_batch {
+        if !self.wait_for_batch {
             println!("Requesting a batch to push transaction along immediately");
             send_request_batch_tx(cosmos_key, gravity_denom,config.cosmos.gas_price.as_tuple(), &contact,config.cosmos.gas_adjustment)
                 .await
