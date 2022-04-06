@@ -9,8 +9,13 @@ use std::path;
     long_about = "DESCRIPTION \n\n Rename an Eth key.\n This command will rename an Eth key in the keystore. It takes the existing keyname and new keyname."
 )]
 pub struct RenameEthKeyCmd {
-    pub args: Vec<String>,
+    /// Eth keyname
+    pub name: String,
 
+    /// New keyname to replace name in keystore.
+    pub new_name: String,
+
+    /// Overwrite key with the same name in the keystore when set to true. Takes a Boolean.
     #[clap(short, long)]
     pub overwrite: bool,
 }
@@ -22,11 +27,9 @@ impl Runnable for RenameEthKeyCmd {
         let keystore = path::Path::new(&config.keystore);
         let keystore = FsKeyStore::create_or_open(keystore).expect("Could not open keystore");
 
-        let name = self.args.get(0).expect("name is required");
-        let name = name.parse().expect("Could not parse name");
+        let name = self.name.parse().expect("Could not parse name");
 
-        let new_name = self.args.get(1).expect("new-name is required");
-        let new_name = new_name.parse().expect("Could not parse new-name");
+        let new_name = self.new_name.parse().expect("Could not parse new-name");
         if let Ok(_info) = keystore.info(&new_name) {
             if !self.overwrite {
                 eprintln!("Key already exists, exiting.");

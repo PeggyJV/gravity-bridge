@@ -7,11 +7,14 @@ use abscissa_core::{clap::Parser, Application, Command, Runnable};
     long_about = "DESCRIPTION \n\n Show details of an Eth key in the keystore.\n This command shows details of an Eth key in the keystore, it takes the name of the key."
 )]
 pub struct ShowEthKeyCmd {
-    pub args: Vec<String>,
+    /// Cosmos keyname
+    pub name: String,
 
+    /// Show private key when set to true. Takes a Boolean.
     #[clap(short, long)]
     pub show_private_key: bool,
 
+    /// Show key name when set to true. Takes a Boolean.
     #[clap(short = 'n', long)]
     pub show_name: bool,
 }
@@ -20,7 +23,7 @@ pub struct ShowEthKeyCmd {
 impl Runnable for ShowEthKeyCmd {
     fn run(&self) {
         let config = APP.config();
-        let name = self.args.get(0).expect("name is required");
+        let name = self.name.clone();
         // TODO(bolten): is ethers wallet even capable of printing the public and
         // private keys? for now, leaving load_clarity_key in config.rs and
         // maintaining the functionality here

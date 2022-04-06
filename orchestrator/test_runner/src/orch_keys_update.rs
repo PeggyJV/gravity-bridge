@@ -1,9 +1,9 @@
 //! This test verifies that live updating of orchestrator keys works correctly
 
 use crate::utils::ValidatorKeys;
+use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::send::update_gravity_delegate_addresses;
 use deep_space::address::Address as CosmosAddress;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
 use ethers::types::Address as EthAddress;
 use ethers::{core::k256::ecdsa::SigningKey, prelude::*};

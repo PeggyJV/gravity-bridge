@@ -9,11 +9,13 @@ use std::path;
 /// Add a new Cosmos Key
 #[derive(Command, Debug, Default, Parser)]
 #[clap(
-    long_about = "DESCRIPTION \n\n Create a new Cosmos Key.\n This command creates a new Cosmos key when provided an overwrite option, which if set to true, overwrites\n an existing key in the keystore with the same keyname."
+    long_about = "DESCRIPTION \n\n Create a new Cosmos Key.\n This command creates a new Cosmos key. When provided an overwrite option, which if set to true, overwrites\n an existing key in the keystore with the same keyname."
 )]
 pub struct AddCosmosKeyCmd {
-    pub args: Vec<String>,
+    /// Cosmos keyname
+    pub name: String,
 
+    /// Overwrite key with the same name in the keystore when set to true. Takes a Boolean.
     #[clap(short, long)]
     pub overwrite: bool,
 }
@@ -24,8 +26,7 @@ impl Runnable for AddCosmosKeyCmd {
         let keystore = path::Path::new(&config.keystore);
         let keystore = FsKeyStore::create_or_open(keystore).expect("Could not open keystore");
 
-        let name = self.args.get(0).expect("name is required");
-        let name = name.parse().expect("Could not parse name");
+        let name = self.name.parse().expect("Could not parse name");
         if let Ok(_info) = keystore.info(&name) {
             if !self.overwrite {
                 eprintln!("Key already exists, exiting.");
@@ -52,8 +53,8 @@ impl Runnable for AddCosmosKeyCmd {
 
         keystore.store(&name, &key).expect("Could not store key");
 
-        let args = vec![name.to_string()];
-        let show_cmd = ShowCosmosKeyCmd { args };
+        let name = name.to_string();
+        let show_cmd = ShowCosmosKeyCmd { name };
         show_cmd.run();
     }
 }

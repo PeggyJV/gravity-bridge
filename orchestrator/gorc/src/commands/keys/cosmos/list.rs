@@ -23,8 +23,8 @@ impl Runnable for ListCosmosKeyCmd {
                     if extension == "pem" {
                         let name = path.file_stem().unwrap();
                         let name = name.to_str().unwrap();
-                        let args = vec![name.to_string()];
-                        let show_cmd = ShowCosmosKeyCmd { args };
+                        let name = name.to_string();
+                        let show_cmd = ShowCosmosKeyCmd { name };
                         show_cmd.run();
                     }
                 }

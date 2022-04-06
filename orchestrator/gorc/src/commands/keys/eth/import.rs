@@ -9,16 +9,22 @@ use std::path;
 ///Import an Eth Key
 #[derive(Command, Debug, Default, Parser)]
 #[clap(
-    long_about = "DESCRIPTION \n\n Import an external Eth key.\n This command will recover a Eth key, storing it in the keystore. \n It takes a keyname and bip39-mnemonic."
+    long_about = "DESCRIPTION \n\n Import an external Eth key.\n This command will import an Eth key, storing it in the keystore. \n It takes a keyname and the key you want to import."
 )]
 pub struct ImportEthKeyCmd {
-    pub args: Vec<String>,
+    /// Eth keyname.
+    pub name: String,
 
+    /// Overwrite key with the same name in the keystore when set to true. Takes a Boolean.
     #[clap(short, long)]
     pub overwrite: bool,
 
+    /// Show private key when set to true. Takes a Boolean.
     #[clap(short, long)]
     show_private_key: bool,
+
+    /// Eth key you want to import.
+    pub key: Option<String>,
 }
 
 // Entry point for `gorc keys eth import [name] (private-key)`
@@ -30,8 +36,7 @@ impl Runnable for ImportEthKeyCmd {
         let keystore = path::Path::new(&config.keystore);
         let keystore = FsKeyStore::create_or_open(keystore).expect("Could not open keystore");
 
-        let name = self.args.get(0).expect("name is required");
-        let name = name.parse().expect("Could not parse name");
+        let name = self.name.parse().expect("Could not parse name");
         if let Ok(_info) = keystore.info(&name) {
             if !self.overwrite {
                 eprintln!("Key already exists, exiting.");
@@ -39,8 +44,8 @@ impl Runnable for ImportEthKeyCmd {
             }
         }
 
-        let key = match self.args.get(1) {
-            Some(private_key) => private_key.clone(),
+        let key = match self.key.clone() {
+            Some(private_key) => private_key,
             None => rpassword::read_password_from_tty(Some("> Enter your private-key:\n"))
                 .expect("Could not read private-key"),
         };
@@ -58,7 +63,7 @@ impl Runnable for ImportEthKeyCmd {
         keystore.store(&name, &key).expect("Could not store key");
 
         let show_cmd = ShowEthKeyCmd {
-            args: vec![name.to_string()],
+            name: name.to_string(),
             show_private_key: self.show_private_key,
             show_name: false,
         };

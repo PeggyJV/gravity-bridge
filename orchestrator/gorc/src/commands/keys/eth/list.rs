@@ -9,6 +9,7 @@ use std::path;
     long_about = "DESCRIPTION \n\n List all Eth keys in keystore.\n This command lists all Eth keys and their addresses from the keystore."
 )]
 pub struct ListEthKeyCmd {
+    /// Show private key when set to true. Takes a Boolean.
     #[clap(short, long)]
     pub show_private_key: bool,
 }
@@ -27,7 +28,7 @@ impl Runnable for ListEthKeyCmd {
                         let name = path.file_stem().unwrap();
                         let name = name.to_str().unwrap();
                         let show_cmd = ShowEthKeyCmd {
-                            args: vec![name.to_string()],
+                            name: name.to_string(),
                             show_private_key: self.show_private_key,
                             show_name: true,
                         };

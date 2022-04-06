@@ -9,7 +9,8 @@ use std::path;
     long_about = "DESCRIPTION \n\n Delete an Eth Key.\n This command deletes an Eth key from your keystore when provided with the keyname."
 )]
 pub struct DeleteEthKeyCmd {
-    pub args: Vec<String>,
+    /// Eth keyname.
+    pub name: String,
 }
 
 // Entry point for `gorc keys eth delete [name]`
@@ -19,9 +20,7 @@ impl Runnable for DeleteEthKeyCmd {
         let config = APP.config();
         let keystore = path::Path::new(&config.keystore);
         let keystore = FsKeyStore::create_or_open(keystore).expect("Could not open keystore");
-
-        let name = self.args.get(0).expect("name is required");
-        let name = name.parse().expect("Could not parse name");
+        let name = self.name.parse().expect("Could not parse name");
         keystore.delete(&name).expect("Could not delete key");
     }
 }
