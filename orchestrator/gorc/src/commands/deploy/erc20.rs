@@ -15,11 +15,13 @@ use tokio::time::sleep as delay_for;
 /// Deploy Erc20
 #[derive(Command, Debug, Parser)]
 pub struct Erc20 {
-    args: Vec<String>,
-
+    /// Erc20 token denom.
+    #[clap(short, long)]
+    denom: String,
+    /// Ethereum ID representing a Keystore entry.
     #[clap(short, long)]
     ethereum_key: String,
-
+    /// Ethereum gas multiplier, default is 1.
     #[clap(short, long, default_value_t = 1.0)]
     gas_multiplier: f64,
 }
@@ -38,7 +40,7 @@ impl Runnable for Erc20 {
 
 impl Erc20 {
     async fn deploy(&self) {
-        let denom = self.args.get(0).expect("denom is required");
+        let denom = self.denom.clone();
 
         let config = APP.config();
 
