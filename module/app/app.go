@@ -418,7 +418,7 @@ func NewGravityApp(
 		app.slashingKeeper,
 		app.distrKeeper,
 		sdk.DefaultPowerReduction,
-		app.ModuleAccountAddressesToNames([]string{distrtypes.ModuleName}),
+		app.ModuleAccountAddressesToNames([]string{}),
 		app.ModuleAccountAddressesToNames([]string{distrtypes.ModuleName}),
 	)
 
