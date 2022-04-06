@@ -9,7 +9,7 @@ use std::path;
 /// Add a new Cosmos Key
 #[derive(Command, Debug, Default, Parser)]
 #[clap(
-    long_about = "DESCRIPTION \n\n Create a new Cosmos Key.\n This command creates a new Cosmos key. When provided an overwrite option, which if set to true, overwrites\n an existing key in the keystore with the same keyname."
+    long_about = "DESCRIPTION \n\n Create a new Cosmos Key.\n This command creates a new Cosmos key. When provided an overwrite option, which if set to true,\n overwrites an existing key in the keystore with the same keyname."
 )]
 pub struct AddCosmosKeyCmd {
     /// Cosmos keyname

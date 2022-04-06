@@ -68,14 +68,13 @@ impl Runnable for CosmosToEthCmd {
     fn run(&self) {
         let config = APP.config();
         let gravity_denom = self.gravity_denom.clone();
-        let gravity_denom = gravity_denom.to_string();
         let is_cosmos_originated = !gravity_denom.starts_with("gravity");
 
         let amount = self.amount.clone();
         let amount: Uint256 = amount.parse().expect("cannot parse amount");
 
         let cosmos_key = self.cosmos_key.clone();
-        let cosmos_key = config.load_deep_space_key(cosmos_key.to_string());
+        let cosmos_key = config.load_deep_space_key(cosmos_key);
 
         let cosmos_prefix = config.cosmos.prefix.trim();
         let cosmos_address = cosmos_key.to_address(cosmos_prefix).unwrap();

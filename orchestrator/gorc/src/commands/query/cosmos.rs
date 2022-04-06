@@ -6,8 +6,10 @@ use abscissa_core::{clap::Parser, Command, Runnable};
 /// Query cosmos chain
 #[derive(Command, Debug, Parser)]
 pub enum Cosmos {
+    /// Query the balance in a Cosmos account.
     Balance(Balance),
 
+    /// Query gravity keys.
     GravityKeys(GravityKeys),
 }
 

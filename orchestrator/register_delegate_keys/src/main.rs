@@ -8,7 +8,7 @@ extern crate lazy_static;
 use clarity::PrivateKey as EthPrivateKey;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::send::update_gravity_delegate_addresses;
-use deep_space::{coin::Coin, mnemonic::Mnemonic};
+use deep_space::mnemonic::Mnemonic;
 use docopt::Docopt;
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::prelude::*;

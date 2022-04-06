@@ -6,8 +6,10 @@ use abscissa_core::{clap::Parser, Command, Runnable};
 /// Query Eth chain
 #[derive(Command, Debug, Parser)]
 pub enum Eth {
+    /// Query balance in an Ethereum account.
     Balance(Balance),
 
+    /// Query Ethereum Contract.
     Contract(Contract),
 }
 
