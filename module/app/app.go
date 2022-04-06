@@ -418,6 +418,8 @@ func NewGravityApp(
 		app.ModuleAccountAddressesToNames([]string{distrtypes.ModuleName}),
 	)
 
+	app.setupUpgradeStoreLoaders()
+
 	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
 	app.mm = module.NewManager(
@@ -606,6 +608,9 @@ func (app *Gravity) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
+
+	app.upgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
@@ -778,4 +783,17 @@ func VerifyAddressFormat(bz []byte) error {
 	}
 
 	return nil
+}
+
+func (app *Gravity) setupUpgradeStoreLoaders() {
+	_, err := app.upgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
+	}
+
+	// if upgradeInfo.Name matches a plan name with a module being added, renamed, or deleted,
+	// create a storetypes.StoreUpgrades struct and
+	// app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	// see also:
+	// https://github.com/cosmos/cosmos-sdk/blob/master/docs/core/upgrade.md#add-storeupgrades-for-new-modules
 }
