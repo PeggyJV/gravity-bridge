@@ -14,6 +14,9 @@ use tokio::time::sleep as delay_for;
 
 /// Deploy Erc20
 #[derive(Command, Debug, Parser)]
+#[clap(
+    long_about = "DESCRIPTION \n\n Deploy ERC20 tokens via the Gravity Bridge.\n This command takes a token denom, Ethereum key and gas multiplier."
+)]
 pub struct Erc20 {
     /// Erc20 token denom.
     #[clap(short, long)]
