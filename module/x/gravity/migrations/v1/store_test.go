@@ -1,10 +1,11 @@
-package v1
+package v1_test
 
 import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/keeper"
+	v1 "github.com/peggyjv/gravity-bridge/module/x/gravity/migrations/v1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,12 +17,12 @@ func TestMigrateCosmosOriginatedERC20ToDenom(t *testing.T) {
 	ctx := input.Context
 	storeKey := input.GravityStoreKey
 
-	ctx.KVStore(storeKey).Set(MakeOldERC20ToDenomKey(tokenContractString), []byte(denom))
+	ctx.KVStore(storeKey).Set(v1.MakeOldERC20ToDenomKey(tokenContractString), []byte(denom))
 
-	err := MigrateStore(ctx, storeKey, input.Marshaler)
+	err := v1.MigrateStore(ctx, storeKey, input.Marshaler)
 	assert.NoError(t, err)
 
 	tokenContract := common.HexToAddress(tokenContractString)
-	storedDenom := ctx.KVStore(storeKey).Get(MakeNewERC20ToDenomKey(tokenContract))
+	storedDenom := ctx.KVStore(storeKey).Get(v1.MakeNewERC20ToDenomKey(tokenContract))
 	assert.Equal(t, denom, string(storedDenom))
 }
