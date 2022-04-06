@@ -27,8 +27,18 @@ impl Runnable for Cosmos {
 }
 
 #[derive(Command, Debug, Parser)]
+#[clap(
+    long_about = "DESCRIPTION \n\n Send transactions from Cosmos to Ethereum chain.\n This command sends tx from the Cosmos chain to the Eth chain.\n It takes the Cosmos key, Eth address and amount."
+)]
 pub struct SendToEth {
-    free: Vec<String>,
+    /// Cosmos key name
+    cosmos_key: String,
+
+    /// Eth Address
+    eth_addr: String,
+
+    /// ERC20 coin amount
+    erc20_amount: String,
 
     #[clap(short, long)]
     help: bool,
@@ -54,10 +64,9 @@ fn get_cosmos_key(_key_name: &str) -> CosmosPrivateKey {
 
 impl Runnable for SendToEth {
     fn run(&self) {
-        assert!(self.free.len() == 3);
-        let from_cosmos_key = self.free[0].clone();
-        let to_eth_addr = self.free[1].clone(); //TODO parse this to an Eth Address
-        let erc_20_coin = self.free[2].clone(); // 1231234uatom
+        let from_cosmos_key = self.cosmos_key.clone();
+        let to_eth_addr = self.eth_addr.clone(); //TODO parse this to an Eth Address
+        let erc_20_coin = self.erc20_amount.clone(); // 1231234uatom
         let (amount, denom) = parse_denom(&erc_20_coin);
 
         let amount: Uint256 = amount.parse().expect("Could not parse amount");
@@ -150,8 +159,18 @@ impl Runnable for SendToEth {
 }
 
 #[derive(Command, Debug, Parser)]
+#[clap(
+    long_about = "DESCRIPTION \n\n Send transactions across the Cosmos chain.\n This command sends tx from one Cosmos account to another.\n It takes the sender's key, reciever's address and amount."
+)]
 pub struct Send {
-    free: Vec<String>,
+    /// Sender's keyname
+    from_key: String,
+
+    /// Reciever's address.
+    to_addr: String,
+
+    /// Amount to be sent.
+    amount: String,
 
     #[clap(short, long)]
     help: bool,
@@ -160,10 +179,9 @@ pub struct Send {
 impl Runnable for Send {
     /// Start the application.
     fn run(&self) {
-        assert!(self.free.len() == 3);
-        let _from_key = self.free[0].clone();
-        let _to_addr = self.free[1].clone();
-        let _coin_amount = self.free[2].clone();
+        let _from_key = self.from_key.clone();
+        let _to_addr = self.to_addr.clone();
+        let _coin_amount = self.amount.clone();
 
         abscissa_tokio::run_with_actix(&APP, async { unimplemented!() }).unwrap_or_else(|e| {
             status_err!("executor exited with error: {}", e);
