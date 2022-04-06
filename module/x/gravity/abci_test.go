@@ -244,7 +244,7 @@ func TestBatchTxTimeout(t *testing.T) {
 		mySender, _         = sdk.AccAddressFromBech32("cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn")
 		myReceiver          = common.HexToAddress("0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7")
 		myTokenContractAddr = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5") // Pickle
-		allVouchers         = sdk.NewCoins(types.NewERC20Token(99999, myTokenContractAddr.Hex()).GravityCoin())
+		allVouchers         = sdk.NewCoins(types.NewERC20Token(99999, myTokenContractAddr).GravityCoin())
 	)
 
 	require.Greater(t, params.AverageBlockTime, uint64(0))
