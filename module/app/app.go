@@ -81,6 +81,7 @@ import (
 	"github.com/gorilla/mux"
 	gravityparams "github.com/peggyjv/gravity-bridge/module/app/params"
 	"github.com/peggyjv/gravity-bridge/module/x/gravity"
+	gravityclient "github.com/peggyjv/gravity-bridge/module/x/gravity/client"
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/keeper"
 	gravitytypes "github.com/peggyjv/gravity-bridge/module/x/gravity/types"
 	"github.com/rakyll/statik/fs"
@@ -124,6 +125,7 @@ var (
 			distrclient.ProposalHandler,
 			upgradeclient.ProposalHandler,
 			upgradeclient.CancelProposalHandler,
+			gravityclient.ProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -409,7 +411,10 @@ func NewGravityApp(
 		stakingKeeper,
 		app.bankKeeper,
 		app.slashingKeeper,
+		app.distrKeeper,
 		sdk.DefaultPowerReduction,
+		app.ModuleAccountAddressesToNames([]string{distrtypes.ModuleName}),
+		app.ModuleAccountAddressesToNames([]string{distrtypes.ModuleName}),
 	)
 
 	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
@@ -616,6 +621,16 @@ func (app *Gravity) ModuleAccountAddrs() map[string]bool {
 	}
 
 	return modAccAddrs
+}
+
+// ModuleAccountNames returns a map of module account address to module name
+func (app *Gravity) ModuleAccountAddressesToNames(moduleAccounts []string) map[string]string {
+	modAccNames := make(map[string]string)
+	for _, acc := range moduleAccounts {
+		modAccNames[authtypes.NewModuleAddress(acc).String()] = acc
+	}
+
+	return modAccNames
 }
 
 // BlockedAddrs returns all the app's module account addresses that are not

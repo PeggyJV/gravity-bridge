@@ -47,10 +47,10 @@ func EthereumAddrLessThan(e, o string) bool {
 /////////////////////////
 
 // NewERC20Token returns a new instance of an ERC20
-func NewERC20Token(amount uint64, contract string) ERC20Token {
+func NewERC20Token(amount uint64, contract common.Address) ERC20Token {
 	return ERC20Token{
 		Amount:   sdk.NewIntFromUint64(amount),
-		Contract: contract,
+		Contract: contract.Hex(),
 	}
 }
 
@@ -61,9 +61,13 @@ func NewSDKIntERC20Token(amount sdk.Int, contract common.Address) ERC20Token {
 	}
 }
 
+func GravityDenom(contract common.Address) string {
+	return strings.Join([]string{GravityDenomPrefix, contract.Hex()}, GravityDenomSeparator)
+}
+
 // GravityCoin returns the gravity representation of the ERC20
 func (e ERC20Token) GravityCoin() sdk.Coin {
-	return sdk.Coin{Amount: e.Amount, Denom: strings.Join([]string{GravityDenomPrefix, e.Contract}, GravityDenomSeparator)}
+	return sdk.Coin{Amount: e.Amount, Denom: GravityDenom(common.HexToAddress(e.Contract))}
 }
 
 func GravityDenomToERC20(denom string) (string, error) {
@@ -78,17 +82,29 @@ func GravityDenomToERC20(denom string) (string, error) {
 	case len(denom) != GravityDenomLen:
 		return "", fmt.Errorf("len(denom)(%d) not equal to GravityDenomLen(%d)", len(denom), GravityDenomLen)
 	default:
-		return contract, nil
+		return common.HexToAddress(contract).Hex(), nil
 	}
+}
+
+func NormalizeCoinDenom(coin *sdk.Coin) {
+	coin.Denom = NormalizeDenom(coin.Denom)
+}
+
+func NormalizeDenom(denom string) string {
+	if contract, err := GravityDenomToERC20(denom); err == nil {
+		return GravityDenom(common.HexToAddress(contract))
+	}
+
+	return denom
 }
 
 func NewSendToEthereumTx(id uint64, tokenContract common.Address, sender sdk.AccAddress, recipient common.Address, amount, feeAmount uint64) *SendToEthereum {
 	return &SendToEthereum{
 		Id:                id,
-		Erc20Fee:          NewERC20Token(feeAmount, tokenContract.Hex()),
+		Erc20Fee:          NewERC20Token(feeAmount, tokenContract),
 		Sender:            sender.String(),
 		EthereumRecipient: recipient.Hex(),
-		Erc20Token:        NewERC20Token(amount, tokenContract.Hex()),
+		Erc20Token:        NewERC20Token(amount, tokenContract),
 	}
 }
 

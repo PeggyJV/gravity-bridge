@@ -559,7 +559,7 @@ func TestKeeper_Migration(t *testing.T) {
 		myReceiver          = common.HexToAddress("0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7")
 		myTokenContractAddr = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5") // Pickle
 		allVouchers         = sdk.NewCoins(
-			types.NewERC20Token(99999, myTokenContractAddr.Hex()).GravityCoin(),
+			types.NewERC20Token(99999, myTokenContractAddr).GravityCoin(),
 		)
 	)
 
