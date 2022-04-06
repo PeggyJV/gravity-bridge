@@ -80,6 +80,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
 	"github.com/gorilla/mux"
 	gravityparams "github.com/peggyjv/gravity-bridge/module/app/params"
+	v2 "github.com/peggyjv/gravity-bridge/module/app/upgrades/v2"
 	"github.com/peggyjv/gravity-bridge/module/x/gravity"
 	gravityclient "github.com/peggyjv/gravity-bridge/module/x/gravity/client"
 	"github.com/peggyjv/gravity-bridge/module/x/gravity/keeper"
@@ -530,6 +531,8 @@ func NewGravityApp(
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.mm.RegisterServices(module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter()))
 
+	app.setupUpgradeHandlers()
+
 	app.sm = module.NewSimulationManager(
 		auth.NewAppModule(appCodec, app.accountKeeper, authsims.RandomGenesisAccounts),
 		bank.NewAppModule(appCodec, app.bankKeeper, app.accountKeeper),
@@ -796,4 +799,13 @@ func (app *Gravity) setupUpgradeStoreLoaders() {
 	// app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	// see also:
 	// https://github.com/cosmos/cosmos-sdk/blob/master/docs/core/upgrade.md#add-storeupgrades-for-new-modules
+}
+
+func (app *Gravity) setupUpgradeHandlers() {
+	app.upgradeKeeper.SetUpgradeHandler(
+		v2.UpgradeName,
+		v2.CreateUpgradeHandler(
+			app.mm,
+		),
+	)
 }
