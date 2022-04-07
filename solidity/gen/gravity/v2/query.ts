@@ -1,13 +1,13 @@
 /* eslint-disable */
 import Long from "long";
 import _m0 from "protobufjs/minimal";
-import { Params } from "../../gravity/v1/genesis";
+import { Params } from "../../gravity/v2/genesis";
 import {
   SignerSetTx,
   BatchTx,
   ContractCallTx,
   SendToEthereum,
-} from "../../gravity/v1/gravity";
+} from "../../gravity/v2/gravity";
 import {
   PageRequest,
   PageResponse,
@@ -16,10 +16,11 @@ import {
   SignerSetTxConfirmation,
   ContractCallTxConfirmation,
   BatchTxConfirmation,
-} from "../../gravity/v1/msgs";
+  MsgDelegateKeys,
+} from "../../gravity/v2/msgs";
 import { Coin } from "../../cosmos/base/v1beta1/coin";
 
-export const protobufPackage = "gravity.v1";
+export const protobufPackage = "gravity.v2";
 
 /** rpc Params */
 export interface ParamsRequest {}
@@ -102,7 +103,7 @@ export interface ContractCallTxsResponse {
 export interface UnsignedSignerSetTxsRequest {
   /**
    * NOTE: this is an sdk.AccAddress and can represent either the
-   * orchestartor address or the cooresponding validator address
+   * orchestrator address or the corresponding validator address
    */
   address: string;
 }
@@ -114,7 +115,7 @@ export interface UnsignedSignerSetTxsResponse {
 export interface UnsignedBatchTxsRequest {
   /**
    * NOTE: this is an sdk.AccAddress and can represent either the
-   * orchestrator address or the cooresponding validator address
+   * orchestrator address or the corresponding validator address
    */
   address: string;
 }
@@ -174,6 +175,17 @@ export interface ERC20ToDenomResponse {
   cosmosOriginated: boolean;
 }
 
+export interface DenomToERC20ParamsRequest {
+  denom: string;
+}
+
+export interface DenomToERC20ParamsResponse {
+  baseDenom: string;
+  erc20Name: string;
+  erc20Symbol: string;
+  erc20Decimals: Long;
+}
+
 export interface DenomToERC20Request {
   denom: string;
 }
@@ -208,6 +220,12 @@ export interface DelegateKeysByOrchestratorRequest {
 export interface DelegateKeysByOrchestratorResponse {
   validatorAddress: string;
   ethereumSigner: string;
+}
+
+export interface DelegateKeysRequest {}
+
+export interface DelegateKeysResponse {
+  delegateKeys: MsgDelegateKeys[];
 }
 
 /** NOTE: if there is no sender address, return all */
@@ -308,11 +326,10 @@ export const ParamsResponse = {
 
   fromJSON(object: any): ParamsResponse {
     const message = { ...baseParamsResponse } as ParamsResponse;
-    if (object.params !== undefined && object.params !== null) {
-      message.params = Params.fromJSON(object.params);
-    } else {
-      message.params = undefined;
-    }
+    message.params =
+      object.params !== undefined && object.params !== null
+        ? Params.fromJSON(object.params)
+        : undefined;
     return message;
   },
 
@@ -325,11 +342,10 @@ export const ParamsResponse = {
 
   fromPartial(object: DeepPartial<ParamsResponse>): ParamsResponse {
     const message = { ...baseParamsResponse } as ParamsResponse;
-    if (object.params !== undefined && object.params !== null) {
-      message.params = Params.fromPartial(object.params);
-    } else {
-      message.params = undefined;
-    }
+    message.params =
+      object.params !== undefined && object.params !== null
+        ? Params.fromPartial(object.params)
+        : undefined;
     return message;
   },
 };
@@ -367,11 +383,10 @@ export const SignerSetTxRequest = {
 
   fromJSON(object: any): SignerSetTxRequest {
     const message = { ...baseSignerSetTxRequest } as SignerSetTxRequest;
-    if (object.signerSetNonce !== undefined && object.signerSetNonce !== null) {
-      message.signerSetNonce = Long.fromString(object.signerSetNonce);
-    } else {
-      message.signerSetNonce = Long.UZERO;
-    }
+    message.signerSetNonce =
+      object.signerSetNonce !== undefined && object.signerSetNonce !== null
+        ? Long.fromString(object.signerSetNonce)
+        : Long.UZERO;
     return message;
   },
 
@@ -384,11 +399,10 @@ export const SignerSetTxRequest = {
 
   fromPartial(object: DeepPartial<SignerSetTxRequest>): SignerSetTxRequest {
     const message = { ...baseSignerSetTxRequest } as SignerSetTxRequest;
-    if (object.signerSetNonce !== undefined && object.signerSetNonce !== null) {
-      message.signerSetNonce = object.signerSetNonce as Long;
-    } else {
-      message.signerSetNonce = Long.UZERO;
-    }
+    message.signerSetNonce =
+      object.signerSetNonce !== undefined && object.signerSetNonce !== null
+        ? Long.fromValue(object.signerSetNonce)
+        : Long.UZERO;
     return message;
   },
 };
@@ -478,11 +492,10 @@ export const SignerSetTxResponse = {
 
   fromJSON(object: any): SignerSetTxResponse {
     const message = { ...baseSignerSetTxResponse } as SignerSetTxResponse;
-    if (object.signerSet !== undefined && object.signerSet !== null) {
-      message.signerSet = SignerSetTx.fromJSON(object.signerSet);
-    } else {
-      message.signerSet = undefined;
-    }
+    message.signerSet =
+      object.signerSet !== undefined && object.signerSet !== null
+        ? SignerSetTx.fromJSON(object.signerSet)
+        : undefined;
     return message;
   },
 
@@ -497,11 +510,10 @@ export const SignerSetTxResponse = {
 
   fromPartial(object: DeepPartial<SignerSetTxResponse>): SignerSetTxResponse {
     const message = { ...baseSignerSetTxResponse } as SignerSetTxResponse;
-    if (object.signerSet !== undefined && object.signerSet !== null) {
-      message.signerSet = SignerSetTx.fromPartial(object.signerSet);
-    } else {
-      message.signerSet = undefined;
-    }
+    message.signerSet =
+      object.signerSet !== undefined && object.signerSet !== null
+        ? SignerSetTx.fromPartial(object.signerSet)
+        : undefined;
     return message;
   },
 };
@@ -548,16 +560,14 @@ export const BatchTxRequest = {
 
   fromJSON(object: any): BatchTxRequest {
     const message = { ...baseBatchTxRequest } as BatchTxRequest;
-    if (object.tokenContract !== undefined && object.tokenContract !== null) {
-      message.tokenContract = String(object.tokenContract);
-    } else {
-      message.tokenContract = "";
-    }
-    if (object.batchNonce !== undefined && object.batchNonce !== null) {
-      message.batchNonce = Long.fromString(object.batchNonce);
-    } else {
-      message.batchNonce = Long.UZERO;
-    }
+    message.tokenContract =
+      object.tokenContract !== undefined && object.tokenContract !== null
+        ? String(object.tokenContract)
+        : "";
+    message.batchNonce =
+      object.batchNonce !== undefined && object.batchNonce !== null
+        ? Long.fromString(object.batchNonce)
+        : Long.UZERO;
     return message;
   },
 
@@ -572,16 +582,11 @@ export const BatchTxRequest = {
 
   fromPartial(object: DeepPartial<BatchTxRequest>): BatchTxRequest {
     const message = { ...baseBatchTxRequest } as BatchTxRequest;
-    if (object.tokenContract !== undefined && object.tokenContract !== null) {
-      message.tokenContract = object.tokenContract;
-    } else {
-      message.tokenContract = "";
-    }
-    if (object.batchNonce !== undefined && object.batchNonce !== null) {
-      message.batchNonce = object.batchNonce as Long;
-    } else {
-      message.batchNonce = Long.UZERO;
-    }
+    message.tokenContract = object.tokenContract ?? "";
+    message.batchNonce =
+      object.batchNonce !== undefined && object.batchNonce !== null
+        ? Long.fromValue(object.batchNonce)
+        : Long.UZERO;
     return message;
   },
 };
@@ -619,11 +624,10 @@ export const BatchTxResponse = {
 
   fromJSON(object: any): BatchTxResponse {
     const message = { ...baseBatchTxResponse } as BatchTxResponse;
-    if (object.batch !== undefined && object.batch !== null) {
-      message.batch = BatchTx.fromJSON(object.batch);
-    } else {
-      message.batch = undefined;
-    }
+    message.batch =
+      object.batch !== undefined && object.batch !== null
+        ? BatchTx.fromJSON(object.batch)
+        : undefined;
     return message;
   },
 
@@ -636,11 +640,10 @@ export const BatchTxResponse = {
 
   fromPartial(object: DeepPartial<BatchTxResponse>): BatchTxResponse {
     const message = { ...baseBatchTxResponse } as BatchTxResponse;
-    if (object.batch !== undefined && object.batch !== null) {
-      message.batch = BatchTx.fromPartial(object.batch);
-    } else {
-      message.batch = undefined;
-    }
+    message.batch =
+      object.batch !== undefined && object.batch !== null
+        ? BatchTx.fromPartial(object.batch)
+        : undefined;
     return message;
   },
 };
@@ -688,21 +691,16 @@ export const ContractCallTxRequest = {
 
   fromJSON(object: any): ContractCallTxRequest {
     const message = { ...baseContractCallTxRequest } as ContractCallTxRequest;
-    message.invalidationScope = new Uint8Array();
-    if (
+    message.invalidationScope =
       object.invalidationScope !== undefined &&
       object.invalidationScope !== null
-    ) {
-      message.invalidationScope = bytesFromBase64(object.invalidationScope);
-    }
-    if (
+        ? bytesFromBase64(object.invalidationScope)
+        : new Uint8Array();
+    message.invalidationNonce =
       object.invalidationNonce !== undefined &&
       object.invalidationNonce !== null
-    ) {
-      message.invalidationNonce = Long.fromString(object.invalidationNonce);
-    } else {
-      message.invalidationNonce = Long.UZERO;
-    }
+        ? Long.fromString(object.invalidationNonce)
+        : Long.UZERO;
     return message;
   },
 
@@ -725,22 +723,12 @@ export const ContractCallTxRequest = {
     object: DeepPartial<ContractCallTxRequest>
   ): ContractCallTxRequest {
     const message = { ...baseContractCallTxRequest } as ContractCallTxRequest;
-    if (
-      object.invalidationScope !== undefined &&
-      object.invalidationScope !== null
-    ) {
-      message.invalidationScope = object.invalidationScope;
-    } else {
-      message.invalidationScope = new Uint8Array();
-    }
-    if (
+    message.invalidationScope = object.invalidationScope ?? new Uint8Array();
+    message.invalidationNonce =
       object.invalidationNonce !== undefined &&
       object.invalidationNonce !== null
-    ) {
-      message.invalidationNonce = object.invalidationNonce as Long;
-    } else {
-      message.invalidationNonce = Long.UZERO;
-    }
+        ? Long.fromValue(object.invalidationNonce)
+        : Long.UZERO;
     return message;
   },
 };
@@ -784,11 +772,10 @@ export const ContractCallTxResponse = {
 
   fromJSON(object: any): ContractCallTxResponse {
     const message = { ...baseContractCallTxResponse } as ContractCallTxResponse;
-    if (object.logicCall !== undefined && object.logicCall !== null) {
-      message.logicCall = ContractCallTx.fromJSON(object.logicCall);
-    } else {
-      message.logicCall = undefined;
-    }
+    message.logicCall =
+      object.logicCall !== undefined && object.logicCall !== null
+        ? ContractCallTx.fromJSON(object.logicCall)
+        : undefined;
     return message;
   },
 
@@ -805,11 +792,10 @@ export const ContractCallTxResponse = {
     object: DeepPartial<ContractCallTxResponse>
   ): ContractCallTxResponse {
     const message = { ...baseContractCallTxResponse } as ContractCallTxResponse;
-    if (object.logicCall !== undefined && object.logicCall !== null) {
-      message.logicCall = ContractCallTx.fromPartial(object.logicCall);
-    } else {
-      message.logicCall = undefined;
-    }
+    message.logicCall =
+      object.logicCall !== undefined && object.logicCall !== null
+        ? ContractCallTx.fromPartial(object.logicCall)
+        : undefined;
     return message;
   },
 };
@@ -856,11 +842,10 @@ export const SignerSetTxConfirmationsRequest = {
     const message = {
       ...baseSignerSetTxConfirmationsRequest,
     } as SignerSetTxConfirmationsRequest;
-    if (object.signerSetNonce !== undefined && object.signerSetNonce !== null) {
-      message.signerSetNonce = Long.fromString(object.signerSetNonce);
-    } else {
-      message.signerSetNonce = Long.UZERO;
-    }
+    message.signerSetNonce =
+      object.signerSetNonce !== undefined && object.signerSetNonce !== null
+        ? Long.fromString(object.signerSetNonce)
+        : Long.UZERO;
     return message;
   },
 
@@ -877,11 +862,10 @@ export const SignerSetTxConfirmationsRequest = {
     const message = {
       ...baseSignerSetTxConfirmationsRequest,
     } as SignerSetTxConfirmationsRequest;
-    if (object.signerSetNonce !== undefined && object.signerSetNonce !== null) {
-      message.signerSetNonce = object.signerSetNonce as Long;
-    } else {
-      message.signerSetNonce = Long.UZERO;
-    }
+    message.signerSetNonce =
+      object.signerSetNonce !== undefined && object.signerSetNonce !== null
+        ? Long.fromValue(object.signerSetNonce)
+        : Long.UZERO;
     return message;
   },
 };
@@ -929,12 +913,9 @@ export const SignerSetTxConfirmationsResponse = {
     const message = {
       ...baseSignerSetTxConfirmationsResponse,
     } as SignerSetTxConfirmationsResponse;
-    message.signatures = [];
-    if (object.signatures !== undefined && object.signatures !== null) {
-      for (const e of object.signatures) {
-        message.signatures.push(SignerSetTxConfirmation.fromJSON(e));
-      }
-    }
+    message.signatures = (object.signatures ?? []).map((e: any) =>
+      SignerSetTxConfirmation.fromJSON(e)
+    );
     return message;
   },
 
@@ -956,12 +937,9 @@ export const SignerSetTxConfirmationsResponse = {
     const message = {
       ...baseSignerSetTxConfirmationsResponse,
     } as SignerSetTxConfirmationsResponse;
-    message.signatures = [];
-    if (object.signatures !== undefined && object.signatures !== null) {
-      for (const e of object.signatures) {
-        message.signatures.push(SignerSetTxConfirmation.fromPartial(e));
-      }
-    }
+    message.signatures = (object.signatures ?? []).map((e) =>
+      SignerSetTxConfirmation.fromPartial(e)
+    );
     return message;
   },
 };
@@ -999,11 +977,10 @@ export const SignerSetTxsRequest = {
 
   fromJSON(object: any): SignerSetTxsRequest {
     const message = { ...baseSignerSetTxsRequest } as SignerSetTxsRequest;
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageRequest.fromJSON(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageRequest.fromJSON(object.pagination)
+        : undefined;
     return message;
   },
 
@@ -1018,11 +995,10 @@ export const SignerSetTxsRequest = {
 
   fromPartial(object: DeepPartial<SignerSetTxsRequest>): SignerSetTxsRequest {
     const message = { ...baseSignerSetTxsRequest } as SignerSetTxsRequest;
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageRequest.fromPartial(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageRequest.fromPartial(object.pagination)
+        : undefined;
     return message;
   },
 };
@@ -1073,17 +1049,13 @@ export const SignerSetTxsResponse = {
 
   fromJSON(object: any): SignerSetTxsResponse {
     const message = { ...baseSignerSetTxsResponse } as SignerSetTxsResponse;
-    message.signerSets = [];
-    if (object.signerSets !== undefined && object.signerSets !== null) {
-      for (const e of object.signerSets) {
-        message.signerSets.push(SignerSetTx.fromJSON(e));
-      }
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageResponse.fromJSON(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.signerSets = (object.signerSets ?? []).map((e: any) =>
+      SignerSetTx.fromJSON(e)
+    );
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageResponse.fromJSON(object.pagination)
+        : undefined;
     return message;
   },
 
@@ -1105,17 +1077,13 @@ export const SignerSetTxsResponse = {
 
   fromPartial(object: DeepPartial<SignerSetTxsResponse>): SignerSetTxsResponse {
     const message = { ...baseSignerSetTxsResponse } as SignerSetTxsResponse;
-    message.signerSets = [];
-    if (object.signerSets !== undefined && object.signerSets !== null) {
-      for (const e of object.signerSets) {
-        message.signerSets.push(SignerSetTx.fromPartial(e));
-      }
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageResponse.fromPartial(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.signerSets = (object.signerSets ?? []).map((e) =>
+      SignerSetTx.fromPartial(e)
+    );
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageResponse.fromPartial(object.pagination)
+        : undefined;
     return message;
   },
 };
@@ -1153,11 +1121,10 @@ export const BatchTxsRequest = {
 
   fromJSON(object: any): BatchTxsRequest {
     const message = { ...baseBatchTxsRequest } as BatchTxsRequest;
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageRequest.fromJSON(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageRequest.fromJSON(object.pagination)
+        : undefined;
     return message;
   },
 
@@ -1172,11 +1139,10 @@ export const BatchTxsRequest = {
 
   fromPartial(object: DeepPartial<BatchTxsRequest>): BatchTxsRequest {
     const message = { ...baseBatchTxsRequest } as BatchTxsRequest;
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageRequest.fromPartial(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageRequest.fromPartial(object.pagination)
+        : undefined;
     return message;
   },
 };
@@ -1224,17 +1190,13 @@ export const BatchTxsResponse = {
 
   fromJSON(object: any): BatchTxsResponse {
     const message = { ...baseBatchTxsResponse } as BatchTxsResponse;
-    message.batches = [];
-    if (object.batches !== undefined && object.batches !== null) {
-      for (const e of object.batches) {
-        message.batches.push(BatchTx.fromJSON(e));
-      }
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageResponse.fromJSON(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.batches = (object.batches ?? []).map((e: any) =>
+      BatchTx.fromJSON(e)
+    );
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageResponse.fromJSON(object.pagination)
+        : undefined;
     return message;
   },
 
@@ -1256,17 +1218,11 @@ export const BatchTxsResponse = {
 
   fromPartial(object: DeepPartial<BatchTxsResponse>): BatchTxsResponse {
     const message = { ...baseBatchTxsResponse } as BatchTxsResponse;
-    message.batches = [];
-    if (object.batches !== undefined && object.batches !== null) {
-      for (const e of object.batches) {
-        message.batches.push(BatchTx.fromPartial(e));
-      }
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageResponse.fromPartial(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.batches = (object.batches ?? []).map((e) => BatchTx.fromPartial(e));
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageResponse.fromPartial(object.pagination)
+        : undefined;
     return message;
   },
 };
@@ -1307,11 +1263,10 @@ export const ContractCallTxsRequest = {
 
   fromJSON(object: any): ContractCallTxsRequest {
     const message = { ...baseContractCallTxsRequest } as ContractCallTxsRequest;
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageRequest.fromJSON(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageRequest.fromJSON(object.pagination)
+        : undefined;
     return message;
   },
 
@@ -1328,11 +1283,10 @@ export const ContractCallTxsRequest = {
     object: DeepPartial<ContractCallTxsRequest>
   ): ContractCallTxsRequest {
     const message = { ...baseContractCallTxsRequest } as ContractCallTxsRequest;
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageRequest.fromPartial(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageRequest.fromPartial(object.pagination)
+        : undefined;
     return message;
   },
 };
@@ -1387,17 +1341,13 @@ export const ContractCallTxsResponse = {
     const message = {
       ...baseContractCallTxsResponse,
     } as ContractCallTxsResponse;
-    message.calls = [];
-    if (object.calls !== undefined && object.calls !== null) {
-      for (const e of object.calls) {
-        message.calls.push(ContractCallTx.fromJSON(e));
-      }
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageResponse.fromJSON(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.calls = (object.calls ?? []).map((e: any) =>
+      ContractCallTx.fromJSON(e)
+    );
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageResponse.fromJSON(object.pagination)
+        : undefined;
     return message;
   },
 
@@ -1423,17 +1373,13 @@ export const ContractCallTxsResponse = {
     const message = {
       ...baseContractCallTxsResponse,
     } as ContractCallTxsResponse;
-    message.calls = [];
-    if (object.calls !== undefined && object.calls !== null) {
-      for (const e of object.calls) {
-        message.calls.push(ContractCallTx.fromPartial(e));
-      }
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageResponse.fromPartial(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.calls = (object.calls ?? []).map((e) =>
+      ContractCallTx.fromPartial(e)
+    );
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageResponse.fromPartial(object.pagination)
+        : undefined;
     return message;
   },
 };
@@ -1478,11 +1424,10 @@ export const UnsignedSignerSetTxsRequest = {
     const message = {
       ...baseUnsignedSignerSetTxsRequest,
     } as UnsignedSignerSetTxsRequest;
-    if (object.address !== undefined && object.address !== null) {
-      message.address = String(object.address);
-    } else {
-      message.address = "";
-    }
+    message.address =
+      object.address !== undefined && object.address !== null
+        ? String(object.address)
+        : "";
     return message;
   },
 
@@ -1498,11 +1443,7 @@ export const UnsignedSignerSetTxsRequest = {
     const message = {
       ...baseUnsignedSignerSetTxsRequest,
     } as UnsignedSignerSetTxsRequest;
-    if (object.address !== undefined && object.address !== null) {
-      message.address = object.address;
-    } else {
-      message.address = "";
-    }
+    message.address = object.address ?? "";
     return message;
   },
 };
@@ -1548,12 +1489,9 @@ export const UnsignedSignerSetTxsResponse = {
     const message = {
       ...baseUnsignedSignerSetTxsResponse,
     } as UnsignedSignerSetTxsResponse;
-    message.signerSets = [];
-    if (object.signerSets !== undefined && object.signerSets !== null) {
-      for (const e of object.signerSets) {
-        message.signerSets.push(SignerSetTx.fromJSON(e));
-      }
-    }
+    message.signerSets = (object.signerSets ?? []).map((e: any) =>
+      SignerSetTx.fromJSON(e)
+    );
     return message;
   },
 
@@ -1575,12 +1513,9 @@ export const UnsignedSignerSetTxsResponse = {
     const message = {
       ...baseUnsignedSignerSetTxsResponse,
     } as UnsignedSignerSetTxsResponse;
-    message.signerSets = [];
-    if (object.signerSets !== undefined && object.signerSets !== null) {
-      for (const e of object.signerSets) {
-        message.signerSets.push(SignerSetTx.fromPartial(e));
-      }
-    }
+    message.signerSets = (object.signerSets ?? []).map((e) =>
+      SignerSetTx.fromPartial(e)
+    );
     return message;
   },
 };
@@ -1625,11 +1560,10 @@ export const UnsignedBatchTxsRequest = {
     const message = {
       ...baseUnsignedBatchTxsRequest,
     } as UnsignedBatchTxsRequest;
-    if (object.address !== undefined && object.address !== null) {
-      message.address = String(object.address);
-    } else {
-      message.address = "";
-    }
+    message.address =
+      object.address !== undefined && object.address !== null
+        ? String(object.address)
+        : "";
     return message;
   },
 
@@ -1645,11 +1579,7 @@ export const UnsignedBatchTxsRequest = {
     const message = {
       ...baseUnsignedBatchTxsRequest,
     } as UnsignedBatchTxsRequest;
-    if (object.address !== undefined && object.address !== null) {
-      message.address = object.address;
-    } else {
-      message.address = "";
-    }
+    message.address = object.address ?? "";
     return message;
   },
 };
@@ -1695,12 +1625,9 @@ export const UnsignedBatchTxsResponse = {
     const message = {
       ...baseUnsignedBatchTxsResponse,
     } as UnsignedBatchTxsResponse;
-    message.batches = [];
-    if (object.batches !== undefined && object.batches !== null) {
-      for (const e of object.batches) {
-        message.batches.push(BatchTx.fromJSON(e));
-      }
-    }
+    message.batches = (object.batches ?? []).map((e: any) =>
+      BatchTx.fromJSON(e)
+    );
     return message;
   },
 
@@ -1722,12 +1649,7 @@ export const UnsignedBatchTxsResponse = {
     const message = {
       ...baseUnsignedBatchTxsResponse,
     } as UnsignedBatchTxsResponse;
-    message.batches = [];
-    if (object.batches !== undefined && object.batches !== null) {
-      for (const e of object.batches) {
-        message.batches.push(BatchTx.fromPartial(e));
-      }
-    }
+    message.batches = (object.batches ?? []).map((e) => BatchTx.fromPartial(e));
     return message;
   },
 };
@@ -1772,11 +1694,10 @@ export const UnsignedContractCallTxsRequest = {
     const message = {
       ...baseUnsignedContractCallTxsRequest,
     } as UnsignedContractCallTxsRequest;
-    if (object.address !== undefined && object.address !== null) {
-      message.address = String(object.address);
-    } else {
-      message.address = "";
-    }
+    message.address =
+      object.address !== undefined && object.address !== null
+        ? String(object.address)
+        : "";
     return message;
   },
 
@@ -1792,11 +1713,7 @@ export const UnsignedContractCallTxsRequest = {
     const message = {
       ...baseUnsignedContractCallTxsRequest,
     } as UnsignedContractCallTxsRequest;
-    if (object.address !== undefined && object.address !== null) {
-      message.address = object.address;
-    } else {
-      message.address = "";
-    }
+    message.address = object.address ?? "";
     return message;
   },
 };
@@ -1842,12 +1759,9 @@ export const UnsignedContractCallTxsResponse = {
     const message = {
       ...baseUnsignedContractCallTxsResponse,
     } as UnsignedContractCallTxsResponse;
-    message.calls = [];
-    if (object.calls !== undefined && object.calls !== null) {
-      for (const e of object.calls) {
-        message.calls.push(ContractCallTx.fromJSON(e));
-      }
-    }
+    message.calls = (object.calls ?? []).map((e: any) =>
+      ContractCallTx.fromJSON(e)
+    );
     return message;
   },
 
@@ -1869,12 +1783,9 @@ export const UnsignedContractCallTxsResponse = {
     const message = {
       ...baseUnsignedContractCallTxsResponse,
     } as UnsignedContractCallTxsResponse;
-    message.calls = [];
-    if (object.calls !== undefined && object.calls !== null) {
-      for (const e of object.calls) {
-        message.calls.push(ContractCallTx.fromPartial(e));
-      }
-    }
+    message.calls = (object.calls ?? []).map((e) =>
+      ContractCallTx.fromPartial(e)
+    );
     return message;
   },
 };
@@ -1954,12 +1865,7 @@ export const BatchTxFeesResponse = {
 
   fromJSON(object: any): BatchTxFeesResponse {
     const message = { ...baseBatchTxFeesResponse } as BatchTxFeesResponse;
-    message.fees = [];
-    if (object.fees !== undefined && object.fees !== null) {
-      for (const e of object.fees) {
-        message.fees.push(Coin.fromJSON(e));
-      }
-    }
+    message.fees = (object.fees ?? []).map((e: any) => Coin.fromJSON(e));
     return message;
   },
 
@@ -1975,12 +1881,7 @@ export const BatchTxFeesResponse = {
 
   fromPartial(object: DeepPartial<BatchTxFeesResponse>): BatchTxFeesResponse {
     const message = { ...baseBatchTxFeesResponse } as BatchTxFeesResponse;
-    message.fees = [];
-    if (object.fees !== undefined && object.fees !== null) {
-      for (const e of object.fees) {
-        message.fees.push(Coin.fromPartial(e));
-      }
-    }
+    message.fees = (object.fees ?? []).map((e) => Coin.fromPartial(e));
     return message;
   },
 };
@@ -2034,21 +1935,16 @@ export const ContractCallTxConfirmationsRequest = {
     const message = {
       ...baseContractCallTxConfirmationsRequest,
     } as ContractCallTxConfirmationsRequest;
-    message.invalidationScope = new Uint8Array();
-    if (
+    message.invalidationScope =
       object.invalidationScope !== undefined &&
       object.invalidationScope !== null
-    ) {
-      message.invalidationScope = bytesFromBase64(object.invalidationScope);
-    }
-    if (
+        ? bytesFromBase64(object.invalidationScope)
+        : new Uint8Array();
+    message.invalidationNonce =
       object.invalidationNonce !== undefined &&
       object.invalidationNonce !== null
-    ) {
-      message.invalidationNonce = Long.fromString(object.invalidationNonce);
-    } else {
-      message.invalidationNonce = Long.UZERO;
-    }
+        ? Long.fromString(object.invalidationNonce)
+        : Long.UZERO;
     return message;
   },
 
@@ -2073,22 +1969,12 @@ export const ContractCallTxConfirmationsRequest = {
     const message = {
       ...baseContractCallTxConfirmationsRequest,
     } as ContractCallTxConfirmationsRequest;
-    if (
-      object.invalidationScope !== undefined &&
-      object.invalidationScope !== null
-    ) {
-      message.invalidationScope = object.invalidationScope;
-    } else {
-      message.invalidationScope = new Uint8Array();
-    }
-    if (
+    message.invalidationScope = object.invalidationScope ?? new Uint8Array();
+    message.invalidationNonce =
       object.invalidationNonce !== undefined &&
       object.invalidationNonce !== null
-    ) {
-      message.invalidationNonce = object.invalidationNonce as Long;
-    } else {
-      message.invalidationNonce = Long.UZERO;
-    }
+        ? Long.fromValue(object.invalidationNonce)
+        : Long.UZERO;
     return message;
   },
 };
@@ -2136,12 +2022,9 @@ export const ContractCallTxConfirmationsResponse = {
     const message = {
       ...baseContractCallTxConfirmationsResponse,
     } as ContractCallTxConfirmationsResponse;
-    message.signatures = [];
-    if (object.signatures !== undefined && object.signatures !== null) {
-      for (const e of object.signatures) {
-        message.signatures.push(ContractCallTxConfirmation.fromJSON(e));
-      }
-    }
+    message.signatures = (object.signatures ?? []).map((e: any) =>
+      ContractCallTxConfirmation.fromJSON(e)
+    );
     return message;
   },
 
@@ -2163,12 +2046,9 @@ export const ContractCallTxConfirmationsResponse = {
     const message = {
       ...baseContractCallTxConfirmationsResponse,
     } as ContractCallTxConfirmationsResponse;
-    message.signatures = [];
-    if (object.signatures !== undefined && object.signatures !== null) {
-      for (const e of object.signatures) {
-        message.signatures.push(ContractCallTxConfirmation.fromPartial(e));
-      }
-    }
+    message.signatures = (object.signatures ?? []).map((e) =>
+      ContractCallTxConfirmation.fromPartial(e)
+    );
     return message;
   },
 };
@@ -2222,16 +2102,14 @@ export const BatchTxConfirmationsRequest = {
     const message = {
       ...baseBatchTxConfirmationsRequest,
     } as BatchTxConfirmationsRequest;
-    if (object.batchNonce !== undefined && object.batchNonce !== null) {
-      message.batchNonce = Long.fromString(object.batchNonce);
-    } else {
-      message.batchNonce = Long.UZERO;
-    }
-    if (object.tokenContract !== undefined && object.tokenContract !== null) {
-      message.tokenContract = String(object.tokenContract);
-    } else {
-      message.tokenContract = "";
-    }
+    message.batchNonce =
+      object.batchNonce !== undefined && object.batchNonce !== null
+        ? Long.fromString(object.batchNonce)
+        : Long.UZERO;
+    message.tokenContract =
+      object.tokenContract !== undefined && object.tokenContract !== null
+        ? String(object.tokenContract)
+        : "";
     return message;
   },
 
@@ -2250,16 +2128,11 @@ export const BatchTxConfirmationsRequest = {
     const message = {
       ...baseBatchTxConfirmationsRequest,
     } as BatchTxConfirmationsRequest;
-    if (object.batchNonce !== undefined && object.batchNonce !== null) {
-      message.batchNonce = object.batchNonce as Long;
-    } else {
-      message.batchNonce = Long.UZERO;
-    }
-    if (object.tokenContract !== undefined && object.tokenContract !== null) {
-      message.tokenContract = object.tokenContract;
-    } else {
-      message.tokenContract = "";
-    }
+    message.batchNonce =
+      object.batchNonce !== undefined && object.batchNonce !== null
+        ? Long.fromValue(object.batchNonce)
+        : Long.UZERO;
+    message.tokenContract = object.tokenContract ?? "";
     return message;
   },
 };
@@ -2307,12 +2180,9 @@ export const BatchTxConfirmationsResponse = {
     const message = {
       ...baseBatchTxConfirmationsResponse,
     } as BatchTxConfirmationsResponse;
-    message.signatures = [];
-    if (object.signatures !== undefined && object.signatures !== null) {
-      for (const e of object.signatures) {
-        message.signatures.push(BatchTxConfirmation.fromJSON(e));
-      }
-    }
+    message.signatures = (object.signatures ?? []).map((e: any) =>
+      BatchTxConfirmation.fromJSON(e)
+    );
     return message;
   },
 
@@ -2334,12 +2204,9 @@ export const BatchTxConfirmationsResponse = {
     const message = {
       ...baseBatchTxConfirmationsResponse,
     } as BatchTxConfirmationsResponse;
-    message.signatures = [];
-    if (object.signatures !== undefined && object.signatures !== null) {
-      for (const e of object.signatures) {
-        message.signatures.push(BatchTxConfirmation.fromPartial(e));
-      }
-    }
+    message.signatures = (object.signatures ?? []).map((e) =>
+      BatchTxConfirmation.fromPartial(e)
+    );
     return message;
   },
 };
@@ -2384,11 +2251,10 @@ export const LastSubmittedEthereumEventRequest = {
     const message = {
       ...baseLastSubmittedEthereumEventRequest,
     } as LastSubmittedEthereumEventRequest;
-    if (object.address !== undefined && object.address !== null) {
-      message.address = String(object.address);
-    } else {
-      message.address = "";
-    }
+    message.address =
+      object.address !== undefined && object.address !== null
+        ? String(object.address)
+        : "";
     return message;
   },
 
@@ -2404,11 +2270,7 @@ export const LastSubmittedEthereumEventRequest = {
     const message = {
       ...baseLastSubmittedEthereumEventRequest,
     } as LastSubmittedEthereumEventRequest;
-    if (object.address !== undefined && object.address !== null) {
-      message.address = object.address;
-    } else {
-      message.address = "";
-    }
+    message.address = object.address ?? "";
     return message;
   },
 };
@@ -2455,11 +2317,10 @@ export const LastSubmittedEthereumEventResponse = {
     const message = {
       ...baseLastSubmittedEthereumEventResponse,
     } as LastSubmittedEthereumEventResponse;
-    if (object.eventNonce !== undefined && object.eventNonce !== null) {
-      message.eventNonce = Long.fromString(object.eventNonce);
-    } else {
-      message.eventNonce = Long.UZERO;
-    }
+    message.eventNonce =
+      object.eventNonce !== undefined && object.eventNonce !== null
+        ? Long.fromString(object.eventNonce)
+        : Long.UZERO;
     return message;
   },
 
@@ -2476,11 +2337,10 @@ export const LastSubmittedEthereumEventResponse = {
     const message = {
       ...baseLastSubmittedEthereumEventResponse,
     } as LastSubmittedEthereumEventResponse;
-    if (object.eventNonce !== undefined && object.eventNonce !== null) {
-      message.eventNonce = object.eventNonce as Long;
-    } else {
-      message.eventNonce = Long.UZERO;
-    }
+    message.eventNonce =
+      object.eventNonce !== undefined && object.eventNonce !== null
+        ? Long.fromValue(object.eventNonce)
+        : Long.UZERO;
     return message;
   },
 };
@@ -2518,11 +2378,10 @@ export const ERC20ToDenomRequest = {
 
   fromJSON(object: any): ERC20ToDenomRequest {
     const message = { ...baseERC20ToDenomRequest } as ERC20ToDenomRequest;
-    if (object.erc20 !== undefined && object.erc20 !== null) {
-      message.erc20 = String(object.erc20);
-    } else {
-      message.erc20 = "";
-    }
+    message.erc20 =
+      object.erc20 !== undefined && object.erc20 !== null
+        ? String(object.erc20)
+        : "";
     return message;
   },
 
@@ -2534,11 +2393,7 @@ export const ERC20ToDenomRequest = {
 
   fromPartial(object: DeepPartial<ERC20ToDenomRequest>): ERC20ToDenomRequest {
     const message = { ...baseERC20ToDenomRequest } as ERC20ToDenomRequest;
-    if (object.erc20 !== undefined && object.erc20 !== null) {
-      message.erc20 = object.erc20;
-    } else {
-      message.erc20 = "";
-    }
+    message.erc20 = object.erc20 ?? "";
     return message;
   },
 };
@@ -2585,19 +2440,14 @@ export const ERC20ToDenomResponse = {
 
   fromJSON(object: any): ERC20ToDenomResponse {
     const message = { ...baseERC20ToDenomResponse } as ERC20ToDenomResponse;
-    if (object.denom !== undefined && object.denom !== null) {
-      message.denom = String(object.denom);
-    } else {
-      message.denom = "";
-    }
-    if (
-      object.cosmosOriginated !== undefined &&
-      object.cosmosOriginated !== null
-    ) {
-      message.cosmosOriginated = Boolean(object.cosmosOriginated);
-    } else {
-      message.cosmosOriginated = false;
-    }
+    message.denom =
+      object.denom !== undefined && object.denom !== null
+        ? String(object.denom)
+        : "";
+    message.cosmosOriginated =
+      object.cosmosOriginated !== undefined && object.cosmosOriginated !== null
+        ? Boolean(object.cosmosOriginated)
+        : false;
     return message;
   },
 
@@ -2611,19 +2461,182 @@ export const ERC20ToDenomResponse = {
 
   fromPartial(object: DeepPartial<ERC20ToDenomResponse>): ERC20ToDenomResponse {
     const message = { ...baseERC20ToDenomResponse } as ERC20ToDenomResponse;
-    if (object.denom !== undefined && object.denom !== null) {
-      message.denom = object.denom;
-    } else {
-      message.denom = "";
+    message.denom = object.denom ?? "";
+    message.cosmosOriginated = object.cosmosOriginated ?? false;
+    return message;
+  },
+};
+
+const baseDenomToERC20ParamsRequest: object = { denom: "" };
+
+export const DenomToERC20ParamsRequest = {
+  encode(
+    message: DenomToERC20ParamsRequest,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    if (message.denom !== "") {
+      writer.uint32(10).string(message.denom);
     }
-    if (
-      object.cosmosOriginated !== undefined &&
-      object.cosmosOriginated !== null
-    ) {
-      message.cosmosOriginated = object.cosmosOriginated;
-    } else {
-      message.cosmosOriginated = false;
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number
+  ): DenomToERC20ParamsRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseDenomToERC20ParamsRequest,
+    } as DenomToERC20ParamsRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.denom = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
     }
+    return message;
+  },
+
+  fromJSON(object: any): DenomToERC20ParamsRequest {
+    const message = {
+      ...baseDenomToERC20ParamsRequest,
+    } as DenomToERC20ParamsRequest;
+    message.denom =
+      object.denom !== undefined && object.denom !== null
+        ? String(object.denom)
+        : "";
+    return message;
+  },
+
+  toJSON(message: DenomToERC20ParamsRequest): unknown {
+    const obj: any = {};
+    message.denom !== undefined && (obj.denom = message.denom);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<DenomToERC20ParamsRequest>
+  ): DenomToERC20ParamsRequest {
+    const message = {
+      ...baseDenomToERC20ParamsRequest,
+    } as DenomToERC20ParamsRequest;
+    message.denom = object.denom ?? "";
+    return message;
+  },
+};
+
+const baseDenomToERC20ParamsResponse: object = {
+  baseDenom: "",
+  erc20Name: "",
+  erc20Symbol: "",
+  erc20Decimals: Long.UZERO,
+};
+
+export const DenomToERC20ParamsResponse = {
+  encode(
+    message: DenomToERC20ParamsResponse,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    if (message.baseDenom !== "") {
+      writer.uint32(10).string(message.baseDenom);
+    }
+    if (message.erc20Name !== "") {
+      writer.uint32(18).string(message.erc20Name);
+    }
+    if (message.erc20Symbol !== "") {
+      writer.uint32(26).string(message.erc20Symbol);
+    }
+    if (!message.erc20Decimals.isZero()) {
+      writer.uint32(32).uint64(message.erc20Decimals);
+    }
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number
+  ): DenomToERC20ParamsResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseDenomToERC20ParamsResponse,
+    } as DenomToERC20ParamsResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.baseDenom = reader.string();
+          break;
+        case 2:
+          message.erc20Name = reader.string();
+          break;
+        case 3:
+          message.erc20Symbol = reader.string();
+          break;
+        case 4:
+          message.erc20Decimals = reader.uint64() as Long;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DenomToERC20ParamsResponse {
+    const message = {
+      ...baseDenomToERC20ParamsResponse,
+    } as DenomToERC20ParamsResponse;
+    message.baseDenom =
+      object.baseDenom !== undefined && object.baseDenom !== null
+        ? String(object.baseDenom)
+        : "";
+    message.erc20Name =
+      object.erc20Name !== undefined && object.erc20Name !== null
+        ? String(object.erc20Name)
+        : "";
+    message.erc20Symbol =
+      object.erc20Symbol !== undefined && object.erc20Symbol !== null
+        ? String(object.erc20Symbol)
+        : "";
+    message.erc20Decimals =
+      object.erc20Decimals !== undefined && object.erc20Decimals !== null
+        ? Long.fromString(object.erc20Decimals)
+        : Long.UZERO;
+    return message;
+  },
+
+  toJSON(message: DenomToERC20ParamsResponse): unknown {
+    const obj: any = {};
+    message.baseDenom !== undefined && (obj.baseDenom = message.baseDenom);
+    message.erc20Name !== undefined && (obj.erc20Name = message.erc20Name);
+    message.erc20Symbol !== undefined &&
+      (obj.erc20Symbol = message.erc20Symbol);
+    message.erc20Decimals !== undefined &&
+      (obj.erc20Decimals = (message.erc20Decimals || Long.UZERO).toString());
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<DenomToERC20ParamsResponse>
+  ): DenomToERC20ParamsResponse {
+    const message = {
+      ...baseDenomToERC20ParamsResponse,
+    } as DenomToERC20ParamsResponse;
+    message.baseDenom = object.baseDenom ?? "";
+    message.erc20Name = object.erc20Name ?? "";
+    message.erc20Symbol = object.erc20Symbol ?? "";
+    message.erc20Decimals =
+      object.erc20Decimals !== undefined && object.erc20Decimals !== null
+        ? Long.fromValue(object.erc20Decimals)
+        : Long.UZERO;
     return message;
   },
 };
@@ -2661,11 +2674,10 @@ export const DenomToERC20Request = {
 
   fromJSON(object: any): DenomToERC20Request {
     const message = { ...baseDenomToERC20Request } as DenomToERC20Request;
-    if (object.denom !== undefined && object.denom !== null) {
-      message.denom = String(object.denom);
-    } else {
-      message.denom = "";
-    }
+    message.denom =
+      object.denom !== undefined && object.denom !== null
+        ? String(object.denom)
+        : "";
     return message;
   },
 
@@ -2677,11 +2689,7 @@ export const DenomToERC20Request = {
 
   fromPartial(object: DeepPartial<DenomToERC20Request>): DenomToERC20Request {
     const message = { ...baseDenomToERC20Request } as DenomToERC20Request;
-    if (object.denom !== undefined && object.denom !== null) {
-      message.denom = object.denom;
-    } else {
-      message.denom = "";
-    }
+    message.denom = object.denom ?? "";
     return message;
   },
 };
@@ -2728,19 +2736,14 @@ export const DenomToERC20Response = {
 
   fromJSON(object: any): DenomToERC20Response {
     const message = { ...baseDenomToERC20Response } as DenomToERC20Response;
-    if (object.erc20 !== undefined && object.erc20 !== null) {
-      message.erc20 = String(object.erc20);
-    } else {
-      message.erc20 = "";
-    }
-    if (
-      object.cosmosOriginated !== undefined &&
-      object.cosmosOriginated !== null
-    ) {
-      message.cosmosOriginated = Boolean(object.cosmosOriginated);
-    } else {
-      message.cosmosOriginated = false;
-    }
+    message.erc20 =
+      object.erc20 !== undefined && object.erc20 !== null
+        ? String(object.erc20)
+        : "";
+    message.cosmosOriginated =
+      object.cosmosOriginated !== undefined && object.cosmosOriginated !== null
+        ? Boolean(object.cosmosOriginated)
+        : false;
     return message;
   },
 
@@ -2754,19 +2757,8 @@ export const DenomToERC20Response = {
 
   fromPartial(object: DeepPartial<DenomToERC20Response>): DenomToERC20Response {
     const message = { ...baseDenomToERC20Response } as DenomToERC20Response;
-    if (object.erc20 !== undefined && object.erc20 !== null) {
-      message.erc20 = object.erc20;
-    } else {
-      message.erc20 = "";
-    }
-    if (
-      object.cosmosOriginated !== undefined &&
-      object.cosmosOriginated !== null
-    ) {
-      message.cosmosOriginated = object.cosmosOriginated;
-    } else {
-      message.cosmosOriginated = false;
-    }
+    message.erc20 = object.erc20 ?? "";
+    message.cosmosOriginated = object.cosmosOriginated ?? false;
     return message;
   },
 };
@@ -2811,14 +2803,10 @@ export const DelegateKeysByValidatorRequest = {
     const message = {
       ...baseDelegateKeysByValidatorRequest,
     } as DelegateKeysByValidatorRequest;
-    if (
-      object.validatorAddress !== undefined &&
-      object.validatorAddress !== null
-    ) {
-      message.validatorAddress = String(object.validatorAddress);
-    } else {
-      message.validatorAddress = "";
-    }
+    message.validatorAddress =
+      object.validatorAddress !== undefined && object.validatorAddress !== null
+        ? String(object.validatorAddress)
+        : "";
     return message;
   },
 
@@ -2835,14 +2823,7 @@ export const DelegateKeysByValidatorRequest = {
     const message = {
       ...baseDelegateKeysByValidatorRequest,
     } as DelegateKeysByValidatorRequest;
-    if (
-      object.validatorAddress !== undefined &&
-      object.validatorAddress !== null
-    ) {
-      message.validatorAddress = object.validatorAddress;
-    } else {
-      message.validatorAddress = "";
-    }
+    message.validatorAddress = object.validatorAddress ?? "";
     return message;
   },
 };
@@ -2896,19 +2877,15 @@ export const DelegateKeysByValidatorResponse = {
     const message = {
       ...baseDelegateKeysByValidatorResponse,
     } as DelegateKeysByValidatorResponse;
-    if (object.ethAddress !== undefined && object.ethAddress !== null) {
-      message.ethAddress = String(object.ethAddress);
-    } else {
-      message.ethAddress = "";
-    }
-    if (
+    message.ethAddress =
+      object.ethAddress !== undefined && object.ethAddress !== null
+        ? String(object.ethAddress)
+        : "";
+    message.orchestratorAddress =
       object.orchestratorAddress !== undefined &&
       object.orchestratorAddress !== null
-    ) {
-      message.orchestratorAddress = String(object.orchestratorAddress);
-    } else {
-      message.orchestratorAddress = "";
-    }
+        ? String(object.orchestratorAddress)
+        : "";
     return message;
   },
 
@@ -2926,19 +2903,8 @@ export const DelegateKeysByValidatorResponse = {
     const message = {
       ...baseDelegateKeysByValidatorResponse,
     } as DelegateKeysByValidatorResponse;
-    if (object.ethAddress !== undefined && object.ethAddress !== null) {
-      message.ethAddress = object.ethAddress;
-    } else {
-      message.ethAddress = "";
-    }
-    if (
-      object.orchestratorAddress !== undefined &&
-      object.orchestratorAddress !== null
-    ) {
-      message.orchestratorAddress = object.orchestratorAddress;
-    } else {
-      message.orchestratorAddress = "";
-    }
+    message.ethAddress = object.ethAddress ?? "";
+    message.orchestratorAddress = object.orchestratorAddress ?? "";
     return message;
   },
 };
@@ -2983,11 +2949,10 @@ export const DelegateKeysByEthereumSignerRequest = {
     const message = {
       ...baseDelegateKeysByEthereumSignerRequest,
     } as DelegateKeysByEthereumSignerRequest;
-    if (object.ethereumSigner !== undefined && object.ethereumSigner !== null) {
-      message.ethereumSigner = String(object.ethereumSigner);
-    } else {
-      message.ethereumSigner = "";
-    }
+    message.ethereumSigner =
+      object.ethereumSigner !== undefined && object.ethereumSigner !== null
+        ? String(object.ethereumSigner)
+        : "";
     return message;
   },
 
@@ -3004,11 +2969,7 @@ export const DelegateKeysByEthereumSignerRequest = {
     const message = {
       ...baseDelegateKeysByEthereumSignerRequest,
     } as DelegateKeysByEthereumSignerRequest;
-    if (object.ethereumSigner !== undefined && object.ethereumSigner !== null) {
-      message.ethereumSigner = object.ethereumSigner;
-    } else {
-      message.ethereumSigner = "";
-    }
+    message.ethereumSigner = object.ethereumSigner ?? "";
     return message;
   },
 };
@@ -3062,22 +3023,15 @@ export const DelegateKeysByEthereumSignerResponse = {
     const message = {
       ...baseDelegateKeysByEthereumSignerResponse,
     } as DelegateKeysByEthereumSignerResponse;
-    if (
-      object.validatorAddress !== undefined &&
-      object.validatorAddress !== null
-    ) {
-      message.validatorAddress = String(object.validatorAddress);
-    } else {
-      message.validatorAddress = "";
-    }
-    if (
+    message.validatorAddress =
+      object.validatorAddress !== undefined && object.validatorAddress !== null
+        ? String(object.validatorAddress)
+        : "";
+    message.orchestratorAddress =
       object.orchestratorAddress !== undefined &&
       object.orchestratorAddress !== null
-    ) {
-      message.orchestratorAddress = String(object.orchestratorAddress);
-    } else {
-      message.orchestratorAddress = "";
-    }
+        ? String(object.orchestratorAddress)
+        : "";
     return message;
   },
 
@@ -3096,22 +3050,8 @@ export const DelegateKeysByEthereumSignerResponse = {
     const message = {
       ...baseDelegateKeysByEthereumSignerResponse,
     } as DelegateKeysByEthereumSignerResponse;
-    if (
-      object.validatorAddress !== undefined &&
-      object.validatorAddress !== null
-    ) {
-      message.validatorAddress = object.validatorAddress;
-    } else {
-      message.validatorAddress = "";
-    }
-    if (
-      object.orchestratorAddress !== undefined &&
-      object.orchestratorAddress !== null
-    ) {
-      message.orchestratorAddress = object.orchestratorAddress;
-    } else {
-      message.orchestratorAddress = "";
-    }
+    message.validatorAddress = object.validatorAddress ?? "";
+    message.orchestratorAddress = object.orchestratorAddress ?? "";
     return message;
   },
 };
@@ -3158,14 +3098,11 @@ export const DelegateKeysByOrchestratorRequest = {
     const message = {
       ...baseDelegateKeysByOrchestratorRequest,
     } as DelegateKeysByOrchestratorRequest;
-    if (
+    message.orchestratorAddress =
       object.orchestratorAddress !== undefined &&
       object.orchestratorAddress !== null
-    ) {
-      message.orchestratorAddress = String(object.orchestratorAddress);
-    } else {
-      message.orchestratorAddress = "";
-    }
+        ? String(object.orchestratorAddress)
+        : "";
     return message;
   },
 
@@ -3182,14 +3119,7 @@ export const DelegateKeysByOrchestratorRequest = {
     const message = {
       ...baseDelegateKeysByOrchestratorRequest,
     } as DelegateKeysByOrchestratorRequest;
-    if (
-      object.orchestratorAddress !== undefined &&
-      object.orchestratorAddress !== null
-    ) {
-      message.orchestratorAddress = object.orchestratorAddress;
-    } else {
-      message.orchestratorAddress = "";
-    }
+    message.orchestratorAddress = object.orchestratorAddress ?? "";
     return message;
   },
 };
@@ -3243,19 +3173,14 @@ export const DelegateKeysByOrchestratorResponse = {
     const message = {
       ...baseDelegateKeysByOrchestratorResponse,
     } as DelegateKeysByOrchestratorResponse;
-    if (
-      object.validatorAddress !== undefined &&
-      object.validatorAddress !== null
-    ) {
-      message.validatorAddress = String(object.validatorAddress);
-    } else {
-      message.validatorAddress = "";
-    }
-    if (object.ethereumSigner !== undefined && object.ethereumSigner !== null) {
-      message.ethereumSigner = String(object.ethereumSigner);
-    } else {
-      message.ethereumSigner = "";
-    }
+    message.validatorAddress =
+      object.validatorAddress !== undefined && object.validatorAddress !== null
+        ? String(object.validatorAddress)
+        : "";
+    message.ethereumSigner =
+      object.ethereumSigner !== undefined && object.ethereumSigner !== null
+        ? String(object.ethereumSigner)
+        : "";
     return message;
   },
 
@@ -3274,19 +3199,115 @@ export const DelegateKeysByOrchestratorResponse = {
     const message = {
       ...baseDelegateKeysByOrchestratorResponse,
     } as DelegateKeysByOrchestratorResponse;
-    if (
-      object.validatorAddress !== undefined &&
-      object.validatorAddress !== null
-    ) {
-      message.validatorAddress = object.validatorAddress;
-    } else {
-      message.validatorAddress = "";
+    message.validatorAddress = object.validatorAddress ?? "";
+    message.ethereumSigner = object.ethereumSigner ?? "";
+    return message;
+  },
+};
+
+const baseDelegateKeysRequest: object = {};
+
+export const DelegateKeysRequest = {
+  encode(
+    _: DelegateKeysRequest,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): DelegateKeysRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseDelegateKeysRequest } as DelegateKeysRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
     }
-    if (object.ethereumSigner !== undefined && object.ethereumSigner !== null) {
-      message.ethereumSigner = object.ethereumSigner;
-    } else {
-      message.ethereumSigner = "";
+    return message;
+  },
+
+  fromJSON(_: any): DelegateKeysRequest {
+    const message = { ...baseDelegateKeysRequest } as DelegateKeysRequest;
+    return message;
+  },
+
+  toJSON(_: DelegateKeysRequest): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial(_: DeepPartial<DelegateKeysRequest>): DelegateKeysRequest {
+    const message = { ...baseDelegateKeysRequest } as DelegateKeysRequest;
+    return message;
+  },
+};
+
+const baseDelegateKeysResponse: object = {};
+
+export const DelegateKeysResponse = {
+  encode(
+    message: DelegateKeysResponse,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    for (const v of message.delegateKeys) {
+      MsgDelegateKeys.encode(v!, writer.uint32(10).fork()).ldelim();
     }
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number
+  ): DelegateKeysResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseDelegateKeysResponse } as DelegateKeysResponse;
+    message.delegateKeys = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.delegateKeys.push(
+            MsgDelegateKeys.decode(reader, reader.uint32())
+          );
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DelegateKeysResponse {
+    const message = { ...baseDelegateKeysResponse } as DelegateKeysResponse;
+    message.delegateKeys = (object.delegateKeys ?? []).map((e: any) =>
+      MsgDelegateKeys.fromJSON(e)
+    );
+    return message;
+  },
+
+  toJSON(message: DelegateKeysResponse): unknown {
+    const obj: any = {};
+    if (message.delegateKeys) {
+      obj.delegateKeys = message.delegateKeys.map((e) =>
+        e ? MsgDelegateKeys.toJSON(e) : undefined
+      );
+    } else {
+      obj.delegateKeys = [];
+    }
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<DelegateKeysResponse>): DelegateKeysResponse {
+    const message = { ...baseDelegateKeysResponse } as DelegateKeysResponse;
+    message.delegateKeys = (object.delegateKeys ?? []).map((e) =>
+      MsgDelegateKeys.fromPartial(e)
+    );
     return message;
   },
 };
@@ -3331,11 +3352,10 @@ export const BatchedSendToEthereumsRequest = {
     const message = {
       ...baseBatchedSendToEthereumsRequest,
     } as BatchedSendToEthereumsRequest;
-    if (object.senderAddress !== undefined && object.senderAddress !== null) {
-      message.senderAddress = String(object.senderAddress);
-    } else {
-      message.senderAddress = "";
-    }
+    message.senderAddress =
+      object.senderAddress !== undefined && object.senderAddress !== null
+        ? String(object.senderAddress)
+        : "";
     return message;
   },
 
@@ -3352,11 +3372,7 @@ export const BatchedSendToEthereumsRequest = {
     const message = {
       ...baseBatchedSendToEthereumsRequest,
     } as BatchedSendToEthereumsRequest;
-    if (object.senderAddress !== undefined && object.senderAddress !== null) {
-      message.senderAddress = object.senderAddress;
-    } else {
-      message.senderAddress = "";
-    }
+    message.senderAddress = object.senderAddress ?? "";
     return message;
   },
 };
@@ -3404,15 +3420,9 @@ export const BatchedSendToEthereumsResponse = {
     const message = {
       ...baseBatchedSendToEthereumsResponse,
     } as BatchedSendToEthereumsResponse;
-    message.sendToEthereums = [];
-    if (
-      object.sendToEthereums !== undefined &&
-      object.sendToEthereums !== null
-    ) {
-      for (const e of object.sendToEthereums) {
-        message.sendToEthereums.push(SendToEthereum.fromJSON(e));
-      }
-    }
+    message.sendToEthereums = (object.sendToEthereums ?? []).map((e: any) =>
+      SendToEthereum.fromJSON(e)
+    );
     return message;
   },
 
@@ -3434,15 +3444,9 @@ export const BatchedSendToEthereumsResponse = {
     const message = {
       ...baseBatchedSendToEthereumsResponse,
     } as BatchedSendToEthereumsResponse;
-    message.sendToEthereums = [];
-    if (
-      object.sendToEthereums !== undefined &&
-      object.sendToEthereums !== null
-    ) {
-      for (const e of object.sendToEthereums) {
-        message.sendToEthereums.push(SendToEthereum.fromPartial(e));
-      }
-    }
+    message.sendToEthereums = (object.sendToEthereums ?? []).map((e) =>
+      SendToEthereum.fromPartial(e)
+    );
     return message;
   },
 };
@@ -3493,16 +3497,14 @@ export const UnbatchedSendToEthereumsRequest = {
     const message = {
       ...baseUnbatchedSendToEthereumsRequest,
     } as UnbatchedSendToEthereumsRequest;
-    if (object.senderAddress !== undefined && object.senderAddress !== null) {
-      message.senderAddress = String(object.senderAddress);
-    } else {
-      message.senderAddress = "";
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageRequest.fromJSON(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.senderAddress =
+      object.senderAddress !== undefined && object.senderAddress !== null
+        ? String(object.senderAddress)
+        : "";
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageRequest.fromJSON(object.pagination)
+        : undefined;
     return message;
   },
 
@@ -3523,16 +3525,11 @@ export const UnbatchedSendToEthereumsRequest = {
     const message = {
       ...baseUnbatchedSendToEthereumsRequest,
     } as UnbatchedSendToEthereumsRequest;
-    if (object.senderAddress !== undefined && object.senderAddress !== null) {
-      message.senderAddress = object.senderAddress;
-    } else {
-      message.senderAddress = "";
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageRequest.fromPartial(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.senderAddress = object.senderAddress ?? "";
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageRequest.fromPartial(object.pagination)
+        : undefined;
     return message;
   },
 };
@@ -3589,20 +3586,13 @@ export const UnbatchedSendToEthereumsResponse = {
     const message = {
       ...baseUnbatchedSendToEthereumsResponse,
     } as UnbatchedSendToEthereumsResponse;
-    message.sendToEthereums = [];
-    if (
-      object.sendToEthereums !== undefined &&
-      object.sendToEthereums !== null
-    ) {
-      for (const e of object.sendToEthereums) {
-        message.sendToEthereums.push(SendToEthereum.fromJSON(e));
-      }
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageResponse.fromJSON(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.sendToEthereums = (object.sendToEthereums ?? []).map((e: any) =>
+      SendToEthereum.fromJSON(e)
+    );
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageResponse.fromJSON(object.pagination)
+        : undefined;
     return message;
   },
 
@@ -3628,20 +3618,13 @@ export const UnbatchedSendToEthereumsResponse = {
     const message = {
       ...baseUnbatchedSendToEthereumsResponse,
     } as UnbatchedSendToEthereumsResponse;
-    message.sendToEthereums = [];
-    if (
-      object.sendToEthereums !== undefined &&
-      object.sendToEthereums !== null
-    ) {
-      for (const e of object.sendToEthereums) {
-        message.sendToEthereums.push(SendToEthereum.fromPartial(e));
-      }
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageResponse.fromPartial(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
+    message.sendToEthereums = (object.sendToEthereums ?? []).map((e) =>
+      SendToEthereum.fromPartial(e)
+    );
+    message.pagination =
+      object.pagination !== undefined && object.pagination !== null
+        ? PageResponse.fromPartial(object.pagination)
+        : undefined;
     return message;
   },
 };
@@ -3699,6 +3682,13 @@ export interface Query {
   BatchTxFees(request: BatchTxFeesRequest): Promise<BatchTxFeesResponse>;
   /** Query for info about denoms tracked by gravity */
   ERC20ToDenom(request: ERC20ToDenomRequest): Promise<ERC20ToDenomResponse>;
+  /**
+   * DenomToERC20Params implements a query that allows ERC-20 parameter
+   * information to be retrieved by a Cosmos base denomination.
+   */
+  DenomToERC20Params(
+    request: DenomToERC20ParamsRequest
+  ): Promise<DenomToERC20ParamsResponse>;
   /** Query for info about denoms tracked by gravity */
   DenomToERC20(request: DenomToERC20Request): Promise<DenomToERC20Response>;
   /** Query for batch send to ethereums */
@@ -3719,6 +3709,7 @@ export interface Query {
   DelegateKeysByOrchestrator(
     request: DelegateKeysByOrchestratorRequest
   ): Promise<DelegateKeysByOrchestratorResponse>;
+  DelegateKeys(request: DelegateKeysRequest): Promise<DelegateKeysResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -3735,37 +3726,35 @@ export class QueryClientImpl implements Query {
     this.ContractCallTxs = this.ContractCallTxs.bind(this);
     this.SignerSetTxConfirmations = this.SignerSetTxConfirmations.bind(this);
     this.BatchTxConfirmations = this.BatchTxConfirmations.bind(this);
-    this.ContractCallTxConfirmations = this.ContractCallTxConfirmations.bind(
-      this
-    );
+    this.ContractCallTxConfirmations =
+      this.ContractCallTxConfirmations.bind(this);
     this.UnsignedSignerSetTxs = this.UnsignedSignerSetTxs.bind(this);
     this.UnsignedBatchTxs = this.UnsignedBatchTxs.bind(this);
     this.UnsignedContractCallTxs = this.UnsignedContractCallTxs.bind(this);
-    this.LastSubmittedEthereumEvent = this.LastSubmittedEthereumEvent.bind(
-      this
-    );
+    this.LastSubmittedEthereumEvent =
+      this.LastSubmittedEthereumEvent.bind(this);
     this.BatchTxFees = this.BatchTxFees.bind(this);
     this.ERC20ToDenom = this.ERC20ToDenom.bind(this);
+    this.DenomToERC20Params = this.DenomToERC20Params.bind(this);
     this.DenomToERC20 = this.DenomToERC20.bind(this);
     this.BatchedSendToEthereums = this.BatchedSendToEthereums.bind(this);
     this.UnbatchedSendToEthereums = this.UnbatchedSendToEthereums.bind(this);
     this.DelegateKeysByValidator = this.DelegateKeysByValidator.bind(this);
-    this.DelegateKeysByEthereumSigner = this.DelegateKeysByEthereumSigner.bind(
-      this
-    );
-    this.DelegateKeysByOrchestrator = this.DelegateKeysByOrchestrator.bind(
-      this
-    );
+    this.DelegateKeysByEthereumSigner =
+      this.DelegateKeysByEthereumSigner.bind(this);
+    this.DelegateKeysByOrchestrator =
+      this.DelegateKeysByOrchestrator.bind(this);
+    this.DelegateKeys = this.DelegateKeys.bind(this);
   }
   Params(request: ParamsRequest): Promise<ParamsResponse> {
     const data = ParamsRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v1.Query", "Params", data);
+    const promise = this.rpc.request("gravity.v2.Query", "Params", data);
     return promise.then((data) => ParamsResponse.decode(new _m0.Reader(data)));
   }
 
   SignerSetTx(request: SignerSetTxRequest): Promise<SignerSetTxResponse> {
     const data = SignerSetTxRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v1.Query", "SignerSetTx", data);
+    const promise = this.rpc.request("gravity.v2.Query", "SignerSetTx", data);
     return promise.then((data) =>
       SignerSetTxResponse.decode(new _m0.Reader(data))
     );
@@ -3776,7 +3765,7 @@ export class QueryClientImpl implements Query {
   ): Promise<SignerSetTxResponse> {
     const data = LatestSignerSetTxRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "LatestSignerSetTx",
       data
     );
@@ -3787,7 +3776,7 @@ export class QueryClientImpl implements Query {
 
   BatchTx(request: BatchTxRequest): Promise<BatchTxResponse> {
     const data = BatchTxRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v1.Query", "BatchTx", data);
+    const promise = this.rpc.request("gravity.v2.Query", "BatchTx", data);
     return promise.then((data) => BatchTxResponse.decode(new _m0.Reader(data)));
   }
 
@@ -3796,7 +3785,7 @@ export class QueryClientImpl implements Query {
   ): Promise<ContractCallTxResponse> {
     const data = ContractCallTxRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "ContractCallTx",
       data
     );
@@ -3807,7 +3796,7 @@ export class QueryClientImpl implements Query {
 
   SignerSetTxs(request: SignerSetTxsRequest): Promise<SignerSetTxsResponse> {
     const data = SignerSetTxsRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v1.Query", "SignerSetTxs", data);
+    const promise = this.rpc.request("gravity.v2.Query", "SignerSetTxs", data);
     return promise.then((data) =>
       SignerSetTxsResponse.decode(new _m0.Reader(data))
     );
@@ -3815,7 +3804,7 @@ export class QueryClientImpl implements Query {
 
   BatchTxs(request: BatchTxsRequest): Promise<BatchTxsResponse> {
     const data = BatchTxsRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v1.Query", "BatchTxs", data);
+    const promise = this.rpc.request("gravity.v2.Query", "BatchTxs", data);
     return promise.then((data) =>
       BatchTxsResponse.decode(new _m0.Reader(data))
     );
@@ -3826,7 +3815,7 @@ export class QueryClientImpl implements Query {
   ): Promise<ContractCallTxsResponse> {
     const data = ContractCallTxsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "ContractCallTxs",
       data
     );
@@ -3840,7 +3829,7 @@ export class QueryClientImpl implements Query {
   ): Promise<SignerSetTxConfirmationsResponse> {
     const data = SignerSetTxConfirmationsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "SignerSetTxConfirmations",
       data
     );
@@ -3854,7 +3843,7 @@ export class QueryClientImpl implements Query {
   ): Promise<BatchTxConfirmationsResponse> {
     const data = BatchTxConfirmationsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "BatchTxConfirmations",
       data
     );
@@ -3868,7 +3857,7 @@ export class QueryClientImpl implements Query {
   ): Promise<ContractCallTxConfirmationsResponse> {
     const data = ContractCallTxConfirmationsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "ContractCallTxConfirmations",
       data
     );
@@ -3882,7 +3871,7 @@ export class QueryClientImpl implements Query {
   ): Promise<UnsignedSignerSetTxsResponse> {
     const data = UnsignedSignerSetTxsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "UnsignedSignerSetTxs",
       data
     );
@@ -3896,7 +3885,7 @@ export class QueryClientImpl implements Query {
   ): Promise<UnsignedBatchTxsResponse> {
     const data = UnsignedBatchTxsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "UnsignedBatchTxs",
       data
     );
@@ -3910,7 +3899,7 @@ export class QueryClientImpl implements Query {
   ): Promise<UnsignedContractCallTxsResponse> {
     const data = UnsignedContractCallTxsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "UnsignedContractCallTxs",
       data
     );
@@ -3924,7 +3913,7 @@ export class QueryClientImpl implements Query {
   ): Promise<LastSubmittedEthereumEventResponse> {
     const data = LastSubmittedEthereumEventRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "LastSubmittedEthereumEvent",
       data
     );
@@ -3935,7 +3924,7 @@ export class QueryClientImpl implements Query {
 
   BatchTxFees(request: BatchTxFeesRequest): Promise<BatchTxFeesResponse> {
     const data = BatchTxFeesRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v1.Query", "BatchTxFees", data);
+    const promise = this.rpc.request("gravity.v2.Query", "BatchTxFees", data);
     return promise.then((data) =>
       BatchTxFeesResponse.decode(new _m0.Reader(data))
     );
@@ -3943,15 +3932,29 @@ export class QueryClientImpl implements Query {
 
   ERC20ToDenom(request: ERC20ToDenomRequest): Promise<ERC20ToDenomResponse> {
     const data = ERC20ToDenomRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v1.Query", "ERC20ToDenom", data);
+    const promise = this.rpc.request("gravity.v2.Query", "ERC20ToDenom", data);
     return promise.then((data) =>
       ERC20ToDenomResponse.decode(new _m0.Reader(data))
     );
   }
 
+  DenomToERC20Params(
+    request: DenomToERC20ParamsRequest
+  ): Promise<DenomToERC20ParamsResponse> {
+    const data = DenomToERC20ParamsRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "gravity.v2.Query",
+      "DenomToERC20Params",
+      data
+    );
+    return promise.then((data) =>
+      DenomToERC20ParamsResponse.decode(new _m0.Reader(data))
+    );
+  }
+
   DenomToERC20(request: DenomToERC20Request): Promise<DenomToERC20Response> {
     const data = DenomToERC20Request.encode(request).finish();
-    const promise = this.rpc.request("gravity.v1.Query", "DenomToERC20", data);
+    const promise = this.rpc.request("gravity.v2.Query", "DenomToERC20", data);
     return promise.then((data) =>
       DenomToERC20Response.decode(new _m0.Reader(data))
     );
@@ -3962,7 +3965,7 @@ export class QueryClientImpl implements Query {
   ): Promise<BatchedSendToEthereumsResponse> {
     const data = BatchedSendToEthereumsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "BatchedSendToEthereums",
       data
     );
@@ -3976,7 +3979,7 @@ export class QueryClientImpl implements Query {
   ): Promise<UnbatchedSendToEthereumsResponse> {
     const data = UnbatchedSendToEthereumsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "UnbatchedSendToEthereums",
       data
     );
@@ -3990,7 +3993,7 @@ export class QueryClientImpl implements Query {
   ): Promise<DelegateKeysByValidatorResponse> {
     const data = DelegateKeysByValidatorRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "DelegateKeysByValidator",
       data
     );
@@ -4004,7 +4007,7 @@ export class QueryClientImpl implements Query {
   ): Promise<DelegateKeysByEthereumSignerResponse> {
     const data = DelegateKeysByEthereumSignerRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "DelegateKeysByEthereumSigner",
       data
     );
@@ -4018,12 +4021,20 @@ export class QueryClientImpl implements Query {
   ): Promise<DelegateKeysByOrchestratorResponse> {
     const data = DelegateKeysByOrchestratorRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v1.Query",
+      "gravity.v2.Query",
       "DelegateKeysByOrchestrator",
       data
     );
     return promise.then((data) =>
       DelegateKeysByOrchestratorResponse.decode(new _m0.Reader(data))
+    );
+  }
+
+  DelegateKeys(request: DelegateKeysRequest): Promise<DelegateKeysResponse> {
+    const data = DelegateKeysRequest.encode(request).finish();
+    const promise = this.rpc.request("gravity.v2.Query", "DelegateKeys", data);
+    return promise.then((data) =>
+      DelegateKeysResponse.decode(new _m0.Reader(data))
     );
   }
 }
@@ -4038,6 +4049,7 @@ interface Rpc {
 
 declare var self: any | undefined;
 declare var window: any | undefined;
+declare var global: any | undefined;
 var globalThis: any = (() => {
   if (typeof globalThis !== "undefined") return globalThis;
   if (typeof self !== "undefined") return self;
@@ -4063,8 +4075,8 @@ const btoa: (bin: string) => string =
   ((bin) => globalThis.Buffer.from(bin, "binary").toString("base64"));
 function base64FromBytes(arr: Uint8Array): string {
   const bin: string[] = [];
-  for (let i = 0; i < arr.byteLength; ++i) {
-    bin.push(String.fromCharCode(arr[i]));
+  for (const byte of arr) {
+    bin.push(String.fromCharCode(byte));
   }
   return btoa(bin.join(""));
 }
@@ -4076,10 +4088,11 @@ type Builtin =
   | string
   | number
   | boolean
-  | undefined
-  | Long;
+  | undefined;
 export type DeepPartial<T> = T extends Builtin
   ? T
+  : T extends Long
+  ? string | number | Long
   : T extends Array<infer U>
   ? Array<DeepPartial<U>>
   : T extends ReadonlyArray<infer U>

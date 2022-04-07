@@ -5,10 +5,10 @@ import { Any } from "../../google/protobuf/any";
 import {
   EthereumEventVoteRecord,
   SendToEthereum,
-} from "../../gravity/v1/gravity";
-import { MsgDelegateKeys } from "../../gravity/v1/msgs";
+} from "../../gravity/v2/gravity";
+import { MsgDelegateKeys } from "../../gravity/v2/msgs";
 
-export const protobufPackage = "gravity.v1";
+export const protobufPackage = "gravity.v2";
 
 /**
  * Params represent the Gravity genesis and store parameters
@@ -50,18 +50,18 @@ export const protobufPackage = "gravity.v1";
  * when the attestation is created, but only allows for slashing once the event
  * has passed
  *
- * target_batch_timeout:
+ * target_eth_tx_timeout:
  *
- * This is the 'target' value for when batches time out, this is a target
- * because Ethereum is a probabalistic chain and you can't say for sure what the
- * block frequency is ahead of time.
+ * This is the 'target' value for when ethereum transactions time out, this is a
+ * target because Ethereum is a probabilistic chain and you can't say for sure
+ * what the block frequency is ahead of time.
  *
  * average_block_time
  * average_ethereum_block_time
  *
  * These values are the average Cosmos block time and Ethereum block time
- * repsectively and they are used to copute what the target batch timeout is. It
- * is important that governance updates these in case of any major, prolonged
+ * respectively and they are used to compute what the target batch timeout is.
+ * It is important that governance updates these in case of any major, prolonged
  * change in the time it takes to produce a block
  *
  * slash_fraction_signer_set_tx
@@ -81,7 +81,7 @@ export interface Params {
   signedSignerSetTxsWindow: Long;
   signedBatchesWindow: Long;
   ethereumSignaturesWindow: Long;
-  targetBatchTimeout: Long;
+  targetEthTxTimeout: Long;
   averageBlockTime: Long;
   averageEthereumBlockTime: Long;
   /** TODO: slash fraction for contract call txs too */
@@ -125,7 +125,7 @@ const baseParams: object = {
   signedSignerSetTxsWindow: Long.UZERO,
   signedBatchesWindow: Long.UZERO,
   ethereumSignaturesWindow: Long.UZERO,
-  targetBatchTimeout: Long.UZERO,
+  targetEthTxTimeout: Long.UZERO,
   averageBlockTime: Long.UZERO,
   averageEthereumBlockTime: Long.UZERO,
   unbondSlashingSignerSetTxsWindow: Long.UZERO,
@@ -157,8 +157,8 @@ export const Params = {
     if (!message.ethereumSignaturesWindow.isZero()) {
       writer.uint32(64).uint64(message.ethereumSignaturesWindow);
     }
-    if (!message.targetBatchTimeout.isZero()) {
-      writer.uint32(80).uint64(message.targetBatchTimeout);
+    if (!message.targetEthTxTimeout.isZero()) {
+      writer.uint32(80).uint64(message.targetEthTxTimeout);
     }
     if (!message.averageBlockTime.isZero()) {
       writer.uint32(88).uint64(message.averageBlockTime);
@@ -219,7 +219,7 @@ export const Params = {
           message.ethereumSignaturesWindow = reader.uint64() as Long;
           break;
         case 10:
-          message.targetBatchTimeout = reader.uint64() as Long;
+          message.targetEthTxTimeout = reader.uint64() as Long;
           break;
         case 11:
           message.averageBlockTime = reader.uint64() as Long;
@@ -252,130 +252,78 @@ export const Params = {
 
   fromJSON(object: any): Params {
     const message = { ...baseParams } as Params;
-    message.slashFractionSignerSetTx = new Uint8Array();
-    message.slashFractionBatch = new Uint8Array();
-    message.slashFractionEthereumSignature = new Uint8Array();
-    message.slashFractionConflictingEthereumSignature = new Uint8Array();
-    if (object.gravityId !== undefined && object.gravityId !== null) {
-      message.gravityId = String(object.gravityId);
-    } else {
-      message.gravityId = "";
-    }
-    if (
+    message.gravityId =
+      object.gravityId !== undefined && object.gravityId !== null
+        ? String(object.gravityId)
+        : "";
+    message.contractSourceHash =
       object.contractSourceHash !== undefined &&
       object.contractSourceHash !== null
-    ) {
-      message.contractSourceHash = String(object.contractSourceHash);
-    } else {
-      message.contractSourceHash = "";
-    }
-    if (
+        ? String(object.contractSourceHash)
+        : "";
+    message.bridgeEthereumAddress =
       object.bridgeEthereumAddress !== undefined &&
       object.bridgeEthereumAddress !== null
-    ) {
-      message.bridgeEthereumAddress = String(object.bridgeEthereumAddress);
-    } else {
-      message.bridgeEthereumAddress = "";
-    }
-    if (object.bridgeChainId !== undefined && object.bridgeChainId !== null) {
-      message.bridgeChainId = Long.fromString(object.bridgeChainId);
-    } else {
-      message.bridgeChainId = Long.UZERO;
-    }
-    if (
+        ? String(object.bridgeEthereumAddress)
+        : "";
+    message.bridgeChainId =
+      object.bridgeChainId !== undefined && object.bridgeChainId !== null
+        ? Long.fromString(object.bridgeChainId)
+        : Long.UZERO;
+    message.signedSignerSetTxsWindow =
       object.signedSignerSetTxsWindow !== undefined &&
       object.signedSignerSetTxsWindow !== null
-    ) {
-      message.signedSignerSetTxsWindow = Long.fromString(
-        object.signedSignerSetTxsWindow
-      );
-    } else {
-      message.signedSignerSetTxsWindow = Long.UZERO;
-    }
-    if (
+        ? Long.fromString(object.signedSignerSetTxsWindow)
+        : Long.UZERO;
+    message.signedBatchesWindow =
       object.signedBatchesWindow !== undefined &&
       object.signedBatchesWindow !== null
-    ) {
-      message.signedBatchesWindow = Long.fromString(object.signedBatchesWindow);
-    } else {
-      message.signedBatchesWindow = Long.UZERO;
-    }
-    if (
+        ? Long.fromString(object.signedBatchesWindow)
+        : Long.UZERO;
+    message.ethereumSignaturesWindow =
       object.ethereumSignaturesWindow !== undefined &&
       object.ethereumSignaturesWindow !== null
-    ) {
-      message.ethereumSignaturesWindow = Long.fromString(
-        object.ethereumSignaturesWindow
-      );
-    } else {
-      message.ethereumSignaturesWindow = Long.UZERO;
-    }
-    if (
-      object.targetBatchTimeout !== undefined &&
-      object.targetBatchTimeout !== null
-    ) {
-      message.targetBatchTimeout = Long.fromString(object.targetBatchTimeout);
-    } else {
-      message.targetBatchTimeout = Long.UZERO;
-    }
-    if (
-      object.averageBlockTime !== undefined &&
-      object.averageBlockTime !== null
-    ) {
-      message.averageBlockTime = Long.fromString(object.averageBlockTime);
-    } else {
-      message.averageBlockTime = Long.UZERO;
-    }
-    if (
+        ? Long.fromString(object.ethereumSignaturesWindow)
+        : Long.UZERO;
+    message.targetEthTxTimeout =
+      object.targetEthTxTimeout !== undefined &&
+      object.targetEthTxTimeout !== null
+        ? Long.fromString(object.targetEthTxTimeout)
+        : Long.UZERO;
+    message.averageBlockTime =
+      object.averageBlockTime !== undefined && object.averageBlockTime !== null
+        ? Long.fromString(object.averageBlockTime)
+        : Long.UZERO;
+    message.averageEthereumBlockTime =
       object.averageEthereumBlockTime !== undefined &&
       object.averageEthereumBlockTime !== null
-    ) {
-      message.averageEthereumBlockTime = Long.fromString(
-        object.averageEthereumBlockTime
-      );
-    } else {
-      message.averageEthereumBlockTime = Long.UZERO;
-    }
-    if (
+        ? Long.fromString(object.averageEthereumBlockTime)
+        : Long.UZERO;
+    message.slashFractionSignerSetTx =
       object.slashFractionSignerSetTx !== undefined &&
       object.slashFractionSignerSetTx !== null
-    ) {
-      message.slashFractionSignerSetTx = bytesFromBase64(
-        object.slashFractionSignerSetTx
-      );
-    }
-    if (
+        ? bytesFromBase64(object.slashFractionSignerSetTx)
+        : new Uint8Array();
+    message.slashFractionBatch =
       object.slashFractionBatch !== undefined &&
       object.slashFractionBatch !== null
-    ) {
-      message.slashFractionBatch = bytesFromBase64(object.slashFractionBatch);
-    }
-    if (
+        ? bytesFromBase64(object.slashFractionBatch)
+        : new Uint8Array();
+    message.slashFractionEthereumSignature =
       object.slashFractionEthereumSignature !== undefined &&
       object.slashFractionEthereumSignature !== null
-    ) {
-      message.slashFractionEthereumSignature = bytesFromBase64(
-        object.slashFractionEthereumSignature
-      );
-    }
-    if (
+        ? bytesFromBase64(object.slashFractionEthereumSignature)
+        : new Uint8Array();
+    message.slashFractionConflictingEthereumSignature =
       object.slashFractionConflictingEthereumSignature !== undefined &&
       object.slashFractionConflictingEthereumSignature !== null
-    ) {
-      message.slashFractionConflictingEthereumSignature = bytesFromBase64(
-        object.slashFractionConflictingEthereumSignature
-      );
-    }
-    if (
+        ? bytesFromBase64(object.slashFractionConflictingEthereumSignature)
+        : new Uint8Array();
+    message.unbondSlashingSignerSetTxsWindow =
       object.unbondSlashingSignerSetTxsWindow !== undefined &&
       object.unbondSlashingSignerSetTxsWindow !== null
-    ) {
-      message.unbondSlashingSignerSetTxsWindow = Long.fromString(
-        object.unbondSlashingSignerSetTxsWindow
-      );
-    } else {
-      message.unbondSlashingSignerSetTxsWindow = Long.UZERO;
-    }
+        ? Long.fromString(object.unbondSlashingSignerSetTxsWindow)
+        : Long.UZERO;
     return message;
   },
 
@@ -400,9 +348,9 @@ export const Params = {
       (obj.ethereumSignaturesWindow = (
         message.ethereumSignaturesWindow || Long.UZERO
       ).toString());
-    message.targetBatchTimeout !== undefined &&
-      (obj.targetBatchTimeout = (
-        message.targetBatchTimeout || Long.UZERO
+    message.targetEthTxTimeout !== undefined &&
+      (obj.targetEthTxTimeout = (
+        message.targetEthTxTimeout || Long.UZERO
       ).toString());
     message.averageBlockTime !== undefined &&
       (obj.averageBlockTime = (
@@ -445,122 +393,54 @@ export const Params = {
 
   fromPartial(object: DeepPartial<Params>): Params {
     const message = { ...baseParams } as Params;
-    if (object.gravityId !== undefined && object.gravityId !== null) {
-      message.gravityId = object.gravityId;
-    } else {
-      message.gravityId = "";
-    }
-    if (
-      object.contractSourceHash !== undefined &&
-      object.contractSourceHash !== null
-    ) {
-      message.contractSourceHash = object.contractSourceHash;
-    } else {
-      message.contractSourceHash = "";
-    }
-    if (
-      object.bridgeEthereumAddress !== undefined &&
-      object.bridgeEthereumAddress !== null
-    ) {
-      message.bridgeEthereumAddress = object.bridgeEthereumAddress;
-    } else {
-      message.bridgeEthereumAddress = "";
-    }
-    if (object.bridgeChainId !== undefined && object.bridgeChainId !== null) {
-      message.bridgeChainId = object.bridgeChainId as Long;
-    } else {
-      message.bridgeChainId = Long.UZERO;
-    }
-    if (
+    message.gravityId = object.gravityId ?? "";
+    message.contractSourceHash = object.contractSourceHash ?? "";
+    message.bridgeEthereumAddress = object.bridgeEthereumAddress ?? "";
+    message.bridgeChainId =
+      object.bridgeChainId !== undefined && object.bridgeChainId !== null
+        ? Long.fromValue(object.bridgeChainId)
+        : Long.UZERO;
+    message.signedSignerSetTxsWindow =
       object.signedSignerSetTxsWindow !== undefined &&
       object.signedSignerSetTxsWindow !== null
-    ) {
-      message.signedSignerSetTxsWindow = object.signedSignerSetTxsWindow as Long;
-    } else {
-      message.signedSignerSetTxsWindow = Long.UZERO;
-    }
-    if (
+        ? Long.fromValue(object.signedSignerSetTxsWindow)
+        : Long.UZERO;
+    message.signedBatchesWindow =
       object.signedBatchesWindow !== undefined &&
       object.signedBatchesWindow !== null
-    ) {
-      message.signedBatchesWindow = object.signedBatchesWindow as Long;
-    } else {
-      message.signedBatchesWindow = Long.UZERO;
-    }
-    if (
+        ? Long.fromValue(object.signedBatchesWindow)
+        : Long.UZERO;
+    message.ethereumSignaturesWindow =
       object.ethereumSignaturesWindow !== undefined &&
       object.ethereumSignaturesWindow !== null
-    ) {
-      message.ethereumSignaturesWindow = object.ethereumSignaturesWindow as Long;
-    } else {
-      message.ethereumSignaturesWindow = Long.UZERO;
-    }
-    if (
-      object.targetBatchTimeout !== undefined &&
-      object.targetBatchTimeout !== null
-    ) {
-      message.targetBatchTimeout = object.targetBatchTimeout as Long;
-    } else {
-      message.targetBatchTimeout = Long.UZERO;
-    }
-    if (
-      object.averageBlockTime !== undefined &&
-      object.averageBlockTime !== null
-    ) {
-      message.averageBlockTime = object.averageBlockTime as Long;
-    } else {
-      message.averageBlockTime = Long.UZERO;
-    }
-    if (
+        ? Long.fromValue(object.ethereumSignaturesWindow)
+        : Long.UZERO;
+    message.targetEthTxTimeout =
+      object.targetEthTxTimeout !== undefined &&
+      object.targetEthTxTimeout !== null
+        ? Long.fromValue(object.targetEthTxTimeout)
+        : Long.UZERO;
+    message.averageBlockTime =
+      object.averageBlockTime !== undefined && object.averageBlockTime !== null
+        ? Long.fromValue(object.averageBlockTime)
+        : Long.UZERO;
+    message.averageEthereumBlockTime =
       object.averageEthereumBlockTime !== undefined &&
       object.averageEthereumBlockTime !== null
-    ) {
-      message.averageEthereumBlockTime = object.averageEthereumBlockTime as Long;
-    } else {
-      message.averageEthereumBlockTime = Long.UZERO;
-    }
-    if (
-      object.slashFractionSignerSetTx !== undefined &&
-      object.slashFractionSignerSetTx !== null
-    ) {
-      message.slashFractionSignerSetTx = object.slashFractionSignerSetTx;
-    } else {
-      message.slashFractionSignerSetTx = new Uint8Array();
-    }
-    if (
-      object.slashFractionBatch !== undefined &&
-      object.slashFractionBatch !== null
-    ) {
-      message.slashFractionBatch = object.slashFractionBatch;
-    } else {
-      message.slashFractionBatch = new Uint8Array();
-    }
-    if (
-      object.slashFractionEthereumSignature !== undefined &&
-      object.slashFractionEthereumSignature !== null
-    ) {
-      message.slashFractionEthereumSignature =
-        object.slashFractionEthereumSignature;
-    } else {
-      message.slashFractionEthereumSignature = new Uint8Array();
-    }
-    if (
-      object.slashFractionConflictingEthereumSignature !== undefined &&
-      object.slashFractionConflictingEthereumSignature !== null
-    ) {
-      message.slashFractionConflictingEthereumSignature =
-        object.slashFractionConflictingEthereumSignature;
-    } else {
-      message.slashFractionConflictingEthereumSignature = new Uint8Array();
-    }
-    if (
+        ? Long.fromValue(object.averageEthereumBlockTime)
+        : Long.UZERO;
+    message.slashFractionSignerSetTx =
+      object.slashFractionSignerSetTx ?? new Uint8Array();
+    message.slashFractionBatch = object.slashFractionBatch ?? new Uint8Array();
+    message.slashFractionEthereumSignature =
+      object.slashFractionEthereumSignature ?? new Uint8Array();
+    message.slashFractionConflictingEthereumSignature =
+      object.slashFractionConflictingEthereumSignature ?? new Uint8Array();
+    message.unbondSlashingSignerSetTxsWindow =
       object.unbondSlashingSignerSetTxsWindow !== undefined &&
       object.unbondSlashingSignerSetTxsWindow !== null
-    ) {
-      message.unbondSlashingSignerSetTxsWindow = object.unbondSlashingSignerSetTxsWindow as Long;
-    } else {
-      message.unbondSlashingSignerSetTxsWindow = Long.UZERO;
-    }
+        ? Long.fromValue(object.unbondSlashingSignerSetTxsWindow)
+        : Long.UZERO;
     return message;
   },
 };
@@ -654,65 +534,33 @@ export const GenesisState = {
 
   fromJSON(object: any): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
-    message.outgoingTxs = [];
-    message.confirmations = [];
-    message.ethereumEventVoteRecords = [];
-    message.delegateKeys = [];
-    message.erc20ToDenoms = [];
-    message.unbatchedSendToEthereumTxs = [];
-    if (object.params !== undefined && object.params !== null) {
-      message.params = Params.fromJSON(object.params);
-    } else {
-      message.params = undefined;
-    }
-    if (
+    message.params =
+      object.params !== undefined && object.params !== null
+        ? Params.fromJSON(object.params)
+        : undefined;
+    message.lastObservedEventNonce =
       object.lastObservedEventNonce !== undefined &&
       object.lastObservedEventNonce !== null
-    ) {
-      message.lastObservedEventNonce = Long.fromString(
-        object.lastObservedEventNonce
-      );
-    } else {
-      message.lastObservedEventNonce = Long.UZERO;
-    }
-    if (object.outgoingTxs !== undefined && object.outgoingTxs !== null) {
-      for (const e of object.outgoingTxs) {
-        message.outgoingTxs.push(Any.fromJSON(e));
-      }
-    }
-    if (object.confirmations !== undefined && object.confirmations !== null) {
-      for (const e of object.confirmations) {
-        message.confirmations.push(Any.fromJSON(e));
-      }
-    }
-    if (
-      object.ethereumEventVoteRecords !== undefined &&
-      object.ethereumEventVoteRecords !== null
-    ) {
-      for (const e of object.ethereumEventVoteRecords) {
-        message.ethereumEventVoteRecords.push(
-          EthereumEventVoteRecord.fromJSON(e)
-        );
-      }
-    }
-    if (object.delegateKeys !== undefined && object.delegateKeys !== null) {
-      for (const e of object.delegateKeys) {
-        message.delegateKeys.push(MsgDelegateKeys.fromJSON(e));
-      }
-    }
-    if (object.erc20ToDenoms !== undefined && object.erc20ToDenoms !== null) {
-      for (const e of object.erc20ToDenoms) {
-        message.erc20ToDenoms.push(ERC20ToDenom.fromJSON(e));
-      }
-    }
-    if (
-      object.unbatchedSendToEthereumTxs !== undefined &&
-      object.unbatchedSendToEthereumTxs !== null
-    ) {
-      for (const e of object.unbatchedSendToEthereumTxs) {
-        message.unbatchedSendToEthereumTxs.push(SendToEthereum.fromJSON(e));
-      }
-    }
+        ? Long.fromString(object.lastObservedEventNonce)
+        : Long.UZERO;
+    message.outgoingTxs = (object.outgoingTxs ?? []).map((e: any) =>
+      Any.fromJSON(e)
+    );
+    message.confirmations = (object.confirmations ?? []).map((e: any) =>
+      Any.fromJSON(e)
+    );
+    message.ethereumEventVoteRecords = (
+      object.ethereumEventVoteRecords ?? []
+    ).map((e: any) => EthereumEventVoteRecord.fromJSON(e));
+    message.delegateKeys = (object.delegateKeys ?? []).map((e: any) =>
+      MsgDelegateKeys.fromJSON(e)
+    );
+    message.erc20ToDenoms = (object.erc20ToDenoms ?? []).map((e: any) =>
+      ERC20ToDenom.fromJSON(e)
+    );
+    message.unbatchedSendToEthereumTxs = (
+      object.unbatchedSendToEthereumTxs ?? []
+    ).map((e: any) => SendToEthereum.fromJSON(e));
     return message;
   },
 
@@ -771,63 +619,33 @@ export const GenesisState = {
 
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
-    message.outgoingTxs = [];
-    message.confirmations = [];
-    message.ethereumEventVoteRecords = [];
-    message.delegateKeys = [];
-    message.erc20ToDenoms = [];
-    message.unbatchedSendToEthereumTxs = [];
-    if (object.params !== undefined && object.params !== null) {
-      message.params = Params.fromPartial(object.params);
-    } else {
-      message.params = undefined;
-    }
-    if (
+    message.params =
+      object.params !== undefined && object.params !== null
+        ? Params.fromPartial(object.params)
+        : undefined;
+    message.lastObservedEventNonce =
       object.lastObservedEventNonce !== undefined &&
       object.lastObservedEventNonce !== null
-    ) {
-      message.lastObservedEventNonce = object.lastObservedEventNonce as Long;
-    } else {
-      message.lastObservedEventNonce = Long.UZERO;
-    }
-    if (object.outgoingTxs !== undefined && object.outgoingTxs !== null) {
-      for (const e of object.outgoingTxs) {
-        message.outgoingTxs.push(Any.fromPartial(e));
-      }
-    }
-    if (object.confirmations !== undefined && object.confirmations !== null) {
-      for (const e of object.confirmations) {
-        message.confirmations.push(Any.fromPartial(e));
-      }
-    }
-    if (
-      object.ethereumEventVoteRecords !== undefined &&
-      object.ethereumEventVoteRecords !== null
-    ) {
-      for (const e of object.ethereumEventVoteRecords) {
-        message.ethereumEventVoteRecords.push(
-          EthereumEventVoteRecord.fromPartial(e)
-        );
-      }
-    }
-    if (object.delegateKeys !== undefined && object.delegateKeys !== null) {
-      for (const e of object.delegateKeys) {
-        message.delegateKeys.push(MsgDelegateKeys.fromPartial(e));
-      }
-    }
-    if (object.erc20ToDenoms !== undefined && object.erc20ToDenoms !== null) {
-      for (const e of object.erc20ToDenoms) {
-        message.erc20ToDenoms.push(ERC20ToDenom.fromPartial(e));
-      }
-    }
-    if (
-      object.unbatchedSendToEthereumTxs !== undefined &&
-      object.unbatchedSendToEthereumTxs !== null
-    ) {
-      for (const e of object.unbatchedSendToEthereumTxs) {
-        message.unbatchedSendToEthereumTxs.push(SendToEthereum.fromPartial(e));
-      }
-    }
+        ? Long.fromValue(object.lastObservedEventNonce)
+        : Long.UZERO;
+    message.outgoingTxs = (object.outgoingTxs ?? []).map((e) =>
+      Any.fromPartial(e)
+    );
+    message.confirmations = (object.confirmations ?? []).map((e) =>
+      Any.fromPartial(e)
+    );
+    message.ethereumEventVoteRecords = (
+      object.ethereumEventVoteRecords ?? []
+    ).map((e) => EthereumEventVoteRecord.fromPartial(e));
+    message.delegateKeys = (object.delegateKeys ?? []).map((e) =>
+      MsgDelegateKeys.fromPartial(e)
+    );
+    message.erc20ToDenoms = (object.erc20ToDenoms ?? []).map((e) =>
+      ERC20ToDenom.fromPartial(e)
+    );
+    message.unbatchedSendToEthereumTxs = (
+      object.unbatchedSendToEthereumTxs ?? []
+    ).map((e) => SendToEthereum.fromPartial(e));
     return message;
   },
 };
@@ -871,16 +689,14 @@ export const ERC20ToDenom = {
 
   fromJSON(object: any): ERC20ToDenom {
     const message = { ...baseERC20ToDenom } as ERC20ToDenom;
-    if (object.erc20 !== undefined && object.erc20 !== null) {
-      message.erc20 = String(object.erc20);
-    } else {
-      message.erc20 = "";
-    }
-    if (object.denom !== undefined && object.denom !== null) {
-      message.denom = String(object.denom);
-    } else {
-      message.denom = "";
-    }
+    message.erc20 =
+      object.erc20 !== undefined && object.erc20 !== null
+        ? String(object.erc20)
+        : "";
+    message.denom =
+      object.denom !== undefined && object.denom !== null
+        ? String(object.denom)
+        : "";
     return message;
   },
 
@@ -893,22 +709,15 @@ export const ERC20ToDenom = {
 
   fromPartial(object: DeepPartial<ERC20ToDenom>): ERC20ToDenom {
     const message = { ...baseERC20ToDenom } as ERC20ToDenom;
-    if (object.erc20 !== undefined && object.erc20 !== null) {
-      message.erc20 = object.erc20;
-    } else {
-      message.erc20 = "";
-    }
-    if (object.denom !== undefined && object.denom !== null) {
-      message.denom = object.denom;
-    } else {
-      message.denom = "";
-    }
+    message.erc20 = object.erc20 ?? "";
+    message.denom = object.denom ?? "";
     return message;
   },
 };
 
 declare var self: any | undefined;
 declare var window: any | undefined;
+declare var global: any | undefined;
 var globalThis: any = (() => {
   if (typeof globalThis !== "undefined") return globalThis;
   if (typeof self !== "undefined") return self;
@@ -934,8 +743,8 @@ const btoa: (bin: string) => string =
   ((bin) => globalThis.Buffer.from(bin, "binary").toString("base64"));
 function base64FromBytes(arr: Uint8Array): string {
   const bin: string[] = [];
-  for (let i = 0; i < arr.byteLength; ++i) {
-    bin.push(String.fromCharCode(arr[i]));
+  for (const byte of arr) {
+    bin.push(String.fromCharCode(byte));
   }
   return btoa(bin.join(""));
 }
@@ -947,10 +756,11 @@ type Builtin =
   | string
   | number
   | boolean
-  | undefined
-  | Long;
+  | undefined;
 export type DeepPartial<T> = T extends Builtin
   ? T
+  : T extends Long
+  ? string | number | Long
   : T extends Array<infer U>
   ? Array<DeepPartial<U>>
   : T extends ReadonlyArray<infer U>

@@ -2,8 +2,9 @@
 import Long from "long";
 import _m0 from "protobufjs/minimal";
 import { Any } from "../../google/protobuf/any";
+import { Coin } from "../../cosmos/base/v1beta1/coin";
 
-export const protobufPackage = "gravity.v1";
+export const protobufPackage = "gravity.v2";
 
 /**
  * EthereumEventVoteRecord is an event that is pending of confirmation by 2/3 of
@@ -72,7 +73,7 @@ export interface SendToEthereum {
 }
 
 /**
- * ContractCallTx represents an individual arbitratry logic call transaction
+ * ContractCallTx represents an individual arbitrary logic call transaction
  * from Cosmos to Ethereum.
  */
 export interface ContractCallTx {
@@ -93,6 +94,27 @@ export interface ERC20Token {
 
 export interface IDSet {
   ids: Long[];
+}
+
+export interface CommunityPoolEthereumSpendProposal {
+  title: string;
+  description: string;
+  recipient: string;
+  amount?: Coin;
+  bridgeFee?: Coin;
+}
+
+/**
+ * This format of the community spend Ethereum proposal is specifically for
+ * the CLI to allow simple text serialization.
+ */
+export interface CommunityPoolEthereumSpendProposalForCLI {
+  title: string;
+  description: string;
+  recipient: string;
+  amount: string;
+  bridgeFee: string;
+  deposit: string;
 }
 
 const baseEthereumEventVoteRecord: object = { votes: "", accepted: false };
@@ -148,22 +170,15 @@ export const EthereumEventVoteRecord = {
     const message = {
       ...baseEthereumEventVoteRecord,
     } as EthereumEventVoteRecord;
-    message.votes = [];
-    if (object.event !== undefined && object.event !== null) {
-      message.event = Any.fromJSON(object.event);
-    } else {
-      message.event = undefined;
-    }
-    if (object.votes !== undefined && object.votes !== null) {
-      for (const e of object.votes) {
-        message.votes.push(String(e));
-      }
-    }
-    if (object.accepted !== undefined && object.accepted !== null) {
-      message.accepted = Boolean(object.accepted);
-    } else {
-      message.accepted = false;
-    }
+    message.event =
+      object.event !== undefined && object.event !== null
+        ? Any.fromJSON(object.event)
+        : undefined;
+    message.votes = (object.votes ?? []).map((e: any) => String(e));
+    message.accepted =
+      object.accepted !== undefined && object.accepted !== null
+        ? Boolean(object.accepted)
+        : false;
     return message;
   },
 
@@ -186,22 +201,12 @@ export const EthereumEventVoteRecord = {
     const message = {
       ...baseEthereumEventVoteRecord,
     } as EthereumEventVoteRecord;
-    message.votes = [];
-    if (object.event !== undefined && object.event !== null) {
-      message.event = Any.fromPartial(object.event);
-    } else {
-      message.event = undefined;
-    }
-    if (object.votes !== undefined && object.votes !== null) {
-      for (const e of object.votes) {
-        message.votes.push(e);
-      }
-    }
-    if (object.accepted !== undefined && object.accepted !== null) {
-      message.accepted = object.accepted;
-    } else {
-      message.accepted = false;
-    }
+    message.event =
+      object.event !== undefined && object.event !== null
+        ? Any.fromPartial(object.event)
+        : undefined;
+    message.votes = (object.votes ?? []).map((e) => e);
+    message.accepted = object.accepted ?? false;
     return message;
   },
 };
@@ -255,16 +260,14 @@ export const LatestEthereumBlockHeight = {
     const message = {
       ...baseLatestEthereumBlockHeight,
     } as LatestEthereumBlockHeight;
-    if (object.ethereumHeight !== undefined && object.ethereumHeight !== null) {
-      message.ethereumHeight = Long.fromString(object.ethereumHeight);
-    } else {
-      message.ethereumHeight = Long.UZERO;
-    }
-    if (object.cosmosHeight !== undefined && object.cosmosHeight !== null) {
-      message.cosmosHeight = Long.fromString(object.cosmosHeight);
-    } else {
-      message.cosmosHeight = Long.UZERO;
-    }
+    message.ethereumHeight =
+      object.ethereumHeight !== undefined && object.ethereumHeight !== null
+        ? Long.fromString(object.ethereumHeight)
+        : Long.UZERO;
+    message.cosmosHeight =
+      object.cosmosHeight !== undefined && object.cosmosHeight !== null
+        ? Long.fromString(object.cosmosHeight)
+        : Long.UZERO;
     return message;
   },
 
@@ -283,16 +286,14 @@ export const LatestEthereumBlockHeight = {
     const message = {
       ...baseLatestEthereumBlockHeight,
     } as LatestEthereumBlockHeight;
-    if (object.ethereumHeight !== undefined && object.ethereumHeight !== null) {
-      message.ethereumHeight = object.ethereumHeight as Long;
-    } else {
-      message.ethereumHeight = Long.UZERO;
-    }
-    if (object.cosmosHeight !== undefined && object.cosmosHeight !== null) {
-      message.cosmosHeight = object.cosmosHeight as Long;
-    } else {
-      message.cosmosHeight = Long.UZERO;
-    }
+    message.ethereumHeight =
+      object.ethereumHeight !== undefined && object.ethereumHeight !== null
+        ? Long.fromValue(object.ethereumHeight)
+        : Long.UZERO;
+    message.cosmosHeight =
+      object.cosmosHeight !== undefined && object.cosmosHeight !== null
+        ? Long.fromValue(object.cosmosHeight)
+        : Long.UZERO;
     return message;
   },
 };
@@ -336,19 +337,14 @@ export const EthereumSigner = {
 
   fromJSON(object: any): EthereumSigner {
     const message = { ...baseEthereumSigner } as EthereumSigner;
-    if (object.power !== undefined && object.power !== null) {
-      message.power = Long.fromString(object.power);
-    } else {
-      message.power = Long.UZERO;
-    }
-    if (
-      object.ethereumAddress !== undefined &&
-      object.ethereumAddress !== null
-    ) {
-      message.ethereumAddress = String(object.ethereumAddress);
-    } else {
-      message.ethereumAddress = "";
-    }
+    message.power =
+      object.power !== undefined && object.power !== null
+        ? Long.fromString(object.power)
+        : Long.UZERO;
+    message.ethereumAddress =
+      object.ethereumAddress !== undefined && object.ethereumAddress !== null
+        ? String(object.ethereumAddress)
+        : "";
     return message;
   },
 
@@ -363,19 +359,11 @@ export const EthereumSigner = {
 
   fromPartial(object: DeepPartial<EthereumSigner>): EthereumSigner {
     const message = { ...baseEthereumSigner } as EthereumSigner;
-    if (object.power !== undefined && object.power !== null) {
-      message.power = object.power as Long;
-    } else {
-      message.power = Long.UZERO;
-    }
-    if (
-      object.ethereumAddress !== undefined &&
-      object.ethereumAddress !== null
-    ) {
-      message.ethereumAddress = object.ethereumAddress;
-    } else {
-      message.ethereumAddress = "";
-    }
+    message.power =
+      object.power !== undefined && object.power !== null
+        ? Long.fromValue(object.power)
+        : Long.UZERO;
+    message.ethereumAddress = object.ethereumAddress ?? "";
     return message;
   },
 };
@@ -426,22 +414,17 @@ export const SignerSetTx = {
 
   fromJSON(object: any): SignerSetTx {
     const message = { ...baseSignerSetTx } as SignerSetTx;
-    message.signers = [];
-    if (object.nonce !== undefined && object.nonce !== null) {
-      message.nonce = Long.fromString(object.nonce);
-    } else {
-      message.nonce = Long.UZERO;
-    }
-    if (object.height !== undefined && object.height !== null) {
-      message.height = Long.fromString(object.height);
-    } else {
-      message.height = Long.UZERO;
-    }
-    if (object.signers !== undefined && object.signers !== null) {
-      for (const e of object.signers) {
-        message.signers.push(EthereumSigner.fromJSON(e));
-      }
-    }
+    message.nonce =
+      object.nonce !== undefined && object.nonce !== null
+        ? Long.fromString(object.nonce)
+        : Long.UZERO;
+    message.height =
+      object.height !== undefined && object.height !== null
+        ? Long.fromString(object.height)
+        : Long.UZERO;
+    message.signers = (object.signers ?? []).map((e: any) =>
+      EthereumSigner.fromJSON(e)
+    );
     return message;
   },
 
@@ -463,22 +446,17 @@ export const SignerSetTx = {
 
   fromPartial(object: DeepPartial<SignerSetTx>): SignerSetTx {
     const message = { ...baseSignerSetTx } as SignerSetTx;
-    message.signers = [];
-    if (object.nonce !== undefined && object.nonce !== null) {
-      message.nonce = object.nonce as Long;
-    } else {
-      message.nonce = Long.UZERO;
-    }
-    if (object.height !== undefined && object.height !== null) {
-      message.height = object.height as Long;
-    } else {
-      message.height = Long.UZERO;
-    }
-    if (object.signers !== undefined && object.signers !== null) {
-      for (const e of object.signers) {
-        message.signers.push(EthereumSigner.fromPartial(e));
-      }
-    }
+    message.nonce =
+      object.nonce !== undefined && object.nonce !== null
+        ? Long.fromValue(object.nonce)
+        : Long.UZERO;
+    message.height =
+      object.height !== undefined && object.height !== null
+        ? Long.fromValue(object.height)
+        : Long.UZERO;
+    message.signers = (object.signers ?? []).map((e) =>
+      EthereumSigner.fromPartial(e)
+    );
     return message;
   },
 };
@@ -548,32 +526,25 @@ export const BatchTx = {
 
   fromJSON(object: any): BatchTx {
     const message = { ...baseBatchTx } as BatchTx;
-    message.transactions = [];
-    if (object.batchNonce !== undefined && object.batchNonce !== null) {
-      message.batchNonce = Long.fromString(object.batchNonce);
-    } else {
-      message.batchNonce = Long.UZERO;
-    }
-    if (object.timeout !== undefined && object.timeout !== null) {
-      message.timeout = Long.fromString(object.timeout);
-    } else {
-      message.timeout = Long.UZERO;
-    }
-    if (object.transactions !== undefined && object.transactions !== null) {
-      for (const e of object.transactions) {
-        message.transactions.push(SendToEthereum.fromJSON(e));
-      }
-    }
-    if (object.tokenContract !== undefined && object.tokenContract !== null) {
-      message.tokenContract = String(object.tokenContract);
-    } else {
-      message.tokenContract = "";
-    }
-    if (object.height !== undefined && object.height !== null) {
-      message.height = Long.fromString(object.height);
-    } else {
-      message.height = Long.UZERO;
-    }
+    message.batchNonce =
+      object.batchNonce !== undefined && object.batchNonce !== null
+        ? Long.fromString(object.batchNonce)
+        : Long.UZERO;
+    message.timeout =
+      object.timeout !== undefined && object.timeout !== null
+        ? Long.fromString(object.timeout)
+        : Long.UZERO;
+    message.transactions = (object.transactions ?? []).map((e: any) =>
+      SendToEthereum.fromJSON(e)
+    );
+    message.tokenContract =
+      object.tokenContract !== undefined && object.tokenContract !== null
+        ? String(object.tokenContract)
+        : "";
+    message.height =
+      object.height !== undefined && object.height !== null
+        ? Long.fromString(object.height)
+        : Long.UZERO;
     return message;
   },
 
@@ -599,32 +570,22 @@ export const BatchTx = {
 
   fromPartial(object: DeepPartial<BatchTx>): BatchTx {
     const message = { ...baseBatchTx } as BatchTx;
-    message.transactions = [];
-    if (object.batchNonce !== undefined && object.batchNonce !== null) {
-      message.batchNonce = object.batchNonce as Long;
-    } else {
-      message.batchNonce = Long.UZERO;
-    }
-    if (object.timeout !== undefined && object.timeout !== null) {
-      message.timeout = object.timeout as Long;
-    } else {
-      message.timeout = Long.UZERO;
-    }
-    if (object.transactions !== undefined && object.transactions !== null) {
-      for (const e of object.transactions) {
-        message.transactions.push(SendToEthereum.fromPartial(e));
-      }
-    }
-    if (object.tokenContract !== undefined && object.tokenContract !== null) {
-      message.tokenContract = object.tokenContract;
-    } else {
-      message.tokenContract = "";
-    }
-    if (object.height !== undefined && object.height !== null) {
-      message.height = object.height as Long;
-    } else {
-      message.height = Long.UZERO;
-    }
+    message.batchNonce =
+      object.batchNonce !== undefined && object.batchNonce !== null
+        ? Long.fromValue(object.batchNonce)
+        : Long.UZERO;
+    message.timeout =
+      object.timeout !== undefined && object.timeout !== null
+        ? Long.fromValue(object.timeout)
+        : Long.UZERO;
+    message.transactions = (object.transactions ?? []).map((e) =>
+      SendToEthereum.fromPartial(e)
+    );
+    message.tokenContract = object.tokenContract ?? "";
+    message.height =
+      object.height !== undefined && object.height !== null
+        ? Long.fromValue(object.height)
+        : Long.UZERO;
     return message;
   },
 };
@@ -690,34 +651,27 @@ export const SendToEthereum = {
 
   fromJSON(object: any): SendToEthereum {
     const message = { ...baseSendToEthereum } as SendToEthereum;
-    if (object.id !== undefined && object.id !== null) {
-      message.id = Long.fromString(object.id);
-    } else {
-      message.id = Long.UZERO;
-    }
-    if (object.sender !== undefined && object.sender !== null) {
-      message.sender = String(object.sender);
-    } else {
-      message.sender = "";
-    }
-    if (
+    message.id =
+      object.id !== undefined && object.id !== null
+        ? Long.fromString(object.id)
+        : Long.UZERO;
+    message.sender =
+      object.sender !== undefined && object.sender !== null
+        ? String(object.sender)
+        : "";
+    message.ethereumRecipient =
       object.ethereumRecipient !== undefined &&
       object.ethereumRecipient !== null
-    ) {
-      message.ethereumRecipient = String(object.ethereumRecipient);
-    } else {
-      message.ethereumRecipient = "";
-    }
-    if (object.erc20Token !== undefined && object.erc20Token !== null) {
-      message.erc20Token = ERC20Token.fromJSON(object.erc20Token);
-    } else {
-      message.erc20Token = undefined;
-    }
-    if (object.erc20Fee !== undefined && object.erc20Fee !== null) {
-      message.erc20Fee = ERC20Token.fromJSON(object.erc20Fee);
-    } else {
-      message.erc20Fee = undefined;
-    }
+        ? String(object.ethereumRecipient)
+        : "";
+    message.erc20Token =
+      object.erc20Token !== undefined && object.erc20Token !== null
+        ? ERC20Token.fromJSON(object.erc20Token)
+        : undefined;
+    message.erc20Fee =
+      object.erc20Fee !== undefined && object.erc20Fee !== null
+        ? ERC20Token.fromJSON(object.erc20Fee)
+        : undefined;
     return message;
   },
 
@@ -741,34 +695,20 @@ export const SendToEthereum = {
 
   fromPartial(object: DeepPartial<SendToEthereum>): SendToEthereum {
     const message = { ...baseSendToEthereum } as SendToEthereum;
-    if (object.id !== undefined && object.id !== null) {
-      message.id = object.id as Long;
-    } else {
-      message.id = Long.UZERO;
-    }
-    if (object.sender !== undefined && object.sender !== null) {
-      message.sender = object.sender;
-    } else {
-      message.sender = "";
-    }
-    if (
-      object.ethereumRecipient !== undefined &&
-      object.ethereumRecipient !== null
-    ) {
-      message.ethereumRecipient = object.ethereumRecipient;
-    } else {
-      message.ethereumRecipient = "";
-    }
-    if (object.erc20Token !== undefined && object.erc20Token !== null) {
-      message.erc20Token = ERC20Token.fromPartial(object.erc20Token);
-    } else {
-      message.erc20Token = undefined;
-    }
-    if (object.erc20Fee !== undefined && object.erc20Fee !== null) {
-      message.erc20Fee = ERC20Token.fromPartial(object.erc20Fee);
-    } else {
-      message.erc20Fee = undefined;
-    }
+    message.id =
+      object.id !== undefined && object.id !== null
+        ? Long.fromValue(object.id)
+        : Long.UZERO;
+    message.sender = object.sender ?? "";
+    message.ethereumRecipient = object.ethereumRecipient ?? "";
+    message.erc20Token =
+      object.erc20Token !== undefined && object.erc20Token !== null
+        ? ERC20Token.fromPartial(object.erc20Token)
+        : undefined;
+    message.erc20Fee =
+      object.erc20Fee !== undefined && object.erc20Fee !== null
+        ? ERC20Token.fromPartial(object.erc20Fee)
+        : undefined;
     return message;
   },
 };
@@ -857,52 +797,36 @@ export const ContractCallTx = {
 
   fromJSON(object: any): ContractCallTx {
     const message = { ...baseContractCallTx } as ContractCallTx;
-    message.tokens = [];
-    message.fees = [];
-    message.invalidationScope = new Uint8Array();
-    message.payload = new Uint8Array();
-    if (
+    message.invalidationNonce =
       object.invalidationNonce !== undefined &&
       object.invalidationNonce !== null
-    ) {
-      message.invalidationNonce = Long.fromString(object.invalidationNonce);
-    } else {
-      message.invalidationNonce = Long.UZERO;
-    }
-    if (
+        ? Long.fromString(object.invalidationNonce)
+        : Long.UZERO;
+    message.invalidationScope =
       object.invalidationScope !== undefined &&
       object.invalidationScope !== null
-    ) {
-      message.invalidationScope = bytesFromBase64(object.invalidationScope);
-    }
-    if (object.address !== undefined && object.address !== null) {
-      message.address = String(object.address);
-    } else {
-      message.address = "";
-    }
-    if (object.payload !== undefined && object.payload !== null) {
-      message.payload = bytesFromBase64(object.payload);
-    }
-    if (object.timeout !== undefined && object.timeout !== null) {
-      message.timeout = Long.fromString(object.timeout);
-    } else {
-      message.timeout = Long.UZERO;
-    }
-    if (object.tokens !== undefined && object.tokens !== null) {
-      for (const e of object.tokens) {
-        message.tokens.push(ERC20Token.fromJSON(e));
-      }
-    }
-    if (object.fees !== undefined && object.fees !== null) {
-      for (const e of object.fees) {
-        message.fees.push(ERC20Token.fromJSON(e));
-      }
-    }
-    if (object.height !== undefined && object.height !== null) {
-      message.height = Long.fromString(object.height);
-    } else {
-      message.height = Long.UZERO;
-    }
+        ? bytesFromBase64(object.invalidationScope)
+        : new Uint8Array();
+    message.address =
+      object.address !== undefined && object.address !== null
+        ? String(object.address)
+        : "";
+    message.payload =
+      object.payload !== undefined && object.payload !== null
+        ? bytesFromBase64(object.payload)
+        : new Uint8Array();
+    message.timeout =
+      object.timeout !== undefined && object.timeout !== null
+        ? Long.fromString(object.timeout)
+        : Long.UZERO;
+    message.tokens = (object.tokens ?? []).map((e: any) =>
+      ERC20Token.fromJSON(e)
+    );
+    message.fees = (object.fees ?? []).map((e: any) => ERC20Token.fromJSON(e));
+    message.height =
+      object.height !== undefined && object.height !== null
+        ? Long.fromString(object.height)
+        : Long.UZERO;
     return message;
   },
 
@@ -946,54 +870,26 @@ export const ContractCallTx = {
 
   fromPartial(object: DeepPartial<ContractCallTx>): ContractCallTx {
     const message = { ...baseContractCallTx } as ContractCallTx;
-    message.tokens = [];
-    message.fees = [];
-    if (
+    message.invalidationNonce =
       object.invalidationNonce !== undefined &&
       object.invalidationNonce !== null
-    ) {
-      message.invalidationNonce = object.invalidationNonce as Long;
-    } else {
-      message.invalidationNonce = Long.UZERO;
-    }
-    if (
-      object.invalidationScope !== undefined &&
-      object.invalidationScope !== null
-    ) {
-      message.invalidationScope = object.invalidationScope;
-    } else {
-      message.invalidationScope = new Uint8Array();
-    }
-    if (object.address !== undefined && object.address !== null) {
-      message.address = object.address;
-    } else {
-      message.address = "";
-    }
-    if (object.payload !== undefined && object.payload !== null) {
-      message.payload = object.payload;
-    } else {
-      message.payload = new Uint8Array();
-    }
-    if (object.timeout !== undefined && object.timeout !== null) {
-      message.timeout = object.timeout as Long;
-    } else {
-      message.timeout = Long.UZERO;
-    }
-    if (object.tokens !== undefined && object.tokens !== null) {
-      for (const e of object.tokens) {
-        message.tokens.push(ERC20Token.fromPartial(e));
-      }
-    }
-    if (object.fees !== undefined && object.fees !== null) {
-      for (const e of object.fees) {
-        message.fees.push(ERC20Token.fromPartial(e));
-      }
-    }
-    if (object.height !== undefined && object.height !== null) {
-      message.height = object.height as Long;
-    } else {
-      message.height = Long.UZERO;
-    }
+        ? Long.fromValue(object.invalidationNonce)
+        : Long.UZERO;
+    message.invalidationScope = object.invalidationScope ?? new Uint8Array();
+    message.address = object.address ?? "";
+    message.payload = object.payload ?? new Uint8Array();
+    message.timeout =
+      object.timeout !== undefined && object.timeout !== null
+        ? Long.fromValue(object.timeout)
+        : Long.UZERO;
+    message.tokens = (object.tokens ?? []).map((e) =>
+      ERC20Token.fromPartial(e)
+    );
+    message.fees = (object.fees ?? []).map((e) => ERC20Token.fromPartial(e));
+    message.height =
+      object.height !== undefined && object.height !== null
+        ? Long.fromValue(object.height)
+        : Long.UZERO;
     return message;
   },
 };
@@ -1037,16 +933,14 @@ export const ERC20Token = {
 
   fromJSON(object: any): ERC20Token {
     const message = { ...baseERC20Token } as ERC20Token;
-    if (object.contract !== undefined && object.contract !== null) {
-      message.contract = String(object.contract);
-    } else {
-      message.contract = "";
-    }
-    if (object.amount !== undefined && object.amount !== null) {
-      message.amount = String(object.amount);
-    } else {
-      message.amount = "";
-    }
+    message.contract =
+      object.contract !== undefined && object.contract !== null
+        ? String(object.contract)
+        : "";
+    message.amount =
+      object.amount !== undefined && object.amount !== null
+        ? String(object.amount)
+        : "";
     return message;
   },
 
@@ -1059,16 +953,8 @@ export const ERC20Token = {
 
   fromPartial(object: DeepPartial<ERC20Token>): ERC20Token {
     const message = { ...baseERC20Token } as ERC20Token;
-    if (object.contract !== undefined && object.contract !== null) {
-      message.contract = object.contract;
-    } else {
-      message.contract = "";
-    }
-    if (object.amount !== undefined && object.amount !== null) {
-      message.amount = object.amount;
-    } else {
-      message.amount = "";
-    }
+    message.contract = object.contract ?? "";
+    message.amount = object.amount ?? "";
     return message;
   },
 };
@@ -1113,12 +999,7 @@ export const IDSet = {
 
   fromJSON(object: any): IDSet {
     const message = { ...baseIDSet } as IDSet;
-    message.ids = [];
-    if (object.ids !== undefined && object.ids !== null) {
-      for (const e of object.ids) {
-        message.ids.push(Long.fromString(e));
-      }
-    }
+    message.ids = (object.ids ?? []).map((e: any) => Long.fromString(e));
     return message;
   },
 
@@ -1134,18 +1015,273 @@ export const IDSet = {
 
   fromPartial(object: DeepPartial<IDSet>): IDSet {
     const message = { ...baseIDSet } as IDSet;
-    message.ids = [];
-    if (object.ids !== undefined && object.ids !== null) {
-      for (const e of object.ids) {
-        message.ids.push(e);
+    message.ids = (object.ids ?? []).map((e) => Long.fromValue(e));
+    return message;
+  },
+};
+
+const baseCommunityPoolEthereumSpendProposal: object = {
+  title: "",
+  description: "",
+  recipient: "",
+};
+
+export const CommunityPoolEthereumSpendProposal = {
+  encode(
+    message: CommunityPoolEthereumSpendProposal,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    if (message.title !== "") {
+      writer.uint32(10).string(message.title);
+    }
+    if (message.description !== "") {
+      writer.uint32(18).string(message.description);
+    }
+    if (message.recipient !== "") {
+      writer.uint32(26).string(message.recipient);
+    }
+    if (message.amount !== undefined) {
+      Coin.encode(message.amount, writer.uint32(34).fork()).ldelim();
+    }
+    if (message.bridgeFee !== undefined) {
+      Coin.encode(message.bridgeFee, writer.uint32(42).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number
+  ): CommunityPoolEthereumSpendProposal {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseCommunityPoolEthereumSpendProposal,
+    } as CommunityPoolEthereumSpendProposal;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.title = reader.string();
+          break;
+        case 2:
+          message.description = reader.string();
+          break;
+        case 3:
+          message.recipient = reader.string();
+          break;
+        case 4:
+          message.amount = Coin.decode(reader, reader.uint32());
+          break;
+        case 5:
+          message.bridgeFee = Coin.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
     }
+    return message;
+  },
+
+  fromJSON(object: any): CommunityPoolEthereumSpendProposal {
+    const message = {
+      ...baseCommunityPoolEthereumSpendProposal,
+    } as CommunityPoolEthereumSpendProposal;
+    message.title =
+      object.title !== undefined && object.title !== null
+        ? String(object.title)
+        : "";
+    message.description =
+      object.description !== undefined && object.description !== null
+        ? String(object.description)
+        : "";
+    message.recipient =
+      object.recipient !== undefined && object.recipient !== null
+        ? String(object.recipient)
+        : "";
+    message.amount =
+      object.amount !== undefined && object.amount !== null
+        ? Coin.fromJSON(object.amount)
+        : undefined;
+    message.bridgeFee =
+      object.bridgeFee !== undefined && object.bridgeFee !== null
+        ? Coin.fromJSON(object.bridgeFee)
+        : undefined;
+    return message;
+  },
+
+  toJSON(message: CommunityPoolEthereumSpendProposal): unknown {
+    const obj: any = {};
+    message.title !== undefined && (obj.title = message.title);
+    message.description !== undefined &&
+      (obj.description = message.description);
+    message.recipient !== undefined && (obj.recipient = message.recipient);
+    message.amount !== undefined &&
+      (obj.amount = message.amount ? Coin.toJSON(message.amount) : undefined);
+    message.bridgeFee !== undefined &&
+      (obj.bridgeFee = message.bridgeFee
+        ? Coin.toJSON(message.bridgeFee)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<CommunityPoolEthereumSpendProposal>
+  ): CommunityPoolEthereumSpendProposal {
+    const message = {
+      ...baseCommunityPoolEthereumSpendProposal,
+    } as CommunityPoolEthereumSpendProposal;
+    message.title = object.title ?? "";
+    message.description = object.description ?? "";
+    message.recipient = object.recipient ?? "";
+    message.amount =
+      object.amount !== undefined && object.amount !== null
+        ? Coin.fromPartial(object.amount)
+        : undefined;
+    message.bridgeFee =
+      object.bridgeFee !== undefined && object.bridgeFee !== null
+        ? Coin.fromPartial(object.bridgeFee)
+        : undefined;
+    return message;
+  },
+};
+
+const baseCommunityPoolEthereumSpendProposalForCLI: object = {
+  title: "",
+  description: "",
+  recipient: "",
+  amount: "",
+  bridgeFee: "",
+  deposit: "",
+};
+
+export const CommunityPoolEthereumSpendProposalForCLI = {
+  encode(
+    message: CommunityPoolEthereumSpendProposalForCLI,
+    writer: _m0.Writer = _m0.Writer.create()
+  ): _m0.Writer {
+    if (message.title !== "") {
+      writer.uint32(10).string(message.title);
+    }
+    if (message.description !== "") {
+      writer.uint32(18).string(message.description);
+    }
+    if (message.recipient !== "") {
+      writer.uint32(26).string(message.recipient);
+    }
+    if (message.amount !== "") {
+      writer.uint32(34).string(message.amount);
+    }
+    if (message.bridgeFee !== "") {
+      writer.uint32(42).string(message.bridgeFee);
+    }
+    if (message.deposit !== "") {
+      writer.uint32(50).string(message.deposit);
+    }
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number
+  ): CommunityPoolEthereumSpendProposalForCLI {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseCommunityPoolEthereumSpendProposalForCLI,
+    } as CommunityPoolEthereumSpendProposalForCLI;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.title = reader.string();
+          break;
+        case 2:
+          message.description = reader.string();
+          break;
+        case 3:
+          message.recipient = reader.string();
+          break;
+        case 4:
+          message.amount = reader.string();
+          break;
+        case 5:
+          message.bridgeFee = reader.string();
+          break;
+        case 6:
+          message.deposit = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CommunityPoolEthereumSpendProposalForCLI {
+    const message = {
+      ...baseCommunityPoolEthereumSpendProposalForCLI,
+    } as CommunityPoolEthereumSpendProposalForCLI;
+    message.title =
+      object.title !== undefined && object.title !== null
+        ? String(object.title)
+        : "";
+    message.description =
+      object.description !== undefined && object.description !== null
+        ? String(object.description)
+        : "";
+    message.recipient =
+      object.recipient !== undefined && object.recipient !== null
+        ? String(object.recipient)
+        : "";
+    message.amount =
+      object.amount !== undefined && object.amount !== null
+        ? String(object.amount)
+        : "";
+    message.bridgeFee =
+      object.bridgeFee !== undefined && object.bridgeFee !== null
+        ? String(object.bridgeFee)
+        : "";
+    message.deposit =
+      object.deposit !== undefined && object.deposit !== null
+        ? String(object.deposit)
+        : "";
+    return message;
+  },
+
+  toJSON(message: CommunityPoolEthereumSpendProposalForCLI): unknown {
+    const obj: any = {};
+    message.title !== undefined && (obj.title = message.title);
+    message.description !== undefined &&
+      (obj.description = message.description);
+    message.recipient !== undefined && (obj.recipient = message.recipient);
+    message.amount !== undefined && (obj.amount = message.amount);
+    message.bridgeFee !== undefined && (obj.bridgeFee = message.bridgeFee);
+    message.deposit !== undefined && (obj.deposit = message.deposit);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<CommunityPoolEthereumSpendProposalForCLI>
+  ): CommunityPoolEthereumSpendProposalForCLI {
+    const message = {
+      ...baseCommunityPoolEthereumSpendProposalForCLI,
+    } as CommunityPoolEthereumSpendProposalForCLI;
+    message.title = object.title ?? "";
+    message.description = object.description ?? "";
+    message.recipient = object.recipient ?? "";
+    message.amount = object.amount ?? "";
+    message.bridgeFee = object.bridgeFee ?? "";
+    message.deposit = object.deposit ?? "";
     return message;
   },
 };
 
 declare var self: any | undefined;
 declare var window: any | undefined;
+declare var global: any | undefined;
 var globalThis: any = (() => {
   if (typeof globalThis !== "undefined") return globalThis;
   if (typeof self !== "undefined") return self;
@@ -1171,8 +1307,8 @@ const btoa: (bin: string) => string =
   ((bin) => globalThis.Buffer.from(bin, "binary").toString("base64"));
 function base64FromBytes(arr: Uint8Array): string {
   const bin: string[] = [];
-  for (let i = 0; i < arr.byteLength; ++i) {
-    bin.push(String.fromCharCode(arr[i]));
+  for (const byte of arr) {
+    bin.push(String.fromCharCode(byte));
   }
   return btoa(bin.join(""));
 }
@@ -1184,10 +1320,11 @@ type Builtin =
   | string
   | number
   | boolean
-  | undefined
-  | Long;
+  | undefined;
 export type DeepPartial<T> = T extends Builtin
   ? T
+  : T extends Long
+  ? string | number | Long
   : T extends Array<infer U>
   ? Array<DeepPartial<U>>
   : T extends ReadonlyArray<infer U>

@@ -4,8 +4,8 @@ import {
   Query,
   QueryClientImpl,
   SignerSetTxConfirmationsResponse,
-} from "./gen/gravity/v1/query";
-import { SignerSetTx } from "./gen/gravity/v1/gravity";
+} from "./gen/gravity/v2/query";
+import { SignerSetTx } from "./gen/gravity/v2/gravity";
 import Long from "long";
 import { exit } from "process";
 
