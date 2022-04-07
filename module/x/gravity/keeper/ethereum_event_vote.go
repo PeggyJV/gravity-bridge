@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 )
 
 func (k Keeper) recordEventVote(
@@ -131,7 +131,7 @@ func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent)
 		)
 	} else {
 		ctx.EventManager().EmitEvents(xCtx.EventManager().Events()) // copy events to original context
-		commit() // persist transient storage
+		commit()                                                    // persist transient storage
 	}
 }
 

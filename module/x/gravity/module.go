@@ -18,10 +18,9 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/client/cli"
-	// "github.com/peggyjv/gravity-bridge/module/x/gravity/client/rest"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/client/cli"
+	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 )
 
 // type check to ensure the interface is properly implemented
