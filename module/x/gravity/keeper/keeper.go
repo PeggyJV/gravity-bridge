@@ -25,15 +25,18 @@ import (
 
 // Keeper maintains the link to storage and exposes getter/setter methods for the various parts of the state machine
 type Keeper struct {
-	StakingKeeper  types.StakingKeeper
-	storeKey       sdk.StoreKey
-	paramSpace     paramtypes.Subspace
-	cdc            codec.Codec
-	accountKeeper  types.AccountKeeper
-	bankKeeper     types.BankKeeper
-	SlashingKeeper types.SlashingKeeper
-	PowerReduction sdk.Int
-	hooks          types.GravityHooks
+	StakingKeeper          types.StakingKeeper
+	storeKey               sdk.StoreKey
+	paramSpace             paramtypes.Subspace
+	cdc                    codec.Codec
+	accountKeeper          types.AccountKeeper
+	bankKeeper             types.BankKeeper
+	SlashingKeeper         types.SlashingKeeper
+	DistributionKeeper     types.DistributionKeeper
+	PowerReduction         sdk.Int
+	hooks                  types.GravityHooks
+	ReceiverModuleAccounts map[string]string
+	SenderModuleAccounts   map[string]string
 }
 
 // NewKeeper returns a new instance of the gravity keeper
@@ -45,7 +48,10 @@ func NewKeeper(
 	stakingKeeper types.StakingKeeper,
 	bankKeeper types.BankKeeper,
 	slashingKeeper types.SlashingKeeper,
+	distributionKeeper types.DistributionKeeper,
 	powerReduction sdk.Int,
+	receiverModuleAccounts map[string]string,
+	senderModuleAccounts map[string]string,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -53,14 +59,17 @@ func NewKeeper(
 	}
 
 	k := Keeper{
-		cdc:            cdc,
-		paramSpace:     paramSpace,
-		storeKey:       storeKey,
-		accountKeeper:  accKeeper,
-		StakingKeeper:  stakingKeeper,
-		bankKeeper:     bankKeeper,
-		SlashingKeeper: slashingKeeper,
-		PowerReduction: powerReduction,
+		cdc:                    cdc,
+		paramSpace:             paramSpace,
+		storeKey:               storeKey,
+		accountKeeper:          accKeeper,
+		StakingKeeper:          stakingKeeper,
+		bankKeeper:             bankKeeper,
+		SlashingKeeper:         slashingKeeper,
+		DistributionKeeper:     distributionKeeper,
+		PowerReduction:         powerReduction,
+		ReceiverModuleAccounts: receiverModuleAccounts,
+		SenderModuleAccounts:   senderModuleAccounts,
 	}
 
 	return k

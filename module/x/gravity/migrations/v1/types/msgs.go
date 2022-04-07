@@ -50,7 +50,7 @@ func (msg *MsgDelegateKeys) ValidateBasic() (err error) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "ethereum address")
 	}
 	if len(msg.EthSignature) == 0 {
-		return ErrEmptyEthSig
+		return fmt.Errorf("empty signature")
 	}
 
 	return nil
@@ -265,7 +265,7 @@ func (msg MsgCancelSendToEthereum) Type() string { return "cancel_send_to_ethere
 // ValidateBasic performs stateless checks
 func (msg MsgCancelSendToEthereum) ValidateBasic() error {
 	if msg.Id == 0 {
-		return sdkerrors.Wrap(ErrInvalid, "Id cannot be 0")
+		return fmt.Errorf("Id cannot be 0")
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Sender)

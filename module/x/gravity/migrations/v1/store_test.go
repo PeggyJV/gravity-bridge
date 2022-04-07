@@ -1,10 +1,11 @@
-package v1
+package v1_test
 
 import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
+	v1 "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/migrations/v1"
 	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/migrations/v1/keeper"
 	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/migrations/v1/types"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +21,7 @@ func TestMigrateCosmosOriginatedERC20ToDenom(t *testing.T) {
 
 	ctx.KVStore(storeKey).Set(types.MakeERC20ToDenomKey(tokenContractString), []byte(denom))
 
-	err := MigrateStore(ctx, storeKey, input.Marshaler)
+	err := v1.MigrateStore(ctx, storeKey, input.Marshaler)
 	assert.NoError(t, err)
 
 	tokenContract := common.HexToAddress(tokenContractString)
@@ -67,7 +68,7 @@ func TestMigrateContractCallTxTimeout(t *testing.T) {
 		cdc.MustMarshal(any),
 	)
 
-	err = MigrateStore(ctx, storeKey, input.Marshaler)
+	err = v1.MigrateStore(ctx, storeKey, input.Marshaler)
 	assert.NoError(t, err)
 
 	var updatedOtx types.OutgoingTx

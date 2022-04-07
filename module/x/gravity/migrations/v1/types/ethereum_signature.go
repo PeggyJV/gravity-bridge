@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -54,7 +53,7 @@ func (u *SignerSetTxConfirmation) Validate() error {
 		return fmt.Errorf("nonce must be set")
 	}
 	if !common.IsHexAddress(u.EthereumSigner) {
-		return sdkerrors.Wrap(ErrInvalid, "ethereum signer must be address")
+		return fmt.Errorf("ethereum signer must be address")
 	}
 	if u.Signature == nil {
 		return fmt.Errorf("signature must be set")
@@ -70,7 +69,7 @@ func (u *ContractCallTxConfirmation) Validate() error {
 		return fmt.Errorf("invalidation scope must be set")
 	}
 	if !common.IsHexAddress(u.EthereumSigner) {
-		return sdkerrors.Wrap(ErrInvalid, "ethereum signer must be address")
+		return fmt.Errorf("ethereum signer must be address")
 	}
 	if u.Signature == nil {
 		return fmt.Errorf("signature must be set")
@@ -86,7 +85,7 @@ func (u *BatchTxConfirmation) Validate() error {
 		return fmt.Errorf("token contract address must be valid ethereum address")
 	}
 	if !common.IsHexAddress(u.EthereumSigner) {
-		return sdkerrors.Wrap(ErrInvalid, "ethereum signer must be address")
+		return fmt.Errorf("ethereum signer must be address")
 	}
 	if u.Signature == nil {
 		return fmt.Errorf("signature must be set")
