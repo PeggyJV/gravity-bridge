@@ -39,7 +39,7 @@ pub async fn signer_set_tx_confirmation_messages(
             signer: cosmos_address.to_string(),
             confirmation: confirmation.to_any(),
         };
-        let msg = Msg::new("/gravity.v1.MsgSubmitEthereumTxConfirmation", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEthereumTxConfirmation", msg);
         msgs.push(msg);
     }
     msgs
@@ -71,7 +71,7 @@ pub async fn batch_tx_confirmation_messages(
             signer: cosmos_address.to_string(),
             event: confirmation.to_any(),
         };
-        let msg = Msg::new("/gravity.v1.MsgSubmitEthereumTxConfirmation", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEthereumTxConfirmation", msg);
         msgs.push(msg);
     }
     msgs
@@ -104,7 +104,7 @@ pub async fn contract_call_tx_confirmation_messages(
             signer: cosmos_address.to_string(),
             confirmation: confirmation.to_any(),
         };
-        let msg = Msg::new("/gravity.v1.MsgSubmitEthereumTxConfirmation", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEthereumTxConfirmation", msg);
         msgs.push(msg);
     }
     msgs
@@ -143,7 +143,7 @@ pub fn ethereum_event_messages(
             signer: cosmos_address.to_string(),
             event: event.to_any(),
         };
-        let msg = Msg::new("/gravity.v1.MsgSubmitEthereumEvent", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEthereumEvent", msg);
         unordered_msgs.insert(deposit.event_nonce, msg);
     }
     for batch in batches {
@@ -157,7 +157,7 @@ pub fn ethereum_event_messages(
             signer: cosmos_address.to_string(),
             event: event.to_any(),
         };
-        let msg = Msg::new("/gravity.v1.MsgSubmitEthereumEvent", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEthereumEvent", msg);
         unordered_msgs.insert(batch.event_nonce, msg);
     }
     for deploy in erc20_deploys {
@@ -174,7 +174,7 @@ pub fn ethereum_event_messages(
             signer: cosmos_address.to_string(),
             event: event.to_any(),
         };
-        let msg = Msg::new("/gravity.v1.MsgSubmitEthereumEvent", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEthereumEvent", msg);
         unordered_msgs.insert(deploy.event_nonce, msg);
     }
     for logic_call in logic_calls {
@@ -188,7 +188,7 @@ pub fn ethereum_event_messages(
             signer: cosmos_address.to_string(),
             event: event.to_any(),
         };
-        let msg = Msg::new("/gravity.v1.MsgSubmitEthereumEvent", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEthereumEvent", msg);
         unordered_msgs.insert(logic_call.event_nonce, msg);
     }
     for valset in valsets {
@@ -205,7 +205,7 @@ pub fn ethereum_event_messages(
             signer: cosmos_address.to_string(),
             event: event.to_any(),
         };
-        let msg = Msg::new("/gravity.v1.MsgSubmitEthereumEvent", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEthereumEvent", msg);
         unordered_msgs.insert(valset.event_nonce, msg);
     }
 
