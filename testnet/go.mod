@@ -11,7 +11,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/moby/term v0.0.0-20210610120745-9d4ed1856297 // indirect
 	github.com/ory/dockertest/v3 v3.6.5
-	github.com/peggyjv/gravity-bridge/module v0.0.0-00010101000000-000000000000
+	github.com/peggyjv/gravity-bridge/module/v2 v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/tendermint v0.34.14
 	gotest.tools/v3 v3.0.3 // indirect
@@ -19,4 +19,4 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/peggyjv/gravity-bridge/module => ../module
+replace github.com/peggyjv/gravity-bridge/module/v2 => ../module
