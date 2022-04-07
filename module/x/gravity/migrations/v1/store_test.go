@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/x/gravity/migrations/v1/keeper"
+	"github.com/peggyjv/gravity-bridge/module/x/gravity/migrations/v1/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,13 +18,13 @@ func TestMigrateCosmosOriginatedERC20ToDenom(t *testing.T) {
 	ctx := input.Context
 	storeKey := input.GravityStoreKey
 
-	ctx.KVStore(storeKey).Set(MakeOldERC20ToDenomKey(tokenContractString), []byte(denom))
+	ctx.KVStore(storeKey).Set(types.MakeERC20ToDenomKey(tokenContractString), []byte(denom))
 
 	err := MigrateStore(ctx, storeKey, input.Marshaler)
 	assert.NoError(t, err)
 
 	tokenContract := common.HexToAddress(tokenContractString)
-	storedDenom := ctx.KVStore(storeKey).Get(MakeNewERC20ToDenomKey(tokenContract))
+	storedDenom := ctx.KVStore(storeKey).Get(types.MakeNewERC20ToDenomKey(tokenContract))
 	assert.Equal(t, denom, string(storedDenom))
 }
 
@@ -39,7 +39,7 @@ func TestMigrateContractCallTxTimeout(t *testing.T) {
 		EthereumHeight: 1000,
 	}
 
-	ctx.KVStore(storeKey).Set([]byte{LastEthereumBlockHeightKey}, cdc.MustMarshal(latestEthereumBlockHeight))
+	ctx.KVStore(storeKey).Set([]byte{types.LastEthereumBlockHeightKey}, cdc.MustMarshal(latestEthereumBlockHeight))
 
 	erc20Token := types.ERC20Token{
 		Contract: tokenContractString,
@@ -63,7 +63,7 @@ func TestMigrateContractCallTxTimeout(t *testing.T) {
 	}
 
 	ctx.KVStore(storeKey).Set(
-		MakeOutgoingTxKey(otx.GetStoreIndex()),
+		types.MakeOutgoingTxKey(otx.GetStoreIndex()),
 		cdc.MustMarshal(any),
 	)
 

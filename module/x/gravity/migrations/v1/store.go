@@ -7,7 +7,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/x/gravity/migrations/v1/types"
 )
 
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
@@ -24,7 +24,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 }
 
 func migrateCosmosOriginatedERC20ToDenom(store storetypes.KVStore) error {
-	prefixStore := prefix.NewStore(store, []byte{ERC20ToDenomKey})
+	prefixStore := prefix.NewStore(store, []byte{types.ERC20ToDenomKey})
 	iter := prefixStore.Iterator(nil, nil)
 	defer iter.Close()
 
@@ -42,7 +42,7 @@ func migrateCosmosOriginatedERC20ToDenom(store storetypes.KVStore) error {
 func migrateContractCallTxTimeouts(store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	lastObservedEthereumBlockHeight := getLastObservedEthereumBlockHeight(store, cdc).EthereumHeight
 
-	prefixStore := prefix.NewStore(store, MakeOutgoingTxKey([]byte{types.ContractCallTxPrefixByte}))
+	prefixStore := prefix.NewStore(store, types.MakeOutgoingTxKey([]byte{types.ContractCallTxPrefixByte}))
 	iter := prefixStore.Iterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
@@ -71,7 +71,7 @@ func migrateContractCallTxTimeouts(store storetypes.KVStore, cdc codec.BinaryCod
 }
 
 func getLastObservedEthereumBlockHeight(store storetypes.KVStore, cdc codec.BinaryCodec) types.LatestEthereumBlockHeight {
-	bytes := store.Get([]byte{LastEthereumBlockHeightKey})
+	bytes := store.Get([]byte{types.LastEthereumBlockHeightKey})
 
 	if len(bytes) == 0 {
 		return types.LatestEthereumBlockHeight{
