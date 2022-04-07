@@ -8,6 +8,7 @@
     "test": "npx hardhat test --network localhost",
     "typechain": "npx hardhat typechain",
     "compile-deployer": "npx tsc -p . ; pkg dist/contract-deployer.js --targets node10-linux-x64",
+    "aave-mock": "npx tsc -p . ; pkg dist/aave-mock-deployer.js --targets node10-linux-x64",
     "evm_fork": "npx hardhat node --fork https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_ID} --fork-block-number 11780000",
     "test_fork": "npx hardhat test --network localhost ./tests_mainnet_fork/*.ts"
   },
@@ -42,7 +43,7 @@
     "ethers": "^5.5.1",
     "fs-extra": "^9.0.1",
     "ganache-cli": "^6.1.8",
-    "hardhat": "^2.6.8",
+    "hardhat": "^2.9.3",
     "hardhat-gas-reporter": "^1.0.4",
     "hardhat-typechain": "^0.3.4",
     "husky": "^4.3.0",
