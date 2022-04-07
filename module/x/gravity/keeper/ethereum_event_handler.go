@@ -63,6 +63,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 		return nil
 
 	case *types.ContractCallExecutedEvent:
+		k.contractCallExecuted(ctx, event.InvalidationScope.Bytes(), event.InvalidationNonce)
 		k.AfterContractCallExecutedEvent(ctx, *event)
 		return nil
 

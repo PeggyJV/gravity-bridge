@@ -172,7 +172,7 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 	})
 }
 
-// cleanupTimedOutBatchTxs deletes logic calls that have passed their expiration on Ethereum
+// cleanupTimedOutContractCallTxs deletes logic calls that have passed their expiration on Ethereum
 // keep in mind several things when modifying this function
 // A) unlike nonces timeouts are not monotonically increasing, meaning call 5 can have a later timeout than batch 6
 //    this means that we MUST only cleanup a single call at a time
