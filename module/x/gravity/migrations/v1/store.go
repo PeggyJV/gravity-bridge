@@ -62,10 +62,7 @@ func migrateContractCallTxTimeouts(store storetypes.KVStore, cdc codec.BinaryCod
 		if err != nil {
 			panic(err)
 		}
-		store.Set(
-			types.MakeOutgoingTxKey(otx.GetStoreIndex()),
-			cdc.MustMarshal(newAny),
-		)
+		prefixStore.Set(iter.Key(), cdc.MustMarshal(newAny))
 	}
 	return nil
 }
