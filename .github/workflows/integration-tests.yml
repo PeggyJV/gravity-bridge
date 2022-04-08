@@ -225,10 +225,11 @@ jobs:
         ]
 
     steps:
-      - name: Set up Go 1.16
-        uses: actions/setup-go@v2
-        with:
-          go-version: ^1.16
+# not needed on self-hosted
+#      - name: Set up Go 1.16
+#        uses: actions/setup-go@v2
+#        with:
+#          go-version: ^1.16
       - name: checkout
         uses: actions/checkout@v2
       - name: go-cache
