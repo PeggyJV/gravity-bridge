@@ -37,7 +37,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 )
 
 // GenTxCmd builds the application's gentx command.
@@ -49,9 +49,9 @@ func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalI
 		Use:   "gentx [key_name] [amount] [eth-address] [orchestrator-address] [eth-sig]",
 		Short: "Generate a genesis tx carrying a self delegation, oracle key delegation and orchestrator key delegation",
 		Args:  cobra.ExactArgs(5),
-		Long: fmt.Sprintf(`Generate a genesis transaction that creates a validator with a self-delegation, oracle key 
-delegation and orchestrator key delegation that is signed by the key in the Keyring referenced by a given name. A node 
-ID and Bech32 consensus pubkey may optionally be provided. If they are omitted, they will be retrieved from the 
+		Long: fmt.Sprintf(`Generate a genesis transaction that creates a validator with a self-delegation, oracle key
+delegation and orchestrator key delegation that is signed by the key in the Keyring referenced by a given name. A node
+ID and Bech32 consensus pubkey may optionally be provided. If they are omitted, they will be retrieved from the
 priv_validator.json file. The following default parameters are included:
     %s
 

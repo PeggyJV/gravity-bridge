@@ -8,8 +8,8 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 )
 
 // BeginBlocker is called at the beginning of every block
@@ -172,7 +172,7 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 	})
 }
 
-// cleanupTimedOutBatchTxs deletes logic calls that have passed their expiration on Ethereum
+// cleanupTimedOutContractCallTxs deletes logic calls that have passed their expiration on Ethereum
 // keep in mind several things when modifying this function
 // A) unlike nonces timeouts are not monotonically increasing, meaning call 5 can have a later timeout than batch 6
 //    this means that we MUST only cleanup a single call at a time
