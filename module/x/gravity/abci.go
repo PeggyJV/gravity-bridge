@@ -1,6 +1,7 @@
 package gravity
 
 import (
+	"encoding/hex"
 	"fmt"
 	"sort"
 
@@ -166,6 +167,11 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 
 		if btx.Timeout < ethereumHeight {
 			k.CancelBatchTx(ctx, btx)
+			ctx.Logger().Info("canceling timed out batch",
+				"timeout", btx.Timeout,
+				"batch nonce", btx.BatchNonce,
+				"token contract", btx.TokenContract,
+			)
 		}
 
 		return false
@@ -187,6 +193,11 @@ func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper) {
 		cctx, _ := otx.(*types.ContractCallTx)
 		if cctx.Timeout < ethereumHeight {
 			k.DeleteOutgoingTx(ctx, cctx.GetStoreIndex())
+			ctx.Logger().Info("canceling timed out contract call",
+				"timeout", cctx.Timeout,
+				"invalidation scope", hex.EncodeToString(cctx.InvalidationScope),
+				"invaidation nonce", cctx.InvalidationNonce,
+			)
 		}
 		return true
 	})
