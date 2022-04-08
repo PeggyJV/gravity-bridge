@@ -67,7 +67,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -117,7 +117,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -167,7 +167,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -215,7 +215,7 @@ jobs:
 
   integration-tests:
     environment: CI
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
     needs: [ rust-build, go-build, hardhat-build ]
     strategy:
       fail-fast: false
