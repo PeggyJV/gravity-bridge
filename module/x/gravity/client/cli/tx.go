@@ -15,7 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/spf13/cobra"
 
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 )
 
 func GetTxCmd(storeKey string) *cobra.Command {
@@ -85,7 +85,7 @@ func CmdSendToEthereum() *cobra.Command {
 func CmdCancelSendToEthereum() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-send-to-ethereum [id]",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		Short: "Cancel ethereum send by id",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)

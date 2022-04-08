@@ -29,8 +29,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/peggyjv/gravity-bridge/module/app"
-	"github.com/peggyjv/gravity-bridge/module/app/params"
+	"github.com/peggyjv/gravity-bridge/module/v2/app"
+	"github.com/peggyjv/gravity-bridge/module/v2/app/params"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the

@@ -54,7 +54,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 )
 
 var (
@@ -369,7 +369,6 @@ func CreateTestEnv(t *testing.T) TestInput {
 	totalSupply := sdk.NewCoins(sdk.NewInt64Coin("stake", 100000000))
 
 	// set up initial accounts
-	modAccNames := make(map[string]string)
 	for name, perms := range maccPerms {
 		mod := authtypes.NewEmptyModuleAccount(name, perms...)
 		if name == stakingtypes.NotBondedPoolName {
@@ -381,7 +380,6 @@ func CreateTestEnv(t *testing.T) TestInput {
 		}
 
 		accountKeeper.SetModuleAccount(ctx, mod)
-		modAccNames[authtypes.NewModuleAddress(name).String()] = name
 	}
 
 	// receiver/sender module account maps for the bridge

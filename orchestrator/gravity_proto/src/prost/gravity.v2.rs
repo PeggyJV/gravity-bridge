@@ -105,6 +105,36 @@ pub struct IdSet {
     #[prost(uint64, repeated, tag = "1")]
     pub ids: ::prost::alloc::vec::Vec<u64>,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CommunityPoolEthereumSpendProposal {
+    #[prost(string, tag = "1")]
+    pub title: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub description: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub recipient: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "4")]
+    pub amount: ::core::option::Option<cosmos_sdk_proto::cosmos::base::v1beta1::Coin>,
+    #[prost(message, optional, tag = "5")]
+    pub bridge_fee: ::core::option::Option<cosmos_sdk_proto::cosmos::base::v1beta1::Coin>,
+}
+/// This format of the community spend Ethereum proposal is specifically for
+/// the CLI to allow simple text serialization.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CommunityPoolEthereumSpendProposalForCli {
+    #[prost(string, tag = "1")]
+    pub title: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub description: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub recipient: ::prost::alloc::string::String,
+    #[prost(string, tag = "4")]
+    pub amount: ::prost::alloc::string::String,
+    #[prost(string, tag = "5")]
+    pub bridge_fee: ::prost::alloc::string::String,
+    #[prost(string, tag = "6")]
+    pub deposit: ::prost::alloc::string::String,
+}
 /// MsgSendToEthereum submits a SendToEthereum attempt to bridge an asset over to
 /// Ethereum. The SendToEthereum will be stored and then included in a batch and
 /// then submitted to Ethereum.
@@ -362,7 +392,7 @@ pub mod msg_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Msg/SendToEthereum");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Msg/SendToEthereum");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn cancel_send_to_ethereum(
@@ -377,7 +407,7 @@ pub mod msg_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Msg/CancelSendToEthereum");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Msg/CancelSendToEthereum");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn request_batch_tx(
@@ -391,7 +421,7 @@ pub mod msg_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Msg/RequestBatchTx");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Msg/RequestBatchTx");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn submit_ethereum_tx_confirmation(
@@ -407,7 +437,7 @@ pub mod msg_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gravity.v1.Msg/SubmitEthereumTxConfirmation",
+                "/gravity.v2.Msg/SubmitEthereumTxConfirmation",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
@@ -422,7 +452,7 @@ pub mod msg_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Msg/SubmitEthereumEvent");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Msg/SubmitEthereumEvent");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn set_delegate_keys(
@@ -436,7 +466,7 @@ pub mod msg_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Msg/SetDelegateKeys");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Msg/SetDelegateKeys");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
@@ -919,7 +949,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/Params");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/Params");
             self.inner.unary(request.into_request(), path, codec).await
         }
         #[doc = " get info on individual outgoing data"]
@@ -934,7 +964,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/SignerSetTx");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/SignerSetTx");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn latest_signer_set_tx(
@@ -948,7 +978,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/LatestSignerSetTx");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/LatestSignerSetTx");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn batch_tx(
@@ -962,7 +992,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/BatchTx");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/BatchTx");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn contract_call_tx(
@@ -976,7 +1006,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/ContractCallTx");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/ContractCallTx");
             self.inner.unary(request.into_request(), path, codec).await
         }
         #[doc = " get collections of outgoing traffic from the bridge"]
@@ -991,7 +1021,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/SignerSetTxs");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/SignerSetTxs");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn batch_txs(
@@ -1005,7 +1035,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/BatchTxs");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/BatchTxs");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn contract_call_txs(
@@ -1019,7 +1049,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/ContractCallTxs");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/ContractCallTxs");
             self.inner.unary(request.into_request(), path, codec).await
         }
         #[doc = " TODO: can/should we group these into one endpoint?"]
@@ -1036,7 +1066,7 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Query/SignerSetTxConfirmations");
+                http::uri::PathAndQuery::from_static("/gravity.v2.Query/SignerSetTxConfirmations");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn batch_tx_confirmations(
@@ -1051,7 +1081,7 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Query/BatchTxConfirmations");
+                http::uri::PathAndQuery::from_static("/gravity.v2.Query/BatchTxConfirmations");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn contract_call_tx_confirmations(
@@ -1067,7 +1097,7 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gravity.v1.Query/ContractCallTxConfirmations",
+                "/gravity.v2.Query/ContractCallTxConfirmations",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
@@ -1086,7 +1116,7 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Query/UnsignedSignerSetTxs");
+                http::uri::PathAndQuery::from_static("/gravity.v2.Query/UnsignedSignerSetTxs");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn unsigned_batch_txs(
@@ -1100,7 +1130,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/UnsignedBatchTxs");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/UnsignedBatchTxs");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn unsigned_contract_call_txs(
@@ -1116,7 +1146,7 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Query/UnsignedContractCallTxs");
+                http::uri::PathAndQuery::from_static("/gravity.v2.Query/UnsignedContractCallTxs");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn last_submitted_ethereum_event(
@@ -1132,7 +1162,7 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gravity.v1.Query/LastSubmittedEthereumEvent",
+                "/gravity.v2.Query/LastSubmittedEthereumEvent",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
@@ -1149,7 +1179,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/BatchTxFees");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/BatchTxFees");
             self.inner.unary(request.into_request(), path, codec).await
         }
         #[doc = " Query for info about denoms tracked by gravity"]
@@ -1164,7 +1194,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/ERC20ToDenom");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/ERC20ToDenom");
             self.inner.unary(request.into_request(), path, codec).await
         }
         #[doc = " DenomToERC20Params implements a query that allows ERC-20 parameter"]
@@ -1180,7 +1210,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/DenomToERC20Params");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/DenomToERC20Params");
             self.inner.unary(request.into_request(), path, codec).await
         }
         #[doc = " Query for info about denoms tracked by gravity"]
@@ -1195,7 +1225,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/DenomToERC20");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/DenomToERC20");
             self.inner.unary(request.into_request(), path, codec).await
         }
         #[doc = " Query for batch send to ethereums"]
@@ -1211,7 +1241,7 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Query/BatchedSendToEthereums");
+                http::uri::PathAndQuery::from_static("/gravity.v2.Query/BatchedSendToEthereums");
             self.inner.unary(request.into_request(), path, codec).await
         }
         #[doc = " Query for unbatched send to ethereums"]
@@ -1228,7 +1258,7 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Query/UnbatchedSendToEthereums");
+                http::uri::PathAndQuery::from_static("/gravity.v2.Query/UnbatchedSendToEthereums");
             self.inner.unary(request.into_request(), path, codec).await
         }
         #[doc = " delegate keys"]
@@ -1245,7 +1275,7 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Query/DelegateKeysByValidator");
+                http::uri::PathAndQuery::from_static("/gravity.v2.Query/DelegateKeysByValidator");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn delegate_keys_by_ethereum_signer(
@@ -1261,7 +1291,7 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gravity.v1.Query/DelegateKeysByEthereumSigner",
+                "/gravity.v2.Query/DelegateKeysByEthereumSigner",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
@@ -1278,7 +1308,7 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gravity.v1.Query/DelegateKeysByOrchestrator",
+                "/gravity.v2.Query/DelegateKeysByOrchestrator",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
@@ -1293,7 +1323,7 @@ pub mod query_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/DelegateKeys");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/DelegateKeys");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }

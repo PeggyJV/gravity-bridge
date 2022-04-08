@@ -6,7 +6,7 @@
 
 pub use cosmos_sdk_proto;
 pub mod gravity {
-    include!("prost/gravity.v1.rs");
+    include!("prost/gravity.v2.rs");
 }
 
 use bytes::BytesMut;
@@ -24,7 +24,7 @@ impl ToAny for gravity::BatchExecutedEvent {
         let mut buf = BytesMut::with_capacity(self.encoded_len());
         self.encode(&mut buf).expect("encoding failed");
         Some(Any {
-            type_url: "/gravity.v1.BatchExecutedEvent".into(),
+            type_url: "/gravity.v2.BatchExecutedEvent".into(),
             value: buf.to_vec(),
         })
     }
@@ -35,7 +35,7 @@ impl ToAny for gravity::BatchTxConfirmation {
         let mut buf = BytesMut::with_capacity(self.encoded_len());
         self.encode(&mut buf).expect("encoding failed");
         Some(Any {
-            type_url: "/gravity.v1.BatchTxConfirmation".into(),
+            type_url: "/gravity.v2.BatchTxConfirmation".into(),
             value: buf.to_vec(),
         })
     }
@@ -46,7 +46,7 @@ impl ToAny for gravity::ContractCallExecutedEvent {
         let mut buf = BytesMut::with_capacity(self.encoded_len());
         self.encode(&mut buf).expect("encoding failed");
         Some(Any {
-            type_url: "/gravity.v1.ContractCallExecutedEvent".into(),
+            type_url: "/gravity.v2.ContractCallExecutedEvent".into(),
             value: buf.to_vec(),
         })
     }
@@ -57,7 +57,7 @@ impl ToAny for gravity::ContractCallTxConfirmation {
         let mut buf = BytesMut::with_capacity(self.encoded_len());
         self.encode(&mut buf).expect("encoding failed");
         Some(Any {
-            type_url: "/gravity.v1.ContractCallTxConfirmation".into(),
+            type_url: "/gravity.v2.ContractCallTxConfirmation".into(),
             value: buf.to_vec(),
         })
     }
@@ -68,7 +68,7 @@ impl ToAny for gravity::Erc20DeployedEvent {
         let mut buf = BytesMut::with_capacity(self.encoded_len());
         self.encode(&mut buf).expect("encoding failed");
         Some(Any {
-            type_url: "/gravity.v1.ERC20DeployedEvent".into(),
+            type_url: "/gravity.v2.ERC20DeployedEvent".into(),
             value: buf.to_vec(),
         })
     }
@@ -79,7 +79,7 @@ impl ToAny for gravity::SendToCosmosEvent {
         let mut buf = BytesMut::with_capacity(self.encoded_len());
         self.encode(&mut buf).expect("encoding failed");
         Some(Any {
-            type_url: "/gravity.v1.SendToCosmosEvent".into(),
+            type_url: "/gravity.v2.SendToCosmosEvent".into(),
             value: buf.to_vec(),
         })
     }
@@ -90,7 +90,7 @@ impl ToAny for gravity::SignerSetTxExecutedEvent {
         let mut buf = BytesMut::with_capacity(self.encoded_len());
         self.encode(&mut buf).expect("encoding failed");
         Some(Any {
-            type_url: "/gravity.v1.SignerSetTxExecutedEvent".into(),
+            type_url: "/gravity.v2.SignerSetTxExecutedEvent".into(),
             value: buf.to_vec(),
         })
     }
@@ -101,7 +101,7 @@ impl ToAny for gravity::SignerSetTxConfirmation {
         let mut buf = BytesMut::with_capacity(self.encoded_len());
         self.encode(&mut buf).expect("encoding failed");
         Some(Any {
-            type_url: "/gravity.v1.SignerSetTxConfirmation".into(),
+            type_url: "/gravity.v2.SignerSetTxConfirmation".into(),
             value: buf.to_vec(),
         })
     }

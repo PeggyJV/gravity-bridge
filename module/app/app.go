@@ -79,11 +79,12 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
 	"github.com/gorilla/mux"
-	gravityparams "github.com/peggyjv/gravity-bridge/module/app/params"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity"
-	gravityclient "github.com/peggyjv/gravity-bridge/module/x/gravity/client"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/keeper"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	gravityparams "github.com/peggyjv/gravity-bridge/module/v2/app/params"
+	v2 "github.com/peggyjv/gravity-bridge/module/v2/app/upgrades/v2"
+	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity"
+	gravityclient "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/client"
+	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/keeper"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -210,6 +211,9 @@ type Gravity struct {
 
 	// Module Manager
 	mm *module.Manager
+
+	// configurator
+	configurator module.Configurator
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -372,7 +376,8 @@ func NewGravityApp(
 		AddRoute(paramsproposal.RouterKey, params.NewParamChangeProposalHandler(app.paramsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.distrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.upgradeKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.ibcKeeper.ClientKeeper))
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.ibcKeeper.ClientKeeper)).
+		AddRoute(gravitytypes.RouterKey, gravity.NewCommunityPoolEthereumSpendProposalHandler(app.gravityKeeper))
 
 	app.govKeeper = govkeeper.NewKeeper(
 		appCodec,
@@ -413,9 +418,11 @@ func NewGravityApp(
 		app.slashingKeeper,
 		app.distrKeeper,
 		sdk.DefaultPowerReduction,
-		app.ModuleAccountAddressesToNames([]string{distrtypes.ModuleName}),
+		app.ModuleAccountAddressesToNames([]string{}),
 		app.ModuleAccountAddressesToNames([]string{distrtypes.ModuleName}),
 	)
+
+	app.setupUpgradeStoreLoaders()
 
 	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
@@ -525,7 +532,10 @@ func NewGravityApp(
 
 	app.mm.RegisterInvariants(&app.crisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.mm.RegisterServices(module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter()))
+	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.mm.RegisterServices(app.configurator)
+
+	app.setupUpgradeHandlers()
 
 	app.sm = module.NewSimulationManager(
 		auth.NewAppModule(appCodec, app.accountKeeper, authsims.RandomGenesisAccounts),
@@ -605,6 +615,9 @@ func (app *Gravity) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
+
+	app.upgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
@@ -777,4 +790,28 @@ func VerifyAddressFormat(bz []byte) error {
 	}
 
 	return nil
+}
+
+func (app *Gravity) setupUpgradeStoreLoaders() {
+	_, err := app.upgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
+	}
+
+	// if upgradeInfo.Name matches a plan name with a module being added, renamed, or deleted,
+	// create a storetypes.StoreUpgrades struct and
+	// app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	// see also:
+	// https://github.com/cosmos/cosmos-sdk/blob/master/docs/core/upgrade.md#add-storeupgrades-for-new-modules
+}
+
+func (app *Gravity) setupUpgradeHandlers() {
+	app.upgradeKeeper.SetUpgradeHandler(
+		v2.UpgradeName,
+		v2.CreateUpgradeHandler(
+			app.mm,
+			app.configurator,
+			app.bankKeeper,
+		),
+	)
 }

@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 )
 
 // TODO: should we make this a parameter or a a call arg?
@@ -43,7 +43,7 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, contractAddress common.Address, ma
 
 	batch := &types.BatchTx{
 		BatchNonce:    k.incrementLastOutgoingBatchNonce(ctx),
-		Timeout:       k.getBatchTimeoutHeight(ctx),
+		Timeout:       k.getTimeoutHeight(ctx),
 		Transactions:  selectedStes,
 		TokenContract: contractAddress.Hex(),
 		Height:        uint64(ctx.BlockHeight()),
@@ -60,26 +60,6 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, contractAddress common.Address, ma
 	))
 
 	return batch
-}
-
-// This gets the batch timeout height in Ethereum blocks.
-func (k Keeper) getBatchTimeoutHeight(ctx sdk.Context) uint64 {
-	params := k.GetParams(ctx)
-	currentCosmosHeight := ctx.BlockHeight()
-	// we store the last observed Cosmos and Ethereum heights, we do not concern ourselves if these values are zero because
-	// no batch can be produced if the last Ethereum block height is not first populated by a deposit event.
-	heights := k.GetLastObservedEthereumBlockHeight(ctx)
-	if heights.CosmosHeight == 0 || heights.EthereumHeight == 0 {
-		return 0
-	}
-	// we project how long it has been in milliseconds since the last Ethereum block height was observed
-	projectedMillis := (uint64(currentCosmosHeight) - heights.CosmosHeight) * params.AverageBlockTime
-	// we convert that projection into the current Ethereum height using the average Ethereum block time in millis
-	projectedCurrentEthereumHeight := (projectedMillis / params.AverageEthereumBlockTime) + heights.EthereumHeight
-	// we convert our target time for block timeouts (lets say 12 hours) into a number of blocks to
-	// place on top of our projection of the current Ethereum block height.
-	blocksToAdd := params.TargetEthTxTimeout / params.AverageEthereumBlockTime
-	return projectedCurrentEthereumHeight + blocksToAdd
 }
 
 // batchTxExecuted is run when the Cosmos chain detects that a batch has been executed on Ethereum
