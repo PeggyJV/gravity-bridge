@@ -272,6 +272,8 @@ jobs:
         run: docker pull ${{ steps.meta-hardhat.outputs.tags }}
       - name: rename hardhat image
         run: docker tag ${{ steps.meta-hardhat.outputs.tags }} ethereum:prebuilt
+      - name: clean slate
+        run: make e2e_clean_slate
       - name: build go test binary
         run: cd integration_tests && go test -c
       - name: Run all up ci test
