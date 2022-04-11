@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 )
 
 func (s *IntegrationTestSuite) TestHappyPath() {

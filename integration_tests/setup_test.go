@@ -32,7 +32,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	tmconfig "github.com/tendermint/tendermint/config"

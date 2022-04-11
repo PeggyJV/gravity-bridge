@@ -2,8 +2,6 @@ package integration_tests
 
 import (
 	"fmt"
-	"github.com/peggyjv/gravity-bridge/module/app"
-	"github.com/peggyjv/gravity-bridge/module/app/params"
 	"io/ioutil"
 	"os"
 
@@ -23,7 +21,9 @@ import (
 	sdkTx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v2/app"
+	"github.com/peggyjv/gravity-bridge/module/v2/app/params"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
