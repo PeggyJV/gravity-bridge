@@ -235,7 +235,12 @@ impl LogicCallSkips {
             let nonce_map = id_skip_map.1;
             for nonce_skip_map in nonce_map.clone() {
                 let call = nonce_skip_map.1;
-                if call.timeout < ethereum_height {
+                // Contract calls are timed out based on the last observed ethereum event
+                // height, which means if there is not much bridge activity occurring,
+                // they will not get timed out. This adds a large (longer than a day)
+                // buffer to ensure there is plenty of time for it to get correctly timed
+                // out, while still clearing out entries from the skip list eventually.
+                if call.timeout + 8000 < ethereum_height {
                     nonce_map.remove(&call.invalidation_nonce);
                 }
             }
@@ -294,19 +299,19 @@ fn test_logic_call_skips() {
     assert_eq!(skips.should_skip(&logic_call_1_nonce_2), true);
     assert_eq!(skips.should_skip(&logic_call_2), true);
 
-    skips.clear_old_calls(850);
+    skips.clear_old_calls(8850);
 
     assert_eq!(skips.should_skip(&logic_call_1_nonce_1), false);
     assert_eq!(skips.should_skip(&logic_call_1_nonce_2), true);
     assert_eq!(skips.should_skip(&logic_call_2), true);
 
-    skips.clear_old_calls(980);
+    skips.clear_old_calls(8980);
 
     assert_eq!(skips.should_skip(&logic_call_1_nonce_1), false);
     assert_eq!(skips.should_skip(&logic_call_1_nonce_2), false);
     assert_eq!(skips.should_skip(&logic_call_2), true);
 
-    skips.clear_old_calls(1001);
+    skips.clear_old_calls(9001);
 
     assert_eq!(skips.should_skip(&logic_call_1_nonce_1), false);
     assert_eq!(skips.should_skip(&logic_call_1_nonce_2), false);
