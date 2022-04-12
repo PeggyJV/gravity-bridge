@@ -265,7 +265,7 @@ jobs:
       - name: pull orchestrator image
         run: docker pull ${{ steps.meta-orchestrator.outputs.tags }}
       - name: rename orchestrator image
-        run: docker tag ${{ steps.meta-gravity.outputs.tags }} orchestrator:prebuilt
+        run: docker tag ${{ steps.meta-orchestrator.outputs.tags }} orchestrator:prebuilt
       - name: pull hardhat image
         run: docker pull ${{ steps.meta-hardhat.outputs.tags }}
       - name: rename hardhat image
