@@ -225,3 +225,55 @@ impl LogicCallSkips {
         }
     }
 }
+
+#[test]
+fn test_logic_call_skips() {
+    let logic_call_1_nonce_1 = LogicCall {
+        transfers: Vec::new(),
+        fees: Vec::new(),
+        logic_contract_address: EthAddress::default(),
+        payload: Vec::new(),
+        timeout: 1000,
+        invalidation_id: vec![0, 1, 2],
+        invalidation_nonce: 1,
+    };
+
+    let logic_call_1_nonce_2 = LogicCall {
+        transfers: Vec::new(),
+        fees: Vec::new(),
+        logic_contract_address: EthAddress::default(),
+        payload: Vec::new(),
+        timeout: 1000,
+        invalidation_id: vec![0, 1, 2],
+        invalidation_nonce: 2,
+    };
+
+    let logic_call_2 = LogicCall {
+        transfers: Vec::new(),
+        fees: Vec::new(),
+        logic_contract_address: EthAddress::default(),
+        payload: Vec::new(),
+        timeout: 1000,
+        invalidation_id: vec![3, 4, 5],
+        invalidation_nonce: 1,
+    };
+
+    let mut skips = LogicCallSkips::new();
+
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), false);
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), false);
+    assert_eq!(skips.should_skip(&logic_call_2), false);
+
+    skips.skip(&logic_call_1_nonce_1);
+    skips.skip(&logic_call_2);
+
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), true);
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), false);
+    assert_eq!(skips.should_skip(&logic_call_2), true);
+
+    skips.skip(&logic_call_1_nonce_2);
+
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), true);
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), true);
+    assert_eq!(skips.should_skip(&logic_call_2), true);
+}
