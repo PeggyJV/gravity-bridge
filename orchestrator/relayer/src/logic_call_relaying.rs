@@ -37,6 +37,10 @@ pub async fn relay_logic_calls(
     let mut oldest_signed_call: Option<LogicCall> = None;
     let mut oldest_signatures: Option<Vec<LogicCallConfirmResponse>> = None;
     for call in latest_calls {
+        if logic_call_skips.should_skip(&call) {
+            continue;
+        }
+
         let sigs = get_logic_call_signatures(
             grpc_client,
             call.invalidation_id.clone(),
@@ -48,10 +52,6 @@ pub async fn relay_logic_calls(
             let hash = encode_logic_call_confirm_hashed(gravity_id.clone(), call.clone());
             // this checks that the signatures for the logic call are actually possible to submit to the chain
             if current_valset.order_sigs(&hash, &sigs).is_ok() {
-                if logic_call_skips.should_skip(&call) {
-                    continue;
-                }
-
                 oldest_signed_call = Some(call);
                 oldest_signatures = Some(sigs);
             } else {
