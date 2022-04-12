@@ -9,7 +9,7 @@ use gravity_abi::gravity::*;
 use gravity_utils::ethereum::{bytes_to_hex_str, vec_u8_to_fixed_32};
 use gravity_utils::types::*;
 use gravity_utils::{error::GravityError, message_signatures::encode_logic_call_confirm_hashed};
-use std::{result::Result, time::Duration};
+use std::{result::Result, time::Duration, collections::{HashMap, HashSet}};
 
 /// this function generates an appropriate Ethereum transaction
 /// to submit the provided logic call
@@ -23,6 +23,7 @@ pub async fn send_eth_logic_call(
     gravity_id: String,
     gas_cost: GasCost,
     eth_client: EthClient,
+    logic_call_skips: &mut LogicCallSkips,
 ) -> Result<(), GravityError> {
     let new_call_nonce = call.invalidation_nonce;
     info!(
@@ -45,12 +46,16 @@ pub async fn send_eth_logic_call(
             "Someone else updated the LogicCall to {}, exiting early",
             before_nonce
         );
+
+        logic_call_skips.skip(&call);
         return Ok(());
     } else if current_block_height > call.timeout.into() {
         info!(
             "This LogicCall is timed out. timeout block: {} current block: {}, exiting early",
             current_block_height, call.timeout
         );
+
+        logic_call_skips.skip(&call);
         return Ok(());
     }
 
@@ -188,4 +193,35 @@ pub fn build_send_logic_call_contract_call(
         .value(U256::zero());
 
     Ok(contract_call)
+}
+
+pub struct LogicCallSkips {
+    skip_map: HashMap<Vec<u8>, HashSet<u64>>,
+}
+
+impl LogicCallSkips {
+    pub fn new() -> Self {
+        LogicCallSkips {
+            skip_map: HashMap::new(),
+        }
+    }
+
+    pub fn should_skip(&self, call: &LogicCall) -> bool {
+        let id_skips = self.skip_map.get(&call.invalidation_id);
+        if id_skips.is_some() && id_skips.unwrap().contains(&call.invalidation_nonce) {
+            return true
+        }
+
+        false
+    }
+
+    pub fn skip(&mut self, call: &LogicCall) {
+        let id_skips = self.skip_map.get_mut(&call.invalidation_id);
+        if id_skips.is_none() {
+            let new_id_skips = HashSet::from([call.invalidation_nonce]);
+            self.skip_map.insert(call.invalidation_id.clone(), new_id_skips);
+        } else {
+            id_skips.unwrap().insert(call.invalidation_nonce.clone());
+        }
+    }
 }

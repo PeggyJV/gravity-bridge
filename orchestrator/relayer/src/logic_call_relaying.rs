@@ -1,4 +1,5 @@
 use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
+use ethereum_gravity::logic_call::LogicCallSkips;
 use ethereum_gravity::one_eth_f32;
 use ethereum_gravity::{
     logic_call::send_eth_logic_call, types::EthClient, utils::get_logic_call_nonce,
@@ -21,6 +22,7 @@ pub async fn relay_logic_calls(
     gravity_id: String,
     timeout: Duration,
     eth_gas_price_multiplier: f32,
+    logic_call_skips: &mut LogicCallSkips,
 ) {
     let latest_calls = match get_latest_logic_calls(grpc_client).await {
         Ok(calls) => {
@@ -44,8 +46,12 @@ pub async fn relay_logic_calls(
         debug!("Got sigs {:?}", sigs);
         if let Ok(sigs) = sigs {
             let hash = encode_logic_call_confirm_hashed(gravity_id.clone(), call.clone());
-            // this checks that the signatures for the batch are actually possible to submit to the chain
+            // this checks that the signatures for the logic call are actually possible to submit to the chain
             if current_valset.order_sigs(&hash, &sigs).is_ok() {
+                if logic_call_skips.should_skip(&call) {
+                    continue;
+                }
+
                 oldest_signed_call = Some(call);
                 oldest_signatures = Some(sigs);
             } else {
@@ -126,18 +132,20 @@ pub async fn relay_logic_calls(
 
         let res = send_eth_logic_call(
             current_valset,
-            oldest_signed_call,
+            oldest_signed_call.clone(),
             &oldest_signatures,
             timeout,
             gravity_contract_address,
             gravity_id.clone(),
             cost,
             eth_client.clone(),
+            logic_call_skips,
         )
         .await;
 
         if res.is_err() {
             info!("LogicCall submission failed with {:?}", res);
+            logic_call_skips.skip(&oldest_signed_call);
         }
     }
 }

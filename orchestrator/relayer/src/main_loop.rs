@@ -1,11 +1,11 @@
 use crate::{
     batch_relaying::relay_batches, find_latest_valset::find_latest_valset,
-    logic_call_relaying::relay_logic_calls, valset_relaying::relay_valsets,
+    logic_call_relaying::{relay_logic_calls}, valset_relaying::relay_valsets,
 };
-use ethereum_gravity::{types::EthClient, utils::get_gravity_id};
+use ethereum_gravity::{types::EthClient, utils::get_gravity_id, logic_call::LogicCallSkips};
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use std::time::Duration;
+use std::{time::Duration};
 use tonic::transport::Channel;
 
 pub const LOOP_SPEED: Duration = Duration::from_secs(17);
@@ -26,6 +26,8 @@ pub async fn relayer_main_loop(
         return;
     }
     let gravity_id = gravity_id.unwrap();
+    let mut logic_call_skips = LogicCallSkips::new();
+
     loop {
         let (async_resp, _) = tokio::join!(
             async {
@@ -70,6 +72,7 @@ pub async fn relayer_main_loop(
                     gravity_id.clone(),
                     LOOP_SPEED,
                     eth_gas_price_multiplier,
+                    &mut logic_call_skips,
                 )
                 .await;
             },
