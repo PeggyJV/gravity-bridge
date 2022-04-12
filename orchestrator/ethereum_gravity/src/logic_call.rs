@@ -299,6 +299,12 @@ fn test_logic_call_skips() {
     assert_eq!(skips.should_skip(&logic_call_1_nonce_2), true);
     assert_eq!(skips.should_skip(&logic_call_2), true);
 
+    skips.clear_old_calls(6000);
+
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), true);
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), true);
+    assert_eq!(skips.should_skip(&logic_call_2), true);
+
     skips.clear_old_calls(8850);
 
     assert_eq!(skips.should_skip(&logic_call_1_nonce_1), false);
