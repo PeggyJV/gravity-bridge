@@ -19,3 +19,4 @@ artifacts
 .DS_Store
 
 build/
+.env

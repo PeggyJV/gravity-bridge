@@ -43,10 +43,6 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-orchestrator
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern=v{{version}}
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
@@ -63,57 +59,11 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
-  test-runner-build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v2
-        with: 
-          toolchain: 1.56 
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v1
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        id: docker-cache
-        with:
-          path: /tmp/.buildx-cache
-          # Key is named differently to avoid collision
-          key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-multi-buildx
-      - name: Container service login
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-test-runner
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v2
-        with:
-          context: ./orchestrator
-          builder: ${{ steps.buildx.outputs.name }}
-          file: orchestrator/testnet.Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
-      - name: Move Docker cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
   go-build:
     permissions:
       contents: read
       packages: write
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -163,7 +113,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -209,29 +159,73 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
+  hardhat-build:
+    permissions:
+      contents: read
+      packages: write
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        id: docker-cache
+        with:
+          path: /tmp/.buildx-cache
+          # Key is named differently to avoid collision
+          key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-multi-buildx
+      - name: container-login
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: labels
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-hardhat
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern=v{{version}}
+      - name: build-and-push
+        uses: docker/build-push-action@v2
+        with:
+          context: integration_tests/ethereum
+          file: integration_tests/ethereum/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          builder: ${{ steps.buildx.outputs.name }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+      - name: Move Docker cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
   integration-tests:
-    runs-on: ubuntu-latest
-    needs: [ rust-build, go-build, test-runner-build, solidity-build ]
+    environment: CI
+    runs-on: [self-hosted, linux]
+    needs: [ rust-build, go-build, hardhat-build ]
     strategy:
       fail-fast: false
       matrix:
         test_type: [
-          # working tests
-            "OrchestratorKeys",
-            "ArbitraryLogic"
+            "HappyPath",
         ]
-          # non-working tests
-#            "ValidatorOut",
-#            "BatchStress",
-#            "ValsetStress",
-#            "HappyPath",
-#            "V2HappyPath",
 
     steps:
-      - name: Set up Go 1.16
-        uses: actions/setup-go@v2
-        with:
-          go-version: ^1.16
+# not needed on self-hosted
+#      - name: Set up Go 1.16
+#        uses: actions/setup-go@v2
+#        with:
+#          go-version: ^1.16
       - name: checkout
         uses: actions/checkout@v2
       - name: go-cache
@@ -240,7 +234,9 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('testnet/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('module/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
       - name: container-login
         uses: docker/login-action@v1
         with:
@@ -257,16 +253,11 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-orchestrator
-      - name: docker test runner metadata
-        id: meta-test-runner
+      - name: docker hardhat metadata
+        id: meta-hardhat
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-test-runner
-      - name: docker contract deployer metadata
-        id: meta-solidity
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-solidity
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-hardhat
       - name: pull gravity image
         run: docker pull ${{ steps.meta-gravity.outputs.tags }}
       - name: rename gravity image
@@ -274,16 +265,16 @@ jobs:
       - name: pull orchestrator image
         run: docker pull ${{ steps.meta-orchestrator.outputs.tags }}
       - name: rename orchestrator image
-        run: docker tag ${{ steps.meta-gravity.outputs.tags }} orchestrator:prebuilt
-      - name: pull test-runner image
-        run: docker pull ${{ steps.meta-test-runner.outputs.tags }}
-      - name: rename test-runner image
-        run: docker tag ${{ steps.meta-test-runner.outputs.tags }} test-runner:prebuilt
-      - name: pull contract deployer image
-        run: docker pull ${{ steps.meta-solidity.outputs.tags }}
-      - name: rename contract deployer image
-        run: docker tag ${{ steps.meta-solidity.outputs.tags }} solidity:prebuilt
+        run: docker tag ${{ steps.meta-orchestrator.outputs.tags }} orchestrator:prebuilt
+      - name: pull hardhat image
+        run: docker pull ${{ steps.meta-hardhat.outputs.tags }}
+      - name: rename hardhat image
+        run: docker tag ${{ steps.meta-hardhat.outputs.tags }} ethereum:prebuilt
+      - name: clean slate
+        run: make e2e_clean_slate
       - name: build go test binary
-        run: cd testnet && go test -c
+        run: cd integration_tests && go test -c
       - name: Run all up ci test
-        run: ./testnet/testnet.test -test.run Test${{ matrix.test_type }} -test.failfast -test.v
+        run: ./integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m Test${{ matrix.test_type }}
+        env:
+          ARCHIVE_NODE_URL: https://eth-mainnet.alchemyapi.io/v2/${{ secrets.ALCHEMY_ID }}
