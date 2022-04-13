@@ -9,7 +9,7 @@ use gravity_abi::gravity::*;
 use gravity_utils::ethereum::{bytes_to_hex_str, vec_u8_to_fixed_32};
 use gravity_utils::types::*;
 use gravity_utils::{error::GravityError, message_signatures::encode_logic_call_confirm_hashed};
-use std::{result::Result, time::Duration};
+use std::{result::Result, time::Duration, collections::HashMap};
 
 /// this function generates an appropriate Ethereum transaction
 /// to submit the provided logic call
@@ -23,6 +23,7 @@ pub async fn send_eth_logic_call(
     gravity_id: String,
     gas_cost: GasCost,
     eth_client: EthClient,
+    logic_call_skips: &mut LogicCallSkips,
 ) -> Result<(), GravityError> {
     let new_call_nonce = call.invalidation_nonce;
     info!(
@@ -40,17 +41,23 @@ pub async fn send_eth_logic_call(
     .await?;
 
     let current_block_height = eth_client.get_block_number().await?;
+    logic_call_skips.clear_old_calls(current_block_height.as_u64());
+
     if before_nonce >= new_call_nonce {
         info!(
             "Someone else updated the LogicCall to {}, exiting early",
             before_nonce
         );
+
+        logic_call_skips.skip(&call);
         return Ok(());
     } else if current_block_height > call.timeout.into() {
         info!(
             "This LogicCall is timed out. timeout block: {} current block: {}, exiting early",
             current_block_height, call.timeout
         );
+
+        logic_call_skips.skip(&call);
         return Ok(());
     }
 
@@ -188,4 +195,131 @@ pub fn build_send_logic_call_contract_call(
         .value(U256::zero());
 
     Ok(contract_call)
+}
+
+pub struct LogicCallSkips {
+    skip_map: HashMap<Vec<u8>, HashMap<u64, LogicCall>>,
+}
+
+impl LogicCallSkips {
+    pub fn new() -> Self {
+        LogicCallSkips {
+            skip_map: HashMap::new(),
+        }
+    }
+
+    pub fn should_skip(&self, call: &LogicCall) -> bool {
+        let id_skips = self.skip_map.get(&call.invalidation_id);
+        if id_skips.is_some() {
+            let nonce_skips = id_skips.unwrap().get(&call.invalidation_nonce);
+            if nonce_skips.is_some() {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    pub fn skip(&mut self, call: &LogicCall) {
+        let id_skips = self.skip_map.get_mut(&call.invalidation_id);
+        if id_skips.is_none() {
+            let new_id_skips = HashMap::from([(call.invalidation_nonce, call.clone())]);
+            self.skip_map.insert(call.invalidation_id.clone(), new_id_skips);
+        } else {
+            id_skips.unwrap().insert(call.invalidation_nonce.clone(), call.clone());
+        }
+    }
+
+    pub fn clear_old_calls(&mut self, ethereum_height: u64) {
+        for id_skip_map in self.skip_map.iter_mut() {
+            let nonce_map = id_skip_map.1;
+            for nonce_skip_map in nonce_map.clone() {
+                let call = nonce_skip_map.1;
+                // Contract calls are timed out based on the last observed ethereum event
+                // height, which means if there is not much bridge activity occurring,
+                // they will not get timed out. This adds a large (longer than a day)
+                // buffer to ensure there is plenty of time for it to get correctly timed
+                // out, while still clearing out entries from the skip list eventually.
+                if call.timeout + 8000 < ethereum_height {
+                    nonce_map.remove(&call.invalidation_nonce);
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn test_logic_call_skips() {
+    let logic_call_1_nonce_1 = LogicCall {
+        transfers: Vec::new(),
+        fees: Vec::new(),
+        logic_contract_address: EthAddress::default(),
+        payload: Vec::new(),
+        timeout: 800,
+        invalidation_id: vec![0, 1, 2],
+        invalidation_nonce: 1,
+    };
+
+    let logic_call_1_nonce_2 = LogicCall {
+        transfers: Vec::new(),
+        fees: Vec::new(),
+        logic_contract_address: EthAddress::default(),
+        payload: Vec::new(),
+        timeout: 900,
+        invalidation_id: vec![0, 1, 2],
+        invalidation_nonce: 2,
+    };
+
+    let logic_call_2 = LogicCall {
+        transfers: Vec::new(),
+        fees: Vec::new(),
+        logic_contract_address: EthAddress::default(),
+        payload: Vec::new(),
+        timeout: 1000,
+        invalidation_id: vec![3, 4, 5],
+        invalidation_nonce: 1,
+    };
+
+    let mut skips = LogicCallSkips::new();
+
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), false);
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), false);
+    assert_eq!(skips.should_skip(&logic_call_2), false);
+
+    skips.skip(&logic_call_1_nonce_1);
+    skips.skip(&logic_call_2);
+
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), true);
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), false);
+    assert_eq!(skips.should_skip(&logic_call_2), true);
+
+    skips.skip(&logic_call_1_nonce_2);
+
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), true);
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), true);
+    assert_eq!(skips.should_skip(&logic_call_2), true);
+
+    skips.clear_old_calls(6000);
+
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), true);
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), true);
+    assert_eq!(skips.should_skip(&logic_call_2), true);
+
+    skips.clear_old_calls(8850);
+
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), false);
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), true);
+    assert_eq!(skips.should_skip(&logic_call_2), true);
+
+    skips.clear_old_calls(8980);
+
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), false);
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), false);
+    assert_eq!(skips.should_skip(&logic_call_2), true);
+
+    skips.clear_old_calls(9001);
+
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), false);
+    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), false);
+    assert_eq!(skips.should_skip(&logic_call_2), false);
 }
