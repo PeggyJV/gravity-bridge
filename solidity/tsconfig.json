@@ -24,6 +24,7 @@
     "types/**/*",
     "hardhat.config.ts",
     "contract-deployer.ts",
+    "test-contract-deployer.ts",
     "tests_mainnet_fork/uniswap-logic.ts",
     "scripts/get-valset.ts"
   ]

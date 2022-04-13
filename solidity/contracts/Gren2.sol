@@ -1,0 +1,12 @@
+pragma solidity ^0.8.0;
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract Gren2 is ERC20 {
+	constructor() public ERC20("Real Grenache Coin 2", "REALGREN2") {
+                _mint(0x68Bf478bb59EF53899EaB408a63558A0b6DbEA35, 100000000000000000000000000);
+                _mint(0x9494dCeDe8B4BCBb535bAD186a570AEc9700AEfa, 100000000000000000000000000);
+                _mint(0x7B17557E5546EF32dB236aCA012C932c74F3719b, 100000000000000000000000000);
+                _mint(0x6f0B654ea977D9F819a894cb58E6Bb5D1Dcf3e92, 100000000000000000000000000);
+                _mint(0x5d5A6DfCEcc822FdeD4493A449C1e2Da7F08Bd09, 100000000000000000000000000);
+	}
+}
