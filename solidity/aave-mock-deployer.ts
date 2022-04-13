@@ -23,7 +23,7 @@ async function deploy() {
     const provider = await new ethers.providers.JsonRpcProvider(args["eth-node"]);
     const wallet = new ethers.Wallet(args["eth-privkey"], provider);
     // assumed 'npx hardhat typechain' has been run
-    const { bytecode, abi } = getContractArtifacts("./artifacts/contracts/MockAaveV2StablecoinCellar.sol/MockAaveV2StablecoinCellar.json");
+    const { bytecode, abi } = getContractArtifacts("./MockAaveV2StablecoinCellar.json");
     const cellarFactory = new ethers.ContractFactory(abi, bytecode, wallet);
     const cellar = (await cellarFactory.deploy()) as MockAaveV2StablecoinCellar;
 

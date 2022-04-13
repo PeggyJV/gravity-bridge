@@ -46,7 +46,7 @@ var args = (0, command_line_args_1["default"])([
     // the Ethereum private key that will contain the gas required to pay for the contact deployment
     { name: "eth-privkey", type: String },
     // the cellar contract .json file
-    { name: "contract", type: String },
+    // { name: "contract", type: String },
     // gravity contract address to transfer ownership to
     { name: "gravity-address", type: String }
 ]);
@@ -62,7 +62,7 @@ function deploy() {
                 case 1:
                     provider = _b.sent();
                     wallet = new ethers_1.ethers.Wallet(args["eth-privkey"], provider);
-                    _a = getContractArtifacts(args["contract"]), bytecode = _a.bytecode, abi = _a.abi;
+                    _a = getContractArtifacts("./MockAaveV2StablecoinCellar.json"), bytecode = _a.bytecode, abi = _a.abi;
                     cellarFactory = new ethers_1.ethers.ContractFactory(abi, bytecode, wallet);
                     return [4 /*yield*/, cellarFactory.deploy()];
                 case 2:
