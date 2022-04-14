@@ -71,16 +71,20 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.Ether
 		// Sum the current powers of all validators who have voted and see if it passes the current threshold
 		// TODO: The different integer types and math here needs a careful review
 		requiredPower := types.EventVoteRecordPowerThreshold(k.StakingKeeper.GetLastTotalPower(ctx))
+		ctx.Logger().Error("REQUIRED POWER", "power", requiredPower)
 		eventVotePower := sdk.NewInt(0)
 		for _, validator := range eventVoteRecord.Votes {
 			val, _ := sdk.ValAddressFromBech32(validator)
 
 			validatorPower := k.StakingKeeper.GetLastValidatorPower(ctx, val)
+			ctx.Logger().Error("VALIDATOR POWER", "validator", val.String(), "power", validatorPower)
 			// Add it to the attestation power's sum
 			eventVotePower = eventVotePower.Add(sdk.NewInt(validatorPower))
+			ctx.Logger().Error("CUMULATIVE EVENT POWER", "power", eventVotePower)
 			// If the power of all the validators that have voted on the attestation is higher or equal to the threshold,
 			// process the attestation, set Observed to true, and break
 			if eventVotePower.GTE(requiredPower) {
+				ctx.Logger().Error("HAD ENOUGH POWER TO DO IT")
 				lastEventNonce := k.GetLastObservedEventNonce(ctx)
 				// this check is performed at the next level up so this should never panic
 				// outside of programmer error.
@@ -132,6 +136,7 @@ func (k Keeper) processEthereumEvent(ctx sdk.Context, event types.EthereumEvent)
 	} else {
 		ctx.EventManager().EmitEvents(xCtx.EventManager().Events()) // copy events to original context
 		commit()                                                    // persist transient storage
+		ctx.Logger().Error("PROCESSED ETHEREUM EVENT")
 	}
 }
 
