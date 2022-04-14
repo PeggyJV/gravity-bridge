@@ -70,6 +70,8 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.Ether
 
 		// Sum the current powers of all validators who have voted and see if it passes the current threshold
 		// TODO: The different integer types and math here needs a careful review
+		actualEvent, _ := types.UnpackEvent(eventVoteRecord.Event)
+		ctx.Logger().Error("EVENT", "nonce", actualEvent.GetEventNonce(), "hash", actualEvent.Hash().String())
 		requiredPower := types.EventVoteRecordPowerThreshold(k.StakingKeeper.GetLastTotalPower(ctx))
 		ctx.Logger().Error("REQUIRED POWER", "power", requiredPower)
 		eventVotePower := sdk.NewInt(0)
