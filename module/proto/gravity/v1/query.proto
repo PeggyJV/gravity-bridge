@@ -1,13 +1,13 @@
 syntax = "proto3";
-package gravity.v2;
+package gravity.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "gravity/v2/genesis.proto";
-import "gravity/v2/gravity.proto";
-import "gravity/v2/msgs.proto";
+import "gravity/v1/genesis.proto";
+import "gravity/v1/gravity.proto";
+import "gravity/v1/msgs.proto";
 
 option go_package = "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types";
 
