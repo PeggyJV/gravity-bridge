@@ -199,10 +199,15 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 		return nil, sdkerrors.Wrap(err, "create event vote record")
 	}
 
+	recordedEvent, err := types.UnpackEvent(record.GetEvent())
+	if err != nil {
+		return nil, err
+	}
+
 	ctx.Logger().Error("event vote record",
 		"accepted", record.GetAccepted(),
 		"votes", record.GetVotes(),
-		"event", record.GetEvent())
+		"event nonce", recordedEvent.GetEventNonce())
 
 	recordId := string(types.MakeEthereumEventVoteRecordKey(event.GetEventNonce(), event.Hash()))
 	ctx.Logger().Error("event vote record id", "id", recordId)
