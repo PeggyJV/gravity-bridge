@@ -9,8 +9,8 @@ import { exit } from "process";
 
 import { createProtobufRpcClient, QueryClient } from "@cosmjs/stargate";
 import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
-import { Query, QueryClientImpl } from "./gen/gravity/v2/query";
-import { SignerSetTx } from "./gen/gravity/v2/gravity";
+import { Query, QueryClientImpl } from "./gen/gravity/v1/query";
+import { SignerSetTx } from "./gen/gravity/v1/gravity";
 import Long from "long";
 
 const args = commandLineArgs([

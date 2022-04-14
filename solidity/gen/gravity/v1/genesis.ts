@@ -5,10 +5,10 @@ import { Any } from "../../google/protobuf/any";
 import {
   EthereumEventVoteRecord,
   SendToEthereum,
-} from "../../gravity/v2/gravity";
-import { MsgDelegateKeys } from "../../gravity/v2/msgs";
+} from "../../gravity/v1/gravity";
+import { MsgDelegateKeys } from "../../gravity/v1/msgs";
 
-export const protobufPackage = "gravity.v2";
+export const protobufPackage = "gravity.v1";
 
 /**
  * Params represent the Gravity genesis and store parameters
