@@ -180,17 +180,32 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 		return nil, err
 	}
 
+	ctx.Logger().Error("received submit ethereum event",
+		"eth height", event.GetEthereumHeight(),
+		"event nonce", event.GetEventNonce(),
+		"hash", event.Hash().String())
+
 	// return an error if the validator isn't in the active set
 	val, err := k.getSignerValidator(ctx, msg.Signer)
 	if err != nil {
 		return nil, err
 	}
 
+	ctx.Logger().Error("found signer validator", "val", val.String())
+
 	// Add the claim to the store
-	_, err = k.recordEventVote(ctx, event, val)
+	record, err := k.recordEventVote(ctx, event, val)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "create event vote record")
 	}
+
+	ctx.Logger().Error("event vote record",
+		"accepted", record.GetAccepted(),
+		"votes", record.GetVotes(),
+		"event", record.GetEvent())
+
+	recordId := string(types.MakeEthereumEventVoteRecordKey(event.GetEventNonce(), event.Hash()))
+	ctx.Logger().Error("event vote record id", "id", recordId)
 
 	// Emit the handle message event
 	ctx.EventManager().EmitEvent(
@@ -198,7 +213,7 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, fmt.Sprintf("%T", event)),
 			// TODO: maybe return something better here? is this the right string representation?
-			sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID, string(types.MakeEthereumEventVoteRecordKey(event.GetEventNonce(), event.Hash()))),
+			sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID, recordId),
 		),
 	)
 

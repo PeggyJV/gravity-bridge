@@ -25,6 +25,14 @@ func (k Keeper) DetectMaliciousSupply(ctx sdk.Context, denom string, amount sdk.
 func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 	switch event := eve.(type) {
 	case *types.SendToCosmosEvent:
+		ctx.Logger().Error("received send to cosmos event",
+			"token contract", event.TokenContract,
+			"amount", event.Amount,
+			"sender", event.EthereumSender,
+			"receiver", event.CosmosReceiver,
+			"event nonce", event.EventNonce,
+			"eth height", event.EthereumHeight)
+
 		// Check if coin is Cosmos-originated asset and get denom
 		isCosmosOriginated, denom := k.ERC20ToDenomLookup(ctx, event.TokenContract)
 		addr, _ := sdk.AccAddressFromBech32(event.CosmosReceiver)
@@ -39,11 +47,14 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 			if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coins); err != nil {
 				return sdkerrors.Wrapf(err, "mint vouchers coins: %s", coins)
 			}
+			ctx.Logger().Error("MINTED COINS")
 		}
 
 		if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
 			return err
 		}
+		ctx.Logger().Error("SENT COINS TO ACCOUNT")
+
 		k.AfterSendToCosmosEvent(ctx, *event)
 		return nil
 
