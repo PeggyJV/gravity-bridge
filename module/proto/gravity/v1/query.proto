@@ -1,13 +1,13 @@
 syntax = "proto3";
-package gravity.v2;
+package gravity.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "gravity/v2/genesis.proto";
-import "gravity/v2/gravity.proto";
-import "gravity/v2/msgs.proto";
+import "gravity/v1/genesis.proto";
+import "gravity/v1/gravity.proto";
+import "gravity/v1/msgs.proto";
 
 option go_package = "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types";
 
@@ -16,36 +16,36 @@ service Query {
 
   // Module parameters query
   rpc Params(ParamsRequest) returns (ParamsResponse) {
-    // option (google.api.http).get = "/gravity/v2/params";
+    // option (google.api.http).get = "/gravity/v1/params";
   }
 
   // get info on individual outgoing data
   rpc SignerSetTx(SignerSetTxRequest) returns (SignerSetTxResponse) {
-    // option (google.api.http).get = "/gravity/v2/signer_set";
+    // option (google.api.http).get = "/gravity/v1/signer_set";
   }
   rpc LatestSignerSetTx(LatestSignerSetTxRequest)
       returns (SignerSetTxResponse) {
-    // option (google.api.http).get = "/gravity/v2/signer_set/latest";
+    // option (google.api.http).get = "/gravity/v1/signer_set/latest";
   }
   rpc BatchTx(BatchTxRequest) returns (BatchTxResponse) {
     // option (google.api.http).get =
-    // "/gravity/v2/batch_txs/{token_contract}/{nonce}";
+    // "/gravity/v1/batch_txs/{token_contract}/{nonce}";
   }
   rpc ContractCallTx(ContractCallTxRequest) returns (ContractCallTxResponse) {
     // option (google.api.http).get =
-    // "/gravity/v2/contract_call_txs/{invalidation_id}/{invalidation_nonce}";
+    // "/gravity/v1/contract_call_txs/{invalidation_id}/{invalidation_nonce}";
   }
 
   // get collections of outgoing traffic from the bridge
   rpc SignerSetTxs(SignerSetTxsRequest) returns (SignerSetTxsResponse) {
-    // option (google.api.http).get = "/gravity/v2/signer_sets";
+    // option (google.api.http).get = "/gravity/v1/signer_sets";
   }
   rpc BatchTxs(BatchTxsRequest) returns (BatchTxsResponse) {
-    // option (google.api.http).get = "/gravity/v2/batch/batch_txs";
+    // option (google.api.http).get = "/gravity/v1/batch/batch_txs";
   }
   rpc ContractCallTxs(ContractCallTxsRequest)
       returns (ContractCallTxsResponse) {
-    // option (google.api.http).get = "/gravity/v2/batch/contract_call_txs";
+    // option (google.api.http).get = "/gravity/v1/batch/contract_call_txs";
   }
 
   // ethereum signature queries so validators can construct valid etherum
@@ -55,17 +55,17 @@ service Query {
   rpc SignerSetTxConfirmations(SignerSetTxConfirmationsRequest)
       returns (SignerSetTxConfirmationsResponse) {
     // option (google.api.http).get =
-    // "/gravity/v2/signer_sets/ethereum_signatures";
+    // "/gravity/v1/signer_sets/ethereum_signatures";
   }
   rpc BatchTxConfirmations(BatchTxConfirmationsRequest)
       returns (BatchTxConfirmationsResponse) {
     // option (google.api.http).get =
-    // "/gravity/v2/batch_txs/ethereum_signatures";
+    // "/gravity/v1/batch_txs/ethereum_signatures";
   }
   rpc ContractCallTxConfirmations(ContractCallTxConfirmationsRequest)
       returns (ContractCallTxConfirmationsResponse) {
     // option (google.api.http).get =
-    // "/gravity/v2/logic_calls/ethereum_signatures";
+    // "/gravity/v1/logic_calls/ethereum_signatures";
   }
 
   // ^^^^^^^^^^^^ seem okay for now ^^^^^^
@@ -76,34 +76,34 @@ service Query {
   rpc UnsignedSignerSetTxs(UnsignedSignerSetTxsRequest)
       returns (UnsignedSignerSetTxsResponse) {
     // option (google.api.http).get =
-    // "/gravity/v2/SignerSetTxs/{address}/pending";
+    // "/gravity/v1/SignerSetTxs/{address}/pending";
   }
   rpc UnsignedBatchTxs(UnsignedBatchTxsRequest)
       returns (UnsignedBatchTxsResponse) {
-    // option (google.api.http).get = "/gravity/v2/batches/{address}/pending";
+    // option (google.api.http).get = "/gravity/v1/batches/{address}/pending";
   }
   rpc UnsignedContractCallTxs(UnsignedContractCallTxsRequest)
       returns (UnsignedContractCallTxsResponse) {
     // option (google.api.http).get =
-    // "/gravity/v2/ContractCallTxs/{address}/pending";
+    // "/gravity/v1/ContractCallTxs/{address}/pending";
   }
 
   rpc LastSubmittedEthereumEvent(LastSubmittedEthereumEventRequest)
       returns (LastSubmittedEthereumEventResponse) {
     // option (google.api.http).get =
-    // "/gravity/v2/oracle/event_nonce/{address}";
+    // "/gravity/v1/oracle/event_nonce/{address}";
   }
 
   // Queries the fees for all pending batches, results are returned in sdk.Coin
   // (fee_amount_int)(contract_address) style
   rpc BatchTxFees(BatchTxFeesRequest) returns (BatchTxFeesResponse) {
-    // option (google.api.http).get = "/gravity/v2/batches/fees";
+    // option (google.api.http).get = "/gravity/v1/batches/fees";
   }
 
   // Query for info about denoms tracked by gravity
   rpc ERC20ToDenom(ERC20ToDenomRequest) returns (ERC20ToDenomResponse) {
     // option (google.api.http).get =
-    // "/gravity/v2/cosmos_originated/erc20_to_denom";
+    // "/gravity/v1/cosmos_originated/erc20_to_denom";
   }
 
   // DenomToERC20Params implements a query that allows ERC-20 parameter
@@ -114,39 +114,39 @@ service Query {
   // Query for info about denoms tracked by gravity
   rpc DenomToERC20(DenomToERC20Request) returns (DenomToERC20Response) {
     // option (google.api.http).get =
-    // "/gravity/v2/cosmos_originated/denom_to_erc20";
+    // "/gravity/v1/cosmos_originated/denom_to_erc20";
   }
   // Query for batch send to ethereums
   rpc BatchedSendToEthereums(BatchedSendToEthereumsRequest)
       returns (BatchedSendToEthereumsResponse) {
-    // option (google.api.http).get = "/gravity/v2/query_batched_send_to_eth";
+    // option (google.api.http).get = "/gravity/v1/query_batched_send_to_eth";
   }
   // Query for unbatched send to ethereums
   rpc UnbatchedSendToEthereums(UnbatchedSendToEthereumsRequest)
       returns (UnbatchedSendToEthereumsResponse) {
-    // option (google.api.http).get = "/gravity/v2/query_unbatched_send_to_eth";
+    // option (google.api.http).get = "/gravity/v1/query_unbatched_send_to_eth";
   }
 
   // delegate keys
   rpc DelegateKeysByValidator(DelegateKeysByValidatorRequest)
       returns (DelegateKeysByValidatorResponse) {
     // option (google.api.http).get =
-    // "/gravity/v2/delegate_keys/validator/{validator}";
+    // "/gravity/v1/delegate_keys/validator/{validator}";
   }
   rpc DelegateKeysByEthereumSigner(DelegateKeysByEthereumSignerRequest)
       returns (DelegateKeysByEthereumSignerResponse) {
     // option (google.api.http).get =
-    // "/gravity/v2/delegate_keys/ethereum/{ethereum_signer}";
+    // "/gravity/v1/delegate_keys/ethereum/{ethereum_signer}";
   }
   rpc DelegateKeysByOrchestrator(DelegateKeysByOrchestratorRequest)
       returns (DelegateKeysByOrchestratorResponse) {
     // option (google.api.http).get =
-    // "/gravity/v2/delegate_keys/orchestrator/{orchestrator}";
+    // "/gravity/v1/delegate_keys/orchestrator/{orchestrator}";
   }
 
   rpc DelegateKeys(DelegateKeysRequest) returns (DelegateKeysResponse) {
     // option (google.api.http).get =
-    // "/gravity/v2/delegate_keys";
+    // "/gravity/v1/delegate_keys";
   }
 }
 

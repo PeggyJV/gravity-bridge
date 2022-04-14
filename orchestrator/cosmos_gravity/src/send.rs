@@ -65,7 +65,7 @@ pub async fn update_gravity_delegate_addresses(
         ethereum_address: format_eth_address(delegate_eth_address),
         eth_signature: eth_signature.to_vec(),
     };
-    let msg = Msg::new("/gravity.v2.MsgDelegateKeys", msg);
+    let msg = Msg::new("/gravity.v1.MsgDelegateKeys", msg);
 
     send_messages(contact, cosmos_key, gas_price, vec![msg], gas_adjustment).await
 }
@@ -98,7 +98,7 @@ pub async fn send_to_eth(
         amount: Some(amount.into()),
         bridge_fee: Some(bridge_fee.clone().into()),
     };
-    let msg = Msg::new("/gravity.v2.MsgSendToEthereum", msg);
+    let msg = Msg::new("/gravity.v1.MsgSendToEthereum", msg);
     send_messages(contact, cosmos_key, gas_price, vec![msg], gas_adjustment).await
 }
 
@@ -114,7 +114,7 @@ pub async fn send_request_batch_tx(
         signer: cosmos_address.to_string(),
         denom,
     };
-    let msg = Msg::new("/gravity.v2.MsgRequestBatchTx", msg_request_batch);
+    let msg = Msg::new("/gravity.v1.MsgRequestBatchTx", msg_request_batch);
     send_messages(contact, cosmos_key, gas_price, vec![msg], gas_adjustment).await
 }
 

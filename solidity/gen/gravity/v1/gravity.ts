@@ -4,7 +4,7 @@ import _m0 from "protobufjs/minimal";
 import { Any } from "../../google/protobuf/any";
 import { Coin } from "../../cosmos/base/v1beta1/coin";
 
-export const protobufPackage = "gravity.v2";
+export const protobufPackage = "gravity.v1";
 
 /**
  * EthereumEventVoteRecord is an event that is pending of confirmation by 2/3 of

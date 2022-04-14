@@ -1,13 +1,13 @@
 /* eslint-disable */
 import Long from "long";
 import _m0 from "protobufjs/minimal";
-import { Params } from "../../gravity/v2/genesis";
+import { Params } from "../../gravity/v1/genesis";
 import {
   SignerSetTx,
   BatchTx,
   ContractCallTx,
   SendToEthereum,
-} from "../../gravity/v2/gravity";
+} from "../../gravity/v1/gravity";
 import {
   PageRequest,
   PageResponse,
@@ -17,10 +17,10 @@ import {
   ContractCallTxConfirmation,
   BatchTxConfirmation,
   MsgDelegateKeys,
-} from "../../gravity/v2/msgs";
+} from "../../gravity/v1/msgs";
 import { Coin } from "../../cosmos/base/v1beta1/coin";
 
-export const protobufPackage = "gravity.v2";
+export const protobufPackage = "gravity.v1";
 
 /** rpc Params */
 export interface ParamsRequest {}
@@ -3748,13 +3748,13 @@ export class QueryClientImpl implements Query {
   }
   Params(request: ParamsRequest): Promise<ParamsResponse> {
     const data = ParamsRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v2.Query", "Params", data);
+    const promise = this.rpc.request("gravity.v1.Query", "Params", data);
     return promise.then((data) => ParamsResponse.decode(new _m0.Reader(data)));
   }
 
   SignerSetTx(request: SignerSetTxRequest): Promise<SignerSetTxResponse> {
     const data = SignerSetTxRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v2.Query", "SignerSetTx", data);
+    const promise = this.rpc.request("gravity.v1.Query", "SignerSetTx", data);
     return promise.then((data) =>
       SignerSetTxResponse.decode(new _m0.Reader(data))
     );
@@ -3765,7 +3765,7 @@ export class QueryClientImpl implements Query {
   ): Promise<SignerSetTxResponse> {
     const data = LatestSignerSetTxRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "LatestSignerSetTx",
       data
     );
@@ -3776,7 +3776,7 @@ export class QueryClientImpl implements Query {
 
   BatchTx(request: BatchTxRequest): Promise<BatchTxResponse> {
     const data = BatchTxRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v2.Query", "BatchTx", data);
+    const promise = this.rpc.request("gravity.v1.Query", "BatchTx", data);
     return promise.then((data) => BatchTxResponse.decode(new _m0.Reader(data)));
   }
 
@@ -3785,7 +3785,7 @@ export class QueryClientImpl implements Query {
   ): Promise<ContractCallTxResponse> {
     const data = ContractCallTxRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "ContractCallTx",
       data
     );
@@ -3796,7 +3796,7 @@ export class QueryClientImpl implements Query {
 
   SignerSetTxs(request: SignerSetTxsRequest): Promise<SignerSetTxsResponse> {
     const data = SignerSetTxsRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v2.Query", "SignerSetTxs", data);
+    const promise = this.rpc.request("gravity.v1.Query", "SignerSetTxs", data);
     return promise.then((data) =>
       SignerSetTxsResponse.decode(new _m0.Reader(data))
     );
@@ -3804,7 +3804,7 @@ export class QueryClientImpl implements Query {
 
   BatchTxs(request: BatchTxsRequest): Promise<BatchTxsResponse> {
     const data = BatchTxsRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v2.Query", "BatchTxs", data);
+    const promise = this.rpc.request("gravity.v1.Query", "BatchTxs", data);
     return promise.then((data) =>
       BatchTxsResponse.decode(new _m0.Reader(data))
     );
@@ -3815,7 +3815,7 @@ export class QueryClientImpl implements Query {
   ): Promise<ContractCallTxsResponse> {
     const data = ContractCallTxsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "ContractCallTxs",
       data
     );
@@ -3829,7 +3829,7 @@ export class QueryClientImpl implements Query {
   ): Promise<SignerSetTxConfirmationsResponse> {
     const data = SignerSetTxConfirmationsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "SignerSetTxConfirmations",
       data
     );
@@ -3843,7 +3843,7 @@ export class QueryClientImpl implements Query {
   ): Promise<BatchTxConfirmationsResponse> {
     const data = BatchTxConfirmationsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "BatchTxConfirmations",
       data
     );
@@ -3857,7 +3857,7 @@ export class QueryClientImpl implements Query {
   ): Promise<ContractCallTxConfirmationsResponse> {
     const data = ContractCallTxConfirmationsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "ContractCallTxConfirmations",
       data
     );
@@ -3871,7 +3871,7 @@ export class QueryClientImpl implements Query {
   ): Promise<UnsignedSignerSetTxsResponse> {
     const data = UnsignedSignerSetTxsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "UnsignedSignerSetTxs",
       data
     );
@@ -3885,7 +3885,7 @@ export class QueryClientImpl implements Query {
   ): Promise<UnsignedBatchTxsResponse> {
     const data = UnsignedBatchTxsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "UnsignedBatchTxs",
       data
     );
@@ -3899,7 +3899,7 @@ export class QueryClientImpl implements Query {
   ): Promise<UnsignedContractCallTxsResponse> {
     const data = UnsignedContractCallTxsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "UnsignedContractCallTxs",
       data
     );
@@ -3913,7 +3913,7 @@ export class QueryClientImpl implements Query {
   ): Promise<LastSubmittedEthereumEventResponse> {
     const data = LastSubmittedEthereumEventRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "LastSubmittedEthereumEvent",
       data
     );
@@ -3924,7 +3924,7 @@ export class QueryClientImpl implements Query {
 
   BatchTxFees(request: BatchTxFeesRequest): Promise<BatchTxFeesResponse> {
     const data = BatchTxFeesRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v2.Query", "BatchTxFees", data);
+    const promise = this.rpc.request("gravity.v1.Query", "BatchTxFees", data);
     return promise.then((data) =>
       BatchTxFeesResponse.decode(new _m0.Reader(data))
     );
@@ -3932,7 +3932,7 @@ export class QueryClientImpl implements Query {
 
   ERC20ToDenom(request: ERC20ToDenomRequest): Promise<ERC20ToDenomResponse> {
     const data = ERC20ToDenomRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v2.Query", "ERC20ToDenom", data);
+    const promise = this.rpc.request("gravity.v1.Query", "ERC20ToDenom", data);
     return promise.then((data) =>
       ERC20ToDenomResponse.decode(new _m0.Reader(data))
     );
@@ -3943,7 +3943,7 @@ export class QueryClientImpl implements Query {
   ): Promise<DenomToERC20ParamsResponse> {
     const data = DenomToERC20ParamsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "DenomToERC20Params",
       data
     );
@@ -3954,7 +3954,7 @@ export class QueryClientImpl implements Query {
 
   DenomToERC20(request: DenomToERC20Request): Promise<DenomToERC20Response> {
     const data = DenomToERC20Request.encode(request).finish();
-    const promise = this.rpc.request("gravity.v2.Query", "DenomToERC20", data);
+    const promise = this.rpc.request("gravity.v1.Query", "DenomToERC20", data);
     return promise.then((data) =>
       DenomToERC20Response.decode(new _m0.Reader(data))
     );
@@ -3965,7 +3965,7 @@ export class QueryClientImpl implements Query {
   ): Promise<BatchedSendToEthereumsResponse> {
     const data = BatchedSendToEthereumsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "BatchedSendToEthereums",
       data
     );
@@ -3979,7 +3979,7 @@ export class QueryClientImpl implements Query {
   ): Promise<UnbatchedSendToEthereumsResponse> {
     const data = UnbatchedSendToEthereumsRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "UnbatchedSendToEthereums",
       data
     );
@@ -3993,7 +3993,7 @@ export class QueryClientImpl implements Query {
   ): Promise<DelegateKeysByValidatorResponse> {
     const data = DelegateKeysByValidatorRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "DelegateKeysByValidator",
       data
     );
@@ -4007,7 +4007,7 @@ export class QueryClientImpl implements Query {
   ): Promise<DelegateKeysByEthereumSignerResponse> {
     const data = DelegateKeysByEthereumSignerRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "DelegateKeysByEthereumSigner",
       data
     );
@@ -4021,7 +4021,7 @@ export class QueryClientImpl implements Query {
   ): Promise<DelegateKeysByOrchestratorResponse> {
     const data = DelegateKeysByOrchestratorRequest.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Query",
+      "gravity.v1.Query",
       "DelegateKeysByOrchestrator",
       data
     );
@@ -4032,7 +4032,7 @@ export class QueryClientImpl implements Query {
 
   DelegateKeys(request: DelegateKeysRequest): Promise<DelegateKeysResponse> {
     const data = DelegateKeysRequest.encode(request).finish();
-    const promise = this.rpc.request("gravity.v2.Query", "DelegateKeys", data);
+    const promise = this.rpc.request("gravity.v1.Query", "DelegateKeys", data);
     return promise.then((data) =>
       DelegateKeysResponse.decode(new _m0.Reader(data))
     );

@@ -3,9 +3,9 @@ import Long from "long";
 import _m0 from "protobufjs/minimal";
 import { Coin } from "../../cosmos/base/v1beta1/coin";
 import { Any } from "../../google/protobuf/any";
-import { EthereumSigner } from "../../gravity/v2/gravity";
+import { EthereumSigner } from "../../gravity/v1/gravity";
 
-export const protobufPackage = "gravity.v2";
+export const protobufPackage = "gravity.v1";
 
 /**
  * MsgSendToEthereum submits a SendToEthereum attempt to bridge an asset over to
@@ -2092,7 +2092,7 @@ export class MsgClientImpl implements Msg {
     request: MsgSendToEthereum
   ): Promise<MsgSendToEthereumResponse> {
     const data = MsgSendToEthereum.encode(request).finish();
-    const promise = this.rpc.request("gravity.v2.Msg", "SendToEthereum", data);
+    const promise = this.rpc.request("gravity.v1.Msg", "SendToEthereum", data);
     return promise.then((data) =>
       MsgSendToEthereumResponse.decode(new _m0.Reader(data))
     );
@@ -2103,7 +2103,7 @@ export class MsgClientImpl implements Msg {
   ): Promise<MsgCancelSendToEthereumResponse> {
     const data = MsgCancelSendToEthereum.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Msg",
+      "gravity.v1.Msg",
       "CancelSendToEthereum",
       data
     );
@@ -2116,7 +2116,7 @@ export class MsgClientImpl implements Msg {
     request: MsgRequestBatchTx
   ): Promise<MsgRequestBatchTxResponse> {
     const data = MsgRequestBatchTx.encode(request).finish();
-    const promise = this.rpc.request("gravity.v2.Msg", "RequestBatchTx", data);
+    const promise = this.rpc.request("gravity.v1.Msg", "RequestBatchTx", data);
     return promise.then((data) =>
       MsgRequestBatchTxResponse.decode(new _m0.Reader(data))
     );
@@ -2127,7 +2127,7 @@ export class MsgClientImpl implements Msg {
   ): Promise<MsgSubmitEthereumTxConfirmationResponse> {
     const data = MsgSubmitEthereumTxConfirmation.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Msg",
+      "gravity.v1.Msg",
       "SubmitEthereumTxConfirmation",
       data
     );
@@ -2141,7 +2141,7 @@ export class MsgClientImpl implements Msg {
   ): Promise<MsgSubmitEthereumEventResponse> {
     const data = MsgSubmitEthereumEvent.encode(request).finish();
     const promise = this.rpc.request(
-      "gravity.v2.Msg",
+      "gravity.v1.Msg",
       "SubmitEthereumEvent",
       data
     );
@@ -2152,7 +2152,7 @@ export class MsgClientImpl implements Msg {
 
   SetDelegateKeys(request: MsgDelegateKeys): Promise<MsgDelegateKeysResponse> {
     const data = MsgDelegateKeys.encode(request).finish();
-    const promise = this.rpc.request("gravity.v2.Msg", "SetDelegateKeys", data);
+    const promise = this.rpc.request("gravity.v1.Msg", "SetDelegateKeys", data);
     return promise.then((data) =>
       MsgDelegateKeysResponse.decode(new _m0.Reader(data))
     );
