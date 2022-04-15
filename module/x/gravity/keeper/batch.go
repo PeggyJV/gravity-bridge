@@ -81,6 +81,20 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 		}
 		return false
 	})
+
+	// burn the amount for non cosmos originated asset
+	isCosmosOriginated, denom := k.ERC20ToDenomLookup(ctx, common.HexToAddress(batchTx.TokenContract))
+	if !isCosmosOriginated {
+		totalToBurn := sdk.NewInt(0)
+		for _, tx := range batchTx.Transactions {
+			totalToBurn = totalToBurn.Add(tx.Erc20Token.Amount.Add(tx.Erc20Fee.Amount))
+		}
+		burnVouchers := sdk.NewCoins(sdk.NewCoin(denom, totalToBurn))
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, burnVouchers); err != nil {
+			panic(err)
+		}
+	}
+
 	k.DeleteOutgoingTx(ctx, batchTx.GetStoreIndex())
 }
 
