@@ -105,6 +105,7 @@ pub async fn relay_logic_calls(
 
         if cost.is_err() {
             error!("LogicCall cost estimate failed with {:?}", cost);
+            logic_call_skips.skip(&oldest_signed_call);
             return;
         }
 
@@ -115,6 +116,7 @@ pub async fn relay_logic_calls(
                 "Total gas cost greater than f32 max, skipping logic call submission: {}",
                 oldest_signed_call.invalidation_nonce
             );
+            logic_call_skips.skip(&oldest_signed_call);
             return;
         }
         let total_cost = total_cost.unwrap();
