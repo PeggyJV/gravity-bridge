@@ -50,6 +50,3 @@ ethermint = [
     "gorc/ethermint",
     "register_delegate_keys/ethermint",
 ]
-
-[patch.crates-io]
-deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
