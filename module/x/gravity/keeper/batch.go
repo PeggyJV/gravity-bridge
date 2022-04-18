@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/binary"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -64,13 +65,13 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, contractAddress common.Address, ma
 
 // batchTxExecuted is run when the Cosmos chain detects that a batch has been executed on Ethereum
 // It deletes all the transactions in the batch, then cancels all earlier batches
-func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, nonce uint64) {
+func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, nonce uint64) error {
 	otx := k.GetOutgoingTx(ctx, types.MakeBatchTxKey(tokenContract, nonce))
 	if otx == nil {
 		k.Logger(ctx).Error("Failed to clean batches",
 			"token contract", tokenContract.Hex(),
 			"nonce", nonce)
-		return
+		return nil
 	}
 	batchTx, _ := otx.(*types.BatchTx)
 	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
@@ -91,11 +92,12 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 		}
 		burnVouchers := sdk.NewCoins(sdk.NewCoin(denom, totalToBurn))
 		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, burnVouchers); err != nil {
-			panic(err)
+			return sdkerrors.Wrapf(err, "burn vouchers coins: %s", burnVouchers)
 		}
 	}
 
 	k.DeleteOutgoingTx(ctx, batchTx.GetStoreIndex())
+	return nil
 }
 
 // getBatchFeesByTokenType gets the fees the next batch of a given token type would
