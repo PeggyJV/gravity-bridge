@@ -22,8 +22,7 @@ func TestModuleBalanceUnbatchedTxs(t *testing.T) {
 		myTokenContractAddr = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
 		myTokenDenom        = "gravity0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5"
 	)
-
-	input.GravityKeeper.setCosmosOriginatedDenomToERC20(ctx, myTokenDenom, myTokenContractAddr)
+	
 	// mint some voucher first
 	voucher := sdk.NewCoin(myTokenDenom, sdk.NewInt(99999))
 	allVouchers := sdk.Coins{voucher}
@@ -57,6 +56,14 @@ func TestModuleBalanceUnbatchedTxs(t *testing.T) {
 	// Remove one of the transactions
 	err = input.GravityKeeper.cancelSendToEthereum(ctx, 1, mySender.String())
 	require.NoError(t, err)
+	checkInvariant(t, ctx, input.GravityKeeper, true)
+
+	// Build batch and check
+	batch := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 100)
+	checkInvariant(t, ctx, input.GravityKeeper, true)
+
+	// Execute batch and check
+	input.GravityKeeper.batchTxExecuted(ctx, myTokenContractAddr, batch.BatchNonce)
 	checkInvariant(t, ctx, input.GravityKeeper, true)
 
 	// Ensure an error is returned for a mismatched balance
