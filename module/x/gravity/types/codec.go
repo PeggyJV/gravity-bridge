@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // RegisterLegacyAminoCodec registers the vesting interfaces and concrete types on the
@@ -70,6 +71,10 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&SignerSetTx{},
 		&BatchTx{},
 		&ContractCallTx{},
+	)
+
+	registry.RegisterImplementations((*govtypes.Content)(nil),
+		&CommunityPoolEthereumSpendProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
