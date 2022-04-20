@@ -213,7 +213,7 @@ Where proposal.json contains:
 	"title": "Community Pool Ethereum Spend",
 	"description": "Bridge me some tokens to Ethereum!",
 	"recipient": "0x0000000000000000000000000000000000000000",
-	"amount": "20000stake"
+	"amount": "20000stake",
 	"bridge_fee": "1000stake",
 	"deposit": "1000stake"
 }
