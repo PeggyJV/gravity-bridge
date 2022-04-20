@@ -58,5 +58,5 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - name: Run Carglo Clippy
+      - name: Run Cargo Clippy
         run: cd orchestrator && cargo clippy
