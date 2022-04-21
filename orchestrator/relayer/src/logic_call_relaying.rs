@@ -4,8 +4,11 @@ use ethereum_gravity::one_eth_f32;
 use ethereum_gravity::{
     logic_call::send_eth_logic_call, types::EthClient, utils::get_logic_call_nonce,
 };
+use ethers::prelude::ContractError;
+use ethers::prelude::signer::SignerMiddlewareError;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
 use gravity_utils::types::{LogicCallConfirmResponse, Valset};
 use gravity_utils::{message_signatures::encode_logic_call_confirm_hashed, types::LogicCall};
@@ -38,6 +41,10 @@ pub async fn relay_logic_calls(
     let mut oldest_signatures: Option<Vec<LogicCallConfirmResponse>> = None;
     for call in latest_calls {
         if logic_call_skips.should_skip(&call) {
+            warn!(
+                "Skipping LogicCall {}/{}, will be skipped until on-chain timeout at eth height {} or process restart",
+                bytes_to_hex_str(&call.invalidation_id), call.invalidation_nonce, call.timeout
+            );
             continue;
         }
 
