@@ -219,9 +219,9 @@ impl LogicCallSkips {
     pub fn skips_left(&self, call: &LogicCall) -> u32 {
         let id_skips = self.skip_map.get(&call.invalidation_id);
         if id_skips.is_some() {
-            let nonce_skips = id_skips.unwrap().get(&call.invalidation_nonce);
-            if nonce_skips.is_some() {
-                return nonce_skips.unwrap().skips_left;
+            let skip_state = id_skips.unwrap().get(&call.invalidation_nonce);
+            if skip_state.is_some() {
+                return skip_state.unwrap().skips_left;
             }
         }
 
