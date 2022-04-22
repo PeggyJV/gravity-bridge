@@ -738,7 +738,7 @@ func (s *IntegrationTestSuite) sendToCosmos(destination sdk.AccAddress, amount s
 	return s.SendEthTransaction(s.chain.validators[0], gravityContract, PackSendToCosmos(testERC20contract, destination, amount))
 }
 
-func (s *IntegrationTestSuite) getEthBalanceOf(account common.Address) (*sdk.Int, error) {
+func (s *IntegrationTestSuite) getEthTokenBalanceOf(account common.Address, erc20contract common.Address) (*sdk.Int, error) {
 	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
 	if err != nil {
 		return nil, err
@@ -748,7 +748,7 @@ func (s *IntegrationTestSuite) getEthBalanceOf(account common.Address) (*sdk.Int
 
 	response, err := ethClient.CallContract(context.Background(), ethereum.CallMsg{
 		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
-		To:   &testERC20contract,
+		To:   &erc20contract,
 		Gas:  0,
 		Data: data,
 	}, nil)
