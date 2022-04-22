@@ -1,3 +1,4 @@
+use crate::main_loop::LOOP_SPEED;
 use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
 use ethereum_gravity::logic_call::LogicCallSkips;
 use ethereum_gravity::one_eth_f32;
@@ -37,10 +38,11 @@ pub async fn relay_logic_calls(
     let mut oldest_signed_call: Option<LogicCall> = None;
     let mut oldest_signatures: Option<Vec<LogicCallConfirmResponse>> = None;
     for call in latest_calls {
-        if logic_call_skips.skips_left(&call) > 0 {
+        let skips_left: u64 = logic_call_skips.skips_left(&call).into();
+        if skips_left > 0 {
             warn!(
-                "Skipping LogicCall {}/{}, will be skipped until on-chain timeout at eth height {} or process restart",
-                bytes_to_hex_str(&call.invalidation_id), call.invalidation_nonce, call.timeout
+                "Skipping LogicCall {}/{} with eth timeout {}, estimated next retry after minimum of {} seconds",
+                bytes_to_hex_str(&call.invalidation_id), call.invalidation_nonce, call.timeout, skips_left * LOOP_SPEED.as_secs()
             );
             logic_call_skips.skip(&call);
             continue;
