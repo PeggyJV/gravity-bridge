@@ -13,7 +13,8 @@ func (k Keeper) HandleCommunityPoolEthereumSpendProposal(ctx sdk.Context, p *typ
 	// NOTE the community pool isn't a module account, however its coins
 	// are held in the distribution module account. Thus the community pool
 	// must be reduced separately from the createSendToEthereum calls
-	newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(p.Amount, p.BridgeFee))
+	totalToSpend := p.Amount.Add(p.BridgeFee)
+	newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(totalToSpend))
 	if negative {
 		return distributiontypes.ErrBadDistribution
 	}
