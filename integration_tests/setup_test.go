@@ -28,6 +28,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ory/dockertest/v3"
@@ -276,6 +277,16 @@ func (s *IntegrationTestSuite) initGenesis() {
 	bz, err := cdc.MarshalJSON(&bankGenState)
 	s.Require().NoError(err)
 	appGenState[banktypes.ModuleName] = bz
+
+	var govGenState govtypes.GenesisState
+	s.Require().NoError(cdc.UnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState))
+
+	// set short voting period to allow gov proposals in tests
+	govGenState.VotingParams.VotingPeriod = time.Second * 20
+	govGenState.DepositParams.MinDeposit = sdk.Coins{{Denom: testDenom, Amount: sdk.OneInt()}}
+	bz, err = cdc.MarshalJSON(&govGenState)
+	s.Require().NoError(err)
+	appGenState[govtypes.ModuleName] = bz
 
 	// set crisis denom
 	var crisisGenState crisistypes.GenesisState
@@ -716,20 +727,7 @@ func (s *IntegrationTestSuite) TestBasicChain() {
 }
 
 func (s *IntegrationTestSuite) deployERC20(denom string, name string, symbol string, decimals uint8) error {
-	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
-	if err != nil {
-		return err
-	}
-
-	data := PackDeployERC20(denom, name, symbol, decimals)
-
-	_, err = ethClient.CallContract(context.Background(), ethereum.CallMsg{
-		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
-		To:   &gravityContract,
-		Gas:  0,
-		Data: data,
-	}, nil)
-	return err
+	return s.SendEthTransaction(s.chain.validators[0], gravityContract, PackDeployERC20(denom, name, symbol, decimals))
 }
 
 func (s *IntegrationTestSuite) approveERC20() error {
@@ -810,7 +808,7 @@ func (s *IntegrationTestSuite) SendEthTransaction(validator *validator, toAddres
 	}
 
 	value := big.NewInt(0)
-	gasLimit := uint64(500000)
+	gasLimit := uint64(1000000)
 	gasPrice, err := ethClient.SuggestGasPrice(context.Background())
 	if err != nil {
 		return err
