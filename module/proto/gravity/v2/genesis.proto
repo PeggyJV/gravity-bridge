@@ -1,0 +1,125 @@
+syntax = "proto3";
+package gravity.v2;
+
+import "gogoproto/gogo.proto";
+import "gravity/v2/gravity.proto";
+import "gravity/v2/msgs.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types";
+
+// Params represent the Gravity genesis and store parameters
+// gravity_id:
+// a random 32 byte value to prevent signature reuse, for example if the
+// cosmos validators decided to use the same EVM keys for another chain
+// also running Gravity we would not want it to be possible to play a deposit
+// from chain A back on chain B's Gravity. This value IS USED ON EVM so
+// it must be set in your genesis.json before launch and not changed after
+// deploying Gravity
+//
+// contract_hash:
+// the code hash of a known good version of the Gravity contract
+// solidity code. This can be used to verify the correct version
+// of the contract has been deployed. This is a reference value for
+// goernance action only it is never read by any Gravity code
+//
+// bridge_EVM_address:
+// is address of the bridge contract on the EVM side, this is a
+// reference value for governance only and is not actually used by any
+// Gravity code
+//
+// bridge_chain_id:
+// the unique identifier of the EVM chain, this is a reference value
+// only and is not actually used by any Gravity code
+//
+// These reference values may be used by future Gravity client implemetnations
+// to allow for saftey features or convenience features like the Gravity address
+// in your relayer. A relayer would require a configured Gravity address if
+// governance had not set the address on the chain it was relaying for.
+//
+// signed_signer_set_txs_window
+// signed_batches_window
+// signed_EVM_signatures_window
+//
+// These values represent the time in blocks that a validator has to submit
+// a signature for a batch or valset, or to submit a EVM_signature for a
+// particular attestation nonce. In the case of attestations this clock starts
+// when the attestation is created, but only allows for slashing once the event
+// has passed
+//
+// target_eth_tx_timeout:
+//
+// This is the 'target' value for when EVM transactions time out, this is a
+// target because EVM is a probabilistic chain and you can't say for sure
+// what the block frequency is ahead of time.
+//
+// average_block_time
+// average_EVM_block_time
+//
+// These values are the average Cosmos block time and EVM block time
+// respectively and they are used to compute what the target batch timeout is.
+// It is important that governance updates these in case of any major, prolonged
+// change in the time it takes to produce a block
+//
+// slash_fraction_signer_set_tx
+// slash_fraction_batch
+// slash_fraction_EVM_signature
+// slash_fraction_conflicting_EVM_signature
+//
+// The slashing fractions for the various gravity related slashing conditions.
+// The first three refer to not submitting a particular message, the third for
+// submitting a different EVM_signature for the same EVM event
+message Params {
+  option (gogoproto.stringer) = false;
+
+  string gravity_id = 1;
+  string contract_source_hash = 2;
+  uint64 signed_signer_set_txs_window = 3;
+  uint64 signed_batches_window = 4;
+  uint64 evm_signatures_window = 5;
+  uint64 target_eth_tx_timeout = 6;
+  uint64 average_block_time = 7;
+  uint64 average_EVM_block_time = 8;
+  // TODO: slash fraction for contract call txs too
+  bytes slash_fraction_signer_set_tx = 9 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  bytes slash_fraction_batch = 10 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  bytes slash_fraction_evm_signature = 11 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  bytes slash_fraction_conflicting_evm_signature = 12 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  uint64 unbond_slashing_signer_set_txs_window = 13;
+  repeated uint32 chain_ids = 14;
+}
+
+message GenesisStateMultiChain {
+  Params params = 1;
+  repeated MsgDelegateKeys delegate_keys = 2;
+  repeated ChainGenesisState chain_genesis_states = 3;
+}
+
+message ChainGenesisState {
+  uint32 chainID = 1;
+  uint64 last_observed_event_nonce = 2;
+  repeated google.protobuf.Any outgoing_txs = 3;
+  repeated google.protobuf.Any confirmations = 4;
+  repeated EVMEventVoteRecord evm_event_vote_records = 5;
+  repeated ERC20ToDenom erc20_to_denoms = 6;
+  repeated SendToEVM unbatched_send_to_evm_txs = 7;
+}
+
+// This records the relationship between an ERC20 token and the denom
+// of the corresponding Cosmos originated asset
+message ERC20ToDenom {
+  string erc20 = 1;
+  string denom = 2;
+}
