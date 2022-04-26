@@ -31,7 +31,7 @@ message MsgSendToEVM {
   string EVM_recipient = 2;
   cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
   cosmos.base.v1beta1.Coin bridge_fee = 4 [ (gogoproto.nullable) = false ];
-  optional uint32 chain_id = 5;
+  uint32 chain_id = 5;
 }
 
 // MsgSendToEVMResponse returns the SendToEVM transaction ID which
@@ -47,7 +47,7 @@ message MsgSendToEVMResponse {
 message MsgCancelSendToEVM {
   uint64 id = 1;
   string sender = 2;
-  optional uint32 chain_id = 3;
+  uint32 chain_id = 3;
 }
 
 message MsgCancelSendToEVMResponse {}
@@ -57,7 +57,7 @@ message MsgCancelSendToEVMResponse {}
 message MsgRequestBatchTx {
   string denom = 1;
   string signer = 2;
-  optional uint32 chain_id = 3;
+  uint32 chain_id = 3;
 }
 
 message MsgRequestBatchTxResponse {}
@@ -71,7 +71,7 @@ message MsgSubmitEVMTxConfirmation {
   google.protobuf.Any confirmation = 1
   [ (cosmos_proto.accepts_interface) = "EVMTxConfirmation" ];
   string signer = 2;
-  optional uint32 chain_id = 3;
+  uint32 chain_id = 3;
 }
 
 // ContractCallTxConfirmation is a signature on behalf of a validator for a
@@ -81,7 +81,7 @@ message ContractCallTxConfirmation {
   uint64 invalidation_nonce = 2;
   string EVM_signer = 3;
   bytes signature = 4;
-  optional uint32 chain_id = 5;
+  uint32 chain_id = 5;
 }
 
 // BatchTxConfirmation is a signature on behalf of a validator for a BatchTx.
@@ -90,7 +90,7 @@ message BatchTxConfirmation {
   uint64 batch_nonce = 2;
   string EVM_signer = 3;
   bytes signature = 4;
-  optional uint32 chain_id = 5;
+  uint32 chain_id = 5;
 }
 
 // SignerSetTxConfirmation is a signature on behalf of a validator for a
@@ -99,7 +99,7 @@ message SignerSetTxConfirmation {
   uint64 signer_set_nonce = 1;
   string EVM_signer = 2;
   bytes signature = 3;
-  optional uint32 chain_id = 4;
+  uint32 chain_id = 4;
 }
 
 message MsgSubmitEVMTxConfirmationResponse {}
@@ -111,7 +111,7 @@ message MsgSubmitEVMEvent {
   google.protobuf.Any event = 1
   [ (cosmos_proto.accepts_interface) = "EVMEvent" ];
   string signer = 2;
-  optional uint32 chain_id = 3;
+  uint32 chain_id = 3;
 }
 
 message MsgSubmitEVMEventResponse {}
