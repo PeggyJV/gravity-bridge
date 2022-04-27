@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
 func (k Keeper) contractCallExecuted(ctx sdk.Context, chainID uint32, invalidationScope []byte, invalidationNonce uint64) {

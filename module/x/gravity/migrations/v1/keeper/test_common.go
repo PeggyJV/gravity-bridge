@@ -54,7 +54,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/migrations/v1/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/migrations/v1/types"
 )
 
 var (
