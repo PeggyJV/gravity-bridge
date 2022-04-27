@@ -2339,6 +2339,7 @@ dependencies = [
  "gravity_abi",
  "gravity_proto",
  "hdpath",
+ "lazy_static",
  "log",
  "num-bigint 0.4.0",
  "num256",

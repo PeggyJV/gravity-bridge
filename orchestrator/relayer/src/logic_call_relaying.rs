@@ -2,12 +2,15 @@ use crate::main_loop::LOOP_SPEED;
 use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
 use ethereum_gravity::logic_call::LogicCallSkips;
 use ethereum_gravity::one_eth_f32;
+use ethereum_gravity::utils::{extract_gravity_contract_error, log_contract_error};
 use ethereum_gravity::{
     logic_call::send_eth_logic_call, types::EthClient, utils::get_logic_call_nonce,
 };
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
+use gravity_utils::error::GravityError;
+use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_f32, hex_str_to_bytes};
+use gravity_utils::types::{decode_gravity_error, GravityContractError};
 use gravity_utils::types::{LogicCallConfirmResponse, Valset};
 use gravity_utils::{message_signatures::encode_logic_call_confirm_hashed, types::LogicCall};
 use std::time::Duration;
@@ -111,7 +114,8 @@ pub async fn relay_logic_calls(
         .await;
 
         if cost.is_err() {
-            error!("LogicCall cost estimate failed with {:?}", cost);
+            warn!("LogicCall cost estimate failed");
+            log_contract_error(cost.unwrap_err());
             logic_call_skips.skip(&oldest_signed_call);
             return;
         }
@@ -153,7 +157,8 @@ pub async fn relay_logic_calls(
         .await;
 
         if res.is_err() {
-            info!("LogicCall submission failed with {:?}", res);
+            warn!("LogicCall submission failed");
+            log_contract_error(res.unwrap_err());
             logic_call_skips.skip(&oldest_signed_call);
         }
     }

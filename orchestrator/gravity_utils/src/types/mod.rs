@@ -1,5 +1,6 @@
 mod batches;
 mod ethereum_events;
+mod gravity_contract_errors;
 mod logic_call;
 mod signatures;
 mod valsets;
@@ -11,6 +12,7 @@ use std::result::Result;
 
 pub use batches::*;
 pub use ethereum_events::*;
+pub use gravity_contract_errors::*;
 pub use logic_call::*;
 pub use signatures::*;
 pub use valsets::*;
