@@ -211,16 +211,22 @@ pub fn log_contract_error(gravity_error: GravityError) {
 pub fn extract_gravity_contract_error(gravity_error: GravityError) -> Option<GravityContractError> {
     match gravity_error {
         GravityError::EthersContractError(ce) => {
+            info!("Ethers contract error");
             match ce {
                 ethers::contract::ContractError::MiddlewareError(me) => {
+                    info!("Contract middleware error");
                     match me {
                         ethers::middleware::signer::SignerMiddlewareError::MiddlewareError(sme) => {
+                            info!("Signer middleware error");
                             match sme {
                                 ethers::providers::ProviderError::JsonRpcClientError(jrpce) => {
+                                    info!("JSON RPC client error");
                                     if jrpce.is::<ethers::providers::HttpClientError>() {
                                         let httpe = *jrpce.downcast::<ethers::providers::HttpClientError>().unwrap();
+                                        info!("RPC error confirmed HTTP client error");
                                         match httpe {
                                             ethers::providers::HttpClientError::JsonRpcError(jre) => {
+                                                info!("JSON RPC error found: {:?}", jre);
                                                 if jre.code == 3 && jre.data.is_some() {
                                                     let data = jre.data.unwrap();
                                                     if data.is_string() {

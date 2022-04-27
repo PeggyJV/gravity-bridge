@@ -136,6 +136,8 @@ pub fn decode_gravity_error(data: Vec<u8>) -> Option<GravityContractError> {
         return Some(GravityContractError::LogicCallTimedOut(LogicCallTimedOut{}))
     }
 
+    info!("Did not find gravity error");
+
     None
 }
 
