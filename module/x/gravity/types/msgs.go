@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -11,15 +10,15 @@ import (
 
 var (
 	_ sdk.Msg = &MsgDelegateKeys{}
-	_ sdk.Msg = &MsgSendToEthereum{}
-	_ sdk.Msg = &MsgCancelSendToEthereum{}
+	_ sdk.Msg = &MsgSendToEVM{}
+	_ sdk.Msg = &MsgCancelSendToEVM{}
 	_ sdk.Msg = &MsgRequestBatchTx{}
-	_ sdk.Msg = &MsgSubmitEthereumEvent{}
-	_ sdk.Msg = &MsgSubmitEthereumTxConfirmation{}
+	_ sdk.Msg = &MsgSubmitEVMEvent{}
+	_ sdk.Msg = &MsgSubmitEVMTxConfirmation{}
 
-	_ cdctypes.UnpackInterfacesMessage = &MsgSubmitEthereumEvent{}
-	_ cdctypes.UnpackInterfacesMessage = &MsgSubmitEthereumTxConfirmation{}
-	_ cdctypes.UnpackInterfacesMessage = &EthereumEventVoteRecord{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgSubmitEVMEvent{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgSubmitEVMTxConfirmation{}
+	_ cdctypes.UnpackInterfacesMessage = &EVMEventVoteRecord{}
 )
 
 // NewMsgDelegateKeys returns a reference to a new MsgDelegateKeys.
@@ -27,7 +26,7 @@ func NewMsgDelegateKeys(val sdk.ValAddress, orchAddr sdk.AccAddress, ethAddr str
 	return &MsgDelegateKeys{
 		ValidatorAddress:    val.String(),
 		OrchestratorAddress: orchAddr.String(),
-		EthereumAddress:     ethAddr,
+		EVMAddress:          ethAddr,
 		EthSignature:        ethSig,
 	}
 }
@@ -46,11 +45,11 @@ func (msg *MsgDelegateKeys) ValidateBasic() (err error) {
 	if _, err = sdk.AccAddressFromBech32(msg.OrchestratorAddress); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.OrchestratorAddress)
 	}
-	if !common.IsHexAddress(msg.EthereumAddress) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "ethereum address")
+	if !common.IsHexAddress(msg.EVMAddress) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "EVM address")
 	}
 	if len(msg.EthSignature) == 0 {
-		return ErrEmptyEthSig
+		return ErrEmptyEVMSig
 	}
 
 	return nil
@@ -71,13 +70,13 @@ func (msg *MsgDelegateKeys) GetSigners() []sdk.AccAddress {
 }
 
 // Route should return the name of the module
-func (msg *MsgSubmitEthereumEvent) Route() string { return RouterKey }
+func (msg *MsgSubmitEVMEvent) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg *MsgSubmitEthereumEvent) Type() string { return "submit_ethereum_event" }
+func (msg *MsgSubmitEVMEvent) Type() string { return "submit_EVM_event" }
 
 // ValidateBasic performs stateless checks
-func (msg *MsgSubmitEthereumEvent) ValidateBasic() (err error) {
+func (msg *MsgSubmitEVMEvent) ValidateBasic() (err error) {
 	if _, err = sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Signer)
 	}
@@ -90,12 +89,12 @@ func (msg *MsgSubmitEthereumEvent) ValidateBasic() (err error) {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg *MsgSubmitEthereumEvent) GetSignBytes() []byte {
+func (msg *MsgSubmitEVMEvent) GetSignBytes() []byte {
 	panic(fmt.Errorf("deprecated"))
 }
 
 // GetSigners defines whose signature is required
-func (msg *MsgSubmitEthereumEvent) GetSigners() []sdk.AccAddress {
+func (msg *MsgSubmitEVMEvent) GetSigners() []sdk.AccAddress {
 	// TODO: figure out how to convert between AccAddress and ValAddress properly
 	acc, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
@@ -104,19 +103,19 @@ func (msg *MsgSubmitEthereumEvent) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{acc}
 }
 
-func (msg *MsgSubmitEthereumEvent) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
-	var event EthereumEvent
+func (msg *MsgSubmitEVMEvent) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var event EVMEvent
 	return unpacker.UnpackAny(msg.Event, &event)
 }
 
 // Route should return the name of the module
-func (msg *MsgSubmitEthereumTxConfirmation) Route() string { return RouterKey }
+func (msg *MsgSubmitEVMTxConfirmation) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg *MsgSubmitEthereumTxConfirmation) Type() string { return "submit_ethereum_signature" }
+func (msg *MsgSubmitEVMTxConfirmation) Type() string { return "submit_EVM_signature" }
 
 // ValidateBasic performs stateless checks
-func (msg *MsgSubmitEthereumTxConfirmation) ValidateBasic() (err error) {
+func (msg *MsgSubmitEVMTxConfirmation) ValidateBasic() (err error) {
 	if _, err = sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Signer)
 	}
@@ -131,12 +130,12 @@ func (msg *MsgSubmitEthereumTxConfirmation) ValidateBasic() (err error) {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg *MsgSubmitEthereumTxConfirmation) GetSignBytes() []byte {
+func (msg *MsgSubmitEVMTxConfirmation) GetSignBytes() []byte {
 	panic(fmt.Errorf("deprecated"))
 }
 
 // GetSigners defines whose signature is required
-func (msg *MsgSubmitEthereumTxConfirmation) GetSigners() []sdk.AccAddress {
+func (msg *MsgSubmitEVMTxConfirmation) GetSigners() []sdk.AccAddress {
 	// TODO: figure out how to convert between AccAddress and ValAddress properly
 	acc, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
@@ -145,30 +144,31 @@ func (msg *MsgSubmitEthereumTxConfirmation) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{acc}
 }
 
-func (msg *MsgSubmitEthereumTxConfirmation) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
-	var sig EthereumTxConfirmation
+func (msg *MsgSubmitEVMTxConfirmation) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var sig EVMTxConfirmation
 	return unpacker.UnpackAny(msg.Confirmation, &sig)
 }
 
-// NewMsgSendToEthereum returns a new MsgSendToEthereum
-func NewMsgSendToEthereum(sender sdk.AccAddress, destAddress string, send sdk.Coin, bridgeFee sdk.Coin) *MsgSendToEthereum {
-	return &MsgSendToEthereum{
-		Sender:            sender.String(),
-		EthereumRecipient: destAddress,
-		Amount:            send,
-		BridgeFee:         bridgeFee,
+// NewMsgSendToEVM returns a new MsgSendToEVM
+func NewMsgSendToEVM(chainID uint32, sender sdk.AccAddress, destAddress string, send sdk.Coin, bridgeFee sdk.Coin) *MsgSendToEVM {
+	return &MsgSendToEVM{
+		Sender:       sender.String(),
+		EVMRecipient: destAddress,
+		Amount:       send,
+		BridgeFee:    bridgeFee,
+		ChainId:      chainID,
 	}
 }
 
 // Route should return the name of the module
-func (msg MsgSendToEthereum) Route() string { return RouterKey }
+func (msg MsgSendToEVM) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgSendToEthereum) Type() string { return "send_to_eth" }
+func (msg MsgSendToEVM) Type() string { return "send_to_eth" }
 
 // ValidateBasic runs stateless checks on the message
 // Checks if the Eth address is valid
-func (msg MsgSendToEthereum) ValidateBasic() error {
+func (msg MsgSendToEVM) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Sender)
 	}
@@ -186,20 +186,20 @@ func (msg MsgSendToEthereum) ValidateBasic() error {
 	if !msg.BridgeFee.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "fee")
 	}
-	if !common.IsHexAddress(msg.EthereumRecipient) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "ethereum address")
+	if !common.IsHexAddress(msg.EVMRecipient) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "EVM address")
 	}
 
 	return nil
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgSendToEthereum) GetSignBytes() []byte {
+func (msg MsgSendToEVM) GetSignBytes() []byte {
 	panic(fmt.Errorf("deprecated"))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgSendToEthereum) GetSigners() []sdk.AccAddress {
+func (msg MsgSendToEVM) GetSigners() []sdk.AccAddress {
 	acc, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)
@@ -209,10 +209,11 @@ func (msg MsgSendToEthereum) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgRequestBatchTx returns a new msgRequestBatch
-func NewMsgRequestBatchTx(denom string, signer sdk.AccAddress) *MsgRequestBatchTx {
+func NewMsgRequestBatchTx(chainID uint32, denom string, signer sdk.AccAddress) *MsgRequestBatchTx {
 	return &MsgRequestBatchTx{
-		Denom:  denom,
-		Signer: signer.String(),
+		Denom:   denom,
+		Signer:  signer.String(),
+		ChainId: chainID,
 	}
 }
 
@@ -248,22 +249,22 @@ func (msg MsgRequestBatchTx) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{acc}
 }
 
-// NewMsgCancelSendToEthereum returns a new MsgCancelSendToEthereum
-func NewMsgCancelSendToEthereum(id uint64, orchestrator sdk.AccAddress) *MsgCancelSendToEthereum {
-	return &MsgCancelSendToEthereum{
+// NewMsgCancelSendToEVM returns a new MsgCancelSendToEVM
+func NewMsgCancelSendToEVM(id uint64, orchestrator sdk.AccAddress) *MsgCancelSendToEVM {
+	return &MsgCancelSendToEVM{
 		Id:     id,
 		Sender: orchestrator.String(),
 	}
 }
 
 // Route should return the name of the module
-func (msg MsgCancelSendToEthereum) Route() string { return RouterKey }
+func (msg MsgCancelSendToEVM) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgCancelSendToEthereum) Type() string { return "cancel_send_to_ethereum" }
+func (msg MsgCancelSendToEVM) Type() string { return "cancel_send_to_EVM" }
 
 // ValidateBasic performs stateless checks
-func (msg MsgCancelSendToEthereum) ValidateBasic() error {
+func (msg MsgCancelSendToEVM) ValidateBasic() error {
 	if msg.Id == 0 {
 		return sdkerrors.Wrap(ErrInvalid, "Id cannot be 0")
 	}
@@ -274,12 +275,12 @@ func (msg MsgCancelSendToEthereum) ValidateBasic() error {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgCancelSendToEthereum) GetSignBytes() []byte {
+func (msg MsgCancelSendToEVM) GetSignBytes() []byte {
 	panic(fmt.Errorf("deprecated"))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgCancelSendToEthereum) GetSigners() []sdk.AccAddress {
+func (msg MsgCancelSendToEVM) GetSigners() []sdk.AccAddress {
 	acc, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)

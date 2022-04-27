@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // DefaultParamspace defines the default auth module parameter subspace
@@ -38,17 +37,17 @@ var (
 	// ParamsStoreKeySignedBatchesWindow stores the signed blocks window
 	ParamsStoreKeySignedBatchesWindow = []byte("SignedBatchesWindow")
 
-	// ParamsStoreKeyEthereumSignaturesWindow stores the signed blocks window
-	ParamsStoreKeyEthereumSignaturesWindow = []byte("EthereumSignaturesWindow")
+	// ParamsStoreKeyEVMSignaturesWindow stores the signed blocks window
+	ParamsStoreKeyEVMSignaturesWindow = []byte("EVMSignaturesWindow")
 
-	// ParamsStoreKeyTargetEthTxTimeout stores the target ethereum transaction timeout
+	// ParamsStoreKeyTargetEthTxTimeout stores the target EVM transaction timeout
 	ParamsStoreKeyTargetEthTxTimeout = []byte("TargetEthTxTimeout")
 
 	// ParamsStoreKeyAverageBlockTime stores the signed blocks window
 	ParamsStoreKeyAverageBlockTime = []byte("AverageBlockTime")
 
-	// ParamsStoreKeyAverageEthereumBlockTime stores the signed blocks window
-	ParamsStoreKeyAverageEthereumBlockTime = []byte("AverageEthereumBlockTime")
+	// ParamsStoreKeyAverageEVMBlockTime stores the signed blocks window
+	ParamsStoreKeyAverageEVMBlockTime = []byte("AverageEVMBlockTime")
 
 	// ParamsStoreSlashFractionSignerSetTx stores the slash fraction valset
 	ParamsStoreSlashFractionSignerSetTx = []byte("SlashFractionSignerSetTx")
@@ -56,20 +55,23 @@ var (
 	// ParamsStoreSlashFractionBatch stores the slash fraction Batch
 	ParamsStoreSlashFractionBatch = []byte("SlashFractionBatch")
 
-	// ParamsStoreSlashFractionEthereumSignature stores the slash fraction ethereum siganture
-	ParamsStoreSlashFractionEthereumSignature = []byte("SlashFractionEthereumSignature")
+	// ParamsStoreSlashFractionEVMSignature stores the slash fraction EVM siganture
+	ParamsStoreSlashFractionEVMSignature = []byte("SlashFractionEVMSignature")
 
-	// ParamsStoreSlashFractionConflictingEthereumSignature stores the slash fraction ConflictingEthereumSignature
-	ParamsStoreSlashFractionConflictingEthereumSignature = []byte("SlashFractionConflictingEthereumSignature")
+	// ParamsStoreSlashFractionConflictingEVMSignature stores the slash fraction ConflictingEVMSignature
+	ParamsStoreSlashFractionConflictingEVMSignature = []byte("SlashFractionConflictingEVMSignature")
 
 	//  ParamStoreUnbondSlashingSignerSetTxsWindow stores unbond slashing valset window
 	ParamStoreUnbondSlashingSignerSetTxsWindow = []byte("UnbondSlashingSignerSetTxsWindow")
+
+	//  ParamStoreKeyChainIDs stores the array of active chain IDs for this bridge
+	ParamStoreKeyChainIDs = []byte("ChainIDs")
 
 	// Ensure that params implements the proper interface
 	_ paramtypes.ParamSet = &Params{}
 )
 
-func (gs *GenesisState) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+func (gs *ChainGenesisState) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 	for _, otx := range gs.OutgoingTxs {
 		var outgoing OutgoingTx
 		if err := unpacker.UnpackAny(otx, &outgoing); err != nil {
@@ -77,12 +79,12 @@ func (gs *GenesisState) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 		}
 	}
 	for _, sig := range gs.Confirmations {
-		var signature EthereumTxConfirmation
+		var signature EVMTxConfirmation
 		if err := unpacker.UnpackAny(sig, &signature); err != nil {
 			return err
 		}
 	}
-	for _, evr := range gs.EthereumEventVoteRecords {
+	for _, evr := range gs.EvmEventVoteRecords {
 		if err := evr.UnpackInterfaces(unpacker); err != nil {
 			return err
 		}
@@ -96,7 +98,7 @@ func EventVoteRecordPowerThreshold(totalPower sdk.Int) sdk.Int {
 
 // ValidateBasic validates genesis state by looping through the params and
 // calling their validation functions
-func (s GenesisState) ValidateBasic() error {
+func (s GenesisStateMultiChain) ValidateBasic() error {
 	if err := s.Params.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "params")
 	}
@@ -112,8 +114,8 @@ func (s GenesisState) ValidateBasic() error {
 
 // DefaultGenesisState returns empty genesis state
 // TODO: set some better defaults here
-func DefaultGenesisState() *GenesisState {
-	return &GenesisState{
+func DefaultGenesisState() *GenesisStateMultiChain {
+	return &GenesisStateMultiChain{
 		Params: DefaultParams(),
 	}
 }
@@ -121,19 +123,19 @@ func DefaultGenesisState() *GenesisState {
 // DefaultParams returns a copy of the default params
 func DefaultParams() *Params {
 	return &Params{
-		GravityId:                                 "defaultgravityid",
-		BridgeEthereumAddress:                     "0x0000000000000000000000000000000000000000",
-		SignedSignerSetTxsWindow:                  10000,
-		SignedBatchesWindow:                       10000,
-		EthereumSignaturesWindow:                  10000,
-		TargetEthTxTimeout:                        43200000,
-		AverageBlockTime:                          5000,
-		AverageEthereumBlockTime:                  15000,
-		SlashFractionSignerSetTx:                  sdk.NewDec(1).Quo(sdk.NewDec(1000)),
-		SlashFractionBatch:                        sdk.NewDec(1).Quo(sdk.NewDec(1000)),
-		SlashFractionEthereumSignature:            sdk.NewDec(1).Quo(sdk.NewDec(1000)),
-		SlashFractionConflictingEthereumSignature: sdk.NewDec(1).Quo(sdk.NewDec(1000)),
-		UnbondSlashingSignerSetTxsWindow:          10000,
+		GravityId:                            "defaultgravityid",
+		SignedSignerSetTxsWindow:             10000,
+		SignedBatchesWindow:                  10000,
+		EvmSignaturesWindow:                  10000,
+		TargetEvmTxTimeout:                   43200000,
+		AverageBlockTime:                     5000,
+		AverageEvmBlockTime:                  15000,
+		SlashFractionSignerSetTx:             sdk.NewDec(1).Quo(sdk.NewDec(1000)),
+		SlashFractionBatch:                   sdk.NewDec(1).Quo(sdk.NewDec(1000)),
+		SlashFractionEvmSignature:            sdk.NewDec(1).Quo(sdk.NewDec(1000)),
+		SlashFractionConflictingEvmSignature: sdk.NewDec(1).Quo(sdk.NewDec(1000)),
+		UnbondSlashingSignerSetTxsWindow:     10000,
+		ChainIds:                             []uint32{1},
 	}
 }
 
@@ -145,29 +147,23 @@ func (p Params) ValidateBasic() error {
 	if err := validateContractHash(p.ContractSourceHash); err != nil {
 		return sdkerrors.Wrap(err, "contract hash")
 	}
-	if err := validateBridgeContractAddress(p.BridgeEthereumAddress); err != nil {
-		return sdkerrors.Wrap(err, "bridge contract address")
-	}
-	if err := validateBridgeChainID(p.BridgeChainId); err != nil {
-		return sdkerrors.Wrap(err, "bridge chain id")
-	}
-	if err := validateTargetEthTxTimeout(p.TargetEthTxTimeout); err != nil {
+	if err := validateTargetEthTxTimeout(p.TargetEvmTxTimeout); err != nil {
 		return sdkerrors.Wrap(err, "Batch timeout")
 	}
 	if err := validateAverageBlockTime(p.AverageBlockTime); err != nil {
 		return sdkerrors.Wrap(err, "Block time")
 	}
-	if err := validateAverageEthereumBlockTime(p.AverageEthereumBlockTime); err != nil {
-		return sdkerrors.Wrap(err, "Ethereum block time")
+	if err := validateAverageEVMBlockTime(p.AverageEvmBlockTime); err != nil {
+		return sdkerrors.Wrap(err, "EVM block time")
 	}
 	if err := validateSignedSignerSetTxsWindow(p.SignedSignerSetTxsWindow); err != nil {
-		return sdkerrors.Wrap(err, "signed blocks window")
+		return sdkerrors.Wrap(err, "signed signer set txs window")
 	}
 	if err := validateSignedBatchesWindow(p.SignedBatchesWindow); err != nil {
-		return sdkerrors.Wrap(err, "signed blocks window")
+		return sdkerrors.Wrap(err, "signed batches window")
 	}
-	if err := validateEthereumSignaturesWindow(p.EthereumSignaturesWindow); err != nil {
-		return sdkerrors.Wrap(err, "signed blocks window")
+	if err := validateEVMSignaturesWindow(p.EvmSignaturesWindow); err != nil {
+		return sdkerrors.Wrap(err, "signatures window")
 	}
 	if err := validateSlashFractionSignerSetTx(p.SlashFractionSignerSetTx); err != nil {
 		return sdkerrors.Wrap(err, "slash fraction signersettx")
@@ -175,14 +171,17 @@ func (p Params) ValidateBasic() error {
 	if err := validateSlashFractionBatch(p.SlashFractionBatch); err != nil {
 		return sdkerrors.Wrap(err, "slash fraction batch tx")
 	}
-	if err := validateSlashFractionEthereumSignature(p.SlashFractionEthereumSignature); err != nil {
-		return sdkerrors.Wrap(err, "slash fraction ethereum signature")
+	if err := validateSlashFractionEVMSignature(p.SlashFractionEvmSignature); err != nil {
+		return sdkerrors.Wrap(err, "slash fraction EVM signature")
 	}
-	if err := validateSlashFractionConflictingEthereumSignature(p.SlashFractionConflictingEthereumSignature); err != nil {
-		return sdkerrors.Wrap(err, "slash fraction conflicting ethereum signature")
+	if err := validateSlashFractionConflictingEVMSignature(p.SlashFractionConflictingEvmSignature); err != nil {
+		return sdkerrors.Wrap(err, "slash fraction conflicting EVM signature")
 	}
 	if err := validateUnbondSlashingSignerSetTxsWindow(p.UnbondSlashingSignerSetTxsWindow); err != nil {
 		return sdkerrors.Wrap(err, "unbond slashing signersettx window")
+	}
+	if err := validateChainIDs(p.ChainIds); err != nil {
+		return sdkerrors.Wrap(err, "chain IDs")
 	}
 
 	return nil
@@ -199,19 +198,18 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamsStoreKeyGravityID, &p.GravityId, validateGravityID),
 		paramtypes.NewParamSetPair(ParamsStoreKeyContractHash, &p.ContractSourceHash, validateContractHash),
-		paramtypes.NewParamSetPair(ParamsStoreKeyBridgeContractAddress, &p.BridgeEthereumAddress, validateBridgeContractAddress),
-		paramtypes.NewParamSetPair(ParamsStoreKeyBridgeContractChainID, &p.BridgeChainId, validateBridgeChainID),
 		paramtypes.NewParamSetPair(ParamsStoreKeySignedSignerSetTxsWindow, &p.SignedSignerSetTxsWindow, validateSignedSignerSetTxsWindow),
 		paramtypes.NewParamSetPair(ParamsStoreKeySignedBatchesWindow, &p.SignedBatchesWindow, validateSignedBatchesWindow),
-		paramtypes.NewParamSetPair(ParamsStoreKeyEthereumSignaturesWindow, &p.EthereumSignaturesWindow, validateEthereumSignaturesWindow),
+		paramtypes.NewParamSetPair(ParamsStoreKeyEVMSignaturesWindow, &p.EvmSignaturesWindow, validateEVMSignaturesWindow),
 		paramtypes.NewParamSetPair(ParamsStoreKeyAverageBlockTime, &p.AverageBlockTime, validateAverageBlockTime),
-		paramtypes.NewParamSetPair(ParamsStoreKeyTargetEthTxTimeout, &p.TargetEthTxTimeout, validateTargetEthTxTimeout),
-		paramtypes.NewParamSetPair(ParamsStoreKeyAverageEthereumBlockTime, &p.AverageEthereumBlockTime, validateAverageEthereumBlockTime),
+		paramtypes.NewParamSetPair(ParamsStoreKeyTargetEthTxTimeout, &p.TargetEvmTxTimeout, validateTargetEthTxTimeout),
+		paramtypes.NewParamSetPair(ParamsStoreKeyAverageEVMBlockTime, &p.AverageEvmBlockTime, validateAverageEVMBlockTime),
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionSignerSetTx, &p.SlashFractionSignerSetTx, validateSlashFractionSignerSetTx),
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionBatch, &p.SlashFractionBatch, validateSlashFractionBatch),
-		paramtypes.NewParamSetPair(ParamsStoreSlashFractionEthereumSignature, &p.SlashFractionEthereumSignature, validateSlashFractionEthereumSignature),
-		paramtypes.NewParamSetPair(ParamsStoreSlashFractionConflictingEthereumSignature, &p.SlashFractionConflictingEthereumSignature, validateSlashFractionConflictingEthereumSignature),
+		paramtypes.NewParamSetPair(ParamsStoreSlashFractionEVMSignature, &p.SlashFractionEvmSignature, validateSlashFractionEVMSignature),
+		paramtypes.NewParamSetPair(ParamsStoreSlashFractionConflictingEVMSignature, &p.SlashFractionConflictingEvmSignature, validateSlashFractionConflictingEVMSignature),
 		paramtypes.NewParamSetPair(ParamStoreUnbondSlashingSignerSetTxsWindow, &p.UnbondSlashingSignerSetTxsWindow, validateUnbondSlashingSignerSetTxsWindow),
+		paramtypes.NewParamSetPair(ParamStoreKeyChainIDs, &p.ChainIds, validateChainIDs),
 	}
 }
 
@@ -248,13 +246,6 @@ func validateContractHash(i interface{}) error {
 	return nil
 }
 
-func validateBridgeChainID(i interface{}) error {
-	if _, ok := i.(uint64); !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	return nil
-}
-
 func validateTargetEthTxTimeout(i interface{}) error {
 	val, ok := i.(uint64)
 	if !ok {
@@ -275,23 +266,12 @@ func validateAverageBlockTime(i interface{}) error {
 	return nil
 }
 
-func validateAverageEthereumBlockTime(i interface{}) error {
+func validateAverageEVMBlockTime(i interface{}) error {
 	val, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	} else if val < 100 {
-		return fmt.Errorf("invalid average Ethereum block time, too short for latency limitations")
-	}
-	return nil
-}
-
-func validateBridgeContractAddress(i interface{}) error {
-	v, ok := i.(string)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	if !common.IsHexAddress(v) {
-		return fmt.Errorf("not an ethereum address: %s", v)
+		return fmt.Errorf("invalid average EVM block time, too short for latency limitations")
 	}
 	return nil
 }
@@ -328,7 +308,7 @@ func validateSignedBatchesWindow(i interface{}) error {
 	return nil
 }
 
-func validateEthereumSignaturesWindow(i interface{}) error {
+func validateEVMSignaturesWindow(i interface{}) error {
 	// TODO: do we want to set some bounds on this value?
 	if _, ok := i.(uint64); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -344,7 +324,7 @@ func validateSlashFractionBatch(i interface{}) error {
 	return nil
 }
 
-func validateSlashFractionEthereumSignature(i interface{}) error {
+func validateSlashFractionEVMSignature(i interface{}) error {
 	// TODO: do we want to set some bounds on this value?
 	if _, ok := i.(sdk.Dec); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -352,9 +332,17 @@ func validateSlashFractionEthereumSignature(i interface{}) error {
 	return nil
 }
 
-func validateSlashFractionConflictingEthereumSignature(i interface{}) error {
+func validateSlashFractionConflictingEVMSignature(i interface{}) error {
 	// TODO: do we want to set some bounds on this value?
 	if _, ok := i.(sdk.Dec); !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
+func validateChainIDs(i interface{}) error {
+	// TODO: do we want to set some bounds on this value?
+	if _, ok := i.([]uint32); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil

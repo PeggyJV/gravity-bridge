@@ -23,8 +23,8 @@ const (
 	GravityDenomLen = len(GravityDenomPrefix) + len(GravityDenomSeparator) + EthereumContractAddressLen
 )
 
-// EthereumAddrLessThan migrates the Ethereum address less than function
-func EthereumAddrLessThan(e, o string) bool {
+// EVMAddrLessThan migrates the Ethereum address less than function
+func EVMAddrLessThan(e, o string) bool {
 	return bytes.Compare([]byte(e)[:], []byte(o)[:]) == -1
 }
 
@@ -47,10 +47,10 @@ func EthereumAddrLessThan(e, o string) bool {
 /////////////////////////
 
 // NewERC20Token returns a new instance of an ERC20
-func NewERC20Token(amount uint64, contract common.Address) ERC20Token {
+func NewERC20Token(amount uint64, contract string) ERC20Token {
 	return ERC20Token{
 		Amount:   sdk.NewIntFromUint64(amount),
-		Contract: contract.Hex(),
+		Contract: contract,
 	}
 }
 
@@ -78,7 +78,7 @@ func GravityDenomToERC20(denom string) (string, error) {
 	contract := strings.TrimPrefix(denom, fullPrefix)
 	switch {
 	case !common.IsHexAddress(contract):
-		return "", fmt.Errorf("error validating ethereum contract address")
+		return "", fmt.Errorf("error validating evm contract address")
 	case len(denom) != GravityDenomLen:
 		return "", fmt.Errorf("len(denom)(%d) not equal to GravityDenomLen(%d)", len(denom), GravityDenomLen)
 	default:
@@ -98,18 +98,12 @@ func NormalizeDenom(denom string) string {
 	return denom
 }
 
-func NewSendToEthereumTx(id uint64, tokenContract common.Address, sender sdk.AccAddress, recipient common.Address, amount, feeAmount uint64) *SendToEthereum {
-	return &SendToEthereum{
-		Id:                id,
-		Erc20Fee:          NewERC20Token(feeAmount, tokenContract),
-		Sender:            sender.String(),
-		EthereumRecipient: recipient.Hex(),
-		Erc20Token:        NewERC20Token(amount, tokenContract),
+func NewSendToEVMTx(id uint64, tokenContract common.Address, sender sdk.AccAddress, recipient common.Address, amount, feeAmount uint64) *SendToEVM {
+	return &SendToEVM{
+		Id:           id,
+		Erc20Fee:     NewERC20Token(feeAmount, tokenContract.Hex()),
+		Sender:       sender.String(),
+		EVMRecipient: recipient.Hex(),
+		Erc20Token:   NewERC20Token(amount, tokenContract.Hex()),
 	}
 }
-
-// Id:                2,
-// Erc20Fee:          types.NewERC20Token(3, myTokenContractAddr),
-// Sender:            mySender.String(),
-// EthereumRecipient: myReceiver,
-// Erc20Token:        types.NewERC20Token(101, myTokenContractAddr),

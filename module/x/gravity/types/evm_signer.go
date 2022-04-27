@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	signaturePrefix = "\x19Ethereum Signed Message:\n32"
+	signaturePrefix = "\x19EVM Signed Message:\n32"
 )
 
-// NewEthereumSignature creates a new signuature over a given byte array
-func NewEthereumSignature(hash []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
+// NewEVMSignature creates a new signature over a given byte array
+func NewEVMSignature(hash []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
 	if privateKey == nil {
 		return nil, sdkerrors.Wrap(ErrInvalid, "did not pass in private key")
 	}
@@ -21,9 +21,9 @@ func NewEthereumSignature(hash []byte, privateKey *ecdsa.PrivateKey) ([]byte, er
 	return crypto.Sign(protectedHash.Bytes(), privateKey)
 }
 
-// ValidateEthereumSignature takes a message, an associated signature and public key and
+// ValidateEVMSignature takes a message, an associated signature and public key and
 // returns an error if the signature isn't valid
-func ValidateEthereumSignature(hash []byte, signature []byte, ethAddress common.Address) error {
+func ValidateEVMSignature(hash []byte, signature []byte, ethAddress common.Address) error {
 
 	/// signature to public key: invalid signature length: invalid
 	/// signature not matching: invalid: invalid
@@ -40,7 +40,7 @@ func ValidateEthereumSignature(hash []byte, signature []byte, ethAddress common.
 	// - use crypto.PubkeyToAddress to get the address
 	// - compare this to the address given.
 
-	// for backwards compatibility reasons  the V value of an Ethereum sig is presented
+	// for backwards compatibility reasons  the V value of an EVM sig is presented
 	// as 27 or 28, internally though it should be a 0-3 value due to changed formats.
 	// It seems that go-ethereum expects this to be done before sigs actually reach it's
 	// internal validation functions. In order to comply with this requirement we check

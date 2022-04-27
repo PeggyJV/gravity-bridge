@@ -342,7 +342,7 @@ message BatchedSendToEVMsRequest {
   //  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 message BatchedSendToEVMsResponse {
-  repeated SendToEVM send_to_EVMs = 1;
+  repeated SendToEVM send_to_evms = 1;
   //  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -352,6 +352,6 @@ message UnbatchedSendToEVMsRequest {
   uint32 chain_id = 3;
 }
 message UnbatchedSendToEVMsResponse {
-  repeated SendToEVM send_to_EVMs = 1;
+  repeated SendToEVM send_to_evms = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

@@ -21,12 +21,12 @@ func (k Keeper) DetectMaliciousSupply(ctx sdk.Context, denom string, amount sdk.
 	return nil
 }
 
-// Handle is the entry point for EthereumEvent processing
-func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
+// Handle is the entry point for EVMEvent processing
+func (k Keeper) Handle(ctx sdk.Context, eve types.EVMEvent) (err error) {
 	switch event := eve.(type) {
 	case *types.SendToCosmosEvent:
 		// Check if coin is Cosmos-originated asset and get denom
-		isCosmosOriginated, denom := k.ERC20ToDenomLookup(ctx, common.HexToAddress(event.TokenContract))
+		isCosmosOriginated, denom := k.ERC20ToDenomLookup(ctx, event.ChainID(), event.TokenContract)
 		addr, _ := sdk.AccAddressFromBech32(event.CosmosReceiver)
 		coins := sdk.Coins{sdk.NewCoin(denom, event.Amount)}
 
@@ -41,20 +41,14 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 			}
 		}
 
-		if recipientModule, ok := k.ReceiverModuleAccounts[event.CosmosReceiver]; ok {
-			if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, recipientModule, coins); err != nil {
-				return err
-			}
-		} else {
-			if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
-				return err
-			}
+		if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
+			return err
 		}
 		k.AfterSendToCosmosEvent(ctx, *event)
 		return nil
 
 	case *types.BatchExecutedEvent:
-		k.batchTxExecuted(ctx, common.HexToAddress(event.TokenContract), event.BatchNonce)
+		k.batchTxExecuted(ctx, event.ChainID(), common.HexToAddress(event.TokenContract), event.BatchNonce)
 		k.AfterBatchExecutedEvent(ctx, *event)
 		return nil
 
@@ -64,12 +58,11 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 		}
 
 		// add to denom-erc20 mapping
-		k.setCosmosOriginatedDenomToERC20(ctx, event.CosmosDenom, common.HexToAddress(event.TokenContract))
+		k.setCosmosOriginatedDenomToERC20(ctx, event.ChainID(), event.CosmosDenom, event.TokenContract)
 		k.AfterERC20DeployedEvent(ctx, *event)
 		return nil
 
 	case *types.ContractCallExecutedEvent:
-		k.contractCallExecuted(ctx, event.InvalidationScope.Bytes(), event.InvalidationNonce)
 		k.AfterContractCallExecutedEvent(ctx, *event)
 		return nil
 
@@ -77,7 +70,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 		// TODO here we should check the contents of the validator set against
 		// the store, if they differ we should take some action to indicate to the
 		// user that bridge highjacking has occurred
-		k.setLastObservedSignerSetTx(ctx, types.SignerSetTx{
+		k.setLastObservedSignerSetTx(ctx, event.ChainID(), types.SignerSetTx{
 			Nonce:   event.SignerSetTxNonce,
 			Signers: event.Members,
 		})
@@ -90,7 +83,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 }
 
 func (k Keeper) verifyERC20DeployedEvent(ctx sdk.Context, event *types.ERC20DeployedEvent) error {
-	if existingERC20, exists := k.getCosmosOriginatedERC20(ctx, event.CosmosDenom); exists {
+	if existingERC20, exists := k.getCosmosOriginatedERC20(ctx, event.ChainID(), event.CosmosDenom); exists {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"ERC20 token %s already exists for denom %s", existingERC20.Hex(), event.CosmosDenom,
@@ -173,8 +166,8 @@ func verifyERC20Token(metadata banktypes.Metadata, event *types.ERC20DeployedEve
 	// token "display" value. Then we take the "exponent" from this DenomUnit.
 	//
 	// If the correct DenomUnit is not found, it will default to 0. This will
-	// result in there being no decimal places in the token's ERC20 on Ethereum.
-	// For example, if this happened with ATOM, 1 ATOM would appear on Ethereum
+	// result in there being no decimal places in the token's ERC20 on EVM.
+	// For example, if this happened with ATOM, 1 ATOM would appear on EVM
 	// as 1 million ATOM, having 6 extra places before the decimal point.
 	var decimals uint32
 	for _, denomUnit := range metadata.DenomUnits {

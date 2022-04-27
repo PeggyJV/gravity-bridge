@@ -86,7 +86,7 @@ func addDenomToERC20Relation(tv *testingVars) {
 	eva, err := types.PackEvent(deployedEvent)
 	require.NoError(tv.t, err)
 
-	msgSumbitEvent := &types.MsgSubmitEthereumEvent{Event: eva, Signer: tv.myOrchestratorAddr.String()}
+	msgSumbitEvent := &types.MsgSubmitEVMEvent{Event: eva, Signer: tv.myOrchestratorAddr.String()}
 
 	_, err = tv.h(tv.ctx, msgSumbitEvent)
 	require.NoError(tv.t, err)
@@ -94,15 +94,15 @@ func addDenomToERC20Relation(tv *testingVars) {
 	gravity.EndBlocker(tv.ctx, tv.input.GravityKeeper)
 
 	// check if event vote record persisted
-	a := tv.input.GravityKeeper.GetEthereumEventVoteRecord(tv.ctx, myNonce, deployedEvent.Hash())
+	a := tv.input.GravityKeeper.GetEVMEventVoteRecord(tv.ctx, types.EthereumChainID, myNonce, deployedEvent.Hash())
 	require.NotNil(tv.t, a)
 
 	// check if erc20<>denom relation added to db
-	isCosmosOriginated, gotERC20, err := tv.input.GravityKeeper.DenomToERC20Lookup(tv.ctx, tv.denom)
+	isCosmosOriginated, gotERC20, err := tv.input.GravityKeeper.DenomToERC20Lookup(tv.ctx, types.EthereumChainID, tv.denom)
 	require.NoError(tv.t, err)
 	assert.True(tv.t, isCosmosOriginated)
 
-	isCosmosOriginated, gotDenom := tv.input.GravityKeeper.ERC20ToDenomLookup(tv.ctx, common.HexToAddress(tv.erc20))
+	isCosmosOriginated, gotDenom := tv.input.GravityKeeper.ERC20ToDenomLookup(tv.ctx, types.EthereumChainID, tv.erc20)
 	assert.True(tv.t, isCosmosOriginated)
 
 	assert.Equal(tv.t, tv.denom, gotDenom)
@@ -129,11 +129,11 @@ func lockCoinsInModule(tv *testingVars) {
 	assert.Equal(tv.t, sdk.Coins{sdk.NewCoin(denom, startingCoinAmount)}, balance1)
 
 	// send some coins
-	msg := &types.MsgSendToEthereum{
-		Sender:            userCosmosAddr.String(),
-		EthereumRecipient: ethDestination,
-		Amount:            sendingCoin,
-		BridgeFee:         feeCoin,
+	msg := &types.MsgSendToEVM{
+		Sender:       userCosmosAddr.String(),
+		EVMRecipient: ethDestination,
+		Amount:       sendingCoin,
+		BridgeFee:    feeCoin,
 	}
 
 	_, err := tv.h(tv.ctx, msg)
@@ -168,21 +168,21 @@ func acceptDepositEvent(tv *testingVars) {
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EthereumSender: anyETHAddr,
+		EVMSender:      anyETHAddr,
 		CosmosReceiver: myCosmosAddr.String(),
-		EthereumHeight: 1000,
+		EVMHeight:      1000,
 	}
 
 	eva, err := types.PackEvent(sendToCosmosEvent)
 	require.NoError(tv.t, err)
 
-	msgSubmitEvent := &types.MsgSubmitEthereumEvent{eva, myOrchestratorAddr.String()}
+	msgSubmitEvent := &types.MsgSubmitEVMEvent{Event: eva, Signer: myOrchestratorAddr.String(), ChainId: types.EthereumChainID}
 	_, err = tv.h(tv.ctx, msgSubmitEvent)
 	require.NoError(tv.t, err)
 	gravity.EndBlocker(tv.ctx, tv.input.GravityKeeper)
 
 	// check that attestation persisted
-	a := tv.input.GravityKeeper.GetEthereumEventVoteRecord(tv.ctx, myNonce, sendToCosmosEvent.Hash())
+	a := tv.input.GravityKeeper.GetEVMEventVoteRecord(tv.ctx, types.EthereumChainID, myNonce, sendToCosmosEvent.Hash())
 	require.NotNil(tv.t, a)
 
 	// Check that user balance has gone up

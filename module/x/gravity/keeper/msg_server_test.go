@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	ethCrypto "github.com/ethereum/go-ethereum/crypto"
@@ -16,7 +15,7 @@ import (
 	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 )
 
-func TestMsgServer_SubmitEthereumSignature(t *testing.T) {
+func TestMsgServer_SubmitEVMSignature(t *testing.T) {
 	ethPrivKey, err := ethCrypto.GenerateKey()
 	require.NoError(t, err)
 
@@ -43,21 +42,21 @@ func TestMsgServer_SubmitEthereumSignature(t *testing.T) {
 		gk.SetOrchestratorValidatorAddress(ctx, valAddr3, orcAddr3)
 	}
 
-	// setup for GetValidatorEthereumAddress
-	gk.setValidatorEthereumAddress(ctx, valAddr1, ethAddr1)
+	// setup for GetValidatorEVMAddress
+	gk.setValidatorEVMAddress(ctx, valAddr1, ethAddr1)
 
 	// setup for GetOutgoingTx
-	signerSetTx := gk.CreateSignerSetTx(ctx)
+	signerSetTx := gk.CreateSignerSetTx(ctx, types.EthereumChainID)
 
-	// setup for ValidateEthereumSignature
+	// setup for ValidateEVMSignature
 	gravityId := gk.getGravityID(ctx)
 	checkpoint := signerSetTx.GetCheckpoint([]byte(gravityId))
-	signature, err := types.NewEthereumSignature(checkpoint, ethPrivKey)
+	signature, err := types.NewEVMSignature(checkpoint, ethPrivKey)
 	require.NoError(t, err)
 
 	signerSetTxConfirmation := &types.SignerSetTxConfirmation{
 		SignerSetNonce: signerSetTx.Nonce,
-		EthereumSigner: ethAddr1.Hex(),
+		EVMSigner:      ethAddr1.Hex(),
 		Signature:      signature,
 	}
 
@@ -66,16 +65,16 @@ func TestMsgServer_SubmitEthereumSignature(t *testing.T) {
 
 	msgServer := NewMsgServerImpl(gk)
 
-	msg := &types.MsgSubmitEthereumTxConfirmation{
+	msg := &types.MsgSubmitEVMTxConfirmation{
 		Confirmation: confirmation,
 		Signer:       orcAddr1.String(),
 	}
 
-	_, err = msgServer.SubmitEthereumTxConfirmation(sdk.WrapSDKContext(ctx), msg)
+	_, err = msgServer.SubmitEVMTxConfirmation(sdk.WrapSDKContext(ctx), msg)
 	require.NoError(t, err)
 }
 
-func TestMsgServer_SendToEthereum(t *testing.T) {
+func TestMsgServer_SendToEVM(t *testing.T) {
 	ethPrivKey, err := ethCrypto.GenerateKey()
 	require.NoError(t, err)
 
@@ -94,8 +93,7 @@ func TestMsgServer_SendToEthereum(t *testing.T) {
 		orcAddr3, _ = sdk.AccAddressFromBech32("cosmos193fw83ynn76328pty4yl7473vg9x86alq2cft7")
 		valAddr3    = sdk.ValAddress(orcAddr3)
 
-		testDenom    = "stake"
-		testContract = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
+		testDenom = "stake"
 
 		balance = sdk.Coin{
 			Denom:  testDenom,
@@ -122,25 +120,25 @@ func TestMsgServer_SendToEthereum(t *testing.T) {
 	}
 
 	// create denom in keeper
-	gk.setCosmosOriginatedDenomToERC20(ctx, testDenom, testContract)
+	gk.setCosmosOriginatedDenomToERC20(ctx, types.EthereumChainID, testDenom, "testcontractstring")
 
-	// setup for GetValidatorEthereumAddress
-	gk.setValidatorEthereumAddress(ctx, valAddr1, ethAddr1)
+	// setup for GetValidatorEVMAddress
+	gk.setValidatorEVMAddress(ctx, valAddr1, ethAddr1)
 
 	msgServer := NewMsgServerImpl(gk)
 
-	msg := &types.MsgSendToEthereum{
-		Sender:            orcAddr1.String(),
-		EthereumRecipient: ethAddr1.String(),
-		Amount:            amount,
-		BridgeFee:         fee,
+	msg := &types.MsgSendToEVM{
+		Sender:       orcAddr1.String(),
+		EVMRecipient: ethAddr1.String(),
+		Amount:       amount,
+		BridgeFee:    fee,
 	}
 
-	_, err = msgServer.SendToEthereum(sdk.WrapSDKContext(ctx), msg)
+	_, err = msgServer.SendToEVM(sdk.WrapSDKContext(ctx), msg)
 	require.NoError(t, err)
 }
 
-func TestMsgServer_CancelSendToEthereum(t *testing.T) {
+func TestMsgServer_CancelSendToEVM(t *testing.T) {
 	ethPrivKey, err := ethCrypto.GenerateKey()
 	require.NoError(t, err)
 
@@ -159,8 +157,7 @@ func TestMsgServer_CancelSendToEthereum(t *testing.T) {
 		orcAddr3, _ = sdk.AccAddressFromBech32("cosmos193fw83ynn76328pty4yl7473vg9x86alq2cft7")
 		valAddr3    = sdk.ValAddress(orcAddr3)
 
-		testDenom    = "stake"
-		testContract = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
+		testDenom = "stake"
 
 		balance = sdk.Coin{
 			Denom:  testDenom,
@@ -187,36 +184,32 @@ func TestMsgServer_CancelSendToEthereum(t *testing.T) {
 	}
 
 	// create denom in keeper
-	gk.setCosmosOriginatedDenomToERC20(ctx, testDenom, testContract)
+	gk.setCosmosOriginatedDenomToERC20(ctx, types.EthereumChainID, testDenom, "testcontractstring")
 
-	// setup for GetValidatorEthereumAddress
-	gk.setValidatorEthereumAddress(ctx, valAddr1, ethAddr1)
+	// setup for GetValidatorEVMAddress
+	gk.setValidatorEVMAddress(ctx, valAddr1, ethAddr1)
 
 	msgServer := NewMsgServerImpl(gk)
 
-	msg := &types.MsgSendToEthereum{
-		Sender:            orcAddr1.String(),
-		EthereumRecipient: ethAddr1.String(),
-		Amount:            amount,
-		BridgeFee:         fee,
+	msg := &types.MsgSendToEVM{
+		Sender:       orcAddr1.String(),
+		EVMRecipient: ethAddr1.String(),
+		Amount:       amount,
+		BridgeFee:    fee,
 	}
 
-	response, err := msgServer.SendToEthereum(sdk.WrapSDKContext(ctx), msg)
+	response, err := msgServer.SendToEVM(sdk.WrapSDKContext(ctx), msg)
 	require.NoError(t, err)
 
-	cancelMsg := &types.MsgCancelSendToEthereum{
+	cancelMsg := &types.MsgCancelSendToEVM{
 		Id:     response.Id,
 		Sender: orcAddr1.String(),
 	}
-
-	_, err = msgServer.CancelSendToEthereum(sdk.WrapSDKContext(ctx), cancelMsg)
+	_, err = msgServer.CancelSendToEVM(sdk.WrapSDKContext(ctx), cancelMsg)
 	require.NoError(t, err)
 }
 
 func TestMsgServer_RequestBatchTx(t *testing.T) {
-	ethPrivKey, err := ethCrypto.GenerateKey()
-	require.NoError(t, err)
-
 	var (
 		env = CreateTestEnv(t)
 		ctx = env.Context
@@ -224,7 +217,7 @@ func TestMsgServer_RequestBatchTx(t *testing.T) {
 
 		orcAddr1, _ = sdk.AccAddressFromBech32("cosmos1dg55rtevlfxh46w88yjpdd08sqhh5cc3xhkcej")
 		valAddr1    = sdk.ValAddress(orcAddr1)
-		ethAddr1    = crypto.PubkeyToAddress(ethPrivKey.PublicKey)
+		//ethAddr1    = crypto.PubkeyToAddress(ethPrivKey.PublicKey)
 
 		orcAddr2, _ = sdk.AccAddressFromBech32("cosmos164knshrzuuurf05qxf3q5ewpfnwzl4gj4m4dfy")
 		valAddr2    = sdk.ValAddress(orcAddr2)
@@ -232,77 +225,7 @@ func TestMsgServer_RequestBatchTx(t *testing.T) {
 		orcAddr3, _ = sdk.AccAddressFromBech32("cosmos193fw83ynn76328pty4yl7473vg9x86alq2cft7")
 		valAddr3    = sdk.ValAddress(orcAddr3)
 
-		testDenom    = "stake"
-		testContract = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
-
-		balance = sdk.Coin{
-			Denom:  testDenom,
-			Amount: sdk.NewInt(10000),
-		}
-		amount = sdk.Coin{
-			Denom:  testDenom,
-			Amount: sdk.NewInt(1000),
-		}
-		fee = sdk.Coin{
-			Denom:  testDenom,
-			Amount: sdk.NewInt(10),
-		}
-	)
-
-	{ // setup for getSignerValidator
-		gk.StakingKeeper = NewStakingKeeperMock(valAddr1, valAddr2, valAddr3)
-		gk.SetOrchestratorValidatorAddress(ctx, valAddr1, orcAddr1)
-	}
-
-	{ // add balance to bank
-		err = env.AddBalanceToBank(ctx, orcAddr1, sdk.Coins{balance})
-		require.NoError(t, err)
-	}
-
-	// create denom in keeper
-	gk.setCosmosOriginatedDenomToERC20(ctx, testDenom, testContract)
-
-	// setup for GetValidatorEthereumAddress
-	gk.setValidatorEthereumAddress(ctx, valAddr1, ethAddr1)
-
-	msgServer := NewMsgServerImpl(gk)
-
-	msg := &types.MsgSendToEthereum{
-		Sender:            orcAddr1.String(),
-		EthereumRecipient: ethAddr1.String(),
-		Amount:            amount,
-		BridgeFee:         fee,
-	}
-
-	_, err = msgServer.SendToEthereum(sdk.WrapSDKContext(ctx), msg)
-	require.NoError(t, err)
-
-	requestMsg := &types.MsgRequestBatchTx{
-		Signer: orcAddr1.String(),
-		Denom:  testDenom,
-	}
-
-	_, err = msgServer.RequestBatchTx(sdk.WrapSDKContext(ctx), requestMsg)
-	require.NoError(t, err)
-}
-
-func TestMsgServer_RequestEmptyBatchTx(t *testing.T) {
-	var (
-		env = CreateTestEnv(t)
-		ctx = env.Context
-		gk  = env.GravityKeeper
-
-		orcAddr1, _ = sdk.AccAddressFromBech32("cosmos1dg55rtevlfxh46w88yjpdd08sqhh5cc3xhkcej")
-		valAddr1    = sdk.ValAddress(orcAddr1)
-
-		orcAddr2, _ = sdk.AccAddressFromBech32("cosmos164knshrzuuurf05qxf3q5ewpfnwzl4gj4m4dfy")
-		valAddr2    = sdk.ValAddress(orcAddr2)
-
-		orcAddr3, _ = sdk.AccAddressFromBech32("cosmos193fw83ynn76328pty4yl7473vg9x86alq2cft7")
-		valAddr3    = sdk.ValAddress(orcAddr3)
-
-		testDenom    = "stake"
-		testContract = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
+		testDenom = "stake"
 	)
 
 	{ // setup for getSignerValidator
@@ -311,7 +234,7 @@ func TestMsgServer_RequestEmptyBatchTx(t *testing.T) {
 	}
 
 	// create denom in keeper
-	gk.setCosmosOriginatedDenomToERC20(ctx, testDenom, testContract)
+	gk.setCosmosOriginatedDenomToERC20(ctx, types.EthereumChainID, testDenom, "testcontractstring")
 
 	msgServer := NewMsgServerImpl(gk)
 
@@ -321,11 +244,10 @@ func TestMsgServer_RequestEmptyBatchTx(t *testing.T) {
 	}
 
 	_, err := msgServer.RequestBatchTx(sdk.WrapSDKContext(ctx), msg)
-
-	require.Error(t, err)
+	require.NoError(t, err)
 }
 
-func TestMsgServer_SubmitEthereumEvent(t *testing.T) {
+func TestMsgServer_SubmitEVMEvent(t *testing.T) {
 	ethPrivKey, err := ethCrypto.GenerateKey()
 	require.NoError(t, err)
 
@@ -343,8 +265,6 @@ func TestMsgServer_SubmitEthereumEvent(t *testing.T) {
 
 		orcAddr3, _ = sdk.AccAddressFromBech32("cosmos193fw83ynn76328pty4yl7473vg9x86alq2cft7")
 		valAddr3    = sdk.ValAddress(orcAddr3)
-
-		testContract = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
 	)
 
 	{ // setup for getSignerValidator
@@ -354,16 +274,16 @@ func TestMsgServer_SubmitEthereumEvent(t *testing.T) {
 		gk.SetOrchestratorValidatorAddress(ctx, valAddr3, orcAddr3)
 	}
 
-	// setup for GetValidatorEthereumAddress
-	gk.setValidatorEthereumAddress(ctx, valAddr1, ethAddr1)
+	// setup for GetValidatorEVMAddress
+	gk.setValidatorEVMAddress(ctx, valAddr1, ethAddr1)
 
 	sendToCosmosEvent := &types.SendToCosmosEvent{
 		EventNonce:     1,
-		TokenContract:  testContract.Hex(),
+		TokenContract:  "test-token-contract-string",
 		Amount:         sdk.NewInt(1000),
-		EthereumSender: ethAddr1.String(),
+		EVMSender:      ethAddr1.String(),
 		CosmosReceiver: orcAddr1.String(),
-		EthereumHeight: 200,
+		EVMHeight:      200,
 	}
 
 	event, err := types.PackEvent(sendToCosmosEvent)
@@ -371,12 +291,12 @@ func TestMsgServer_SubmitEthereumEvent(t *testing.T) {
 
 	msgServer := NewMsgServerImpl(gk)
 
-	msg := &types.MsgSubmitEthereumEvent{
+	msg := &types.MsgSubmitEVMEvent{
 		Event:  event,
 		Signer: orcAddr1.String(),
 	}
 
-	_, err = msgServer.SubmitEthereumEvent(sdk.WrapSDKContext(ctx), msg)
+	_, err = msgServer.SubmitEVMEvent(sdk.WrapSDKContext(ctx), msg)
 	require.NoError(t, err)
 }
 
@@ -411,13 +331,13 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 	signMsgBz := env.Marshaler.MustMarshal(&ethMsg)
 	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
 
-	sig, err := types.NewEthereumSignature(hash, ethPrivKey)
+	sig, err := types.NewEVMSignature(hash, ethPrivKey)
 	require.NoError(t, err)
 
 	msg := &types.MsgDelegateKeys{
 		ValidatorAddress:    valAddr1.String(),
 		OrchestratorAddress: orcAddr1.String(),
-		EthereumAddress:     ethAddr1.String(),
+		EVMAddress:          ethAddr1.String(),
 		EthSignature:        sig,
 	}
 
@@ -467,11 +387,11 @@ func TestEthVerify(t *testing.T) {
 	fmt.Println("MESSAGE BYTES TO SIGN:", hexutil.Encode(signMsgBz))
 	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
 
-	sig, err := types.NewEthereumSignature(hash, privKey)
+	sig, err := types.NewEVMSignature(hash, privKey)
 	sig[64] += 27 // change the V value
 	require.NoError(t, err)
 
-	err = types.ValidateEthereumSignature(hash, sig, address)
+	err = types.ValidateEVMSignature(hash, sig, address)
 	require.NoError(t, err)
 
 	// replace gorcSig with what the following command produces:

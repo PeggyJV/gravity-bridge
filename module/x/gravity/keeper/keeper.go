@@ -84,25 +84,25 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 /////////////////////////////
 
 // incrementLatestSignerSetTxNonce sets the latest valset nonce
-func (k Keeper) incrementLatestSignerSetTxNonce(ctx sdk.Context) uint64 {
-	current := k.GetLatestSignerSetTxNonce(ctx)
+func (k Keeper) incrementLatestSignerSetTxNonce(ctx sdk.Context, chainID uint32) uint64 {
+	current := k.GetLatestSignerSetTxNonce(ctx, chainID)
 	next := current + 1
-	ctx.KVStore(k.storeKey).Set([]byte{types.LatestSignerSetTxNonceKey}, sdk.Uint64ToBigEndian(next))
+	ctx.KVStore(k.storeKey).Set(types.MakeLatestSignerSetTxNonceKey(chainID), sdk.Uint64ToBigEndian(next))
 	return next
 }
 
 // GetLatestSignerSetTxNonce returns the latest valset nonce
-func (k Keeper) GetLatestSignerSetTxNonce(ctx sdk.Context) uint64 {
-	if bz := ctx.KVStore(k.storeKey).Get([]byte{types.LatestSignerSetTxNonceKey}); bz != nil {
+func (k Keeper) GetLatestSignerSetTxNonce(ctx sdk.Context, chainID uint32) uint64 {
+	if bz := ctx.KVStore(k.storeKey).Get(types.MakeLatestSignerSetTxNonceKey(chainID)); bz != nil {
 		return binary.BigEndian.Uint64(bz)
 	}
 	return 0
 }
 
 // GetLatestSignerSetTx returns the latest validator set in state
-func (k Keeper) GetLatestSignerSetTx(ctx sdk.Context) *types.SignerSetTx {
-	key := types.MakeSignerSetTxKey(k.GetLatestSignerSetTxNonce(ctx))
-	otx := k.GetOutgoingTx(ctx, key)
+func (k Keeper) GetLatestSignerSetTx(ctx sdk.Context, chainID uint32) *types.SignerSetTx {
+	key := types.MakeSignerSetTxKey(chainID, k.GetLatestSignerSetTxNonce(ctx, chainID))
+	otx := k.GetOutgoingTx(ctx, chainID, key)
 	out, _ := otx.(*types.SignerSetTx)
 	return out
 }
@@ -113,12 +113,12 @@ func (k Keeper) GetLatestSignerSetTx(ctx sdk.Context) *types.SignerSetTx {
 
 // setLastUnbondingBlockHeight sets the last unbonding block height
 func (k Keeper) setLastUnbondingBlockHeight(ctx sdk.Context, unbondingBlockHeight uint64) {
-	ctx.KVStore(k.storeKey).Set([]byte{types.LastUnBondingBlockHeightKey}, sdk.Uint64ToBigEndian(unbondingBlockHeight))
+	ctx.KVStore(k.storeKey).Set(types.MakeLastUnBondingBlockHeightKey(), sdk.Uint64ToBigEndian(unbondingBlockHeight))
 }
 
 // GetLastUnbondingBlockHeight returns the last unbonding block height
 func (k Keeper) GetLastUnbondingBlockHeight(ctx sdk.Context) uint64 {
-	if bz := ctx.KVStore(k.storeKey).Get([]byte{types.LastUnBondingBlockHeightKey}); len(bz) == 0 {
+	if bz := ctx.KVStore(k.storeKey).Get(types.MakeLastUnBondingBlockHeightKey()); len(bz) == 0 {
 		return 0
 	} else {
 		return binary.BigEndian.Uint64(bz)
@@ -129,31 +129,32 @@ func (k Keeper) GetLastUnbondingBlockHeight(ctx sdk.Context) uint64 {
 //     ETHEREUM SIGNATURES   //
 ///////////////////////////////
 
-// getEthereumSignature returns a valset confirmation by a nonce and validator address
-func (k Keeper) getEthereumSignature(ctx sdk.Context, storeIndex []byte, validator sdk.ValAddress) []byte {
-	return ctx.KVStore(k.storeKey).Get(types.MakeEthereumSignatureKey(storeIndex, validator))
+// getEVMSignature returns a valset confirmation by a nonce and validator address
+func (k Keeper) getEVMSignature(ctx sdk.Context, chainID uint32, storeIndex []byte, validator sdk.ValAddress) []byte {
+	return ctx.KVStore(k.storeKey).Get(types.MakeEVMSignatureKeyForValidator(chainID, storeIndex, validator))
 }
 
-// SetEthereumSignature sets a valset confirmation
-func (k Keeper) SetEthereumSignature(ctx sdk.Context, sig types.EthereumTxConfirmation, val sdk.ValAddress) []byte {
-	key := types.MakeEthereumSignatureKey(sig.GetStoreIndex(), val)
+// SetEVMSignature sets a valset confirmation
+func (k Keeper) SetEVMSignature(ctx sdk.Context, chainID uint32, sig types.EVMTxConfirmation, val sdk.ValAddress) []byte {
+	key := types.MakeEVMSignatureKeyForValidator(chainID, sig.GetStoreIndex(chainID), val)
 	ctx.KVStore(k.storeKey).Set(key, sig.GetSignature())
 	return key
 }
 
-// GetEthereumSignatures returns all etherum signatures for a given outgoing tx by store index
-func (k Keeper) GetEthereumSignatures(ctx sdk.Context, storeIndex []byte) map[string][]byte {
+// GetEVMSignatures returns all etherum signatures for a given outgoing tx by store index
+func (k Keeper) GetEVMSignatures(ctx sdk.Context, chainID uint32, storeIndex []byte) map[string][]byte {
 	var signatures = make(map[string][]byte)
-	k.iterateEthereumSignatures(ctx, storeIndex, func(val sdk.ValAddress, h []byte) bool {
+	k.iterateEVMSignatures(ctx, chainID, storeIndex, func(val sdk.ValAddress, h []byte) bool {
 		signatures[val.String()] = h
 		return false
 	})
 	return signatures
 }
 
-// iterateEthereumSignatures iterates through all valset confirms by nonce in ASC order
-func (k Keeper) iterateEthereumSignatures(ctx sdk.Context, storeIndex []byte, cb func(sdk.ValAddress, []byte) bool) {
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.EthereumSignatureKey}, storeIndex...))
+// iterateEVMSignatures iterates through all valset confirms by nonce in ASC order
+func (k Keeper) iterateEVMSignatures(ctx sdk.Context, chainID uint32, storeIndex []byte, cb func(sdk.ValAddress, []byte) bool) {
+	prefixKey := types.EVMSignatureKeyStoreIndexPrefix(chainID, storeIndex)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixKey)
 	iter := prefixStore.Iterator(nil, nil)
 	defer iter.Close()
 
@@ -190,28 +191,28 @@ func (k Keeper) GetOrchestratorValidatorAddress(ctx sdk.Context, orchAddr sdk.Ac
 // VAL -> ETH ADDRESS //
 ////////////////////////
 
-// setValidatorEthereumAddress sets the ethereum address for a given validator
-func (k Keeper) setValidatorEthereumAddress(ctx sdk.Context, valAddr sdk.ValAddress, ethAddr common.Address) {
+// setValidatorEVMAddress sets the ethereum address for a given validator
+func (k Keeper) setValidatorEVMAddress(ctx sdk.Context, valAddr sdk.ValAddress, ethAddr common.Address) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.MakeValidatorEthereumAddressKey(valAddr)
+	key := types.MakeValidatorEVMAddressKeyForValidator(valAddr)
 
 	store.Set(key, ethAddr.Bytes())
 }
 
-// GetValidatorEthereumAddress returns the eth address for a given gravity validator.
-func (k Keeper) GetValidatorEthereumAddress(ctx sdk.Context, valAddr sdk.ValAddress) common.Address {
+// GetValidatorEVMAddress returns the eth address for a given gravity validator.
+func (k Keeper) GetValidatorEVMAddress(ctx sdk.Context, valAddr sdk.ValAddress) common.Address {
 	store := ctx.KVStore(k.storeKey)
-	key := types.MakeValidatorEthereumAddressKey(valAddr)
+	key := types.MakeValidatorEVMAddressKeyForValidator(valAddr)
 
 	return common.BytesToAddress(store.Get(key))
 }
 
-func (k Keeper) getValidatorsByEthereumAddress(ctx sdk.Context, ethAddr common.Address) (vals []sdk.ValAddress) {
+func (k Keeper) getValidatorsByEVMAddress(ctx sdk.Context, ethAddr common.Address) (vals []sdk.ValAddress) {
 	iter := ctx.KVStore(k.storeKey).Iterator(nil, nil)
 
 	for ; iter.Valid(); iter.Next() {
 		if common.BytesToAddress(iter.Value()) == ethAddr {
-			valBs := bytes.TrimPrefix(iter.Key(), []byte{types.ValidatorEthereumAddressKey})
+			valBs := bytes.TrimPrefix(iter.Key(), types.ValidatorToEVMAddressKeyPrefix())
 			val := sdk.ValAddress(valBs)
 			vals = append(vals, val)
 		}
@@ -224,28 +225,28 @@ func (k Keeper) getValidatorsByEthereumAddress(ctx sdk.Context, ethAddr common.A
 // ETH -> ORC ADDRESS //
 ////////////////////////
 
-// setEthereumOrchestratorAddress sets the eth orch addr mapping
-func (k Keeper) setEthereumOrchestratorAddress(ctx sdk.Context, ethAddr common.Address, orch sdk.AccAddress) {
+// setEVMOrchestratorAddress sets the eth orch addr mapping
+func (k Keeper) setEVMOrchestratorAddress(ctx sdk.Context, ethAddr common.Address, orch sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.MakeEthereumOrchestratorAddressKey(ethAddr)
+	key := types.MakeEVMOrchestratorAddressKey(ethAddr)
 
 	store.Set(key, orch.Bytes())
 }
 
-// GetEthereumOrchestratorAddress gets the orch address for a given eth address
-func (k Keeper) GetEthereumOrchestratorAddress(ctx sdk.Context, ethAddr common.Address) sdk.AccAddress {
+// GetEVMOrchestratorAddress gets the orch address for a given eth address
+func (k Keeper) GetEVMOrchestratorAddress(ctx sdk.Context, ethAddr common.Address) sdk.AccAddress {
 	store := ctx.KVStore(k.storeKey)
-	key := types.MakeEthereumOrchestratorAddressKey(ethAddr)
+	key := types.MakeEVMOrchestratorAddressKey(ethAddr)
 
 	return store.Get(key)
 }
 
-func (k Keeper) getEthereumAddressesByOrchestrator(ctx sdk.Context, orch sdk.AccAddress) (ethAddrs []common.Address) {
+func (k Keeper) getEVMAddressesByOrchestrator(ctx sdk.Context, orch sdk.AccAddress) (ethAddrs []common.Address) {
 	iter := ctx.KVStore(k.storeKey).Iterator(nil, nil)
 
 	for ; iter.Valid(); iter.Next() {
 		if sdk.AccAddress(iter.Value()).String() == orch.String() {
-			ethBs := bytes.TrimPrefix(iter.Key(), []byte{types.EthereumOrchestratorAddressKey})
+			ethBs := bytes.TrimPrefix(iter.Key(), types.EVMToOrchestratorAddressKeyPrefix())
 			ethAddr := common.BytesToAddress(ethBs)
 			ethAddrs = append(ethAddrs, ethAddr)
 		}
@@ -256,8 +257,8 @@ func (k Keeper) getEthereumAddressesByOrchestrator(ctx sdk.Context, orch sdk.Acc
 
 // CreateSignerSetTx gets the current signer set from the staking keeper, increments the nonce,
 // creates the signer set tx object, emits an event and sets the signer set in state
-func (k Keeper) CreateSignerSetTx(ctx sdk.Context) *types.SignerSetTx {
-	nonce := k.incrementLatestSignerSetTxNonce(ctx)
+func (k Keeper) CreateSignerSetTx(ctx sdk.Context, chainID uint32) *types.SignerSetTx {
+	nonce := k.incrementLatestSignerSetTxNonce(ctx, chainID)
 	currSignerSet := k.CurrentSignerSet(ctx)
 	newSignerSetTx := types.NewSignerSetTx(nonce, uint64(ctx.BlockHeight()), currSignerSet)
 
@@ -270,7 +271,7 @@ func (k Keeper) CreateSignerSetTx(ctx sdk.Context) *types.SignerSetTx {
 			sdk.NewAttribute(types.AttributeKeySignerSetNonce, fmt.Sprint(nonce)),
 		),
 	)
-	k.SetOutgoingTx(ctx, newSignerSetTx)
+	k.SetOutgoingTx(ctx, chainID, newSignerSetTx)
 	k.Logger(ctx).Info(
 		"SignerSetTx created",
 		"nonce", newSignerSetTx.Nonce,
@@ -291,17 +292,17 @@ func (k Keeper) CreateSignerSetTx(ctx sdk.Context) *types.SignerSetTx {
 // total voting power. This is an acceptable rounding error since floating
 // point may cause consensus problems if different floating point unit
 // implementations are involved.
-func (k Keeper) CurrentSignerSet(ctx sdk.Context) types.EthereumSigners {
+func (k Keeper) CurrentSignerSet(ctx sdk.Context) types.EVMSigners {
 	validators := k.StakingKeeper.GetBondedValidatorsByPower(ctx)
-	ethereumSigners := make([]*types.EthereumSigner, 0)
+	ethereumSigners := make([]*types.EVMSigner, 0)
 	var totalPower uint64
 	for _, validator := range validators {
 		val := validator.GetOperator()
 
 		p := uint64(k.StakingKeeper.GetLastValidatorPower(ctx, val))
 
-		if ethAddr := k.GetValidatorEthereumAddress(ctx, val); ethAddr.Hex() != "0x0000000000000000000000000000000000000000" {
-			es := &types.EthereumSigner{Power: p, EthereumAddress: ethAddr.Hex()}
+		if ethAddr := k.GetValidatorEVMAddress(ctx, val); ethAddr.Hex() != "0x0000000000000000000000000000000000000000" {
+			es := &types.EVMSigner{Power: p, EVMAddress: ethAddr.Hex()}
 			ethereumSigners = append(ethereumSigners, es)
 			totalPower += p
 		}
@@ -315,8 +316,8 @@ func (k Keeper) CurrentSignerSet(ctx sdk.Context) types.EthereumSigners {
 }
 
 // GetSignerSetTxs returns all the signer set txs from the store
-func (k Keeper) GetSignerSetTxs(ctx sdk.Context) (out []*types.SignerSetTx) {
-	k.IterateOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+func (k Keeper) GetSignerSetTxs(ctx sdk.Context, chainID uint32) (out []*types.SignerSetTx) {
+	k.IterateOutgoingTxsByType(ctx, chainID, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		sstx, _ := otx.(*types.SignerSetTx)
 		out = append(out, sstx)
 		return false
@@ -353,6 +354,18 @@ func (k Keeper) getBridgeChainID(ctx sdk.Context) uint64 {
 	return a
 }
 
+func (k Keeper) chainIDsContains(ctx sdk.Context, chainID uint32) bool {
+	var cids []uint32
+	k.paramSpace.Get(ctx, types.ParamStoreKeyChainIDs, &cids)
+	for _, cid := range cids {
+		if chainID == cid {
+			return true
+		}
+	}
+
+	return false
+}
+
 // getGravityID returns the GravityID the GravityID is essentially a salt value
 // for bridge signatures, provided each chain running Gravity has a unique ID
 // it won't be possible to play back signatures from one bridge onto another
@@ -374,31 +387,31 @@ func (k Keeper) getGravityID(ctx sdk.Context) string {
 // export / import. This may seem at first glance to be excessively complicated, why not combine
 // the EthAddress and Orchestrator address indexes and simply iterate one thing? The answer is that
 // even though we set the Eth and Orchestrator address in the same place we use them differently we
-// always go from Orchestrator address to Validator address and from validator address to Ethereum address
-// we want to keep looking up the validator address for various reasons, so a direct Orchestrator to Ethereum
+// always go from Orchestrator address to Validator address and from validator address to EVM address
+// we want to keep looking up the validator address for various reasons, so a direct Orchestrator to EVM
 // address mapping will mean having to keep two of the same data around just to provide lookups.
 //
 // For the time being this will serve
 func (k Keeper) getDelegateKeys(ctx sdk.Context) (out []*types.MsgDelegateKeys) {
 	store := ctx.KVStore(k.storeKey)
-	iter := prefix.NewStore(store, []byte{types.ValidatorEthereumAddressKey}).Iterator(nil, nil)
+	iter := prefix.NewStore(store, types.ValidatorToEVMAddressKeyPrefix()).Iterator(nil, nil)
 	for ; iter.Valid(); iter.Next() {
 		out = append(out, &types.MsgDelegateKeys{
 			ValidatorAddress: sdk.ValAddress(iter.Key()).String(),
-			EthereumAddress:  common.BytesToAddress(iter.Value()).Hex(),
+			EVMAddress:       common.BytesToAddress(iter.Value()).Hex(),
 		})
 	}
 	iter.Close()
 
 	for _, msg := range out {
-		msg.OrchestratorAddress = k.GetEthereumOrchestratorAddress(ctx, common.HexToAddress(msg.EthereumAddress)).String()
+		msg.OrchestratorAddress = k.GetEVMOrchestratorAddress(ctx, common.HexToAddress(msg.EVMAddress)).String()
 	}
 
 	// we iterated over a map, so now we have to sort to ensure the
 	// output here is deterministic, eth address chosen for no particular
 	// reason
 	sort.Slice(out[:], func(i, j int) bool {
-		return out[i].EthereumAddress < out[j].EthereumAddress
+		return out[i].EVMAddress < out[j].EVMAddress
 	})
 
 	return out
@@ -412,66 +425,46 @@ func (k Keeper) GetUnbondingvalidators(unbondingVals []byte) stakingtypes.ValAdd
 	return unbondingValidators
 }
 
-// This gets the timeout height in Ethereum blocks for expiring old batches and contract calls.
-func (k Keeper) getTimeoutHeight(ctx sdk.Context) uint64 {
-	params := k.GetParams(ctx)
-	currentCosmosHeight := ctx.BlockHeight()
-	// we store the last observed Cosmos and Ethereum heights, we do not concern ourselves if these values are zero because
-	// no batch can be produced if the last Ethereum block height is not first populated by a deposit event.
-	heights := k.GetLastObservedEthereumBlockHeight(ctx)
-	if heights.CosmosHeight == 0 || heights.EthereumHeight == 0 {
-		return 0
-	}
-	// we project how long it has been in milliseconds since the last Ethereum block height was observed
-	projectedMillis := (uint64(currentCosmosHeight) - heights.CosmosHeight) * params.AverageBlockTime
-	// we convert that projection into the current Ethereum height using the average Ethereum block time in millis
-	projectedCurrentEthereumHeight := (projectedMillis / params.AverageEthereumBlockTime) + heights.EthereumHeight
-	// we convert our target time for block timeouts (lets say 12 hours) into a number of blocks to
-	// place on top of our projection of the current Ethereum block height.
-	blocksToAdd := params.TargetEthTxTimeout / params.AverageEthereumBlockTime
-	return projectedCurrentEthereumHeight + blocksToAdd
-}
-
 /////////////////
 // OUTGOING TX //
 /////////////////
 
 // GetOutgoingTx todo: outgoingTx prefix byte
-func (k Keeper) GetOutgoingTx(ctx sdk.Context, storeIndex []byte) (out types.OutgoingTx) {
-	if err := k.cdc.UnmarshalInterface(ctx.KVStore(k.storeKey).Get(types.MakeOutgoingTxKey(storeIndex)), &out); err != nil {
+func (k Keeper) GetOutgoingTx(ctx sdk.Context, chainID uint32, storeIndex []byte) (out types.OutgoingTx) {
+	if err := k.cdc.UnmarshalInterface(ctx.KVStore(k.storeKey).Get(types.MakeOutgoingTxKey(chainID, storeIndex)), &out); err != nil {
 		panic(err)
 	}
 	return out
 }
 
-func (k Keeper) SetOutgoingTx(ctx sdk.Context, outgoing types.OutgoingTx) {
-	any, err := types.PackOutgoingTx(outgoing)
+func (k Keeper) SetOutgoingTx(ctx sdk.Context, chainID uint32, outgoing types.OutgoingTx) {
+	outgoingTx, err := types.PackOutgoingTx(outgoing)
 	if err != nil {
 		panic(err)
 	}
 	ctx.KVStore(k.storeKey).Set(
-		types.MakeOutgoingTxKey(outgoing.GetStoreIndex()),
-		k.cdc.MustMarshal(any),
+		types.MakeOutgoingTxKey(chainID, outgoing.GetStoreIndex()),
+		k.cdc.MustMarshal(outgoingTx),
 	)
 }
 
 // DeleteOutgoingTx deletes a given outgoingtx
-func (k Keeper) DeleteOutgoingTx(ctx sdk.Context, storeIndex []byte) {
-	ctx.KVStore(k.storeKey).Delete(types.MakeOutgoingTxKey(storeIndex))
+func (k Keeper) DeleteOutgoingTx(ctx sdk.Context, chainID uint32, storeIndex []byte) {
+	ctx.KVStore(k.storeKey).Delete(types.MakeOutgoingTxKey(chainID, storeIndex))
 }
 
-func (k Keeper) PaginateOutgoingTxsByType(ctx sdk.Context, pageReq *query.PageRequest, prefixByte byte, cb func(key []byte, outgoing types.OutgoingTx) bool) (*query.PageResponse, error) {
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeOutgoingTxKey([]byte{prefixByte}))
+func (k Keeper) PaginateOutgoingTxsByType(ctx sdk.Context, chainID uint32, pageReq *query.PageRequest, prefixByte byte, cb func(key []byte, outgoing types.OutgoingTx) bool) (*query.PageResponse, error) {
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeOutgoingTxKey(chainID, []byte{prefixByte}))
 
 	return query.FilteredPaginate(prefixStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		if !accumulate {
 			return false, nil
 		}
 
-		var any cdctypes.Any
-		k.cdc.MustUnmarshal(value, &any)
+		var anyOTx cdctypes.Any
+		k.cdc.MustUnmarshal(value, &anyOTx)
 		var otx types.OutgoingTx
-		if err := k.cdc.UnpackAny(&any, &otx); err != nil {
+		if err := k.cdc.UnpackAny(&anyOTx, &otx); err != nil {
 			panic(err)
 		}
 		if accumulate {
@@ -483,15 +476,15 @@ func (k Keeper) PaginateOutgoingTxsByType(ctx sdk.Context, pageReq *query.PageRe
 }
 
 // IterateOutgoingTxsByType iterates over a specific type of outgoing transaction denoted by the chosen prefix byte
-func (k Keeper) IterateOutgoingTxsByType(ctx sdk.Context, prefixByte byte, cb func(key []byte, outgoing types.OutgoingTx) (stop bool)) {
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeOutgoingTxKey([]byte{prefixByte}))
+func (k Keeper) IterateOutgoingTxsByType(ctx sdk.Context, chainID uint32, prefixByte byte, cb func(key []byte, outgoing types.OutgoingTx) (stop bool)) {
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeOutgoingTxKey(chainID, []byte{prefixByte}))
 	iter := prefixStore.ReverseIterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var any cdctypes.Any
-		k.cdc.MustUnmarshal(iter.Value(), &any)
+		var anyOTx cdctypes.Any
+		k.cdc.MustUnmarshal(iter.Value(), &anyOTx)
 		var otx types.OutgoingTx
-		if err := k.cdc.UnpackAny(&any, &otx); err != nil {
+		if err := k.cdc.UnpackAny(&anyOTx, &otx); err != nil {
 			panic(err)
 		}
 		if cb(iter.Key(), otx) {
@@ -501,15 +494,16 @@ func (k Keeper) IterateOutgoingTxsByType(ctx sdk.Context, prefixByte byte, cb fu
 }
 
 // iterateOutgoingTxs iterates over a specific type of outgoing transaction denoted by the chosen prefix byte
-func (k Keeper) iterateOutgoingTxs(ctx sdk.Context, cb func(key []byte, outgoing types.OutgoingTx) bool) {
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.OutgoingTxKey})
+func (k Keeper) iterateOutgoingTxs(ctx sdk.Context, chainID uint32, cb func(key []byte, outgoing types.OutgoingTx) bool) {
+	prefixKey := types.OutgoingTxKeyPrefix(chainID)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixKey)
 	iter := prefixStore.ReverseIterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var any cdctypes.Any
-		k.cdc.MustUnmarshal(iter.Value(), &any)
+		var anyOTx cdctypes.Any
+		k.cdc.MustUnmarshal(iter.Value(), &anyOTx)
 		var otx types.OutgoingTx
-		if err := k.cdc.UnpackAny(&any, &otx); err != nil {
+		if err := k.cdc.UnpackAny(&anyOTx, &otx); err != nil {
 			panic(err)
 		}
 		if cb(iter.Key(), otx) {
@@ -519,8 +513,8 @@ func (k Keeper) iterateOutgoingTxs(ctx sdk.Context, cb func(key []byte, outgoing
 }
 
 // GetLastObservedSignerSetTx retrieves the last observed validator set from the store
-func (k Keeper) GetLastObservedSignerSetTx(ctx sdk.Context) *types.SignerSetTx {
-	key := []byte{types.LastObservedSignerSetKey}
+func (k Keeper) GetLastObservedSignerSetTx(ctx sdk.Context, chainID uint32) *types.SignerSetTx {
+	key := types.MakeLastObservedSignerSetKey(chainID)
 	if val := ctx.KVStore(k.storeKey).Get(key); val != nil {
 		var out types.SignerSetTx
 		k.cdc.MustUnmarshal(val, &out)
@@ -530,13 +524,13 @@ func (k Keeper) GetLastObservedSignerSetTx(ctx sdk.Context) *types.SignerSetTx {
 }
 
 // setLastObservedSignerSetTx updates the last observed validator set in the stor e
-func (k Keeper) setLastObservedSignerSetTx(ctx sdk.Context, signerSet types.SignerSetTx) {
-	key := []byte{types.LastObservedSignerSetKey}
+func (k Keeper) setLastObservedSignerSetTx(ctx sdk.Context, chainID uint32, signerSet types.SignerSetTx) {
+	key := types.MakeLastObservedSignerSetKey(chainID)
 	ctx.KVStore(k.storeKey).Set(key, k.cdc.MustMarshal(&signerSet))
 }
 
 // CreateContractCallTx xxx
-func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, invalidationScope tmbytes.HexBytes,
+func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidationNonce uint64, invalidationScope tmbytes.HexBytes,
 	address common.Address, payload []byte, tokens []types.ERC20Token, fees []types.ERC20Token) *types.ContractCallTx {
 	params := k.GetParams(ctx)
 
@@ -545,7 +539,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 		InvalidationScope: invalidationScope,
 		Address:           address.String(),
 		Payload:           payload,
-		Timeout:           k.getTimeoutHeight(ctx),
+		Timeout:           params.TargetEvmTxTimeout,
 		Tokens:            tokens,
 		Fees:              fees,
 		Height:            uint64(ctx.BlockHeight()),
@@ -573,10 +567,10 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 			sdk.NewAttribute(types.AttributeKeyContractCallPayload, string(payload)),
 			sdk.NewAttribute(types.AttributeKeyContractCallTokens, strings.Join(tokenString, "|")),
 			sdk.NewAttribute(types.AttributeKeyContractCallFees, strings.Join(feeString, "|")),
-			sdk.NewAttribute(types.AttributeKeyEthTxTimeout, strconv.FormatUint(params.TargetEthTxTimeout, 10)),
+			sdk.NewAttribute(types.AttributeKeyEvmTxTimeout, strconv.FormatUint(params.TargetEvmTxTimeout, 10)),
 		),
 	)
-	k.SetOutgoingTx(ctx, newContractCallTx)
+	k.SetOutgoingTx(ctx, chainID, newContractCallTx)
 	k.Logger(ctx).Info(
 		"ContractCallTx created",
 		"bridge_contract", k.getBridgeContractAddress(ctx),
@@ -587,7 +581,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 		"payload", string(payload),
 		"tokens", strings.Join(tokenString, "|"),
 		"fees", strings.Join(feeString, "|"),
-		"eth_tx_timeout", strconv.FormatUint(params.TargetEthTxTimeout, 10),
+		"eth_tx_timeout", strconv.FormatUint(params.TargetEvmTxTimeout, 10),
 	)
 	return newContractCallTx
 }
@@ -600,10 +594,10 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 // This implementation is partial at best. It doees not contain necessary functionality to freeze the bridge.
 // We will have yet to implement functionality to Migrate the Cosmos ERC20 tokens or any other ERC20 tokens bridged to the gravity contracts.
 // This just does keeper state cleanup if a new gravity contract has been deployed
-func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string, bridgeDeploymentHeight uint64) {
+func (k Keeper) MigrateGravityContract(ctx sdk.Context, chainID uint32, newBridgeAddress string, bridgeDeploymentHeight uint64) {
 	// Delete Any Outgoing TXs.
 
-	prefixStoreOtx := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.OutgoingTxKey})
+	prefixStoreOtx := prefix.NewStore(ctx.KVStore(k.storeKey), types.OutgoingTxKeyPrefix(chainID))
 	iterOtx := prefixStoreOtx.ReverseIterator(nil, nil)
 	defer iterOtx.Close()
 	for ; iterOtx.Valid(); iterOtx.Next() {
@@ -615,7 +609,7 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string,
 			panic(err)
 		}
 		// Delete any partial Eth Signatures handging around
-		prefixStoreSig := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.EthereumSignatureKey}, otx.GetStoreIndex()...))
+		prefixStoreSig := prefix.NewStore(ctx.KVStore(k.storeKey), types.EVMSignatureKeyStoreIndexPrefix(chainID, otx.GetStoreIndex()))
 		iterSig := prefixStoreSig.Iterator(nil, nil)
 		defer iterSig.Close()
 
@@ -628,11 +622,11 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string,
 
 	// Reset the last observed signer set nonce
 	store := ctx.KVStore(k.storeKey)
-	store.Set([]byte{types.LatestSignerSetTxNonceKey}, sdk.Uint64ToBigEndian(0))
+	store.Set(types.MakeLatestSignerSetTxNonceKey(chainID), sdk.Uint64ToBigEndian(0))
 
 	// Reset all ethereum event nonces to zero
-	k.setLastObservedEventNonce(ctx, 0)
-	k.iterateEthereumEventVoteRecords(ctx, func(_ []byte, voteRecord *types.EthereumEventVoteRecord) bool {
+	k.setLastObservedEventNonce(ctx, chainID, 0)
+	k.iterateEVMEventVoteRecords(ctx, chainID, func(_ []byte, voteRecord *types.EVMEventVoteRecord) bool {
 		for _, vote := range voteRecord.Votes {
 			val, err := sdk.ValAddressFromBech32(vote)
 
@@ -640,39 +634,38 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string,
 				panic(err)
 			}
 
-			k.setLastEventNonceByValidator(ctx, val, 0)
+			k.setLastEventNonceByValidator(ctx, chainID, val, 0)
 		}
 
 		return false
 	})
 
-	// Delete all Ethereum Events
-	prefixStoreEthereumEvent := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.EthereumEventVoteRecordKey})
-	iterEvent := prefixStoreEthereumEvent.Iterator(nil, nil)
+	// Delete all EVM Events
+	prefixStoreEVMEvent := prefix.NewStore(ctx.KVStore(k.storeKey), types.EVMEventVoteRecordPrefix(chainID))
+	iterEvent := prefixStoreEVMEvent.Iterator(nil, nil)
 	defer iterEvent.Close()
 	for ; iterEvent.Valid(); iterEvent.Next() {
-		prefixStoreEthereumEvent.Delete(iterEvent.Key())
+		prefixStoreEVMEvent.Delete(iterEvent.Key())
 	}
 
-	// Set the Last oberved Ethereum Blockheight to zero
-	height := types.LatestEthereumBlockHeight{
-		EthereumHeight: (bridgeDeploymentHeight - 1),
-		CosmosHeight:   uint64(ctx.BlockHeight()),
+	// Set the Last oberved EVM Blockheight to zero
+	height := types.LatestEVMBlockHeight{
+		EVMHeight:    (bridgeDeploymentHeight - 1),
+		CosmosHeight: uint64(ctx.BlockHeight()),
 	}
 
-	store.Set([]byte{types.LastEthereumBlockHeightKey}, k.cdc.MustMarshal(&height))
+	store.Set(types.MakeLastEVMBlockHeightKey(chainID), k.cdc.MustMarshal(&height))
 
-	k.setLastObservedSignerSetTx(ctx, types.SignerSetTx{
+	k.setLastObservedSignerSetTx(ctx, chainID, types.SignerSetTx{
 		Nonce:   0,
 		Height:  0,
 		Signers: nil,
 	})
 
 	// Set the batch Nonce to zero
-	store.Set([]byte{types.LastOutgoingBatchNonceKey}, sdk.Uint64ToBigEndian(0))
+	store.Set(types.MakeLastOutgoingBatchNonceKey(chainID), sdk.Uint64ToBigEndian(0))
 
 	// Update the bridge contract address
 	params := k.GetParams(ctx)
-	params.BridgeEthereumAddress = newBridgeAddress
 	k.setParams(ctx, params)
 }

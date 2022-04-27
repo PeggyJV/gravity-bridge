@@ -181,21 +181,19 @@ var (
 
 	// TestingGravityParams is a set of gravity params for testing
 	TestingGravityParams = types.Params{
-		GravityId:                                 "testgravityid",
-		ContractSourceHash:                        "62328f7bc12efb28f86111d08c29b39285680a906ea0e524e0209d6f6657b713",
-		BridgeEthereumAddress:                     "0x8858eeb3dfffa017d4bce9801d340d36cf895ccf",
-		BridgeChainId:                             11,
-		SignedBatchesWindow:                       10,
-		SignedSignerSetTxsWindow:                  10,
-		UnbondSlashingSignerSetTxsWindow:          15,
-		EthereumSignaturesWindow:                  10,
-		TargetEthTxTimeout:                        60001,
-		AverageBlockTime:                          5000,
-		AverageEthereumBlockTime:                  15000,
-		SlashFractionSignerSetTx:                  sdk.NewDecWithPrec(1, 2),
-		SlashFractionBatch:                        sdk.NewDecWithPrec(1, 2),
-		SlashFractionEthereumSignature:            sdk.NewDecWithPrec(1, 2),
-		SlashFractionConflictingEthereumSignature: sdk.NewDecWithPrec(1, 2),
+		GravityId:                            "testgravityid",
+		ContractSourceHash:                   "62328f7bc12efb28f86111d08c29b39285680a906ea0e524e0209d6f6657b713",
+		SignedBatchesWindow:                  10,
+		SignedSignerSetTxsWindow:             10,
+		UnbondSlashingSignerSetTxsWindow:     15,
+		EvmSignaturesWindow:                  10,
+		TargetEvmTxTimeout:                   60001,
+		AverageBlockTime:                     5000,
+		AverageEvmBlockTime:                  15000,
+		SlashFractionSignerSetTx:             sdk.NewDecWithPrec(1, 2),
+		SlashFractionBatch:                   sdk.NewDecWithPrec(1, 2),
+		SlashFractionEvmSignature:            sdk.NewDecWithPrec(1, 2),
+		SlashFractionConflictingEvmSignature: sdk.NewDecWithPrec(1, 2),
 	}
 )
 
@@ -216,9 +214,9 @@ type TestInput struct {
 
 func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, tokenContract gethcommon.Address, sender sdk.AccAddress, receiver gethcommon.Address, ids ...uint64) {
 	for i, id := range ids {
-		amount := types.NewERC20Token(uint64(i+100), tokenContract).GravityCoin()
-		fee := types.NewERC20Token(id, tokenContract).GravityCoin()
-		_, err := input.GravityKeeper.createSendToEthereum(ctx, sender, receiver.Hex(), amount, fee)
+		amount := types.NewERC20Token(uint64(i+100), tokenContract.Hex()).GravityCoin()
+		fee := types.NewERC20Token(id, tokenContract.Hex()).GravityCoin()
+		_, err := input.GravityKeeper.createSendToEVM(ctx, types.EthereumChainID, sender, receiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}
 }
@@ -267,9 +265,9 @@ func SetupFiveValChain(t *testing.T) (TestInput, sdk.Context) {
 
 	// Register eth addresses for each validator
 	for i, addr := range ValAddrs {
-		input.GravityKeeper.setValidatorEthereumAddress(input.Context, addr, EthAddrs[i])
+		input.GravityKeeper.setValidatorEVMAddress(input.Context, addr, EthAddrs[i])
 		input.GravityKeeper.SetOrchestratorValidatorAddress(input.Context, addr, AccAddrs[i])
-		input.GravityKeeper.setEthereumOrchestratorAddress(input.Context, EthAddrs[i], AccAddrs[i])
+		input.GravityKeeper.setEVMOrchestratorAddress(input.Context, EthAddrs[i], AccAddrs[i])
 	}
 
 	// Return the test input

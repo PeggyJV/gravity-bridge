@@ -3,7 +3,6 @@ package gravity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/keeper"
 	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
@@ -17,24 +16,24 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case *types.MsgSendToEthereum:
-			res, err := msgServer.SendToEthereum(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgSendToEVM:
+			res, err := msgServer.SendToEVM(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgCancelSendToEthereum:
-			res, err := msgServer.CancelSendToEthereum(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgCancelSendToEVM:
+			res, err := msgServer.CancelSendToEVM(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgRequestBatchTx:
 			res, err := msgServer.RequestBatchTx(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgSubmitEthereumTxConfirmation:
-			res, err := msgServer.SubmitEthereumTxConfirmation(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgSubmitEVMTxConfirmation:
+			res, err := msgServer.SubmitEVMTxConfirmation(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgSubmitEthereumEvent:
-			res, err := msgServer.SubmitEthereumEvent(sdk.WrapSDKContext(ctx), msg)
+		case *types.MsgSubmitEVMEvent:
+			res, err := msgServer.SubmitEVMEvent(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		case *types.MsgDelegateKeys:
@@ -43,17 +42,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
-		}
-	}
-}
-
-func NewCommunityPoolEthereumSpendProposalHandler(k keeper.Keeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) error {
-		switch c := content.(type) {
-		case *types.CommunityPoolEthereumSpendProposal:
-			return k.HandleCommunityPoolEthereumSpendProposal(ctx, c)
-		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized gravity proposal content type: %T", c)
 		}
 	}
 }

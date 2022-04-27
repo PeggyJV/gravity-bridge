@@ -47,7 +47,7 @@ option go_package = "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types
 // when the attestation is created, but only allows for slashing once the event
 // has passed
 //
-// target_eth_tx_timeout:
+// target_evm_tx_timeout:
 //
 // This is the 'target' value for when EVM transactions time out, this is a
 // target because EVM is a probabilistic chain and you can't say for sure
@@ -77,9 +77,9 @@ message Params {
   uint64 signed_signer_set_txs_window = 3;
   uint64 signed_batches_window = 4;
   uint64 evm_signatures_window = 5;
-  uint64 target_eth_tx_timeout = 6;
+  uint64 target_evm_tx_timeout = 6;
   uint64 average_block_time = 7;
-  uint64 average_EVM_block_time = 8;
+  uint64 average_evm_block_time = 8;
   // TODO: slash fraction for contract call txs too
   bytes slash_fraction_signer_set_tx = 9 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",

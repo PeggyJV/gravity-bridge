@@ -8,8 +8,8 @@ import (
 	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 )
 
-func (k Keeper) contractCallExecuted(ctx sdk.Context, invalidationScope []byte, invalidationNonce uint64) {
-	otx := k.GetOutgoingTx(ctx, types.MakeContractCallTxKey(invalidationScope, invalidationNonce))
+func (k Keeper) contractCallExecuted(ctx sdk.Context, chainID uint32, invalidationScope []byte, invalidationNonce uint64) {
+	otx := k.GetOutgoingTx(ctx, chainID, types.MakeContractCallTxKey(chainID, invalidationScope, invalidationNonce))
 	if otx == nil {
 		k.Logger(ctx).Error("Failed to clean contract calls",
 			"invalidation scope", hex.EncodeToString(invalidationScope),
@@ -18,15 +18,15 @@ func (k Keeper) contractCallExecuted(ctx sdk.Context, invalidationScope []byte, 
 	}
 
 	completedCallTx, _ := otx.(*types.ContractCallTx)
-	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, chainID, types.ContractCallTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		// If the iterated contract call's nonce is lower than the one that was just executed, delete it
 		cctx, _ := otx.(*types.ContractCallTx)
 		if (cctx.InvalidationNonce < completedCallTx.InvalidationNonce) &&
 			bytes.Equal(cctx.InvalidationScope, completedCallTx.InvalidationScope) {
-			k.DeleteOutgoingTx(ctx, cctx.GetStoreIndex())
+			k.DeleteOutgoingTx(ctx, chainID, cctx.GetStoreIndex())
 		}
 		return false
 	})
 
-	k.DeleteOutgoingTx(ctx, completedCallTx.GetStoreIndex())
+	k.DeleteOutgoingTx(ctx, chainID, completedCallTx.GetStoreIndex())
 }

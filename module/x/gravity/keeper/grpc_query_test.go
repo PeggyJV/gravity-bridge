@@ -36,7 +36,7 @@ func TestKeeper_LatestSignerSetTx(t *testing.T) {
 		ctx := env.Context
 		gk := env.GravityKeeper
 		{ // setup
-			sstx := gk.CreateSignerSetTx(env.Context)
+			sstx := gk.CreateSignerSetTx(env.Context, types.EthereumChainID)
 			require.NotNil(t, sstx)
 		}
 		{ // validate
@@ -56,7 +56,7 @@ func TestKeeper_SignerSetTx(t *testing.T) {
 
 		var signerSetNonce uint64
 		{ // setup
-			sstx := gk.CreateSignerSetTx(env.Context)
+			sstx := gk.CreateSignerSetTx(env.Context, types.EthereumChainID)
 			require.NotNil(t, sstx)
 			signerSetNonce = sstx.Nonce
 		}
@@ -82,7 +82,7 @@ func TestKeeper_BatchTx(t *testing.T) {
 		)
 
 		{ // setup
-			gk.SetOutgoingTx(ctx, &types.BatchTx{
+			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.BatchTx{
 				BatchNonce:    batchNonce,
 				Timeout:       1000,
 				Transactions:  nil,
@@ -116,7 +116,7 @@ func TestKeeper_ContractCallTx(t *testing.T) {
 		)
 
 		{ // setup
-			gk.SetOutgoingTx(ctx, &types.ContractCallTx{
+			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.ContractCallTx{
 				InvalidationNonce: invalidationNonce,
 				InvalidationScope: bytes.HexBytes(invalidationScope),
 			})
@@ -142,8 +142,8 @@ func TestKeeper_SignerSetTxs(t *testing.T) {
 		gk := env.GravityKeeper
 
 		{ // setup
-			require.NotNil(t, gk.CreateSignerSetTx(env.Context))
-			require.NotNil(t, gk.CreateSignerSetTx(env.Context))
+			require.NotNil(t, gk.CreateSignerSetTx(env.Context, types.EthereumChainID))
+			require.NotNil(t, gk.CreateSignerSetTx(env.Context, types.EthereumChainID))
 		}
 		{ // validate
 			req := &types.SignerSetTxsRequest{}
@@ -162,14 +162,14 @@ func TestKeeper_BatchTxs(t *testing.T) {
 		gk := env.GravityKeeper
 
 		{ // setup
-			gk.SetOutgoingTx(ctx, &types.BatchTx{
+			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.BatchTx{
 				BatchNonce:    1000,
 				Timeout:       1000,
 				Transactions:  nil,
 				TokenContract: "0x835973768750b3ED2D5c3EF5AdcD5eDb44d12aD4",
 				Height:        1000,
 			})
-			gk.SetOutgoingTx(ctx, &types.BatchTx{
+			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.BatchTx{
 				BatchNonce:    1001,
 				Timeout:       1000,
 				Transactions:  nil,
@@ -194,12 +194,12 @@ func TestKeeper_ContractCallTxs(t *testing.T) {
 		gk := env.GravityKeeper
 
 		{ // setup
-			gk.SetOutgoingTx(ctx, &types.ContractCallTx{
+			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.ContractCallTx{
 				InvalidationNonce: 5,
 				InvalidationScope: []byte("an-invalidation-scope"),
 				// TODO
 			})
-			gk.SetOutgoingTx(ctx, &types.ContractCallTx{
+			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.ContractCallTx{
 				InvalidationNonce: 6,
 				InvalidationScope: []byte("an-invalidation-scope"),
 			})
@@ -214,7 +214,7 @@ func TestKeeper_ContractCallTxs(t *testing.T) {
 	})
 }
 
-// TODO(levi) ensure coverage for:
+// TODO: ensure coverage for:
 // ContractCallTx(context.Context, *ContractCallTxRequest) (*ContractCallTxResponse, error)
 // ContractCallTxs(context.Context, *ContractCallTxsRequest) (*ContractCallTxsResponse, error)
 

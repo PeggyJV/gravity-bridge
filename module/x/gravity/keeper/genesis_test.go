@@ -19,8 +19,8 @@ func TestExportAndImport(t *testing.T) {
 	orchAddr, _ := sdk.AccAddressFromBech32("cosmos1h706wwrghfpydyh735aet8aluhf95dqj0psgyf")
 	ethAddr := common.BytesToAddress([]byte("0xFDb0aaBD40774BBF3068Bf29E8b0a6C88BE26F83"))
 
-	keeper.setValidatorEthereumAddress(ctx, valAddr, ethAddr)
-	keeper.setEthereumOrchestratorAddress(ctx, ethAddr, orchAddr)
+	keeper.setValidatorEVMAddress(ctx, valAddr, ethAddr)
+	keeper.setEVMOrchestratorAddress(ctx, ethAddr, orchAddr)
 	keeper.SetOrchestratorValidatorAddress(ctx, valAddr, orchAddr)
 
 	exportedGenesis := ExportGenesis(ctx, keeper)
@@ -30,7 +30,7 @@ func TestExportAndImport(t *testing.T) {
 
 	InitGenesis(newCtx, newKeeper, exportedGenesis)
 
-	assert.Equal(t, newKeeper.GetValidatorEthereumAddress(newCtx, valAddr), ethAddr)
-	assert.Equal(t, newKeeper.GetEthereumOrchestratorAddress(newCtx, ethAddr), orchAddr)
+	assert.Equal(t, newKeeper.GetValidatorEVMAddress(newCtx, valAddr), ethAddr)
+	assert.Equal(t, newKeeper.GetEVMOrchestratorAddress(newCtx, ethAddr), orchAddr)
 	assert.Equal(t, newKeeper.GetOrchestratorValidatorAddress(newCtx, orchAddr), valAddr)
 }

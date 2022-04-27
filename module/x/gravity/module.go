@@ -47,7 +47,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 
 // ValidateGenesis implements app module basic
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
-	var data types.GenesisState
+	var data types.GenesisStateMultiChain
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
@@ -104,7 +104,7 @@ func (AppModule) Name() string {
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 {
-	return 2
+	return 1
 }
 
 // RegisterInvariants implements app module
@@ -132,24 +132,19 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-
-	m := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/gravity from version 1 to 2: %v", err))
-	}
 }
 
 // InitGenesis initializes the genesis state for this module and implements app module.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState types.GenesisState
+	var genesisState types.GenesisStateMultiChain
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	keeper.InitGenesis(ctx, am.keeper, genesisState)
+	keeper.InitGenesisMultiChain(ctx, am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis exports the current genesis state to a json.RawMessage
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := keeper.ExportGenesis(ctx, am.keeper)
+	gs := keeper.ExportGenesisMultiChain(ctx, am.keeper)
 	return cdc.MustMarshalJSON(&gs)
 }
 

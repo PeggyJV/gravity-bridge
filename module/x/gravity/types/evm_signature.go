@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	_ EthereumTxConfirmation = &SignerSetTxConfirmation{}
-	_ EthereumTxConfirmation = &ContractCallTxConfirmation{}
-	_ EthereumTxConfirmation = &BatchTxConfirmation{}
+	_ EVMTxConfirmation = &SignerSetTxConfirmation{}
+	_ EVMTxConfirmation = &ContractCallTxConfirmation{}
+	_ EVMTxConfirmation = &BatchTxConfirmation{}
 )
 
 ///////////////
@@ -18,31 +18,31 @@ var (
 ///////////////
 
 func (u *SignerSetTxConfirmation) GetSigner() common.Address {
-	return common.HexToAddress(u.EthereumSigner)
+	return common.HexToAddress(u.EVMSigner)
 }
 
 func (u *ContractCallTxConfirmation) GetSigner() common.Address {
-	return common.HexToAddress(u.EthereumSigner)
+	return common.HexToAddress(u.EVMSigner)
 }
 
 func (u *BatchTxConfirmation) GetSigner() common.Address {
-	return common.HexToAddress(u.EthereumSigner)
+	return common.HexToAddress(u.EVMSigner)
 }
 
 ///////////////////
 // GetStoreIndex //
 ///////////////////
 
-func (sstx *SignerSetTxConfirmation) GetStoreIndex() []byte {
-	return MakeSignerSetTxKey(sstx.SignerSetNonce)
+func (sstx *SignerSetTxConfirmation) GetStoreIndex(chainID uint32) []byte {
+	return MakeSignerSetTxKey(chainID, sstx.SignerSetNonce)
 }
 
-func (btx *BatchTxConfirmation) GetStoreIndex() []byte {
-	return MakeBatchTxKey(common.HexToAddress(btx.TokenContract), btx.BatchNonce)
+func (btx *BatchTxConfirmation) GetStoreIndex(chainID uint32) []byte {
+	return MakeBatchTxKey(chainID, common.HexToAddress(btx.TokenContract), btx.BatchNonce)
 }
 
-func (cctx *ContractCallTxConfirmation) GetStoreIndex() []byte {
-	return MakeContractCallTxKey(cctx.InvalidationScope, cctx.InvalidationNonce)
+func (cctx *ContractCallTxConfirmation) GetStoreIndex(chainID uint32) []byte {
+	return MakeContractCallTxKey(chainID, cctx.InvalidationScope, cctx.InvalidationNonce)
 }
 
 //////////////
@@ -53,8 +53,8 @@ func (u *SignerSetTxConfirmation) Validate() error {
 	if u.SignerSetNonce == 0 {
 		return fmt.Errorf("nonce must be set")
 	}
-	if !common.IsHexAddress(u.EthereumSigner) {
-		return sdkerrors.Wrap(ErrInvalid, "ethereum signer must be address")
+	if !common.IsHexAddress(u.EVMSigner) {
+		return sdkerrors.Wrap(ErrInvalid, "EVM signer must be address")
 	}
 	if u.Signature == nil {
 		return fmt.Errorf("signature must be set")
@@ -69,8 +69,8 @@ func (u *ContractCallTxConfirmation) Validate() error {
 	if u.InvalidationScope == nil {
 		return fmt.Errorf("invalidation scope must be set")
 	}
-	if !common.IsHexAddress(u.EthereumSigner) {
-		return sdkerrors.Wrap(ErrInvalid, "ethereum signer must be address")
+	if !common.IsHexAddress(u.EVMSigner) {
+		return sdkerrors.Wrap(ErrInvalid, "EVM signer must be address")
 	}
 	if u.Signature == nil {
 		return fmt.Errorf("signature must be set")
@@ -83,10 +83,10 @@ func (u *BatchTxConfirmation) Validate() error {
 		return fmt.Errorf("nonce must be set")
 	}
 	if !common.IsHexAddress(u.TokenContract) {
-		return fmt.Errorf("token contract address must be valid ethereum address")
+		return fmt.Errorf("token contract address must be valid EVM address")
 	}
-	if !common.IsHexAddress(u.EthereumSigner) {
-		return sdkerrors.Wrap(ErrInvalid, "ethereum signer must be address")
+	if !common.IsHexAddress(u.EVMSigner) {
+		return sdkerrors.Wrap(ErrInvalid, "EVM signer must be address")
 	}
 	if u.Signature == nil {
 		return fmt.Errorf("signature must be set")

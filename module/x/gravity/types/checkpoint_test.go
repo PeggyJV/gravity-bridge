@@ -21,13 +21,13 @@ func TestBatchTxCheckpoint(t *testing.T) {
 	src := BatchTx{
 		BatchNonce: 1,
 		Timeout:    2111,
-		Transactions: []*SendToEthereum{
+		Transactions: []*SendToEVM{
 			{
-				Id:                0x1,
-				Sender:            senderAddr.String(),
-				EthereumRecipient: "0x9FC9C2DfBA3b6cF204C37a5F690619772b926e39",
-				Erc20Token:        NewSDKIntERC20Token(sdk.NewInt(0x1), erc20Addr),
-				Erc20Fee:          NewSDKIntERC20Token(sdk.NewInt(0x1), erc20Addr),
+				Id:           0x1,
+				Sender:       senderAddr.String(),
+				EVMRecipient: "0x9FC9C2DfBA3b6cF204C37a5F690619772b926e39",
+				Erc20Token:   NewSDKIntERC20Token(sdk.NewInt(0x1), erc20Addr),
+				Erc20Fee:     NewSDKIntERC20Token(sdk.NewInt(0x1), erc20Addr),
 			},
 		},
 		TokenContract: erc20Addr.Hex(),
@@ -47,7 +47,7 @@ func TestBatchTxCheckpoint(t *testing.T) {
 func TestContractCallTxCheckpoint(t *testing.T) {
 	payload, err := hex.DecodeString("0x74657374696e675061796c6f6164000000000000000000000000000000000000"[2:])
 	require.NoError(t, err)
-	invalidationId, err := hex.DecodeString("0x696e76616c69646174696f6e4964000000000000000000000000000000000000"[2:])
+	invalidationId, err := hex.DecodeString("0x696e7package types\n\nimport (\n\t\"encoding/hex\"\n\t\"testing\"\n\n\tsdk \"github.com/cosmos/cosmos-sdk/types\"\n\n\tgethcommon \"github.com/ethereum/go-ethereum/common\"\n\t\"github.com/stretchr/testify/assert\"\n\t\"github.com/stretchr/testify/require\"\n)\n\nfunc TestBatchTxCheckpoint(t *testing.T) {\n\tsenderAddr, err := sdk.AccAddressFromHex(\"527FBEE652609AB150F0AEE9D61A2F76CFC4A73E\")\n\trequire.NoError(t, err)\n\tvar (\n\t\terc20Addr = gethcommon.HexToAddress(\"0x835973768750b3ED2D5c3EF5AdcD5eDb44d12aD4\")\n\t)\n\n\tsrc := BatchTx{\n\t\tBatchNonce: 1,\n\t\tTimeout:    2111,\n\t\tTransactions: []*SendToEVM{\n\t\t\t{\n\t\t\t\tId:           0x1,\n\t\t\t\tSender:       senderAddr.String(),\n\t\t\t\tEVMRecipient: \"0x9FC9C2DfBA3b6cF204C37a5F690619772b926e39\",\n\t\t\t\tErc20Token:   NewSDKIntERC20Token(sdk.NewInt(0x1), erc20Addr),\n\t\t\t\tErc20Fee:     NewSDKIntERC20Token(sdk.NewInt(0x1), erc20Addr),\n\t\t\t},\n\t\t},\n\t\tTokenContract: erc20Addr.Hex(),\n\t}\n\n\t// TODO: get from params\n\tourHash := src.GetCheckpoint([]byte(\"foo\"))\n\n\t// hash from bridge contract\n\tgoldHash := \"0xa3a7ee0a363b8ad2514e7ee8f110d7449c0d88f3b0913c28c1751e6e0079a9b2\"[2:]\n\t// The function used to compute the \"gold hash\" above is in /solidity/test/updateValsetAndSubmitBatch.ts\n\t// Be aware that every time that you run the above .ts file, it will use a different tokenContractAddress and thus compute\n\t// a different hash.\n\tassert.Equal(t, goldHash, hex.EncodeToString(ourHash))\n}\n\nfunc TestContractCallTxCheckpoint(t *testing.T) {\n\tpayload, err := hex.DecodeString(\"0x74657374696e675061796c6f6164000000000000000000000000000000000000\"[2:])\n\trequire.NoError(t, err)\n\tinvalidationId, err := hex.DecodeString(\"0x696e76616c69646174696f6e4964000000000000000000000000000000000000\"[2:])\n\trequire.NoError(t, err)\n\n\ttoken := []ERC20Token{NewSDKIntERC20Token(sdk.NewIntFromUint64(1), gethcommon.HexToAddress(\"0xC26eFfa98B8A2632141562Ae7E34953Cfe5B4888\"))}\n\tcall := ContractCallTx{\n\t\tTokens:            token,\n\t\tFees:              token,\n\t\tAddress:           \"0x17c1736CcF692F653c433d7aa2aB45148C016F68\",\n\t\tPayload:           payload,\n\t\tTimeout:           4766922941000,\n\t\tInvalidationScope: invalidationId,\n\t\tInvalidationNonce: 1,\n\t}\n\n\tourHash := call.GetCheckpoint([]byte(\"foo\"))\n\n\t// hash from bridge contract\n\tgoldHash := \"0x1de95c9ace999f8ec70c6dc8d045942da2612950567c4861aca959c0650194da\"[2:]\n\t// The function used to compute the \"gold hash\" above is in /solidity/test/updateValsetAndSubmitBatch.ts\n\t// Be aware that every time that you run the above .ts file, it will use a different tokenContractAddress and thus compute\n\t// a different hash.\n\tassert.Equal(t, goldHash, hex.EncodeToString(ourHash))\n}\n\nfunc TestValsetCheckpoint(t *testing.T) {\n\tsrc := NewSignerSetTx(0, 0, EVMSigners{{\n\t\tPower:      6667,\n\t\tEVMAddress: \"0xc783df8a850f42e7F7e57013759C285caa701eB6\",\n\t}})\n\n\t// TODO: this is hardcoded to foo, replace\n\tourHash := src.GetCheckpoint([]byte(\"foo\"))\n\n\t// hash from bridge contract\n\tgoldHash := \"0x89731c26bab12cf0cb5363ef9abab6f9bd5496cf758a2309311c7946d54bca85\"[2:]\n\tassert.Equal(t, goldHash, hex.EncodeToString(ourHash))\n}\n6616c69646174696f6e4964000000000000000000000000000000000000"[2:])
 	require.NoError(t, err)
 
 	token := []ERC20Token{NewSDKIntERC20Token(sdk.NewIntFromUint64(1), gethcommon.HexToAddress("0xC26eFfa98B8A2632141562Ae7E34953Cfe5B4888"))}
@@ -72,9 +72,9 @@ func TestContractCallTxCheckpoint(t *testing.T) {
 }
 
 func TestValsetCheckpoint(t *testing.T) {
-	src := NewSignerSetTx(0, 0, EthereumSigners{{
-		Power:           6667,
-		EthereumAddress: "0xc783df8a850f42e7F7e57013759C285caa701eB6",
+	src := NewSignerSetTx(0, 0, EVMSigners{{
+		Power:      6667,
+		EVMAddress: "0xc783df8a850f42e7F7e57013759C285caa701eB6",
 	}})
 
 	// TODO: this is hardcoded to foo, replace

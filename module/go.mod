@@ -1,4 +1,4 @@
-module github.com/peggyjv/gravity-bridge/module/v2
+module github.com/peggyjv/gravity-bridge/module/v3
 
 go 1.15
 
@@ -9,6 +9,7 @@ require (
 	github.com/gogo/protobuf v1.3.3
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/peggyjv/gravity-bridge/module v0.3.9
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
@@ -20,7 +21,6 @@ require (
 	github.com/tendermint/tm-db v0.6.4
 	google.golang.org/genproto v0.0.0-20210828152312-66f60bf46e71
 	google.golang.org/grpc v1.42.0
-	google.golang.org/protobuf v1.27.1
 )
 
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2

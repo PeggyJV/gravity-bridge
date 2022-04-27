@@ -116,9 +116,7 @@ func (m *ParamsResponse) GetParams() Params {
 //  rpc SignerSetTx
 type SignerSetTxRequest struct {
 	SignerSetNonce uint64 `protobuf:"varint,1,opt,name=signer_set_nonce,json=signerSetNonce,proto3" json:"signer_set_nonce,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*SignerSetTxRequest_ChainId
-	XChainId isSignerSetTxRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId        uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *SignerSetTxRequest) Reset()         { *m = SignerSetTxRequest{} }
@@ -154,25 +152,6 @@ func (m *SignerSetTxRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SignerSetTxRequest proto.InternalMessageInfo
 
-type isSignerSetTxRequest_XChainId interface {
-	isSignerSetTxRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type SignerSetTxRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*SignerSetTxRequest_ChainId) isSignerSetTxRequest_XChainId() {}
-
-func (m *SignerSetTxRequest) GetXChainId() isSignerSetTxRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *SignerSetTxRequest) GetSignerSetNonce() uint64 {
 	if m != nil {
 		return m.SignerSetNonce
@@ -181,23 +160,14 @@ func (m *SignerSetTxRequest) GetSignerSetNonce() uint64 {
 }
 
 func (m *SignerSetTxRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*SignerSetTxRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
 }
 
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*SignerSetTxRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*SignerSetTxRequest_ChainId)(nil),
-	}
-}
-
 type LatestSignerSetTxRequest struct {
-	// Types that are valid to be assigned to XChainId:
-	//	*LatestSignerSetTxRequest_ChainId
-	XChainId isLatestSignerSetTxRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId uint32 `protobuf:"varint,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *LatestSignerSetTxRequest) Reset()         { *m = LatestSignerSetTxRequest{} }
@@ -233,37 +203,11 @@ func (m *LatestSignerSetTxRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_LatestSignerSetTxRequest proto.InternalMessageInfo
 
-type isLatestSignerSetTxRequest_XChainId interface {
-	isLatestSignerSetTxRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type LatestSignerSetTxRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,1,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*LatestSignerSetTxRequest_ChainId) isLatestSignerSetTxRequest_XChainId() {}
-
-func (m *LatestSignerSetTxRequest) GetXChainId() isLatestSignerSetTxRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *LatestSignerSetTxRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*LatestSignerSetTxRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*LatestSignerSetTxRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*LatestSignerSetTxRequest_ChainId)(nil),
-	}
 }
 
 type SignerSetTxResponse struct {
@@ -314,9 +258,7 @@ func (m *SignerSetTxResponse) GetSignerSet() *SignerSetTx {
 type BatchTxRequest struct {
 	TokenContract string `protobuf:"bytes,1,opt,name=token_contract,json=tokenContract,proto3" json:"token_contract,omitempty"`
 	BatchNonce    uint64 `protobuf:"varint,2,opt,name=batch_nonce,json=batchNonce,proto3" json:"batch_nonce,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*BatchTxRequest_ChainId
-	XChainId isBatchTxRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId       uint32 `protobuf:"varint,3,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *BatchTxRequest) Reset()         { *m = BatchTxRequest{} }
@@ -352,25 +294,6 @@ func (m *BatchTxRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BatchTxRequest proto.InternalMessageInfo
 
-type isBatchTxRequest_XChainId interface {
-	isBatchTxRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type BatchTxRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,3,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*BatchTxRequest_ChainId) isBatchTxRequest_XChainId() {}
-
-func (m *BatchTxRequest) GetXChainId() isBatchTxRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *BatchTxRequest) GetTokenContract() string {
 	if m != nil {
 		return m.TokenContract
@@ -386,17 +309,10 @@ func (m *BatchTxRequest) GetBatchNonce() uint64 {
 }
 
 func (m *BatchTxRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*BatchTxRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*BatchTxRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*BatchTxRequest_ChainId)(nil),
-	}
 }
 
 type BatchTxResponse struct {
@@ -447,9 +363,7 @@ func (m *BatchTxResponse) GetBatch() *BatchTx {
 type ContractCallTxRequest struct {
 	InvalidationScope []byte `protobuf:"bytes,1,opt,name=invalidation_scope,json=invalidationScope,proto3" json:"invalidation_scope,omitempty"`
 	InvalidationNonce uint64 `protobuf:"varint,2,opt,name=invalidation_nonce,json=invalidationNonce,proto3" json:"invalidation_nonce,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*ContractCallTxRequest_ChainId
-	XChainId isContractCallTxRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId           uint32 `protobuf:"varint,3,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *ContractCallTxRequest) Reset()         { *m = ContractCallTxRequest{} }
@@ -485,25 +399,6 @@ func (m *ContractCallTxRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ContractCallTxRequest proto.InternalMessageInfo
 
-type isContractCallTxRequest_XChainId interface {
-	isContractCallTxRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type ContractCallTxRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,3,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*ContractCallTxRequest_ChainId) isContractCallTxRequest_XChainId() {}
-
-func (m *ContractCallTxRequest) GetXChainId() isContractCallTxRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *ContractCallTxRequest) GetInvalidationScope() []byte {
 	if m != nil {
 		return m.InvalidationScope
@@ -519,17 +414,10 @@ func (m *ContractCallTxRequest) GetInvalidationNonce() uint64 {
 }
 
 func (m *ContractCallTxRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*ContractCallTxRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*ContractCallTxRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*ContractCallTxRequest_ChainId)(nil),
-	}
 }
 
 type ContractCallTxResponse struct {
@@ -579,9 +467,7 @@ func (m *ContractCallTxResponse) GetLogicCall() *ContractCallTx {
 // rpc SignerSetTxConfirmations
 type SignerSetTxConfirmationsRequest struct {
 	SignerSetNonce uint64 `protobuf:"varint,1,opt,name=signer_set_nonce,json=signerSetNonce,proto3" json:"signer_set_nonce,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*SignerSetTxConfirmationsRequest_ChainId
-	XChainId isSignerSetTxConfirmationsRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId        uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *SignerSetTxConfirmationsRequest) Reset()         { *m = SignerSetTxConfirmationsRequest{} }
@@ -617,25 +503,6 @@ func (m *SignerSetTxConfirmationsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SignerSetTxConfirmationsRequest proto.InternalMessageInfo
 
-type isSignerSetTxConfirmationsRequest_XChainId interface {
-	isSignerSetTxConfirmationsRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type SignerSetTxConfirmationsRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*SignerSetTxConfirmationsRequest_ChainId) isSignerSetTxConfirmationsRequest_XChainId() {}
-
-func (m *SignerSetTxConfirmationsRequest) GetXChainId() isSignerSetTxConfirmationsRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *SignerSetTxConfirmationsRequest) GetSignerSetNonce() uint64 {
 	if m != nil {
 		return m.SignerSetNonce
@@ -644,17 +511,10 @@ func (m *SignerSetTxConfirmationsRequest) GetSignerSetNonce() uint64 {
 }
 
 func (m *SignerSetTxConfirmationsRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*SignerSetTxConfirmationsRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*SignerSetTxConfirmationsRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*SignerSetTxConfirmationsRequest_ChainId)(nil),
-	}
 }
 
 type SignerSetTxConfirmationsResponse struct {
@@ -704,9 +564,7 @@ func (m *SignerSetTxConfirmationsResponse) GetSignatures() []*SignerSetTxConfirm
 //  rpc SignerSetTxs
 type SignerSetTxsRequest struct {
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*SignerSetTxsRequest_ChainId
-	XChainId isSignerSetTxsRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId    uint32             `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *SignerSetTxsRequest) Reset()         { *m = SignerSetTxsRequest{} }
@@ -742,25 +600,6 @@ func (m *SignerSetTxsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SignerSetTxsRequest proto.InternalMessageInfo
 
-type isSignerSetTxsRequest_XChainId interface {
-	isSignerSetTxsRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type SignerSetTxsRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*SignerSetTxsRequest_ChainId) isSignerSetTxsRequest_XChainId() {}
-
-func (m *SignerSetTxsRequest) GetXChainId() isSignerSetTxsRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *SignerSetTxsRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
@@ -769,17 +608,10 @@ func (m *SignerSetTxsRequest) GetPagination() *query.PageRequest {
 }
 
 func (m *SignerSetTxsRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*SignerSetTxsRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*SignerSetTxsRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*SignerSetTxsRequest_ChainId)(nil),
-	}
 }
 
 type SignerSetTxsResponse struct {
@@ -837,9 +669,7 @@ func (m *SignerSetTxsResponse) GetPagination() *query.PageResponse {
 //  rpc BatchTxs
 type BatchTxsRequest struct {
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*BatchTxsRequest_ChainId
-	XChainId isBatchTxsRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId    uint32             `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *BatchTxsRequest) Reset()         { *m = BatchTxsRequest{} }
@@ -875,25 +705,6 @@ func (m *BatchTxsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BatchTxsRequest proto.InternalMessageInfo
 
-type isBatchTxsRequest_XChainId interface {
-	isBatchTxsRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type BatchTxsRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*BatchTxsRequest_ChainId) isBatchTxsRequest_XChainId() {}
-
-func (m *BatchTxsRequest) GetXChainId() isBatchTxsRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *BatchTxsRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
@@ -902,17 +713,10 @@ func (m *BatchTxsRequest) GetPagination() *query.PageRequest {
 }
 
 func (m *BatchTxsRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*BatchTxsRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*BatchTxsRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*BatchTxsRequest_ChainId)(nil),
-	}
 }
 
 type BatchTxsResponse struct {
@@ -970,9 +774,7 @@ func (m *BatchTxsResponse) GetPagination() *query.PageResponse {
 //  rpc ContractCallTxs
 type ContractCallTxsRequest struct {
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*ContractCallTxsRequest_ChainId
-	XChainId isContractCallTxsRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId    uint32             `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *ContractCallTxsRequest) Reset()         { *m = ContractCallTxsRequest{} }
@@ -1008,25 +810,6 @@ func (m *ContractCallTxsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ContractCallTxsRequest proto.InternalMessageInfo
 
-type isContractCallTxsRequest_XChainId interface {
-	isContractCallTxsRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type ContractCallTxsRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*ContractCallTxsRequest_ChainId) isContractCallTxsRequest_XChainId() {}
-
-func (m *ContractCallTxsRequest) GetXChainId() isContractCallTxsRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *ContractCallTxsRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
@@ -1035,17 +818,10 @@ func (m *ContractCallTxsRequest) GetPagination() *query.PageRequest {
 }
 
 func (m *ContractCallTxsRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*ContractCallTxsRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*ContractCallTxsRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*ContractCallTxsRequest_ChainId)(nil),
-	}
 }
 
 type ContractCallTxsResponse struct {
@@ -1105,9 +881,7 @@ type UnsignedSignerSetTxsRequest struct {
 	// NOTE: this is an sdk.AccAddress and can represent either the
 	// orchestrator address or the corresponding validator address
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*UnsignedSignerSetTxsRequest_ChainId
-	XChainId isUnsignedSignerSetTxsRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *UnsignedSignerSetTxsRequest) Reset()         { *m = UnsignedSignerSetTxsRequest{} }
@@ -1143,25 +917,6 @@ func (m *UnsignedSignerSetTxsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UnsignedSignerSetTxsRequest proto.InternalMessageInfo
 
-type isUnsignedSignerSetTxsRequest_XChainId interface {
-	isUnsignedSignerSetTxsRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type UnsignedSignerSetTxsRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*UnsignedSignerSetTxsRequest_ChainId) isUnsignedSignerSetTxsRequest_XChainId() {}
-
-func (m *UnsignedSignerSetTxsRequest) GetXChainId() isUnsignedSignerSetTxsRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *UnsignedSignerSetTxsRequest) GetAddress() string {
 	if m != nil {
 		return m.Address
@@ -1170,17 +925,10 @@ func (m *UnsignedSignerSetTxsRequest) GetAddress() string {
 }
 
 func (m *UnsignedSignerSetTxsRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*UnsignedSignerSetTxsRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*UnsignedSignerSetTxsRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*UnsignedSignerSetTxsRequest_ChainId)(nil),
-	}
 }
 
 type UnsignedSignerSetTxsResponse struct {
@@ -1231,9 +979,7 @@ type UnsignedBatchTxsRequest struct {
 	// NOTE: this is an sdk.AccAddress and can represent either the
 	// orchestrator address or the corresponding validator address
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*UnsignedBatchTxsRequest_ChainId
-	XChainId isUnsignedBatchTxsRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *UnsignedBatchTxsRequest) Reset()         { *m = UnsignedBatchTxsRequest{} }
@@ -1269,25 +1015,6 @@ func (m *UnsignedBatchTxsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UnsignedBatchTxsRequest proto.InternalMessageInfo
 
-type isUnsignedBatchTxsRequest_XChainId interface {
-	isUnsignedBatchTxsRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type UnsignedBatchTxsRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*UnsignedBatchTxsRequest_ChainId) isUnsignedBatchTxsRequest_XChainId() {}
-
-func (m *UnsignedBatchTxsRequest) GetXChainId() isUnsignedBatchTxsRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *UnsignedBatchTxsRequest) GetAddress() string {
 	if m != nil {
 		return m.Address
@@ -1296,17 +1023,10 @@ func (m *UnsignedBatchTxsRequest) GetAddress() string {
 }
 
 func (m *UnsignedBatchTxsRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*UnsignedBatchTxsRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*UnsignedBatchTxsRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*UnsignedBatchTxsRequest_ChainId)(nil),
-	}
 }
 
 type UnsignedBatchTxsResponse struct {
@@ -1357,9 +1077,7 @@ func (m *UnsignedBatchTxsResponse) GetBatches() []*BatchTx {
 //  rpc UnsignedContractCallTxs
 type UnsignedContractCallTxsRequest struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*UnsignedContractCallTxsRequest_ChainId
-	XChainId isUnsignedContractCallTxsRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *UnsignedContractCallTxsRequest) Reset()         { *m = UnsignedContractCallTxsRequest{} }
@@ -1395,25 +1113,6 @@ func (m *UnsignedContractCallTxsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UnsignedContractCallTxsRequest proto.InternalMessageInfo
 
-type isUnsignedContractCallTxsRequest_XChainId interface {
-	isUnsignedContractCallTxsRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type UnsignedContractCallTxsRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*UnsignedContractCallTxsRequest_ChainId) isUnsignedContractCallTxsRequest_XChainId() {}
-
-func (m *UnsignedContractCallTxsRequest) GetXChainId() isUnsignedContractCallTxsRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *UnsignedContractCallTxsRequest) GetAddress() string {
 	if m != nil {
 		return m.Address
@@ -1422,17 +1121,10 @@ func (m *UnsignedContractCallTxsRequest) GetAddress() string {
 }
 
 func (m *UnsignedContractCallTxsRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*UnsignedContractCallTxsRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*UnsignedContractCallTxsRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*UnsignedContractCallTxsRequest_ChainId)(nil),
-	}
 }
 
 type UnsignedContractCallTxsResponse struct {
@@ -1480,9 +1172,7 @@ func (m *UnsignedContractCallTxsResponse) GetCalls() []*ContractCallTx {
 }
 
 type BatchTxFeesRequest struct {
-	// Types that are valid to be assigned to XChainId:
-	//	*BatchTxFeesRequest_ChainId
-	XChainId isBatchTxFeesRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *BatchTxFeesRequest) Reset()         { *m = BatchTxFeesRequest{} }
@@ -1518,37 +1208,11 @@ func (m *BatchTxFeesRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BatchTxFeesRequest proto.InternalMessageInfo
 
-type isBatchTxFeesRequest_XChainId interface {
-	isBatchTxFeesRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type BatchTxFeesRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*BatchTxFeesRequest_ChainId) isBatchTxFeesRequest_XChainId() {}
-
-func (m *BatchTxFeesRequest) GetXChainId() isBatchTxFeesRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *BatchTxFeesRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*BatchTxFeesRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*BatchTxFeesRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*BatchTxFeesRequest_ChainId)(nil),
-	}
 }
 
 type BatchTxFeesResponse struct {
@@ -1598,9 +1262,7 @@ func (m *BatchTxFeesResponse) GetFees() github_com_cosmos_cosmos_sdk_types.Coins
 type ContractCallTxConfirmationsRequest struct {
 	InvalidationScope []byte `protobuf:"bytes,1,opt,name=invalidation_scope,json=invalidationScope,proto3" json:"invalidation_scope,omitempty"`
 	InvalidationNonce uint64 `protobuf:"varint,2,opt,name=invalidation_nonce,json=invalidationNonce,proto3" json:"invalidation_nonce,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*ContractCallTxConfirmationsRequest_ChainId
-	XChainId isContractCallTxConfirmationsRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId           uint32 `protobuf:"varint,3,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *ContractCallTxConfirmationsRequest) Reset()         { *m = ContractCallTxConfirmationsRequest{} }
@@ -1636,25 +1298,6 @@ func (m *ContractCallTxConfirmationsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ContractCallTxConfirmationsRequest proto.InternalMessageInfo
 
-type isContractCallTxConfirmationsRequest_XChainId interface {
-	isContractCallTxConfirmationsRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type ContractCallTxConfirmationsRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,3,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*ContractCallTxConfirmationsRequest_ChainId) isContractCallTxConfirmationsRequest_XChainId() {}
-
-func (m *ContractCallTxConfirmationsRequest) GetXChainId() isContractCallTxConfirmationsRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *ContractCallTxConfirmationsRequest) GetInvalidationScope() []byte {
 	if m != nil {
 		return m.InvalidationScope
@@ -1670,17 +1313,10 @@ func (m *ContractCallTxConfirmationsRequest) GetInvalidationNonce() uint64 {
 }
 
 func (m *ContractCallTxConfirmationsRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*ContractCallTxConfirmationsRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*ContractCallTxConfirmationsRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*ContractCallTxConfirmationsRequest_ChainId)(nil),
-	}
 }
 
 type ContractCallTxConfirmationsResponse struct {
@@ -1730,9 +1366,7 @@ func (m *ContractCallTxConfirmationsResponse) GetSignatures() []*ContractCallTxC
 type BatchTxConfirmationsRequest struct {
 	BatchNonce    uint64 `protobuf:"varint,1,opt,name=batch_nonce,json=batchNonce,proto3" json:"batch_nonce,omitempty"`
 	TokenContract string `protobuf:"bytes,2,opt,name=token_contract,json=tokenContract,proto3" json:"token_contract,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*BatchTxConfirmationsRequest_ChainId
-	XChainId isBatchTxConfirmationsRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId       uint32 `protobuf:"varint,3,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *BatchTxConfirmationsRequest) Reset()         { *m = BatchTxConfirmationsRequest{} }
@@ -1768,25 +1402,6 @@ func (m *BatchTxConfirmationsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BatchTxConfirmationsRequest proto.InternalMessageInfo
 
-type isBatchTxConfirmationsRequest_XChainId interface {
-	isBatchTxConfirmationsRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type BatchTxConfirmationsRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,3,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*BatchTxConfirmationsRequest_ChainId) isBatchTxConfirmationsRequest_XChainId() {}
-
-func (m *BatchTxConfirmationsRequest) GetXChainId() isBatchTxConfirmationsRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *BatchTxConfirmationsRequest) GetBatchNonce() uint64 {
 	if m != nil {
 		return m.BatchNonce
@@ -1802,17 +1417,10 @@ func (m *BatchTxConfirmationsRequest) GetTokenContract() string {
 }
 
 func (m *BatchTxConfirmationsRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*BatchTxConfirmationsRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*BatchTxConfirmationsRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*BatchTxConfirmationsRequest_ChainId)(nil),
-	}
 }
 
 type BatchTxConfirmationsResponse struct {
@@ -1861,9 +1469,7 @@ func (m *BatchTxConfirmationsResponse) GetSignatures() []*BatchTxConfirmation {
 
 type LastSubmittedEVMEventRequest struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*LastSubmittedEVMEventRequest_ChainId
-	XChainId isLastSubmittedEVMEventRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *LastSubmittedEVMEventRequest) Reset()         { *m = LastSubmittedEVMEventRequest{} }
@@ -1899,25 +1505,6 @@ func (m *LastSubmittedEVMEventRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_LastSubmittedEVMEventRequest proto.InternalMessageInfo
 
-type isLastSubmittedEVMEventRequest_XChainId interface {
-	isLastSubmittedEVMEventRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type LastSubmittedEVMEventRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*LastSubmittedEVMEventRequest_ChainId) isLastSubmittedEVMEventRequest_XChainId() {}
-
-func (m *LastSubmittedEVMEventRequest) GetXChainId() isLastSubmittedEVMEventRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *LastSubmittedEVMEventRequest) GetAddress() string {
 	if m != nil {
 		return m.Address
@@ -1926,17 +1513,10 @@ func (m *LastSubmittedEVMEventRequest) GetAddress() string {
 }
 
 func (m *LastSubmittedEVMEventRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*LastSubmittedEVMEventRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*LastSubmittedEVMEventRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*LastSubmittedEVMEventRequest_ChainId)(nil),
-	}
 }
 
 type LastSubmittedEVMEventResponse struct {
@@ -1984,10 +1564,8 @@ func (m *LastSubmittedEVMEventResponse) GetEventNonce() uint64 {
 }
 
 type ERC20ToDenomRequest struct {
-	Erc20 string `protobuf:"bytes,1,opt,name=erc20,proto3" json:"erc20,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*ERC20ToDenomRequest_ChainId
-	XChainId isERC20ToDenomRequest_XChainId `protobuf_oneof:"_chain_id"`
+	Erc20   string `protobuf:"bytes,1,opt,name=erc20,proto3" json:"erc20,omitempty"`
+	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *ERC20ToDenomRequest) Reset()         { *m = ERC20ToDenomRequest{} }
@@ -2023,25 +1601,6 @@ func (m *ERC20ToDenomRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ERC20ToDenomRequest proto.InternalMessageInfo
 
-type isERC20ToDenomRequest_XChainId interface {
-	isERC20ToDenomRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type ERC20ToDenomRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*ERC20ToDenomRequest_ChainId) isERC20ToDenomRequest_XChainId() {}
-
-func (m *ERC20ToDenomRequest) GetXChainId() isERC20ToDenomRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *ERC20ToDenomRequest) GetErc20() string {
 	if m != nil {
 		return m.Erc20
@@ -2050,17 +1609,10 @@ func (m *ERC20ToDenomRequest) GetErc20() string {
 }
 
 func (m *ERC20ToDenomRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*ERC20ToDenomRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*ERC20ToDenomRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*ERC20ToDenomRequest_ChainId)(nil),
-	}
 }
 
 type ERC20ToDenomResponse struct {
@@ -2116,10 +1668,8 @@ func (m *ERC20ToDenomResponse) GetCosmosOriginated() bool {
 }
 
 type DenomToERC20ParamsRequest struct {
-	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*DenomToERC20ParamsRequest_ChainId
-	XChainId isDenomToERC20ParamsRequest_XChainId `protobuf_oneof:"_chain_id"`
+	Denom   string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *DenomToERC20ParamsRequest) Reset()         { *m = DenomToERC20ParamsRequest{} }
@@ -2155,25 +1705,6 @@ func (m *DenomToERC20ParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DenomToERC20ParamsRequest proto.InternalMessageInfo
 
-type isDenomToERC20ParamsRequest_XChainId interface {
-	isDenomToERC20ParamsRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type DenomToERC20ParamsRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*DenomToERC20ParamsRequest_ChainId) isDenomToERC20ParamsRequest_XChainId() {}
-
-func (m *DenomToERC20ParamsRequest) GetXChainId() isDenomToERC20ParamsRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *DenomToERC20ParamsRequest) GetDenom() string {
 	if m != nil {
 		return m.Denom
@@ -2182,17 +1713,10 @@ func (m *DenomToERC20ParamsRequest) GetDenom() string {
 }
 
 func (m *DenomToERC20ParamsRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*DenomToERC20ParamsRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*DenomToERC20ParamsRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*DenomToERC20ParamsRequest_ChainId)(nil),
-	}
 }
 
 type DenomToERC20ParamsResponse struct {
@@ -2264,10 +1788,8 @@ func (m *DenomToERC20ParamsResponse) GetErc20Decimals() uint64 {
 }
 
 type DenomToERC20Request struct {
-	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*DenomToERC20Request_ChainId
-	XChainId isDenomToERC20Request_XChainId `protobuf_oneof:"_chain_id"`
+	Denom   string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *DenomToERC20Request) Reset()         { *m = DenomToERC20Request{} }
@@ -2303,25 +1825,6 @@ func (m *DenomToERC20Request) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DenomToERC20Request proto.InternalMessageInfo
 
-type isDenomToERC20Request_XChainId interface {
-	isDenomToERC20Request_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type DenomToERC20Request_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*DenomToERC20Request_ChainId) isDenomToERC20Request_XChainId() {}
-
-func (m *DenomToERC20Request) GetXChainId() isDenomToERC20Request_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *DenomToERC20Request) GetDenom() string {
 	if m != nil {
 		return m.Denom
@@ -2330,17 +1833,10 @@ func (m *DenomToERC20Request) GetDenom() string {
 }
 
 func (m *DenomToERC20Request) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*DenomToERC20Request_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*DenomToERC20Request) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*DenomToERC20Request_ChainId)(nil),
-	}
 }
 
 type DenomToERC20Response struct {
@@ -2766,9 +2262,7 @@ func (m *DelegateKeysResponse) GetDelegateKeys() []*MsgDelegateKeys {
 // NOTE: if there is no sender address, return all
 type BatchedSendToEVMsRequest struct {
 	SenderAddress string `protobuf:"bytes,1,opt,name=sender_address,json=senderAddress,proto3" json:"sender_address,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*BatchedSendToEVMsRequest_ChainId
-	XChainId isBatchedSendToEVMsRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId       uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *BatchedSendToEVMsRequest) Reset()         { *m = BatchedSendToEVMsRequest{} }
@@ -2804,25 +2298,6 @@ func (m *BatchedSendToEVMsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BatchedSendToEVMsRequest proto.InternalMessageInfo
 
-type isBatchedSendToEVMsRequest_XChainId interface {
-	isBatchedSendToEVMsRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type BatchedSendToEVMsRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*BatchedSendToEVMsRequest_ChainId) isBatchedSendToEVMsRequest_XChainId() {}
-
-func (m *BatchedSendToEVMsRequest) GetXChainId() isBatchedSendToEVMsRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *BatchedSendToEVMsRequest) GetSenderAddress() string {
 	if m != nil {
 		return m.SenderAddress
@@ -2831,21 +2306,14 @@ func (m *BatchedSendToEVMsRequest) GetSenderAddress() string {
 }
 
 func (m *BatchedSendToEVMsRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*BatchedSendToEVMsRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
 }
 
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*BatchedSendToEVMsRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*BatchedSendToEVMsRequest_ChainId)(nil),
-	}
-}
-
 type BatchedSendToEVMsResponse struct {
-	SendTo_EVMs []*SendToEVM `protobuf:"bytes,1,rep,name=send_to_EVMs,json=sendToEVMs,proto3" json:"send_to_EVMs,omitempty"`
+	SendToEvms []*SendToEVM `protobuf:"bytes,1,rep,name=send_to_evms,json=sendToEvms,proto3" json:"send_to_evms,omitempty"`
 }
 
 func (m *BatchedSendToEVMsResponse) Reset()         { *m = BatchedSendToEVMsResponse{} }
@@ -2881,9 +2349,9 @@ func (m *BatchedSendToEVMsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BatchedSendToEVMsResponse proto.InternalMessageInfo
 
-func (m *BatchedSendToEVMsResponse) GetSendTo_EVMs() []*SendToEVM {
+func (m *BatchedSendToEVMsResponse) GetSendToEvms() []*SendToEVM {
 	if m != nil {
-		return m.SendTo_EVMs
+		return m.SendToEvms
 	}
 	return nil
 }
@@ -2891,9 +2359,7 @@ func (m *BatchedSendToEVMsResponse) GetSendTo_EVMs() []*SendToEVM {
 type UnbatchedSendToEVMsRequest struct {
 	SenderAddress string             `protobuf:"bytes,1,opt,name=sender_address,json=senderAddress,proto3" json:"sender_address,omitempty"`
 	Pagination    *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
-	// Types that are valid to be assigned to XChainId:
-	//	*UnbatchedSendToEVMsRequest_ChainId
-	XChainId isUnbatchedSendToEVMsRequest_XChainId `protobuf_oneof:"_chain_id"`
+	ChainId       uint32             `protobuf:"varint,3,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 }
 
 func (m *UnbatchedSendToEVMsRequest) Reset()         { *m = UnbatchedSendToEVMsRequest{} }
@@ -2929,25 +2395,6 @@ func (m *UnbatchedSendToEVMsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UnbatchedSendToEVMsRequest proto.InternalMessageInfo
 
-type isUnbatchedSendToEVMsRequest_XChainId interface {
-	isUnbatchedSendToEVMsRequest_XChainId()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type UnbatchedSendToEVMsRequest_ChainId struct {
-	ChainId uint32 `protobuf:"varint,3,opt,name=chain_id,json=chainId,proto3,oneof" json:"chain_id,omitempty"`
-}
-
-func (*UnbatchedSendToEVMsRequest_ChainId) isUnbatchedSendToEVMsRequest_XChainId() {}
-
-func (m *UnbatchedSendToEVMsRequest) GetXChainId() isUnbatchedSendToEVMsRequest_XChainId {
-	if m != nil {
-		return m.XChainId
-	}
-	return nil
-}
-
 func (m *UnbatchedSendToEVMsRequest) GetSenderAddress() string {
 	if m != nil {
 		return m.SenderAddress
@@ -2963,22 +2410,15 @@ func (m *UnbatchedSendToEVMsRequest) GetPagination() *query.PageRequest {
 }
 
 func (m *UnbatchedSendToEVMsRequest) GetChainId() uint32 {
-	if x, ok := m.GetXChainId().(*UnbatchedSendToEVMsRequest_ChainId); ok {
-		return x.ChainId
+	if m != nil {
+		return m.ChainId
 	}
 	return 0
 }
 
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*UnbatchedSendToEVMsRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*UnbatchedSendToEVMsRequest_ChainId)(nil),
-	}
-}
-
 type UnbatchedSendToEVMsResponse struct {
-	SendTo_EVMs []*SendToEVM        `protobuf:"bytes,1,rep,name=send_to_EVMs,json=sendToEVMs,proto3" json:"send_to_EVMs,omitempty"`
-	Pagination  *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	SendToEvms []*SendToEVM        `protobuf:"bytes,1,rep,name=send_to_evms,json=sendToEvms,proto3" json:"send_to_evms,omitempty"`
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *UnbatchedSendToEVMsResponse) Reset()         { *m = UnbatchedSendToEVMsResponse{} }
@@ -3014,9 +2454,9 @@ func (m *UnbatchedSendToEVMsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UnbatchedSendToEVMsResponse proto.InternalMessageInfo
 
-func (m *UnbatchedSendToEVMsResponse) GetSendTo_EVMs() []*SendToEVM {
+func (m *UnbatchedSendToEVMsResponse) GetSendToEvms() []*SendToEVM {
 	if m != nil {
-		return m.SendTo_EVMs
+		return m.SendToEvms
 	}
 	return nil
 }
@@ -3083,123 +2523,121 @@ func init() {
 func init() { proto.RegisterFile("gravity/v2/query.proto", fileDescriptor_819dc9309e3d0b6f) }
 
 var fileDescriptor_819dc9309e3d0b6f = []byte{
-	// 1845 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x59, 0x4f, 0x6f, 0x1b, 0x45,
-	0x14, 0xf7, 0xa6, 0x49, 0xd3, 0x3c, 0x27, 0x69, 0x32, 0x71, 0x5a, 0xc7, 0x49, 0xed, 0x74, 0xd3,
-	0xa6, 0x69, 0x43, 0xec, 0xd4, 0x48, 0xfc, 0x11, 0x48, 0x6d, 0xfe, 0x96, 0x8a, 0xa6, 0x2d, 0x76,
-	0x1a, 0xb5, 0x08, 0xb1, 0xac, 0xbd, 0xd3, 0xcd, 0x12, 0x7b, 0xd7, 0xf5, 0x6e, 0x4c, 0x7d, 0x40,
-	0x82, 0x03, 0x08, 0x55, 0x42, 0x42, 0x88, 0x0b, 0x27, 0x24, 0x04, 0x17, 0x2e, 0x5c, 0xf9, 0x08,
-	0x3d, 0xf6, 0xc8, 0x09, 0x50, 0xfb, 0x45, 0xd0, 0xce, 0xce, 0xae, 0x67, 0xd6, 0xb3, 0xb6, 0x93,
-	0x1a, 0x95, 0x53, 0xb2, 0x6f, 0xde, 0xfc, 0xde, 0xfb, 0xbd, 0x79, 0x33, 0xf3, 0xde, 0x18, 0xce,
-	0xe8, 0x75, 0xb5, 0x61, 0x38, 0xcd, 0x5c, 0x23, 0x9f, 0x7b, 0x74, 0x88, 0xeb, 0xcd, 0x6c, 0xad,
-	0x6e, 0x39, 0x16, 0x02, 0x2a, 0xcf, 0x36, 0xf2, 0xa9, 0x2b, 0x65, 0xcb, 0xae, 0x5a, 0x76, 0xae,
-	0xa4, 0xda, 0xd8, 0x53, 0xca, 0x35, 0xae, 0x96, 0xb0, 0xa3, 0x5e, 0xcd, 0xd5, 0x54, 0xdd, 0x30,
-	0x55, 0xc7, 0xb0, 0x4c, 0x6f, 0x5e, 0x2a, 0xcd, 0xea, 0xfa, 0x5a, 0x65, 0xcb, 0xf0, 0xc7, 0x13,
-	0xba, 0xa5, 0x5b, 0xe4, 0xdf, 0x9c, 0xfb, 0x1f, 0x95, 0xce, 0xe9, 0x96, 0xa5, 0x57, 0x70, 0x4e,
-	0xad, 0x19, 0x39, 0xd5, 0x34, 0x2d, 0x87, 0x40, 0xda, 0x74, 0x34, 0xc9, 0xf8, 0xa8, 0x63, 0x13,
-	0xdb, 0x86, 0x70, 0x84, 0x3a, 0xec, 0x8d, 0x4c, 0x33, 0x23, 0x55, 0x5b, 0xa7, 0x13, 0xe4, 0xd3,
-	0x30, 0x76, 0x57, 0xad, 0xab, 0x55, 0xbb, 0x80, 0x1f, 0x1d, 0x62, 0xdb, 0x91, 0xd7, 0x61, 0xdc,
-	0x17, 0xd8, 0x35, 0xcb, 0xb4, 0x31, 0x5a, 0x85, 0x93, 0x35, 0x22, 0x49, 0x4a, 0xf3, 0xd2, 0x52,
-	0x3c, 0x8f, 0xb2, 0xad, 0x50, 0x64, 0x3d, 0xdd, 0xf5, 0xc1, 0xa7, 0x7f, 0x65, 0x62, 0x05, 0xaa,
-	0x27, 0x1f, 0x00, 0x2a, 0x1a, 0xba, 0x89, 0xeb, 0x45, 0xec, 0xec, 0x3e, 0xa6, 0xc8, 0x68, 0x09,
-	0x26, 0x6c, 0x22, 0x55, 0x6c, 0xec, 0x28, 0xa6, 0x65, 0x96, 0x31, 0x41, 0x1c, 0x2c, 0x8c, 0xdb,
-	0xbe, 0xf6, 0x6d, 0x57, 0x8a, 0xd2, 0x70, 0xaa, 0xbc, 0xaf, 0x1a, 0xa6, 0x62, 0x68, 0xc9, 0x81,
-	0x79, 0x69, 0x69, 0xec, 0xbd, 0x58, 0x61, 0x98, 0x48, 0x6e, 0x6a, 0xdf, 0x48, 0xd2, 0x7a, 0x1c,
-	0x46, 0x14, 0x5f, 0x41, 0xbe, 0x01, 0xc9, 0x5b, 0xaa, 0x83, 0x6d, 0x47, 0x60, 0x92, 0x05, 0x92,
-	0xba, 0x01, 0xed, 0xc0, 0x14, 0x07, 0x41, 0xe9, 0xbf, 0x01, 0xd0, 0x72, 0x9b, 0x86, 0xe0, 0x2c,
-	0x1b, 0x02, 0x76, 0xd2, 0x48, 0xc0, 0x44, 0xfe, 0x4a, 0x82, 0xf1, 0x75, 0xd5, 0x29, 0xef, 0xb7,
-	0xdc, 0xb9, 0x08, 0xe3, 0x8e, 0x75, 0x80, 0x4d, 0xa5, 0x6c, 0x99, 0x4e, 0x5d, 0x2d, 0x7b, 0x70,
-	0x23, 0x85, 0x31, 0x22, 0xdd, 0xa0, 0x42, 0x94, 0x81, 0x78, 0xc9, 0x9d, 0x48, 0x63, 0x34, 0x40,
-	0x62, 0x04, 0x44, 0xd4, 0x1e, 0x9f, 0x13, 0xdd, 0x68, 0xbd, 0x0b, 0xa7, 0x03, 0x37, 0x28, 0xa5,
-	0xcb, 0x30, 0x44, 0xd0, 0x28, 0x9b, 0x29, 0x96, 0x8d, 0xaf, 0xeb, 0x69, 0xc8, 0x3f, 0x4b, 0x30,
-	0xed, 0x3b, 0xb6, 0xa1, 0x56, 0x2a, 0x2d, 0x32, 0x2b, 0x80, 0x0c, 0xb3, 0xa1, 0x56, 0x0c, 0x8d,
-	0xe4, 0xa6, 0x62, 0x97, 0xad, 0x9a, 0xb7, 0xa0, 0xa3, 0x85, 0x49, 0x76, 0xa4, 0xe8, 0x0e, 0xb4,
-	0xa9, 0xb3, 0xdc, 0x38, 0xf5, 0x63, 0x50, 0x2c, 0xc2, 0x99, 0xb0, 0x8f, 0x94, 0xe9, 0xdb, 0x00,
-	0x15, 0x4b, 0x37, 0xca, 0x4a, 0x59, 0xad, 0x54, 0x28, 0xdd, 0x14, 0x4b, 0x37, 0x34, 0x6f, 0x84,
-	0x68, 0xbb, 0x1f, 0xf2, 0x63, 0xc8, 0x30, 0x2b, 0xbb, 0x61, 0x99, 0x0f, 0x8d, 0x7a, 0xd5, 0xdb,
-	0x86, 0xff, 0x71, 0x46, 0xeb, 0x30, 0x1f, 0x6d, 0x99, 0x12, 0xdb, 0xf0, 0xb2, 0x52, 0x75, 0x0e,
-	0xeb, 0xd8, 0xdd, 0x98, 0x27, 0x96, 0xe2, 0xf9, 0x85, 0x88, 0xac, 0x64, 0x11, 0x0a, 0xcc, 0x34,
-	0xf9, 0x89, 0xc4, 0xa5, 0x7c, 0xc0, 0x6b, 0x1b, 0xa0, 0x75, 0x8e, 0xd1, 0xa8, 0x2d, 0x66, 0xbd,
-	0x83, 0x2c, 0xeb, 0x1e, 0x64, 0x59, 0xef, 0x64, 0xa4, 0xc7, 0x59, 0xf6, 0xae, 0xaa, 0x63, 0x3a,
-	0xb7, 0xc0, 0xcc, 0x3c, 0x1a, 0xeb, 0x1f, 0x25, 0x48, 0xf0, 0xce, 0x50, 0xaa, 0x6f, 0x41, 0xbc,
-	0x15, 0x65, 0x9f, 0x6b, 0xe4, 0x0e, 0x84, 0x20, 0xf2, 0x36, 0xba, 0xc1, 0xf1, 0x18, 0x20, 0x3c,
-	0x2e, 0x75, 0xe5, 0xe1, 0x99, 0x65, 0x89, 0xc8, 0x5f, 0x4b, 0xc1, 0x26, 0x7a, 0xb5, 0x41, 0x7a,
-	0x22, 0xc1, 0x44, 0xcb, 0x11, 0x1a, 0xa0, 0x15, 0x18, 0x26, 0x9b, 0x35, 0x48, 0x04, 0xe1, 0x86,
-	0xf6, 0x75, 0xfa, 0x17, 0x95, 0x6f, 0xa5, 0xf0, 0xbe, 0x7b, 0xb5, 0xc1, 0xf9, 0x41, 0x82, 0xb3,
-	0x6d, 0xfe, 0x04, 0x97, 0xd8, 0x90, 0x7b, 0x04, 0xf8, 0x11, 0xea, 0x74, 0x06, 0x78, 0x8a, 0xfd,
-	0x0b, 0x93, 0x06, 0xb3, 0xf7, 0x4c, 0x92, 0x95, 0x9a, 0x68, 0xb3, 0x25, 0x61, 0x58, 0xd5, 0xb4,
-	0x3a, 0xb6, 0x6d, 0x7a, 0x1b, 0xf8, 0x9f, 0x47, 0x23, 0x7f, 0x1f, 0xe6, 0xc4, 0x56, 0x5e, 0x76,
-	0x17, 0xc9, 0x9f, 0xc0, 0x59, 0x1f, 0x39, 0xbc, 0x07, 0xfa, 0xe4, 0xfb, 0x4d, 0x48, 0xb6, 0x5b,
-	0x38, 0x56, 0x72, 0xcb, 0x3a, 0xa4, 0x7d, 0xa8, 0x88, 0xd4, 0xec, 0x93, 0xcf, 0x45, 0xc8, 0x44,
-	0x1a, 0x3a, 0x6e, 0xce, 0xc9, 0x6b, 0x80, 0x28, 0xa3, 0x6d, 0x8c, 0x6d, 0x51, 0x15, 0xd3, 0xd5,
-	0xaf, 0x06, 0x4c, 0x71, 0x10, 0xd4, 0x17, 0x05, 0x06, 0x1f, 0xe2, 0x20, 0x86, 0x33, 0x5c, 0x1e,
-	0xfb, 0x19, 0xbc, 0x61, 0x19, 0xe6, 0xfa, 0xaa, 0x5b, 0xc9, 0xfd, 0xf6, 0x77, 0x66, 0x49, 0x37,
-	0x9c, 0xfd, 0xc3, 0x52, 0xb6, 0x6c, 0x55, 0x73, 0xb4, 0x84, 0xf5, 0xfe, 0xac, 0xd8, 0xda, 0x41,
-	0xce, 0x69, 0xd6, 0xb0, 0x4d, 0x26, 0xd8, 0x05, 0x02, 0x2c, 0xff, 0x2e, 0x81, 0xcc, 0x93, 0x12,
-	0x5e, 0x99, 0xff, 0xa3, 0xaa, 0xa1, 0x0a, 0x0b, 0x1d, 0x1d, 0xa6, 0x91, 0xdb, 0x16, 0xdc, 0xb4,
-	0x8b, 0xd1, 0x4b, 0x19, 0x79, 0xd9, 0x7e, 0x2f, 0xc1, 0x2c, 0x5d, 0x19, 0x61, 0x64, 0x42, 0x55,
-	0x9f, 0xd4, 0x56, 0xf5, 0xb5, 0x57, 0x8f, 0x03, 0xa2, 0xea, 0xf1, 0x48, 0x31, 0x50, 0x60, 0x4e,
-	0xec, 0x13, 0x25, 0x7f, 0x4d, 0x40, 0x3e, 0x23, 0xd8, 0x80, 0x91, 0xac, 0x31, 0xcc, 0xdd, 0x52,
-	0x6d, 0xa7, 0x78, 0x58, 0xaa, 0x1a, 0x8e, 0x83, 0xb5, 0xad, 0xbd, 0x9d, 0xad, 0x06, 0x36, 0x9d,
-	0x3e, 0xef, 0xc6, 0xeb, 0x70, 0x2e, 0xc2, 0x0c, 0x25, 0x92, 0x81, 0x38, 0x76, 0x05, 0x7c, 0x74,
-	0x89, 0x88, 0x44, 0x57, 0xbe, 0x0f, 0x53, 0x5b, 0x85, 0x8d, 0xfc, 0xea, 0xae, 0xb5, 0x89, 0x4d,
-	0xab, 0xea, 0xfb, 0x97, 0x80, 0x21, 0x5c, 0x2f, 0xe7, 0x57, 0xa9, 0x77, 0xde, 0xc7, 0xd1, 0x7c,
-	0x7b, 0x00, 0x09, 0x1e, 0x99, 0xba, 0x94, 0x80, 0x21, 0xcd, 0x15, 0xf8, 0xd0, 0xe4, 0x03, 0x2d,
-	0xc3, 0xa4, 0xb7, 0xcf, 0x14, 0xab, 0x6e, 0x90, 0x3b, 0x04, 0x7b, 0x36, 0x4e, 0x15, 0x26, 0xbc,
-	0x81, 0x3b, 0x81, 0x5c, 0xfe, 0x18, 0x66, 0x08, 0xe6, 0xae, 0x45, 0x2c, 0x70, 0x9d, 0x5c, 0x04,
-	0xfe, 0x91, 0x5c, 0xff, 0x45, 0x82, 0x94, 0xc8, 0x00, 0x65, 0x70, 0x0e, 0xc0, 0x3d, 0x40, 0x14,
-	0xd6, 0xcc, 0x88, 0x2b, 0x21, 0x73, 0xdc, 0x61, 0x12, 0x2e, 0xc5, 0x54, 0xab, 0x98, 0x26, 0xeb,
-	0x08, 0x91, 0xdc, 0x56, 0xab, 0x18, 0x9d, 0x87, 0x51, 0x6f, 0xd8, 0x6e, 0x56, 0x4b, 0x56, 0x85,
-	0x24, 0xeb, 0x48, 0x21, 0x4e, 0x64, 0x45, 0x22, 0x72, 0x53, 0xde, 0x53, 0xd1, 0x70, 0xd9, 0xa8,
-	0xaa, 0x15, 0x3b, 0x39, 0x48, 0x16, 0x6e, 0x8c, 0x48, 0x37, 0xa9, 0xd0, 0x5d, 0x3b, 0xd6, 0xcb,
-	0x3e, 0x06, 0xe0, 0x01, 0x24, 0x78, 0xe4, 0xd6, 0xda, 0x09, 0xd2, 0xe2, 0x48, 0x6b, 0xb7, 0x03,
-	0xe9, 0x4d, 0x5c, 0xc1, 0xba, 0xea, 0xe0, 0xf7, 0x71, 0xd3, 0x5e, 0x6f, 0xee, 0x79, 0x87, 0x99,
-	0x55, 0xf7, 0xfd, 0x5f, 0x86, 0xc9, 0x86, 0x2f, 0x53, 0xf8, 0x5d, 0x32, 0x11, 0x0c, 0xac, 0x79,
-	0x72, 0xf9, 0x10, 0x32, 0x91, 0x70, 0xcc, 0x1e, 0x70, 0xf6, 0x43, 0x48, 0x80, 0x9d, 0x7d, 0x8a,
-	0x81, 0xae, 0x42, 0xc2, 0xaa, 0xbb, 0xd7, 0xa8, 0x53, 0xe7, 0x6c, 0x7a, 0x4b, 0x37, 0xc5, 0x8e,
-	0xf9, 0x66, 0xaf, 0x85, 0x59, 0x6c, 0xed, 0xed, 0x78, 0x85, 0x84, 0xcf, 0xe2, 0x1c, 0xc0, 0xd6,
-	0xde, 0x8e, 0xe2, 0x15, 0x14, 0x7e, 0x92, 0x04, 0x5a, 0xf2, 0x97, 0x52, 0xd8, 0x71, 0x06, 0x81,
-	0x3a, 0x7e, 0x94, 0x40, 0x1c, 0x87, 0xc4, 0x1e, 0x9c, 0xe7, 0x5d, 0xb8, 0xc3, 0x28, 0xf9, 0x3c,
-	0xa2, 0x70, 0xa5, 0x68, 0xdc, 0x1a, 0xc8, 0x9d, 0x70, 0x8f, 0xc3, 0x8e, 0x8f, 0xe6, 0x40, 0x38,
-	0x9a, 0xd3, 0xee, 0x4e, 0x68, 0x59, 0xf4, 0x1f, 0x75, 0xee, 0xbb, 0x69, 0xcc, 0x8a, 0xa9, 0xe9,
-	0xeb, 0x30, 0xa6, 0x51, 0xb9, 0x72, 0x80, 0x9b, 0xfe, 0x09, 0x3f, 0xcb, 0x9e, 0xf0, 0x3b, 0xb6,
-	0xce, 0xcd, 0x1d, 0xd5, 0x98, 0x2f, 0xd9, 0x84, 0x24, 0xb9, 0x02, 0xb0, 0x56, 0xc4, 0xa6, 0xb6,
-	0x6b, 0x6d, 0xed, 0xed, 0xd8, 0xcc, 0x73, 0x87, 0x8d, 0x4d, 0x0d, 0x87, 0x59, 0x8d, 0x79, 0xd2,
-	0xb5, 0xe3, 0x1c, 0xf4, 0xbb, 0x30, 0x23, 0xb0, 0x47, 0xe9, 0xbc, 0x09, 0xa3, 0x2e, 0xb4, 0xe2,
-	0x58, 0x8a, 0x2b, 0xa7, 0x6c, 0xa6, 0xb9, 0x22, 0xd7, 0x9f, 0x55, 0x00, 0x3b, 0x00, 0x90, 0xff,
-	0x90, 0x20, 0x75, 0xcf, 0x2c, 0xbd, 0x24, 0x91, 0x6d, 0x41, 0xc7, 0xf0, 0xb2, 0x4d, 0x4f, 0xd7,
-	0x1b, 0xfc, 0x27, 0xc9, 0x6d, 0x2f, 0x4a, 0x7d, 0x8f, 0x49, 0xdf, 0xfa, 0x9f, 0xfc, 0xaf, 0x53,
-	0x30, 0xf4, 0x81, 0xab, 0x8a, 0xd6, 0xe0, 0xa4, 0x77, 0x83, 0xa0, 0x99, 0xf6, 0x37, 0x44, 0x1a,
-	0x89, 0x54, 0x4a, 0x34, 0xe4, 0xc1, 0xca, 0x31, 0x74, 0x17, 0xe2, 0x4c, 0x9f, 0x82, 0xd2, 0x51,
-	0x0d, 0x0c, 0x05, 0xcb, 0x44, 0x8e, 0x07, 0x88, 0x1f, 0xc1, 0x64, 0xdb, 0xfb, 0x21, 0xba, 0xc0,
-	0xce, 0x8b, 0x7a, 0x5e, 0xec, 0x05, 0x7d, 0x13, 0x86, 0x69, 0x89, 0x84, 0x52, 0xa2, 0xc6, 0x85,
-	0x22, 0xcd, 0x0a, 0xc7, 0x02, 0x94, 0x07, 0x30, 0xce, 0x57, 0x99, 0xe8, 0x7c, 0x87, 0x66, 0x82,
-	0x62, 0xca, 0x9d, 0x54, 0x02, 0xe8, 0x22, 0x8c, 0xb2, 0xfd, 0x22, 0x8a, 0xe2, 0x14, 0xac, 0xcf,
-	0x7c, 0xb4, 0x42, 0x00, 0x7a, 0x03, 0x4e, 0xf9, 0x8d, 0x1c, 0x12, 0x51, 0x0b, 0xc0, 0xe6, 0xc4,
-	0x83, 0xcc, 0xe2, 0x9c, 0x0e, 0x75, 0x57, 0xa8, 0x03, 0xad, 0x00, 0x76, 0xa1, 0xa3, 0x4e, 0x80,
-	0xfe, 0x19, 0x24, 0xa3, 0x1e, 0xda, 0xd0, 0x72, 0x0f, 0x8f, 0x69, 0x81, 0xbd, 0xd7, 0x7a, 0x53,
-	0x0e, 0x0c, 0x1f, 0x40, 0x42, 0x54, 0x76, 0xa3, 0x4b, 0x5d, 0x4a, 0xeb, 0xc0, 0xe0, 0x52, 0x77,
-	0xc5, 0xc0, 0xd8, 0x17, 0x12, 0xcc, 0x76, 0x68, 0x74, 0x50, 0xb6, 0xb7, 0x66, 0x26, 0xb0, 0x9d,
-	0xeb, 0x59, 0x9f, 0xe5, 0x2b, 0x7a, 0x9c, 0xe0, 0xf9, 0x76, 0x78, 0x24, 0xe1, 0xf9, 0x76, 0x7a,
-	0xe7, 0x90, 0x63, 0x48, 0x81, 0x89, 0xf0, 0x6b, 0x02, 0x5a, 0x10, 0xcd, 0x0f, 0x27, 0xe3, 0x85,
-	0xce, 0x4a, 0x81, 0x01, 0xa7, 0xf5, 0x20, 0x12, 0x4e, 0xce, 0x2b, 0x22, 0x88, 0x88, 0x24, 0x5d,
-	0xee, 0x49, 0x37, 0xb0, 0x6a, 0xc2, 0xb4, 0xb0, 0xc5, 0x41, 0x4b, 0xfc, 0x59, 0x15, 0xdd, 0x6c,
-	0xa5, 0x2e, 0xf7, 0xa0, 0xc9, 0x9e, 0xb4, 0xcc, 0x43, 0x02, 0x7f, 0xd2, 0xb6, 0x3f, 0x52, 0xa4,
-	0x32, 0x91, 0xe3, 0xec, 0x51, 0xc3, 0x36, 0x42, 0xfc, 0x51, 0x23, 0x68, 0xbe, 0xf8, 0xa3, 0x46,
-	0xd4, 0x43, 0xc9, 0x31, 0x84, 0x01, 0xb5, 0x77, 0x28, 0xe8, 0x22, 0x3b, 0x33, 0xb2, 0x45, 0x4a,
-	0x2d, 0x76, 0x53, 0x63, 0x7d, 0x67, 0xc7, 0x79, 0xdf, 0x05, 0xcd, 0x07, 0xef, 0xbb, 0xa8, 0x87,
-	0x90, 0x63, 0xa8, 0x04, 0x93, 0x6d, 0xc5, 0x0c, 0x7f, 0xf5, 0x44, 0xd5, 0x56, 0xa9, 0x8b, 0x5d,
-	0xb4, 0x02, 0x1b, 0xfb, 0x30, 0x25, 0x28, 0x0f, 0xd0, 0x22, 0x9f, 0x7c, 0x51, 0xa5, 0x4f, 0xea,
-	0x52, 0x57, 0x3d, 0x76, 0x5b, 0x44, 0x74, 0x20, 0xfc, 0xb6, 0xe8, 0xdc, 0xf5, 0xf0, 0xdb, 0xa2,
-	0x4b, 0x4b, 0x23, 0xb2, 0x1a, 0x14, 0xc3, 0x9d, 0xac, 0x86, 0xbb, 0x94, 0x4e, 0x56, 0xdb, 0xfa,
-	0x11, 0x39, 0x86, 0x3e, 0x77, 0xfb, 0xe2, 0xa8, 0xca, 0x1e, 0xad, 0x44, 0x83, 0x09, 0x3a, 0x8b,
-	0x54, 0xb6, 0x57, 0x75, 0x3e, 0x1b, 0x5b, 0x7a, 0xe1, 0x6c, 0x6c, 0x6b, 0x00, 0xc2, 0xd9, 0xd8,
-	0xde, 0x0a, 0xc8, 0xb1, 0xf5, 0x7b, 0x4f, 0x9f, 0xa7, 0xa5, 0x67, 0xcf, 0xd3, 0xd2, 0x3f, 0xcf,
-	0xd3, 0xd2, 0x77, 0x2f, 0xd2, 0xb1, 0x67, 0x2f, 0xd2, 0xb1, 0x3f, 0x5f, 0xa4, 0x63, 0x1f, 0xbe,
-	0xc3, 0xbc, 0x05, 0xd6, 0xb0, 0xae, 0x37, 0x3f, 0x6d, 0xf8, 0xbf, 0x2e, 0xaf, 0x94, 0xea, 0x86,
-	0xa6, 0xe3, 0x5c, 0xd5, 0xd2, 0x0e, 0x2b, 0x38, 0xd7, 0xc8, 0xe7, 0x1e, 0xfb, 0x43, 0xde, 0x23,
-	0x61, 0xe9, 0x24, 0xf9, 0xa1, 0xf9, 0xf5, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x8e, 0x04, 0x84,
-	0x1a, 0x59, 0x1f, 0x00, 0x00,
+	// 1821 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x59, 0xcd, 0x6f, 0xdb, 0xc8,
+	0x15, 0x17, 0x1d, 0x3b, 0x8e, 0x9f, 0x3f, 0x62, 0x8f, 0xe5, 0x44, 0x96, 0x1d, 0xc9, 0xa1, 0x13,
+	0xc7, 0x89, 0x6b, 0xc9, 0x51, 0xd1, 0x2f, 0xb4, 0x40, 0x12, 0x7f, 0x05, 0x41, 0xe3, 0x24, 0x95,
+	0x6c, 0x23, 0x2e, 0x02, 0x10, 0x94, 0x38, 0xa1, 0x59, 0x4b, 0xa4, 0xa2, 0xa1, 0xd5, 0x08, 0x45,
+	0x81, 0xf6, 0xda, 0x53, 0x0e, 0xbd, 0xf4, 0x50, 0xec, 0x65, 0x77, 0x0f, 0xfb, 0x97, 0xe4, 0x98,
+	0xe3, 0x9e, 0x76, 0x17, 0xc9, 0x3f, 0xb2, 0xe0, 0x70, 0x48, 0xcd, 0x50, 0x43, 0x4a, 0xb1, 0x8d,
+	0xec, 0xc9, 0xe2, 0xfb, 0xf8, 0xbd, 0x8f, 0x79, 0x33, 0xf3, 0xde, 0x18, 0xae, 0x99, 0x2d, 0xbd,
+	0x6d, 0xb9, 0x9d, 0x62, 0xbb, 0x54, 0x7c, 0x73, 0x8a, 0x5b, 0x9d, 0x42, 0xb3, 0xe5, 0xb8, 0x0e,
+	0x02, 0x46, 0x2f, 0xb4, 0x4b, 0xd9, 0x7b, 0x35, 0x87, 0x34, 0x1c, 0x52, 0xac, 0xea, 0x04, 0xfb,
+	0x42, 0xc5, 0xf6, 0xfd, 0x2a, 0x76, 0xf5, 0xfb, 0xc5, 0xa6, 0x6e, 0x5a, 0xb6, 0xee, 0x5a, 0x8e,
+	0xed, 0xeb, 0x65, 0x73, 0xbc, 0x6c, 0x20, 0x55, 0x73, 0xac, 0x80, 0x9f, 0x36, 0x1d, 0xd3, 0xa1,
+	0x3f, 0x8b, 0xde, 0x2f, 0x46, 0x5d, 0x34, 0x1d, 0xc7, 0xac, 0xe3, 0xa2, 0xde, 0xb4, 0x8a, 0xba,
+	0x6d, 0x3b, 0x2e, 0x85, 0x24, 0x8c, 0x9b, 0xe1, 0x7c, 0x34, 0xb1, 0x8d, 0x89, 0x25, 0xe5, 0x30,
+	0x87, 0x7d, 0xce, 0x1c, 0xc7, 0x69, 0x10, 0x93, 0x29, 0xa8, 0x57, 0x61, 0xf2, 0x85, 0xde, 0xd2,
+	0x1b, 0xa4, 0x8c, 0xdf, 0x9c, 0x62, 0xe2, 0xaa, 0x9b, 0x30, 0x15, 0x10, 0x48, 0xd3, 0xb1, 0x09,
+	0x46, 0x1b, 0x70, 0xb9, 0x49, 0x29, 0x19, 0x65, 0x49, 0x59, 0x1d, 0x2f, 0xa1, 0x42, 0x37, 0x15,
+	0x05, 0x5f, 0x76, 0x73, 0xf8, 0xfd, 0x0f, 0xf9, 0x54, 0x99, 0xc9, 0xa9, 0x47, 0x80, 0x2a, 0x96,
+	0x69, 0xe3, 0x56, 0x05, 0xbb, 0xfb, 0x6f, 0x19, 0x32, 0x5a, 0x85, 0x69, 0x42, 0xa9, 0x1a, 0xc1,
+	0xae, 0x66, 0x3b, 0x76, 0x0d, 0x53, 0xc4, 0xe1, 0xf2, 0x14, 0x09, 0xa4, 0x9f, 0x79, 0x54, 0x34,
+	0x0f, 0x57, 0x6a, 0xc7, 0xba, 0x65, 0x6b, 0x96, 0x91, 0x19, 0x5a, 0x52, 0x56, 0x27, 0xcb, 0xa3,
+	0xf4, 0xfb, 0x89, 0xa1, 0xfe, 0x06, 0x32, 0x4f, 0x75, 0x17, 0x13, 0x57, 0x62, 0x80, 0x57, 0x53,
+	0x44, 0xb5, 0x3d, 0x98, 0x15, 0x14, 0x58, 0x68, 0xbf, 0x05, 0xe8, 0xba, 0xc4, 0xc2, 0xbb, 0xce,
+	0x87, 0xc7, 0x2b, 0x8d, 0x85, 0x5e, 0xaa, 0x04, 0xa6, 0x36, 0x75, 0xb7, 0x76, 0xdc, 0xb5, 0x7d,
+	0x1b, 0xa6, 0x5c, 0xe7, 0x04, 0xdb, 0x5a, 0xcd, 0xb1, 0xdd, 0x96, 0x5e, 0xf3, 0xd1, 0xc6, 0xca,
+	0x93, 0x94, 0xba, 0xc5, 0x88, 0x28, 0x0f, 0xe3, 0x55, 0x4f, 0x91, 0x85, 0x3f, 0x44, 0xc3, 0x07,
+	0x4a, 0xea, 0x0d, 0xfd, 0x92, 0x18, 0xc3, 0x9f, 0xe0, 0x6a, 0x68, 0x94, 0xf9, 0x7f, 0x17, 0x46,
+	0xa8, 0x2e, 0x73, 0x7d, 0x96, 0x77, 0x3d, 0x90, 0xf5, 0x25, 0xd4, 0x77, 0x0a, 0xcc, 0x05, 0x6e,
+	0x6c, 0xe9, 0xf5, 0x7a, 0xd7, 0xf5, 0x75, 0x40, 0x96, 0xdd, 0xd6, 0xeb, 0x96, 0x41, 0x8b, 0x4c,
+	0x23, 0x35, 0xa7, 0xe9, 0xaf, 0xcc, 0x44, 0x79, 0x86, 0xe7, 0x54, 0x3c, 0x46, 0x8f, 0x38, 0x1f,
+	0x89, 0x20, 0xde, 0x37, 0xa0, 0x0a, 0x5c, 0x8b, 0x7a, 0xc4, 0xe2, 0xfa, 0x03, 0x40, 0xdd, 0x31,
+	0xad, 0x9a, 0x56, 0xd3, 0xeb, 0x75, 0x16, 0x5c, 0x96, 0x0f, 0x2e, 0xa2, 0x37, 0x46, 0xa5, 0xbd,
+	0x0f, 0xf5, 0x35, 0xe4, 0xb9, 0x45, 0xdb, 0x72, 0xec, 0xd7, 0x56, 0xab, 0xe1, 0xef, 0x9e, 0x0b,
+	0x2d, 0x44, 0x13, 0x96, 0xe2, 0xed, 0xb0, 0x30, 0xb6, 0xfc, 0xf2, 0xd2, 0xdd, 0xd3, 0x16, 0xf6,
+	0x76, 0xcf, 0xa5, 0xd5, 0xf1, 0xd2, 0x72, 0x4c, 0x79, 0xf1, 0x08, 0x65, 0x4e, 0x4d, 0x7d, 0x2b,
+	0x94, 0x6e, 0x18, 0xc4, 0x2e, 0x40, 0xf7, 0xac, 0x61, 0x29, 0x5a, 0x29, 0xf8, 0x87, 0x4d, 0xc1,
+	0x3b, 0x6c, 0x0a, 0xfe, 0xe9, 0xc5, 0x8e, 0x9c, 0xc2, 0x0b, 0xdd, 0xc4, 0x4c, 0xb7, 0xcc, 0x69,
+	0x26, 0x85, 0xf8, 0x3f, 0x05, 0xd2, 0xa2, 0x69, 0x16, 0xd7, 0xef, 0x61, 0xbc, 0x9b, 0xc0, 0x20,
+	0xb0, 0xd8, 0x7d, 0x03, 0x61, 0x52, 0x09, 0x7a, 0x2c, 0x78, 0x3d, 0x44, 0xbd, 0xbe, 0xd3, 0xd7,
+	0x6b, 0xdf, 0x2c, 0xef, 0xb6, 0xea, 0x86, 0x9b, 0xe1, 0x4b, 0x66, 0xe4, 0x3f, 0x0a, 0x4c, 0x77,
+	0xcd, 0xb2, 0x6c, 0xac, 0xc3, 0x28, 0xdd, 0x62, 0xe1, 0x12, 0x4b, 0xb7, 0x61, 0x20, 0x73, 0x71,
+	0x29, 0xf8, 0x47, 0x74, 0xfb, 0x7c, 0xc9, 0x4c, 0xfc, 0x57, 0x81, 0xeb, 0x3d, 0xd6, 0xc3, 0x0b,
+	0x63, 0xc4, 0xdb, 0xb7, 0x41, 0x3a, 0x92, 0x36, 0xae, 0x2f, 0x78, 0x71, 0x39, 0x29, 0xc3, 0xc2,
+	0x81, 0x4d, 0xeb, 0xcd, 0x90, 0x6d, 0x9a, 0x0c, 0x8c, 0xea, 0x86, 0xd1, 0xc2, 0x84, 0xb0, 0xe3,
+	0x39, 0xf8, 0x4c, 0x0a, 0xf5, 0x25, 0x2c, 0xca, 0x31, 0xcf, 0xbb, 0x1b, 0xd4, 0x67, 0x70, 0x3d,
+	0x40, 0x8e, 0x16, 0xf3, 0x99, 0x3c, 0x7d, 0x02, 0x99, 0x5e, 0xbc, 0x33, 0x55, 0xa9, 0x7a, 0x00,
+	0xb9, 0x00, 0x2a, 0xa6, 0xc8, 0xce, 0xe4, 0x61, 0x05, 0xf2, 0xb1, 0xb0, 0x67, 0xad, 0x1e, 0xb5,
+	0x08, 0x88, 0xf9, 0xbf, 0x8b, 0x31, 0x91, 0x75, 0x03, 0x11, 0x2f, 0xda, 0x30, 0x2b, 0x28, 0x30,
+	0xcb, 0x1a, 0x0c, 0xbf, 0xc6, 0x61, 0x7e, 0xe6, 0x85, 0xfa, 0x0b, 0x2a, 0x6f, 0xcb, 0xb1, 0xec,
+	0xcd, 0x0d, 0xaf, 0xdb, 0xf9, 0xee, 0xc7, 0xfc, 0xaa, 0x69, 0xb9, 0xc7, 0xa7, 0xd5, 0x42, 0xcd,
+	0x69, 0x14, 0x59, 0x9b, 0xe7, 0xff, 0x59, 0x27, 0xc6, 0x49, 0xd1, 0xed, 0x34, 0x31, 0xa1, 0x0a,
+	0xa4, 0x4c, 0x81, 0xd5, 0xff, 0x2b, 0xa0, 0x8a, 0x21, 0x48, 0xef, 0xa7, 0x5f, 0xec, 0x42, 0x6e,
+	0xc0, 0x72, 0xa2, 0x7b, 0x2c, 0x4f, 0xbb, 0x92, 0x6b, 0x6d, 0x25, 0x7e, 0x99, 0x62, 0x6f, 0xb6,
+	0x7f, 0x29, 0xb0, 0xc0, 0xd6, 0x41, 0x9a, 0x87, 0x48, 0xb3, 0xa4, 0xf4, 0x34, 0x4b, 0xbd, 0x4d,
+	0xd7, 0x90, 0xac, 0xe9, 0x4a, 0x88, 0x58, 0x83, 0x45, 0xb9, 0x07, 0x2c, 0xd4, 0x07, 0x92, 0x50,
+	0xf3, 0x92, 0x8d, 0x13, 0x1b, 0x63, 0x05, 0x16, 0x9f, 0xea, 0xc4, 0xad, 0x9c, 0x56, 0x1b, 0x96,
+	0xeb, 0x62, 0x63, 0xe7, 0x70, 0x6f, 0xa7, 0x8d, 0x6d, 0xf7, 0x5c, 0xbb, 0xe8, 0x21, 0xdc, 0x88,
+	0x01, 0x65, 0x6e, 0xe7, 0x61, 0x1c, 0x7b, 0x04, 0x31, 0x73, 0x94, 0x44, 0x33, 0xa7, 0xee, 0xc2,
+	0xec, 0x4e, 0x79, 0xab, 0xb4, 0xb1, 0xef, 0x6c, 0x63, 0xdb, 0x69, 0x04, 0xde, 0xa4, 0x61, 0x04,
+	0xb7, 0x6a, 0xa5, 0x0d, 0xe6, 0x8b, 0xff, 0x91, 0xe4, 0xc9, 0x11, 0xa4, 0x45, 0x1c, 0xe6, 0x40,
+	0x1a, 0x46, 0x0c, 0x8f, 0x10, 0x00, 0xd1, 0x0f, 0xb4, 0x06, 0x33, 0xfe, 0xfe, 0xd0, 0x9c, 0x96,
+	0x45, 0xcf, 0x6c, 0xec, 0x23, 0x5e, 0x29, 0x4f, 0xfb, 0x8c, 0xe7, 0x21, 0x5d, 0x7d, 0x0a, 0xf3,
+	0x14, 0x73, 0xdf, 0xa1, 0x16, 0x84, 0x29, 0x25, 0x06, 0x3f, 0xc1, 0xd1, 0xaf, 0x15, 0xc8, 0xca,
+	0xe0, 0x98, 0xbf, 0x37, 0x00, 0xbc, 0x6d, 0xae, 0xf1, 0xa0, 0x63, 0x1e, 0x85, 0xea, 0x78, 0x6c,
+	0x9a, 0x0a, 0xcd, 0xd6, 0x1b, 0x98, 0x15, 0xd9, 0x18, 0xa5, 0x3c, 0xd3, 0x1b, 0x18, 0xdd, 0x84,
+	0x09, 0x9f, 0x4d, 0x3a, 0x8d, 0xaa, 0x53, 0xa7, 0x45, 0x36, 0x56, 0x1e, 0xa7, 0xb4, 0x0a, 0x25,
+	0x79, 0xa5, 0xea, 0x8b, 0x18, 0xb8, 0x66, 0x35, 0xf4, 0x3a, 0xc9, 0x0c, 0xd3, 0x45, 0x99, 0xa4,
+	0xd4, 0x6d, 0x46, 0xf4, 0xd6, 0x85, 0xf7, 0xf2, 0xcc, 0xe1, 0x1e, 0x41, 0x5a, 0xc4, 0xe9, 0xae,
+	0x8b, 0x64, 0x81, 0x3f, 0x6b, 0x5d, 0xf6, 0x20, 0xb7, 0x8d, 0xeb, 0xd8, 0xd4, 0x5d, 0xfc, 0x67,
+	0xdc, 0x21, 0x9b, 0x9d, 0x43, 0xff, 0x80, 0x71, 0x5a, 0x81, 0xb7, 0x6b, 0x30, 0xd3, 0x0e, 0x68,
+	0x9a, 0x58, 0xdd, 0xd3, 0x21, 0xe3, 0x91, 0x4f, 0x57, 0x4f, 0x21, 0x1f, 0x0b, 0xc7, 0x55, 0xb3,
+	0x7b, 0x1c, 0x41, 0x02, 0xec, 0x1e, 0x33, 0x0c, 0x74, 0x1f, 0xd2, 0x4e, 0xcb, 0xbb, 0xb6, 0xdc,
+	0x96, 0x60, 0xd3, 0x5f, 0xa8, 0x59, 0x9e, 0x17, 0x98, 0x7d, 0x10, 0x8d, 0x62, 0xe7, 0x70, 0xcf,
+	0xbf, 0xa6, 0x83, 0x28, 0x6e, 0x00, 0xec, 0x1c, 0xee, 0x69, 0xfe, 0x75, 0x1d, 0x94, 0x44, 0x28,
+	0xa5, 0xfe, 0x5b, 0x89, 0x3a, 0xce, 0x21, 0x30, 0xc7, 0x3f, 0x27, 0x11, 0x67, 0x09, 0xe2, 0x10,
+	0x6e, 0x8a, 0x2e, 0x3c, 0xe7, 0x84, 0x82, 0x38, 0xe2, 0x70, 0x95, 0x78, 0xdc, 0x26, 0xa8, 0x49,
+	0xb8, 0x67, 0x89, 0x4e, 0xcc, 0xe6, 0x50, 0x34, 0x9b, 0x73, 0x5e, 0xdd, 0x77, 0x2d, 0x06, 0x8f,
+	0x11, 0x2f, 0xbd, 0x32, 0xe6, 0xc9, 0xcc, 0xf4, 0x43, 0x98, 0x34, 0x18, 0x5d, 0x3b, 0xc1, 0x9d,
+	0xe0, 0x64, 0x5e, 0xe0, 0x4f, 0xe6, 0x3d, 0x62, 0x0a, 0xba, 0x13, 0x06, 0xf7, 0xa5, 0xbe, 0x82,
+	0x0c, 0x3d, 0xba, 0xb1, 0x51, 0xc1, 0xb6, 0xb1, 0xef, 0xec, 0x1c, 0xee, 0x11, 0x6e, 0x96, 0x27,
+	0xd8, 0x36, 0x70, 0x34, 0xaa, 0x49, 0x9f, 0xfa, 0xa8, 0xff, 0x01, 0xbd, 0x0f, 0xf3, 0x12, 0x74,
+	0xe6, 0xfc, 0xef, 0x60, 0xc2, 0x03, 0xd2, 0x5c, 0x47, 0xc3, 0xed, 0x46, 0xe0, 0xfb, 0x9c, 0xd0,
+	0x30, 0x06, 0x5a, 0x65, 0x20, 0xfe, 0xcf, 0x76, 0x83, 0xa8, 0xdf, 0x2a, 0x90, 0x3d, 0xb0, 0xab,
+	0xe7, 0x74, 0x7b, 0x57, 0xd2, 0x6b, 0x9f, 0x77, 0x38, 0x88, 0xdc, 0xaa, 0x5f, 0x29, 0x5e, 0x1b,
+	0x5e, 0xbd, 0xf0, 0x0c, 0x5c, 0xd8, 0x9c, 0x50, 0xfa, 0x66, 0x16, 0x46, 0xfe, 0xe2, 0x89, 0xa2,
+	0x47, 0x70, 0xd9, 0xbf, 0x0b, 0xd0, 0x7c, 0xef, 0xbb, 0x16, 0x8b, 0x3b, 0x9b, 0x95, 0xb1, 0x7c,
+	0x58, 0x35, 0x85, 0x5e, 0xc0, 0x38, 0xd7, 0xe1, 0xa3, 0x5c, 0x5c, 0xeb, 0xcf, 0xc0, 0xf2, 0xb1,
+	0xfc, 0x10, 0xf1, 0x15, 0xcc, 0xf4, 0xbc, 0x72, 0xa1, 0x5b, 0xbc, 0x5e, 0xdc, 0x23, 0xd8, 0x20,
+	0xe8, 0xdb, 0x30, 0xca, 0xda, 0x16, 0x94, 0x95, 0x0d, 0x01, 0x0c, 0x69, 0x41, 0xca, 0x0b, 0x51,
+	0x8e, 0x60, 0x4a, 0xec, 0xf3, 0xd0, 0xcd, 0x84, 0x56, 0x9d, 0x61, 0xaa, 0x49, 0x22, 0x21, 0x74,
+	0x05, 0x26, 0xf8, 0x49, 0x0b, 0xc5, 0xc5, 0x14, 0xae, 0xcf, 0x52, 0xbc, 0x40, 0x08, 0xfa, 0x18,
+	0xae, 0x04, 0x43, 0x11, 0x92, 0x85, 0x16, 0x82, 0x2d, 0xca, 0x99, 0xdc, 0xe2, 0x5c, 0x8d, 0xcc,
+	0x2e, 0x28, 0x21, 0xac, 0x10, 0x76, 0x39, 0x51, 0x26, 0x44, 0xff, 0x3b, 0x64, 0xe2, 0xde, 0x95,
+	0xd0, 0xda, 0x00, 0x6f, 0x47, 0xa1, 0xbd, 0x5f, 0x0d, 0x26, 0x1c, 0x1a, 0x3e, 0x81, 0xb4, 0xac,
+	0x15, 0x46, 0x77, 0xfa, 0xb4, 0xbb, 0xa1, 0xc1, 0xd5, 0xfe, 0x82, 0xa1, 0x31, 0xaf, 0xf5, 0x4f,
+	0x18, 0x35, 0x50, 0x61, 0xb0, 0x71, 0x22, 0xb4, 0x5d, 0x1c, 0x58, 0x9e, 0x8f, 0x57, 0x36, 0xd6,
+	0x8b, 0xf1, 0x26, 0x3c, 0x26, 0x88, 0xf1, 0x26, 0xbd, 0x10, 0xa8, 0x29, 0xa4, 0xc1, 0x74, 0x74,
+	0x32, 0x47, 0xcb, 0x32, 0xfd, 0x68, 0x31, 0xde, 0x4a, 0x16, 0x0a, 0x0d, 0xb8, 0xdd, 0xa7, 0x84,
+	0x68, 0x71, 0xde, 0x93, 0x41, 0xc4, 0x14, 0xe9, 0xda, 0x40, 0xb2, 0xa1, 0x55, 0x1b, 0xe6, 0xa4,
+	0x83, 0x08, 0x5a, 0x15, 0xcf, 0xaa, 0xf8, 0x01, 0x28, 0x7b, 0x77, 0x00, 0x49, 0xfe, 0xa4, 0xe5,
+	0x06, 0x77, 0xf1, 0xa4, 0xed, 0x7d, 0x02, 0xc8, 0xe6, 0x63, 0xf9, 0xfc, 0x51, 0xc3, 0x0f, 0x30,
+	0xe2, 0x51, 0x23, 0x19, 0x91, 0xc4, 0xa3, 0x46, 0x36, 0xfb, 0xa8, 0x29, 0x84, 0x01, 0xf5, 0xce,
+	0x1a, 0xe8, 0x36, 0xaf, 0x19, 0x3b, 0xda, 0x64, 0x57, 0xfa, 0x89, 0xf1, 0xbe, 0xf3, 0x7c, 0xd1,
+	0x77, 0xc9, 0x18, 0x21, 0xfa, 0x2e, 0x9b, 0x0f, 0xd4, 0x14, 0xaa, 0xc2, 0x4c, 0x4f, 0xeb, 0x22,
+	0x5e, 0x3d, 0x71, 0x7d, 0x53, 0xf6, 0x76, 0x1f, 0xa9, 0xd0, 0xc6, 0x31, 0xcc, 0x4a, 0xda, 0x03,
+	0xb4, 0x22, 0x16, 0x5f, 0x5c, 0xa3, 0x93, 0xbd, 0xd3, 0x57, 0x8e, 0xdf, 0x16, 0x31, 0xd3, 0x85,
+	0xb8, 0x2d, 0x92, 0x27, 0x1a, 0x71, 0x5b, 0xf4, 0x19, 0x57, 0x64, 0x56, 0xc3, 0x46, 0x37, 0xc9,
+	0x6a, 0x74, 0x02, 0x49, 0xb2, 0xda, 0x33, 0x6b, 0xa8, 0x29, 0xf4, 0x4f, 0x6f, 0xc2, 0x8d, 0xeb,
+	0xda, 0xd1, 0x7a, 0x3c, 0x98, 0x64, 0x6a, 0xc8, 0x16, 0x06, 0x15, 0x17, 0xab, 0xb1, 0x2b, 0x17,
+	0xad, 0xc6, 0x9e, 0xe6, 0x3e, 0x5a, 0x8d, 0xbd, 0x6d, 0xbe, 0x9a, 0xda, 0x3c, 0x78, 0xff, 0x31,
+	0xa7, 0x7c, 0xf8, 0x98, 0x53, 0x7e, 0xfa, 0x98, 0x53, 0xde, 0x7d, 0xca, 0xa5, 0x3e, 0x7c, 0xca,
+	0xa5, 0xbe, 0xff, 0x94, 0x4b, 0xfd, 0xf5, 0x8f, 0xdc, 0xdb, 0x5b, 0x13, 0x9b, 0x66, 0xe7, 0x6f,
+	0xed, 0xe0, 0x3f, 0x9e, 0xeb, 0xd5, 0x96, 0x65, 0x98, 0xb8, 0xd8, 0x70, 0x8c, 0xd3, 0x3a, 0x2e,
+	0xb6, 0x4b, 0xc5, 0xb7, 0x01, 0xcb, 0x7f, 0x94, 0xab, 0x5e, 0xa6, 0xff, 0xfc, 0xfc, 0xf5, 0xcf,
+	0x01, 0x00, 0x00, 0xff, 0xff, 0x45, 0xea, 0xab, 0x37, 0xed, 0x1d, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -4254,14 +3692,10 @@ func (m *SignerSetTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if m.SignerSetNonce != 0 {
 		i = encodeVarintQuery(dAtA, i, uint64(m.SignerSetNonce))
@@ -4271,18 +3705,6 @@ func (m *SignerSetTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *SignerSetTxRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *SignerSetTxRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *LatestSignerSetTxRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -4303,30 +3725,14 @@ func (m *LatestSignerSetTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *LatestSignerSetTxRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *LatestSignerSetTxRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x8
-	return len(dAtA) - i, nil
-}
 func (m *SignerSetTxResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -4382,14 +3788,10 @@ func (m *BatchTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x18
 	}
 	if m.BatchNonce != 0 {
 		i = encodeVarintQuery(dAtA, i, uint64(m.BatchNonce))
@@ -4406,18 +3808,6 @@ func (m *BatchTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *BatchTxRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *BatchTxRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x18
-	return len(dAtA) - i, nil
-}
 func (m *BatchTxResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -4473,14 +3863,10 @@ func (m *ContractCallTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x18
 	}
 	if m.InvalidationNonce != 0 {
 		i = encodeVarintQuery(dAtA, i, uint64(m.InvalidationNonce))
@@ -4497,18 +3883,6 @@ func (m *ContractCallTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ContractCallTxRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ContractCallTxRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x18
-	return len(dAtA) - i, nil
-}
 func (m *ContractCallTxResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -4564,14 +3938,10 @@ func (m *SignerSetTxConfirmationsRequest) MarshalToSizedBuffer(dAtA []byte) (int
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if m.SignerSetNonce != 0 {
 		i = encodeVarintQuery(dAtA, i, uint64(m.SignerSetNonce))
@@ -4581,18 +3951,6 @@ func (m *SignerSetTxConfirmationsRequest) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *SignerSetTxConfirmationsRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *SignerSetTxConfirmationsRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *SignerSetTxConfirmationsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -4650,14 +4008,10 @@ func (m *SignerSetTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if m.Pagination != nil {
 		{
@@ -4674,18 +4028,6 @@ func (m *SignerSetTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *SignerSetTxsRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *SignerSetTxsRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *SignerSetTxsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -4755,14 +4097,10 @@ func (m *BatchTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if m.Pagination != nil {
 		{
@@ -4779,18 +4117,6 @@ func (m *BatchTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *BatchTxsRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *BatchTxsRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *BatchTxsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -4860,14 +4186,10 @@ func (m *ContractCallTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if m.Pagination != nil {
 		{
@@ -4884,18 +4206,6 @@ func (m *ContractCallTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *ContractCallTxsRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ContractCallTxsRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *ContractCallTxsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -4965,14 +4275,10 @@ func (m *UnsignedSignerSetTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, er
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if len(m.Address) > 0 {
 		i -= len(m.Address)
@@ -4984,18 +4290,6 @@ func (m *UnsignedSignerSetTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
-func (m *UnsignedSignerSetTxsRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *UnsignedSignerSetTxsRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *UnsignedSignerSetTxsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -5053,14 +4347,10 @@ func (m *UnsignedBatchTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if len(m.Address) > 0 {
 		i -= len(m.Address)
@@ -5072,18 +4362,6 @@ func (m *UnsignedBatchTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *UnsignedBatchTxsRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *UnsignedBatchTxsRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *UnsignedBatchTxsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -5141,14 +4419,10 @@ func (m *UnsignedContractCallTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int,
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if len(m.Address) > 0 {
 		i -= len(m.Address)
@@ -5160,18 +4434,6 @@ func (m *UnsignedContractCallTxsRequest) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
-func (m *UnsignedContractCallTxsRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *UnsignedContractCallTxsRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *UnsignedContractCallTxsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -5229,30 +4491,14 @@ func (m *BatchTxFeesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *BatchTxFeesRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *BatchTxFeesRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *BatchTxFeesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -5310,14 +4556,10 @@ func (m *ContractCallTxConfirmationsRequest) MarshalToSizedBuffer(dAtA []byte) (
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x18
 	}
 	if m.InvalidationNonce != 0 {
 		i = encodeVarintQuery(dAtA, i, uint64(m.InvalidationNonce))
@@ -5334,18 +4576,6 @@ func (m *ContractCallTxConfirmationsRequest) MarshalToSizedBuffer(dAtA []byte) (
 	return len(dAtA) - i, nil
 }
 
-func (m *ContractCallTxConfirmationsRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ContractCallTxConfirmationsRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x18
-	return len(dAtA) - i, nil
-}
 func (m *ContractCallTxConfirmationsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -5403,14 +4633,10 @@ func (m *BatchTxConfirmationsRequest) MarshalToSizedBuffer(dAtA []byte) (int, er
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x18
 	}
 	if len(m.TokenContract) > 0 {
 		i -= len(m.TokenContract)
@@ -5427,18 +4653,6 @@ func (m *BatchTxConfirmationsRequest) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
-func (m *BatchTxConfirmationsRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *BatchTxConfirmationsRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x18
-	return len(dAtA) - i, nil
-}
 func (m *BatchTxConfirmationsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -5496,14 +4710,10 @@ func (m *LastSubmittedEVMEventRequest) MarshalToSizedBuffer(dAtA []byte) (int, e
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if len(m.Address) > 0 {
 		i -= len(m.Address)
@@ -5515,18 +4725,6 @@ func (m *LastSubmittedEVMEventRequest) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
-func (m *LastSubmittedEVMEventRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *LastSubmittedEVMEventRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *LastSubmittedEVMEventResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -5575,14 +4773,10 @@ func (m *ERC20ToDenomRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if len(m.Erc20) > 0 {
 		i -= len(m.Erc20)
@@ -5594,18 +4788,6 @@ func (m *ERC20ToDenomRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ERC20ToDenomRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ERC20ToDenomRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *ERC20ToDenomResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -5666,14 +4848,10 @@ func (m *DenomToERC20ParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if len(m.Denom) > 0 {
 		i -= len(m.Denom)
@@ -5685,18 +4863,6 @@ func (m *DenomToERC20ParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *DenomToERC20ParamsRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *DenomToERC20ParamsRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *DenomToERC20ParamsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -5766,14 +4932,10 @@ func (m *DenomToERC20Request) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if len(m.Denom) > 0 {
 		i -= len(m.Denom)
@@ -5785,18 +4947,6 @@ func (m *DenomToERC20Request) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *DenomToERC20Request_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *DenomToERC20Request_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *DenomToERC20Response) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -6118,14 +5268,10 @@ func (m *BatchedSendToEVMsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if len(m.SenderAddress) > 0 {
 		i -= len(m.SenderAddress)
@@ -6137,18 +5283,6 @@ func (m *BatchedSendToEVMsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
-func (m *BatchedSendToEVMsRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *BatchedSendToEVMsRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x10
-	return len(dAtA) - i, nil
-}
 func (m *BatchedSendToEVMsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -6169,10 +5303,10 @@ func (m *BatchedSendToEVMsResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	if len(m.SendTo_EVMs) > 0 {
-		for iNdEx := len(m.SendTo_EVMs) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.SendToEvms) > 0 {
+		for iNdEx := len(m.SendToEvms) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.SendTo_EVMs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.SendToEvms[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -6206,14 +5340,10 @@ func (m *UnbatchedSendToEVMsRequest) MarshalToSizedBuffer(dAtA []byte) (int, err
 	_ = i
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		{
-			size := m.XChainId.Size()
-			i -= size
-			if _, err := m.XChainId.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x18
 	}
 	if m.Pagination != nil {
 		{
@@ -6237,18 +5367,6 @@ func (m *UnbatchedSendToEVMsRequest) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *UnbatchedSendToEVMsRequest_ChainId) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *UnbatchedSendToEVMsRequest_ChainId) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
-	i--
-	dAtA[i] = 0x18
-	return len(dAtA) - i, nil
-}
 func (m *UnbatchedSendToEVMsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -6281,10 +5399,10 @@ func (m *UnbatchedSendToEVMsResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.SendTo_EVMs) > 0 {
-		for iNdEx := len(m.SendTo_EVMs) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.SendToEvms) > 0 {
+		for iNdEx := len(m.SendToEvms) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.SendTo_EVMs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.SendToEvms[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -6338,42 +5456,24 @@ func (m *SignerSetTxRequest) Size() (n int) {
 	if m.SignerSetNonce != 0 {
 		n += 1 + sovQuery(uint64(m.SignerSetNonce))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *SignerSetTxRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *LatestSignerSetTxRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *LatestSignerSetTxRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *SignerSetTxResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6400,21 +5500,12 @@ func (m *BatchTxRequest) Size() (n int) {
 	if m.BatchNonce != 0 {
 		n += 1 + sovQuery(uint64(m.BatchNonce))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *BatchTxRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *BatchTxResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6441,21 +5532,12 @@ func (m *ContractCallTxRequest) Size() (n int) {
 	if m.InvalidationNonce != 0 {
 		n += 1 + sovQuery(uint64(m.InvalidationNonce))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *ContractCallTxRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *ContractCallTxResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6478,21 +5560,12 @@ func (m *SignerSetTxConfirmationsRequest) Size() (n int) {
 	if m.SignerSetNonce != 0 {
 		n += 1 + sovQuery(uint64(m.SignerSetNonce))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *SignerSetTxConfirmationsRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *SignerSetTxConfirmationsResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6518,21 +5591,12 @@ func (m *SignerSetTxsRequest) Size() (n int) {
 		l = m.Pagination.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *SignerSetTxsRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *SignerSetTxsResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6562,21 +5626,12 @@ func (m *BatchTxsRequest) Size() (n int) {
 		l = m.Pagination.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *BatchTxsRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *BatchTxsResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6606,21 +5661,12 @@ func (m *ContractCallTxsRequest) Size() (n int) {
 		l = m.Pagination.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *ContractCallTxsRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *ContractCallTxsResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6650,21 +5696,12 @@ func (m *UnsignedSignerSetTxsRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *UnsignedSignerSetTxsRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *UnsignedSignerSetTxsResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6690,21 +5727,12 @@ func (m *UnsignedBatchTxsRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *UnsignedBatchTxsRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *UnsignedBatchTxsResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6730,21 +5758,12 @@ func (m *UnsignedContractCallTxsRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *UnsignedContractCallTxsRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *UnsignedContractCallTxsResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6766,21 +5785,12 @@ func (m *BatchTxFeesRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *BatchTxFeesRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *BatchTxFeesResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6809,21 +5819,12 @@ func (m *ContractCallTxConfirmationsRequest) Size() (n int) {
 	if m.InvalidationNonce != 0 {
 		n += 1 + sovQuery(uint64(m.InvalidationNonce))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *ContractCallTxConfirmationsRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *ContractCallTxConfirmationsResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6852,21 +5853,12 @@ func (m *BatchTxConfirmationsRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *BatchTxConfirmationsRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *BatchTxConfirmationsResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6892,21 +5884,12 @@ func (m *LastSubmittedEVMEventRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *LastSubmittedEVMEventRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *LastSubmittedEVMEventResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6929,21 +5912,12 @@ func (m *ERC20ToDenomRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *ERC20ToDenomRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *ERC20ToDenomResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -6970,21 +5944,12 @@ func (m *DenomToERC20ParamsRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *DenomToERC20ParamsRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *DenomToERC20ParamsResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -7019,21 +5984,12 @@ func (m *DenomToERC20Request) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *DenomToERC20Request_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *DenomToERC20Response) Size() (n int) {
 	if m == nil {
 		return 0
@@ -7174,29 +6130,20 @@ func (m *BatchedSendToEVMsRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *BatchedSendToEVMsRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *BatchedSendToEVMsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.SendTo_EVMs) > 0 {
-		for _, e := range m.SendTo_EVMs {
+	if len(m.SendToEvms) > 0 {
+		for _, e := range m.SendToEvms {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -7218,29 +6165,20 @@ func (m *UnbatchedSendToEVMsRequest) Size() (n int) {
 		l = m.Pagination.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.XChainId != nil {
-		n += m.XChainId.Size()
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
 	}
 	return n
 }
 
-func (m *UnbatchedSendToEVMsRequest_ChainId) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	n += 1 + sovQuery(uint64(m.ChainId))
-	return n
-}
 func (m *UnbatchedSendToEVMsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.SendTo_EVMs) > 0 {
-		for _, e := range m.SendTo_EVMs {
+	if len(m.SendToEvms) > 0 {
+		for _, e := range m.SendToEvms {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -7443,7 +6381,7 @@ func (m *SignerSetTxRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -7453,12 +6391,11 @@ func (m *SignerSetTxRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &SignerSetTxRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -7513,7 +6450,7 @@ func (m *LatestSignerSetTxRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -7523,12 +6460,11 @@ func (m *LatestSignerSetTxRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &LatestSignerSetTxRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -7720,7 +6656,7 @@ func (m *BatchTxRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -7730,12 +6666,11 @@ func (m *BatchTxRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &BatchTxRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -7929,7 +6864,7 @@ func (m *ContractCallTxRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -7939,12 +6874,11 @@ func (m *ContractCallTxRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &ContractCallTxRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -8104,7 +7038,7 @@ func (m *SignerSetTxConfirmationsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -8114,12 +7048,11 @@ func (m *SignerSetTxConfirmationsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &SignerSetTxConfirmationsRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -8294,7 +7227,7 @@ func (m *SignerSetTxsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -8304,12 +7237,11 @@ func (m *SignerSetTxsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &SignerSetTxsRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -8520,7 +7452,7 @@ func (m *BatchTxsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -8530,12 +7462,11 @@ func (m *BatchTxsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &BatchTxsRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -8746,7 +7677,7 @@ func (m *ContractCallTxsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -8756,12 +7687,11 @@ func (m *ContractCallTxsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &ContractCallTxsRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -8968,7 +7898,7 @@ func (m *UnsignedSignerSetTxsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -8978,12 +7908,11 @@ func (m *UnsignedSignerSetTxsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &UnsignedSignerSetTxsRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -9154,7 +8083,7 @@ func (m *UnsignedBatchTxsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -9164,12 +8093,11 @@ func (m *UnsignedBatchTxsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &UnsignedBatchTxsRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -9340,7 +8268,7 @@ func (m *UnsignedContractCallTxsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -9350,12 +8278,11 @@ func (m *UnsignedContractCallTxsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &UnsignedContractCallTxsRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -9494,7 +8421,7 @@ func (m *BatchTxFeesRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -9504,12 +8431,11 @@ func (m *BatchTxFeesRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &BatchTxFeesRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -9701,7 +8627,7 @@ func (m *ContractCallTxConfirmationsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -9711,12 +8637,11 @@ func (m *ContractCallTxConfirmationsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &ContractCallTxConfirmationsRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -9906,7 +8831,7 @@ func (m *BatchTxConfirmationsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -9916,12 +8841,11 @@ func (m *BatchTxConfirmationsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &BatchTxConfirmationsRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -10092,7 +9016,7 @@ func (m *LastSubmittedEVMEventRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -10102,12 +9026,11 @@ func (m *LastSubmittedEVMEventRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &LastSubmittedEVMEventRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -10263,7 +9186,7 @@ func (m *ERC20ToDenomRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -10273,12 +9196,11 @@ func (m *ERC20ToDenomRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &ERC20ToDenomRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -10467,7 +9389,7 @@ func (m *DenomToERC20ParamsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -10477,12 +9399,11 @@ func (m *DenomToERC20ParamsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &DenomToERC20ParamsRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -10734,7 +9655,7 @@ func (m *DenomToERC20Request) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -10744,12 +9665,11 @@ func (m *DenomToERC20Request) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &DenomToERC20Request_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -11660,7 +10580,7 @@ func (m *BatchedSendToEVMsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -11670,12 +10590,11 @@ func (m *BatchedSendToEVMsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &BatchedSendToEVMsRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -11728,7 +10647,7 @@ func (m *BatchedSendToEVMsResponse) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SendTo_EVMs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SendToEvms", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -11755,8 +10674,8 @@ func (m *BatchedSendToEVMsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.SendTo_EVMs = append(m.SendTo_EVMs, &SendToEVM{})
-			if err := m.SendTo_EVMs[len(m.SendTo_EVMs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.SendToEvms = append(m.SendToEvms, &SendToEVM{})
+			if err := m.SendToEvms[len(m.SendToEvms)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -11882,7 +10801,7 @@ func (m *UnbatchedSendToEVMsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
-			var v uint32
+			m.ChainId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -11892,12 +10811,11 @@ func (m *UnbatchedSendToEVMsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint32(b&0x7F) << shift
+				m.ChainId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.XChainId = &UnbatchedSendToEVMsRequest_ChainId{v}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -11950,7 +10868,7 @@ func (m *UnbatchedSendToEVMsResponse) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SendTo_EVMs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SendToEvms", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -11977,8 +10895,8 @@ func (m *UnbatchedSendToEVMsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.SendTo_EVMs = append(m.SendTo_EVMs, &SendToEVM{})
-			if err := m.SendTo_EVMs[len(m.SendTo_EVMs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.SendToEvms = append(m.SendToEvms, &SendToEVM{})
+			if err := m.SendToEvms[len(m.SendToEvms)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
