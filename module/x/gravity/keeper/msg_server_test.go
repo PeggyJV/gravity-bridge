@@ -425,6 +425,42 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestMsgServer_SubmitEthereumHeightVote(t *testing.T) {
+	var (
+		env = CreateTestEnv(t)
+		ctx = env.Context
+		gk  = env.GravityKeeper
+
+		orcAddr1, _ = sdk.AccAddressFromBech32("cosmos1dg55rtevlfxh46w88yjpdd08sqhh5cc3xhkcej")
+		valAddr1    = sdk.ValAddress(orcAddr1)
+
+		orcAddr2, _ = sdk.AccAddressFromBech32("cosmos164knshrzuuurf05qxf3q5ewpfnwzl4gj4m4dfy")
+		valAddr2    = sdk.ValAddress(orcAddr2)
+
+		orcAddr3, _ = sdk.AccAddressFromBech32("cosmos193fw83ynn76328pty4yl7473vg9x86alq2cft7")
+		valAddr3    = sdk.ValAddress(orcAddr3)
+	)
+
+	{ // setup for getSignerValidator
+		gk.StakingKeeper = NewStakingKeeperMock(valAddr1, valAddr2, valAddr3)
+		gk.SetOrchestratorValidatorAddress(ctx, valAddr1, orcAddr1)
+		gk.SetOrchestratorValidatorAddress(ctx, valAddr2, orcAddr2)
+		gk.SetOrchestratorValidatorAddress(ctx, valAddr3, orcAddr3)
+	}
+
+	msgServer := NewMsgServerImpl(gk)
+
+	msg := &types.MsgEthereumHeightVote{
+		EthereumHeight: 5,
+		Signer:         orcAddr1.String(),
+	}
+
+	_, err := msgServer.SubmitEthereumHeightVote(sdk.WrapSDKContext(ctx), msg)
+
+	require.NoError(t, err)
+	require.Equal(t, gk.GetEthereumHeightVote(ctx, valAddr1).EthereumHeight, uint64(5))
+}
+
 func TestEthVerify(t *testing.T) {
 	// Replace privKeyHexStr and addrHexStr with your own private key and address
 	// HEX values.

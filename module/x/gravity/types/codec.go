@@ -45,6 +45,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgSubmitEthereumEvent{},
 		&MsgSubmitEthereumTxConfirmation{},
 		&MsgDelegateKeys{},
+		&MsgEthereumHeightVote{},
 	)
 
 	registry.RegisterInterface(
