@@ -190,20 +190,28 @@ impl GasCost {
     }
 }
 
-pub fn log_contract_error(gravity_error: GravityError) {
+pub fn handle_contract_error(gravity_error: GravityError) -> bool {
     let error_string = format!("LogicCall error: {:?}", gravity_error);
     let gravity_contract_error = extract_gravity_contract_error(gravity_error);
 
     if gravity_contract_error.is_some() {
         match gravity_contract_error.unwrap() {
             GravityContractError::InvalidLogicCallNonce(nonce_error) => {
-                info!("LogicCall already processed, skipping until observed on chain: {}", nonce_error.message())
+                info!("LogicCall already processed, skipping until observed on chain: {}", nonce_error.message());
+                return true;
             }
-            _ => { error!("{}", error_string) }
+            GravityContractError::LogicCallTimedOut(timeout_error) => {
+                info!("LogicCall is timed out, will be skipped until timeout on chain: {}", timeout_error.message());
+                return true;
+            }
+            // TODO(bolten): implement other cases if necessary
+            _ => { error!("Unspecified gravity contract error: {}", error_string) }
         }
     } else {
-        error!("{}", error_string);
+        error!("Non-gravity contract error: {}", error_string);
     }
+
+    false
 }
 
 // ethers is providing an extremely nested set of enums as an error type and decomposing it
@@ -211,22 +219,16 @@ pub fn log_contract_error(gravity_error: GravityError) {
 pub fn extract_gravity_contract_error(gravity_error: GravityError) -> Option<GravityContractError> {
     match gravity_error {
         GravityError::EthersContractError(ce) => {
-            info!("Ethers contract error");
             match ce {
                 ethers::contract::ContractError::MiddlewareError(me) => {
-                    info!("Contract middleware error");
                     match me {
                         ethers::middleware::signer::SignerMiddlewareError::MiddlewareError(sme) => {
-                            info!("Signer middleware error");
                             match sme {
                                 ethers::providers::ProviderError::JsonRpcClientError(jrpce) => {
-                                    info!("JSON RPC client error");
                                     if jrpce.is::<ethers::providers::HttpClientError>() {
                                         let httpe = *jrpce.downcast::<ethers::providers::HttpClientError>().unwrap();
-                                        info!("RPC error confirmed HTTP client error");
                                         match httpe {
                                             ethers::providers::HttpClientError::JsonRpcError(jre) => {
-                                                info!("JSON RPC error found: {:?}", jre);
                                                 if jre.code == 3 && jre.data.is_some() {
                                                     let data = jre.data.unwrap();
                                                     if data.is_string() {

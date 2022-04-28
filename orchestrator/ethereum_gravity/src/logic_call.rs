@@ -207,6 +207,7 @@ pub struct LogicCallSkipState {
     logic_call: LogicCall,
     starting_skip_counter: u32,
     skips_left: u32,
+    permanently_skipped: bool,
 }
 
 impl LogicCallSkips {
@@ -228,11 +229,32 @@ impl LogicCallSkips {
         0
     }
 
+    pub fn permanently_skipped(&self, call: &LogicCall) -> bool {
+        let id_skips = self.skip_map.get(&call.invalidation_id);
+        if id_skips.is_some() {
+            let skip_state = id_skips.unwrap().get(&call.invalidation_nonce);
+            if skip_state.is_some() {
+                return skip_state.unwrap().permanently_skipped;
+            }
+        }
+
+        false
+    }
+
     pub fn skip(&mut self, call: &LogicCall) {
+        self.skip_internal(call, false)
+    }
+
+    pub fn skip_permanently(&mut self, call: &LogicCall) {
+        self.skip_internal(call, true)
+    }
+
+    fn skip_internal(&mut self, call: &LogicCall, permanently_skip: bool) {
         let new_skip_state = LogicCallSkipState {
             logic_call: call.clone(),
             starting_skip_counter: 2, // start by waiting 2 loop iterations
             skips_left: 2,
+            permanently_skipped: permanently_skip,
         };
 
         let id_skips = self.skip_map.get_mut(&call.invalidation_id);
@@ -248,13 +270,15 @@ impl LogicCallSkips {
                 id_skips.insert(call.invalidation_nonce.clone(), new_skip_state);
             } else {
                 let mut skip_state = skip_state.unwrap();
-                if skip_state.skips_left == 0 {
-                    // exponential backoff: double the number of skips and reset the skip counter
-                    skip_state.starting_skip_counter *= 2;
-                    skip_state.skips_left = skip_state.starting_skip_counter;
-                } else {
-                    // decrement the existing skip counter
-                    skip_state.skips_left -= 1;
+                if !skip_state.permanently_skipped {
+                    if skip_state.skips_left == 0 {
+                        // exponential backoff: double the number of skips and reset the skip counter
+                        skip_state.starting_skip_counter *= 2;
+                        skip_state.skips_left = skip_state.starting_skip_counter;
+                    } else {
+                        // decrement the existing skip counter
+                        skip_state.skips_left -= 1;
+                    }
                 }
             }
         }
@@ -310,11 +334,34 @@ fn test_logic_call_skips() {
         invalidation_nonce: 1,
     };
 
+    let logic_call_3 = LogicCall {
+        transfers: Vec::new(),
+        fees: Vec::new(),
+        logic_contract_address: EthAddress::default(),
+        payload: Vec::new(),
+        timeout: 1000,
+        invalidation_id: vec![6, 7, 8],
+        invalidation_nonce: 1,
+    };
+
     let mut skips = LogicCallSkips::new();
 
     assert_eq!(skips.skips_left(&logic_call_1_nonce_1), 0);
     assert_eq!(skips.skips_left(&logic_call_1_nonce_2), 0);
     assert_eq!(skips.skips_left(&logic_call_2), 0);
+    assert_eq!(skips.skips_left(&logic_call_3), 0);
+
+    assert_eq!(skips.permanently_skipped(&logic_call_1_nonce_1), false);
+    assert_eq!(skips.permanently_skipped(&logic_call_1_nonce_2), false);
+    assert_eq!(skips.permanently_skipped(&logic_call_2), false);
+    assert_eq!(skips.permanently_skipped(&logic_call_3), false);
+
+    skips.skip_permanently(&logic_call_3);
+
+    assert_eq!(skips.permanently_skipped(&logic_call_1_nonce_1), false);
+    assert_eq!(skips.permanently_skipped(&logic_call_1_nonce_2), false);
+    assert_eq!(skips.permanently_skipped(&logic_call_2), false);
+    assert_eq!(skips.permanently_skipped(&logic_call_3), true);
 
     // both will start with 2 skips
     skips.skip(&logic_call_1_nonce_1);
@@ -387,5 +434,4 @@ fn test_logic_call_skips() {
     assert_eq!(skips.skips_left(&logic_call_1_nonce_1), 0);
     assert_eq!(skips.skips_left(&logic_call_1_nonce_2), 0);
     assert_eq!(skips.skips_left(&logic_call_2), 0);
-
 }

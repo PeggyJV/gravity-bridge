@@ -2,15 +2,13 @@ use crate::main_loop::LOOP_SPEED;
 use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
 use ethereum_gravity::logic_call::LogicCallSkips;
 use ethereum_gravity::one_eth_f32;
-use ethereum_gravity::utils::{extract_gravity_contract_error, log_contract_error};
+use ethereum_gravity::utils::handle_contract_error;
 use ethereum_gravity::{
     logic_call::send_eth_logic_call, types::EthClient, utils::get_logic_call_nonce,
 };
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::error::GravityError;
-use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_f32, hex_str_to_bytes};
-use gravity_utils::types::{decode_gravity_error, GravityContractError};
+use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
 use gravity_utils::types::{LogicCallConfirmResponse, Valset};
 use gravity_utils::{message_signatures::encode_logic_call_confirm_hashed, types::LogicCall};
 use std::time::Duration;
@@ -41,6 +39,13 @@ pub async fn relay_logic_calls(
     let mut oldest_signed_call: Option<LogicCall> = None;
     let mut oldest_signatures: Option<Vec<LogicCallConfirmResponse>> = None;
     for call in latest_calls {
+        if logic_call_skips.permanently_skipped(&call) {
+            info!("LogicCall {}/{} permanently skipped, on-chain timeout after eth height {}",
+                bytes_to_hex_str(&call.invalidation_id), call.invalidation_nonce, call.timeout
+            );
+            continue;
+        }
+
         let skips_left: u64 = logic_call_skips.skips_left(&call).into();
         if skips_left > 0 {
             warn!(
@@ -115,8 +120,12 @@ pub async fn relay_logic_calls(
 
         if cost.is_err() {
             warn!("LogicCall cost estimate failed");
-            log_contract_error(cost.unwrap_err());
-            logic_call_skips.skip(&oldest_signed_call);
+            let should_permanently_skip = handle_contract_error(cost.unwrap_err());
+            if should_permanently_skip {
+                logic_call_skips.skip_permanently(&oldest_signed_call);
+            } else {
+                logic_call_skips.skip(&oldest_signed_call);
+            }
             return;
         }
 
@@ -158,8 +167,12 @@ pub async fn relay_logic_calls(
 
         if res.is_err() {
             warn!("LogicCall submission failed");
-            log_contract_error(res.unwrap_err());
-            logic_call_skips.skip(&oldest_signed_call);
+            let should_permanently_skip = handle_contract_error(res.unwrap_err());
+            if should_permanently_skip {
+                logic_call_skips.skip_permanently(&oldest_signed_call);
+            } else {
+                logic_call_skips.skip(&oldest_signed_call);
+            }
         }
     }
 }
