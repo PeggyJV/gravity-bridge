@@ -110,6 +110,25 @@ pub async fn contract_call_tx_confirmation_messages(
     msgs
 }
 
+pub async fn ethereum_vote_height_messages(
+    contact: &Contact,
+    cosmos_key: CosmosPrivateKey,
+    ethereum_height: U64,
+) -> Vec<Msg> {
+    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
+
+    let msg = proto::MsgEthereumHeightVote {
+        ethereum_height: ethereum_height.as_u64(),
+        signer: cosmos_address.to_string(),
+    };
+    let msg = Msg::new("/gravity.v1.MsgSubmitEthereumHeightVote", msg);
+
+    let mut msgs = Vec::new();
+    msgs.push(msg);
+
+    msgs
+}
+
 pub fn ethereum_event_messages(
     contact: &Contact,
     cosmos_key: CosmosPrivateKey,

@@ -140,6 +140,7 @@ pub async fn eth_oracle_main_loop(
     .await;
     info!("Oracle resync complete, Oracle now operational");
     let mut grpc_client = grpc_client;
+    let mut loop_count = 0;
 
     loop {
         let (async_resp, _) = tokio::join!(
@@ -155,6 +156,20 @@ pub async fn eth_oracle_main_loop(
                             latest_eth_block,
                             block_height,
                         );
+
+                        // send latest Ethereum height to the Cosmos chain every 5 loops
+                        if loop_count % 5 == 0 {
+                            let messages = build::ethereum_vote_height_messages(
+                                &contact,
+                                cosmos_key,
+                                latest_eth_block,
+                            ).await;
+
+                            msg_sender
+                                .send(messages)
+                                .await
+                                .expect("Could not send Ethereum height votes");
+                        }
                     }
                     (Ok(_latest_eth_block), Ok(ChainStatus::Syncing)) => {
                         warn!("Cosmos node syncing, Eth oracle paused");
@@ -210,6 +225,8 @@ pub async fn eth_oracle_main_loop(
             },
             delay_for(ETH_ORACLE_LOOP_SPEED)
         );
+
+        loop_count += 1;
     }
 }
 
