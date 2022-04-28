@@ -33,6 +33,10 @@ service Msg {
   rpc SetDelegateKeys(MsgDelegateKeys) returns (MsgDelegateKeysResponse) {
     // option (google.api.http).post = "/gravity/v1/delegate_keys";
   }
+  rpc SubmitEthereumHeightVote(MsgEthereumHeightVote)
+      returns (MsgEthereumHeightVoteResponse) {
+    // option (google.api.http).post = "/gravity/v1/ethereum_height_vote";
+  }
 }
 
 // MsgSendToEthereum submits a SendToEthereum attempt to bridge an asset over to
@@ -137,6 +141,15 @@ message DelegateKeysSignMsg {
   string validator_address = 1;
   uint64 nonce = 2;
 }
+
+// Periodic update of latest observed Ethereum and Cosmos heights from the
+// orchestrator
+message MsgEthereumHeightVote {
+  uint64 ethereum_height = 1;
+  uint64 cosmos_height = 2;
+}
+
+message MsgEthereumHeightVoteResponse {}
 
 ////////////
 // Events //
