@@ -190,6 +190,8 @@ impl GasCost {
     }
 }
 
+// returns a bool indicating whether or not this error means we should permanently
+// skip this logic call
 pub fn handle_contract_error(gravity_error: GravityError) -> bool {
     let error_string = format!("LogicCall error: {:?}", gravity_error);
     let gravity_contract_error = extract_gravity_contract_error(gravity_error);
