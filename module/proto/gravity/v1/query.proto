@@ -148,6 +148,12 @@ service Query {
     // option (google.api.http).get =
     // "/gravity/v1/delegate_keys";
   }
+
+  rpc LastObservedEthereumHeight(LastObservedEthereumHeightRequest)
+      returns (LastObservedEthereumHeightResponse) {
+    // option (google.api.http).get =
+    // "/gravity/v1/last_observed_ethereum_height"
+  }
 }
 
 //  rpc Params
@@ -315,7 +321,13 @@ message UnbatchedSendToEthereumsRequest {
   string sender_address = 1;
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
+
 message UnbatchedSendToEthereumsResponse {
   repeated SendToEthereum send_to_ethereums = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message LastObservedEthereumHeightRequest {}
+message LastObservedEthereumHeightResponse {
+  LatestEthereumBlockHeight last_observed_ethereum_height = 1;
 }
