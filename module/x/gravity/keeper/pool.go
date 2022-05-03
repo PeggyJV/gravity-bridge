@@ -30,13 +30,13 @@ func (k Keeper) createSendToEVM(ctx sdk.Context, chainID uint32, sender sdk.AccA
 		return 0, err
 	}
 
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, totalInVouchers); err != nil {
+	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, totalInVouchers); err != nil {
 		return 0, err
 	}
 
 	// If it is no a cosmos-originated asset we burn
 	if !isCosmosOriginated {
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, totalInVouchers); err != nil {
+		if err := k.BankKeeper.BurnCoins(ctx, types.ModuleName, totalInVouchers); err != nil {
 			panic(err)
 		}
 	}
@@ -89,12 +89,12 @@ func (k Keeper) cancelSendToEVM(ctx sdk.Context, chainID uint32, id uint64, s st
 
 	// If it is not cosmos-originated the coins are minted
 	if !isCosmosOriginated {
-		if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, totalToRefundCoins); err != nil {
+		if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, totalToRefundCoins); err != nil {
 			return sdkerrors.Wrapf(err, "mint vouchers coins: %s", totalToRefundCoins)
 		}
 	}
 
-	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, totalToRefundCoins); err != nil {
+	if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, totalToRefundCoins); err != nil {
 		return sdkerrors.Wrap(err, "sending coins from module account")
 	}
 
@@ -103,19 +103,19 @@ func (k Keeper) cancelSendToEVM(ctx sdk.Context, chainID uint32, id uint64, s st
 }
 
 func (k Keeper) setUnbatchedSendToEVM(ctx sdk.Context, chainID uint32, ste *types.SendToEVM) {
-	ctx.KVStore(k.storeKey).Set(types.MakeSendToEVMKeyForEvent(chainID, ste.Id, ste.Erc20Fee), k.cdc.MustMarshal(ste))
+	ctx.KVStore(k.StoreKey).Set(types.MakeSendToEVMKeyForEvent(chainID, ste.Id, ste.Erc20Fee), k.Cdc.MustMarshal(ste))
 }
 
 func (k Keeper) deleteUnbatchedSendToEVM(ctx sdk.Context, chainID uint32, id uint64, fee types.ERC20Token) {
-	ctx.KVStore(k.storeKey).Delete(types.MakeSendToEVMKeyForEvent(chainID, id, fee))
+	ctx.KVStore(k.StoreKey).Delete(types.MakeSendToEVMKeyForEvent(chainID, id, fee))
 }
 
 func (k Keeper) iterateUnbatchedSendToEVMsByContract(ctx sdk.Context, chainID uint32, contract common.Address, cb func(*types.SendToEVM) bool) {
-	iter := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeSendToEVMKeyForContract(chainID, contract)).ReverseIterator(nil, nil)
+	iter := prefix.NewStore(ctx.KVStore(k.StoreKey), types.MakeSendToEVMKeyForContract(chainID, contract)).ReverseIterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var ste types.SendToEVM
-		k.cdc.MustUnmarshal(iter.Value(), &ste)
+		k.Cdc.MustUnmarshal(iter.Value(), &ste)
 		if cb(&ste) {
 			break
 		}
@@ -123,11 +123,11 @@ func (k Keeper) iterateUnbatchedSendToEVMsByContract(ctx sdk.Context, chainID ui
 }
 
 func (k Keeper) IterateUnbatchedSendToEVMs(ctx sdk.Context, chainID uint32, cb func(*types.SendToEVM) bool) {
-	iter := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeSendToEVMKey(chainID)).ReverseIterator(nil, nil)
+	iter := prefix.NewStore(ctx.KVStore(k.StoreKey), types.MakeSendToEVMKey(chainID)).ReverseIterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var ste types.SendToEVM
-		k.cdc.MustUnmarshal(iter.Value(), &ste)
+		k.Cdc.MustUnmarshal(iter.Value(), &ste)
 		if cb(&ste) {
 			break
 		}
@@ -144,7 +144,7 @@ func (k Keeper) getUnbatchedSendToEVMs(ctx sdk.Context, chainID uint32) []*types
 }
 
 func (k Keeper) incrementLastSendToEVMIDKey(ctx sdk.Context, chainID uint32) uint64 {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	bz := store.Get(types.MakeLastSendToEVMIDKey(chainID))
 	var id uint64 = 0
 	if bz != nil {

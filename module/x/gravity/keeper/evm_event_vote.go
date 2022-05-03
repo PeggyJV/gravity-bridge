@@ -64,7 +64,7 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, chainID uint32, eventVoteRec
 	// This conditional stops the event vote record from accidentally being applied twice.
 	if !eventVoteRecord.Accepted {
 		var event types.EVMEvent
-		if err := k.cdc.UnpackAny(eventVoteRecord.Event, &event); err != nil {
+		if err := k.Cdc.UnpackAny(eventVoteRecord.Event, &event); err != nil {
 			panic("unpacking packed any")
 		}
 
@@ -137,16 +137,16 @@ func (k Keeper) processEVMEvent(ctx sdk.Context, chainID uint32, event types.EVM
 
 // setEVMEventVoteRecord sets the attestation in the store
 func (k Keeper) setEVMEventVoteRecord(ctx sdk.Context, chainID uint32, eventNonce uint64, claimHash []byte, eventVoteRecord *types.EVMEventVoteRecord) {
-	ctx.KVStore(k.storeKey).Set(types.MakeEVMEventVoteRecordKey(chainID, eventNonce, claimHash), k.cdc.MustMarshal(eventVoteRecord))
+	ctx.KVStore(k.StoreKey).Set(types.MakeEVMEventVoteRecordKey(chainID, eventNonce, claimHash), k.Cdc.MustMarshal(eventVoteRecord))
 }
 
 // GetEVMEventVoteRecord return a vote record given a nonce
 func (k Keeper) GetEVMEventVoteRecord(ctx sdk.Context, chainID uint32, eventNonce uint64, claimHash []byte) *types.EVMEventVoteRecord {
-	if bz := ctx.KVStore(k.storeKey).Get(types.MakeEVMEventVoteRecordKey(chainID, eventNonce, claimHash)); bz == nil {
+	if bz := ctx.KVStore(k.StoreKey).Get(types.MakeEVMEventVoteRecordKey(chainID, eventNonce, claimHash)); bz == nil {
 		return nil
 	} else {
 		var out types.EVMEventVoteRecord
-		k.cdc.MustUnmarshal(bz, &out)
+		k.Cdc.MustUnmarshal(bz, &out)
 		return &out
 	}
 }
@@ -171,12 +171,12 @@ func (k Keeper) GetEVMEventVoteRecordMapping(ctx sdk.Context, chainID uint32) (o
 
 // iterateEVMEventVoteRecords iterates through all attestations
 func (k Keeper) iterateEVMEventVoteRecords(ctx sdk.Context, chainID uint32, cb func([]byte, *types.EVMEventVoteRecord) bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.EVMEventVoteRecordPrefix(chainID))
+	store := prefix.NewStore(ctx.KVStore(k.StoreKey), types.EVMEventVoteRecordPrefix(chainID))
 	iter := store.Iterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		att := &types.EVMEventVoteRecord{}
-		k.cdc.MustUnmarshal(iter.Value(), att)
+		k.Cdc.MustUnmarshal(iter.Value(), att)
 		// cb returns true to stop early
 		if cb(iter.Key(), att) {
 			return
@@ -186,7 +186,7 @@ func (k Keeper) iterateEVMEventVoteRecords(ctx sdk.Context, chainID uint32, cb f
 
 // GetLastObservedEventNonce returns the latest observed event nonce
 func (k Keeper) GetLastObservedEventNonce(ctx sdk.Context, chainID uint32) uint64 {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	bytes := store.Get(types.MakeLastObservedEventNonceKey(chainID))
 
 	if len(bytes) == 0 {
@@ -198,7 +198,7 @@ func (k Keeper) GetLastObservedEventNonce(ctx sdk.Context, chainID uint32) uint6
 // GetLastObservedEVMBlockHeight height gets the block height to of the last observed attestation from
 // the store
 func (k Keeper) GetLastObservedEVMBlockHeight(ctx sdk.Context, chainID uint32) types.LatestEVMBlockHeight {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	bytes := store.Get(types.MakeLastEVMBlockHeightKey(chainID))
 
 	if len(bytes) == 0 {
@@ -208,29 +208,29 @@ func (k Keeper) GetLastObservedEVMBlockHeight(ctx sdk.Context, chainID uint32) t
 		}
 	}
 	height := types.LatestEVMBlockHeight{}
-	k.cdc.MustUnmarshal(bytes, &height)
+	k.Cdc.MustUnmarshal(bytes, &height)
 	return height
 }
 
 // SetLastObservedEVMBlockHeight sets the block height in the store.
 func (k Keeper) SetLastObservedEVMBlockHeight(ctx sdk.Context, chainID uint32, ethereumHeight uint64) {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	height := types.LatestEVMBlockHeight{
 		EVMHeight:    ethereumHeight,
 		CosmosHeight: uint64(ctx.BlockHeight()),
 	}
-	store.Set(types.MakeLastEVMBlockHeightKey(chainID), k.cdc.MustMarshal(&height))
+	store.Set(types.MakeLastEVMBlockHeightKey(chainID), k.Cdc.MustMarshal(&height))
 }
 
 // setLastObservedEventNonce sets the latest observed event nonce
 func (k Keeper) setLastObservedEventNonce(ctx sdk.Context, chainID uint32, nonce uint64) {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	store.Set(types.MakeLastObservedEventNonceKey(chainID), sdk.Uint64ToBigEndian(nonce))
 }
 
 // getLastEventNonceByValidator returns the latest event nonce for a given validator
 func (k Keeper) getLastEventNonceByValidator(ctx sdk.Context, chainID uint32, validator sdk.ValAddress) uint64 {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	bytes := store.Get(types.MakeLastEventNonceByValidatorKey(chainID, validator))
 
 	if len(bytes) == 0 {
@@ -276,6 +276,6 @@ func (k Keeper) getLastEventNonceByValidator(ctx sdk.Context, chainID uint32, va
 
 // setLastEventNonceByValidator sets the latest event nonce for a give validator
 func (k Keeper) setLastEventNonceByValidator(ctx sdk.Context, chainID uint32, validator sdk.ValAddress, nonce uint64) {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	store.Set(types.MakeLastEventNonceByValidatorKey(chainID, validator), sdk.Uint64ToBigEndian(nonce))
 }

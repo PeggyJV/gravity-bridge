@@ -439,7 +439,7 @@ func CreateTestEnv(t *testing.T) TestInput {
 		),
 	)
 
-	k.setParams(ctx, TestingGravityParams)
+	k.SetParams(ctx, TestingGravityParams)
 
 	return TestInput{
 		GravityKeeper:   k,
@@ -489,9 +489,9 @@ func MakeTestMarshaler() codec.Codec {
 func MintVouchersFromAir(t *testing.T, ctx sdk.Context, k Keeper, dest sdk.AccAddress, amount types.ERC20Token) sdk.Coin {
 	coin := amount.GravityCoin()
 	vouchers := sdk.Coins{coin}
-	err := k.bankKeeper.MintCoins(ctx, types.ModuleName, vouchers)
+	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, vouchers)
 	require.NoError(t, err)
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, dest, vouchers)
+	err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, dest, vouchers)
 	require.NoError(t, err)
 	return coin
 }

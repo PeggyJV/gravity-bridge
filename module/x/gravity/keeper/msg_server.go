@@ -60,7 +60,7 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 	}
 
 	valAccAddr := sdk.AccAddress(valAddr)
-	valAccSeq, err := k.accountKeeper.GetSequence(ctx, valAccAddr)
+	valAccSeq, err := k.AccountKeeper.GetSequence(ctx, valAccAddr)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "failed to get sequence for validator account %s", valAccAddr)
 	}
@@ -70,7 +70,7 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 		nonce = valAccSeq - 1
 	}
 
-	signMsgBz := k.cdc.MustMarshal(&types.DelegateKeysSignMsg{
+	signMsgBz := k.Cdc.MustMarshal(&types.DelegateKeysSignMsg{
 		ValidatorAddress: valAddr.String(),
 		// We decrement since we process the message after the ante-handler which
 		// increments the nonce.

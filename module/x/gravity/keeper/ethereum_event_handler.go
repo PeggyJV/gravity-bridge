@@ -12,7 +12,7 @@ import (
 )
 
 func (k Keeper) DetectMaliciousSupply(ctx sdk.Context, denom string, amount sdk.Int) (err error) {
-	currentSupply := k.bankKeeper.GetSupply(ctx, denom)
+	currentSupply := k.BankKeeper.GetSupply(ctx, denom)
 	newSupply := new(big.Int).Add(currentSupply.Amount.BigInt(), amount.BigInt())
 	if newSupply.BitLen() > 256 {
 		return sdkerrors.Wrapf(types.ErrSupplyOverflow, "malicious supply of %s detected", denom)
@@ -36,12 +36,12 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EVMEvent) (err error) {
 			}
 
 			// if it is not cosmos originated, mint the coins (aka vouchers)
-			if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coins); err != nil {
+			if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, coins); err != nil {
 				return sdkerrors.Wrapf(err, "mint vouchers coins: %s", coins)
 			}
 		}
 
-		if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
+		if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
 			return err
 		}
 		k.AfterSendToCosmosEvent(ctx, *event)
@@ -103,11 +103,11 @@ func (k Keeper) verifyERC20DeployedEvent(ctx sdk.Context, event *types.ERC20Depl
 	// NOTE: This path is not encouraged and all supported assets should have
 	// metadata defined. If metadata cannot be defined, consider adding the token's
 	// metadata on the fly.
-	if md, ok := k.bankKeeper.GetDenomMetaData(ctx, event.CosmosDenom); ok && md.Base != "" {
+	if md, ok := k.BankKeeper.GetDenomMetaData(ctx, event.CosmosDenom); ok && md.Base != "" {
 		return verifyERC20Token(md, event)
 	}
 
-	if supply := k.bankKeeper.GetSupply(ctx, event.CosmosDenom); supply.IsZero() {
+	if supply := k.BankKeeper.GetSupply(ctx, event.CosmosDenom); supply.IsZero() {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"no supply exists for token %s without metadata", event.CosmosDenom,

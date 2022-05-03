@@ -26,7 +26,7 @@ func (k Keeper) LatestSignerSetTx(c context.Context, req *types.LatestSignerSetT
 	ctx := sdk.UnwrapSDKContext(c)
 
 	chainID := types.ChainIDOrDefault(req.GetChainId())
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OutgoingTxKeyPrefixWithPrefixByte(chainID, types.SignerSetTxPrefixByte))
+	store := prefix.NewStore(ctx.KVStore(k.StoreKey), types.OutgoingTxKeyPrefixWithPrefixByte(chainID, types.SignerSetTxPrefixByte))
 	iter := store.ReverseIterator(nil, nil)
 	defer iter.Close()
 
@@ -35,10 +35,10 @@ func (k Keeper) LatestSignerSetTx(c context.Context, req *types.LatestSignerSetT
 	}
 
 	var any cdctypes.Any
-	k.cdc.MustUnmarshal(iter.Value(), &any)
+	k.Cdc.MustUnmarshal(iter.Value(), &any)
 
 	var otx types.OutgoingTx
-	if err := k.cdc.UnpackAny(&any, &otx); err != nil {
+	if err := k.Cdc.UnpackAny(&any, &otx); err != nil {
 		return nil, err
 	}
 	ss, ok := otx.(*types.SignerSetTx)
@@ -165,7 +165,7 @@ func (k Keeper) SignerSetTxConfirmations(c context.Context, req *types.SignerSet
 	key := types.MakeSignerSetTxKey(chainID, req.SignerSetNonce)
 
 	var out []*types.SignerSetTxConfirmation
-	k.iterateEVMSignatures(ctx, chainID, key, func(val sdk.ValAddress, sig []byte) bool {
+	k.iterateEVMSignaturesByStoreIndex(ctx, chainID, key, func(val sdk.ValAddress, sig []byte) bool {
 		out = append(out, &types.SignerSetTxConfirmation{
 			SignerSetNonce: req.SignerSetNonce,
 			EVMSigner:      k.GetValidatorEVMAddress(ctx, val).Hex(),
@@ -183,7 +183,7 @@ func (k Keeper) BatchTxConfirmations(c context.Context, req *types.BatchTxConfir
 	key := types.MakeBatchTxKey(chainID, common.HexToAddress(req.TokenContract), req.BatchNonce)
 
 	var out []*types.BatchTxConfirmation
-	k.iterateEVMSignatures(ctx, chainID, key, func(val sdk.ValAddress, sig []byte) bool {
+	k.iterateEVMSignaturesByStoreIndex(ctx, chainID, key, func(val sdk.ValAddress, sig []byte) bool {
 		out = append(out, &types.BatchTxConfirmation{
 			TokenContract: req.TokenContract,
 			BatchNonce:    req.BatchNonce,
@@ -201,7 +201,7 @@ func (k Keeper) ContractCallTxConfirmations(c context.Context, req *types.Contra
 	key := types.MakeContractCallTxKey(chainID, req.InvalidationScope, req.InvalidationNonce)
 
 	var out []*types.ContractCallTxConfirmation
-	k.iterateEVMSignatures(ctx, chainID, key, func(val sdk.ValAddress, sig []byte) bool {
+	k.iterateEVMSignaturesByStoreIndex(ctx, chainID, key, func(val sdk.ValAddress, sig []byte) bool {
 		out = append(out, &types.ContractCallTxConfirmation{
 			InvalidationScope: req.InvalidationScope,
 			InvalidationNonce: req.InvalidationNonce,
@@ -336,7 +336,7 @@ func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20Par
 	}
 
 	// use metadata, if we can find it
-	if md, ok := k.bankKeeper.GetDenomMetaData(ctx, req.Denom); ok && md.Base != "" {
+	if md, ok := k.BankKeeper.GetDenomMetaData(ctx, req.Denom); ok && md.Base != "" {
 		var erc20Decimals uint64
 		for _, denomUnit := range md.DenomUnits {
 			if denomUnit.Denom == md.Display {
@@ -353,7 +353,7 @@ func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20Par
 		}, nil
 	}
 
-	if supply := k.bankKeeper.GetSupply(ctx, req.Denom); supply.IsZero() {
+	if supply := k.BankKeeper.GetSupply(ctx, req.Denom); supply.IsZero() {
 		return nil, sdkerrors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"no supply exists for token %s without metadata", req.Denom,
@@ -410,10 +410,10 @@ func (k Keeper) UnbatchedSendToEVMs(c context.Context, req *types.UnbatchedSendT
 	res := &types.UnbatchedSendToEVMsResponse{}
 	chainID := types.ChainIDOrDefault(req.GetChainId())
 
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeSendToEVMKey(chainID))
+	prefixStore := prefix.NewStore(ctx.KVStore(k.StoreKey), types.MakeSendToEVMKey(chainID))
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var ste types.SendToEVM
-		k.cdc.MustUnmarshal(value, &ste)
+		k.Cdc.MustUnmarshal(value, &ste)
 		if ste.Sender == req.SenderAddress {
 			res.SendToEvms = append(res.SendToEvms, &ste)
 			return true, nil

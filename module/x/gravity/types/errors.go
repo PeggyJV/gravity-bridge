@@ -15,4 +15,5 @@ var (
 	ErrInvalidEVMProposalBridgeFee = sdkerrors.Register(ModuleName, 10, "invalid community pool EVM spend proposal bridge fee")
 	ErrEVMProposalDenomMismatch    = sdkerrors.Register(ModuleName, 11, "community pool EVM spend proposal amount and bridge fee denom mismatch")
 	ErrUnsupportedEVM              = sdkerrors.Register(ModuleName, 12, "invalid chain ID supplied")
+	ErrDuplicateGravityID          = sdkerrors.Register(ModuleName, 13, "gravity ID matches on off another evm chain")
 )

@@ -72,6 +72,12 @@ option go_package = "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types
 message Params {
   option (gogoproto.stringer) = false;
 
+  map<uint32, ChainParams> chain_params = 1;
+}
+
+message ChainParams {
+  option (gogoproto.stringer) = false;
+
   string gravity_id = 1;
   string contract_source_hash = 2;
   uint64 signed_signer_set_txs_window = 3;
@@ -98,7 +104,6 @@ message Params {
     (gogoproto.nullable) = false
   ];
   uint64 unbond_slashing_signer_set_txs_window = 13;
-  repeated uint32 chain_ids = 14;
 }
 
 message GenesisStateMultiChain {

@@ -10,18 +10,8 @@ import (
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
-func chainIDinParamsChainIDs(chainID uint32, chainIDs []uint32) bool {
-	for _, id := range chainIDs {
-		if id == chainID {
-			return true
-		}
-	}
-
-	return false
-}
-
 func InitGenesisMultiChain(ctx sdk.Context, k Keeper, data types.GenesisStateMultiChain) {
-	k.setParams(ctx, *data.Params)
+	k.SetParams(ctx, *data.Params)
 
 	// reset delegate keys in state
 	for _, keys := range data.DelegateKeys {
@@ -41,7 +31,7 @@ func InitGenesisMultiChain(ctx sdk.Context, k Keeper, data types.GenesisStateMul
 	}
 
 	for _, chainGS := range data.ChainGenesisStates {
-		if !chainIDinParamsChainIDs(chainGS.ChainID, data.Params.ChainIds) {
+		if _, ok := data.Params.ChainParams[chainGS.ChainID]; ok != true {
 			panic(fmt.Sprintf("chain ID %d presented in state, but not in params", chainGS.ChainID))
 		}
 
@@ -122,7 +112,7 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisStateMultiC
 
 	var chainGenesisStates []*types.ChainGenesisState
 
-	for _, chainID := range p.ChainIds {
+	for chainID, _ := range p.ChainParams {
 		var (
 			outgoingTxs              []*cdctypes.Any
 			ethereumTxConfirmations  []*cdctypes.Any
@@ -150,7 +140,7 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisStateMultiC
 			ota, _ := types.PackOutgoingTx(otx)
 			outgoingTxs = append(outgoingTxs, ota)
 			sstx, _ := otx.(*types.SignerSetTx)
-			k.iterateEVMSignatures(ctx, chainID, sstx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
+			k.iterateEVMSignaturesByStoreIndex(ctx, chainID, sstx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
 				siga, _ := types.PackConfirmation(&types.SignerSetTxConfirmation{
 					SignerSetNonce: sstx.Nonce,
 					EVMSigner:      k.GetValidatorEVMAddress(ctx, val).Hex(),
@@ -168,7 +158,7 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisStateMultiC
 			ota, _ := types.PackOutgoingTx(otx)
 			outgoingTxs = append(outgoingTxs, ota)
 			btx, _ := otx.(*types.BatchTx)
-			k.iterateEVMSignatures(ctx, chainID, btx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
+			k.iterateEVMSignaturesByStoreIndex(ctx, chainID, btx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
 				siga, _ := types.PackConfirmation(&types.BatchTxConfirmation{
 					TokenContract: btx.TokenContract,
 					BatchNonce:    btx.BatchNonce,
@@ -187,7 +177,7 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisStateMultiC
 			ota, _ := types.PackOutgoingTx(otx)
 			outgoingTxs = append(outgoingTxs, ota)
 			btx, _ := otx.(*types.ContractCallTx)
-			k.iterateEVMSignatures(ctx, chainID, btx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
+			k.iterateEVMSignaturesByStoreIndex(ctx, chainID, btx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
 				siga, _ := types.PackConfirmation(&types.ContractCallTxConfirmation{
 					InvalidationScope: btx.InvalidationScope,
 					InvalidationNonce: btx.InvalidationNonce,

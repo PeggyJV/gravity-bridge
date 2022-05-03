@@ -116,7 +116,11 @@ func MakeEVMSignatureKeyForValidator(chainID uint32, storeIndex []byte, validato
 }
 
 func EVMSignatureKeyStoreIndexPrefix(chainID uint32, storeIndex []byte) []byte {
-	return bytes.Join([][]byte{{EVMSignatureKey}, Uint32ToBigEndian(chainID), storeIndex}, []byte{})
+	return bytes.Join([][]byte{EVMSignatureKeyPrefix(chainID), storeIndex}, []byte{})
+}
+
+func EVMSignatureKeyPrefix(chainID uint32) []byte {
+	return bytes.Join([][]byte{{EVMSignatureKey}, Uint32ToBigEndian(chainID)}, []byte{})
 }
 
 /////////////////////////////////

@@ -18,7 +18,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 	migrateCosmosOriginatedERC20ToDenom(store)
 	migrateContractCallTxTimeouts(store, cdc)
 
-	ctx.Logger().Info("Gravty v1 to v2: Store migration complete")
+	ctx.Logger().Info("Gravity v1 to v2: Store migration complete")
 
 	return nil
 }

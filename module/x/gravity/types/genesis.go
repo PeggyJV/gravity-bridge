@@ -19,6 +19,9 @@ const (
 )
 
 var (
+	// ParamsStoreKeyChainParams stores a map of chain ID to chain specific params
+	ParamsStoreKeyChainParams = []byte("ChainParams")
+
 	// ParamsStoreKeyGravityID stores the gravity id
 	ParamsStoreKeyGravityID = []byte("GravityID")
 
@@ -122,8 +125,7 @@ func DefaultGenesisState() *GenesisStateMultiChain {
 
 // DefaultParams returns a copy of the default params
 func DefaultParams() *Params {
-	return &Params{
-		GravityId:                            "defaultgravityid",
+	cp := ChainParams{GravityId: "defaultgravityid",
 		SignedSignerSetTxsWindow:             10000,
 		SignedBatchesWindow:                  10000,
 		EvmSignaturesWindow:                  10000,
@@ -134,54 +136,72 @@ func DefaultParams() *Params {
 		SlashFractionBatch:                   sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		SlashFractionEvmSignature:            sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		SlashFractionConflictingEvmSignature: sdk.NewDec(1).Quo(sdk.NewDec(1000)),
-		UnbondSlashingSignerSetTxsWindow:     10000,
-		ChainIds:                             []uint32{1},
+		UnbondSlashingSignerSetTxsWindow:     10000}
+
+	return &Params{
+		ChainParams: map[uint32]*ChainParams{EthereumChainID: &cp},
 	}
 }
 
 // ValidateBasic checks that the parameters have valid values.
 func (p Params) ValidateBasic() error {
-	if err := validateGravityID(p.GravityId); err != nil {
+	var gravityIDs []string
+
+	for _, cp := range p.ChainParams {
+		if err := cp.ValidateBasic(); err != nil {
+			return err
+		}
+
+		for _, gid := range gravityIDs {
+			if gid == cp.GravityId {
+				return sdkerrors.Wrap(ErrDuplicateGravityID, "gravity id")
+			}
+		}
+		gravityIDs = append(gravityIDs, cp.GravityId)
+	}
+
+	return nil
+}
+
+func (cp ChainParams) ValidateBasic() error {
+	if err := validateGravityID(cp.GravityId); err != nil {
 		return sdkerrors.Wrap(err, "gravity id")
 	}
-	if err := validateContractHash(p.ContractSourceHash); err != nil {
+	if err := validateContractHash(cp.ContractSourceHash); err != nil {
 		return sdkerrors.Wrap(err, "contract hash")
 	}
-	if err := validateTargetEthTxTimeout(p.TargetEvmTxTimeout); err != nil {
+	if err := validateTargetEthTxTimeout(cp.TargetEvmTxTimeout); err != nil {
 		return sdkerrors.Wrap(err, "Batch timeout")
 	}
-	if err := validateAverageBlockTime(p.AverageBlockTime); err != nil {
+	if err := validateAverageBlockTime(cp.AverageBlockTime); err != nil {
 		return sdkerrors.Wrap(err, "Block time")
 	}
-	if err := validateAverageEVMBlockTime(p.AverageEvmBlockTime); err != nil {
+	if err := validateAverageEVMBlockTime(cp.AverageEvmBlockTime); err != nil {
 		return sdkerrors.Wrap(err, "EVM block time")
 	}
-	if err := validateSignedSignerSetTxsWindow(p.SignedSignerSetTxsWindow); err != nil {
+	if err := validateSignedSignerSetTxsWindow(cp.SignedSignerSetTxsWindow); err != nil {
 		return sdkerrors.Wrap(err, "signed signer set txs window")
 	}
-	if err := validateSignedBatchesWindow(p.SignedBatchesWindow); err != nil {
+	if err := validateSignedBatchesWindow(cp.SignedBatchesWindow); err != nil {
 		return sdkerrors.Wrap(err, "signed batches window")
 	}
-	if err := validateEVMSignaturesWindow(p.EvmSignaturesWindow); err != nil {
+	if err := validateEVMSignaturesWindow(cp.EvmSignaturesWindow); err != nil {
 		return sdkerrors.Wrap(err, "signatures window")
 	}
-	if err := validateSlashFractionSignerSetTx(p.SlashFractionSignerSetTx); err != nil {
+	if err := validateSlashFractionSignerSetTx(cp.SlashFractionSignerSetTx); err != nil {
 		return sdkerrors.Wrap(err, "slash fraction signersettx")
 	}
-	if err := validateSlashFractionBatch(p.SlashFractionBatch); err != nil {
+	if err := validateSlashFractionBatch(cp.SlashFractionBatch); err != nil {
 		return sdkerrors.Wrap(err, "slash fraction batch tx")
 	}
-	if err := validateSlashFractionEVMSignature(p.SlashFractionEvmSignature); err != nil {
+	if err := validateSlashFractionEVMSignature(cp.SlashFractionEvmSignature); err != nil {
 		return sdkerrors.Wrap(err, "slash fraction EVM signature")
 	}
-	if err := validateSlashFractionConflictingEVMSignature(p.SlashFractionConflictingEvmSignature); err != nil {
+	if err := validateSlashFractionConflictingEVMSignature(cp.SlashFractionConflictingEvmSignature); err != nil {
 		return sdkerrors.Wrap(err, "slash fraction conflicting EVM signature")
 	}
-	if err := validateUnbondSlashingSignerSetTxsWindow(p.UnbondSlashingSignerSetTxsWindow); err != nil {
+	if err := validateUnbondSlashingSignerSetTxsWindow(cp.UnbondSlashingSignerSetTxsWindow); err != nil {
 		return sdkerrors.Wrap(err, "unbond slashing signersettx window")
-	}
-	if err := validateChainIDs(p.ChainIds); err != nil {
-		return sdkerrors.Wrap(err, "chain IDs")
 	}
 
 	return nil
@@ -196,20 +216,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 // pairs of auth module's parameters.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(ParamsStoreKeyGravityID, &p.GravityId, validateGravityID),
-		paramtypes.NewParamSetPair(ParamsStoreKeyContractHash, &p.ContractSourceHash, validateContractHash),
-		paramtypes.NewParamSetPair(ParamsStoreKeySignedSignerSetTxsWindow, &p.SignedSignerSetTxsWindow, validateSignedSignerSetTxsWindow),
-		paramtypes.NewParamSetPair(ParamsStoreKeySignedBatchesWindow, &p.SignedBatchesWindow, validateSignedBatchesWindow),
-		paramtypes.NewParamSetPair(ParamsStoreKeyEVMSignaturesWindow, &p.EvmSignaturesWindow, validateEVMSignaturesWindow),
-		paramtypes.NewParamSetPair(ParamsStoreKeyAverageBlockTime, &p.AverageBlockTime, validateAverageBlockTime),
-		paramtypes.NewParamSetPair(ParamsStoreKeyTargetEthTxTimeout, &p.TargetEvmTxTimeout, validateTargetEthTxTimeout),
-		paramtypes.NewParamSetPair(ParamsStoreKeyAverageEVMBlockTime, &p.AverageEvmBlockTime, validateAverageEVMBlockTime),
-		paramtypes.NewParamSetPair(ParamsStoreSlashFractionSignerSetTx, &p.SlashFractionSignerSetTx, validateSlashFractionSignerSetTx),
-		paramtypes.NewParamSetPair(ParamsStoreSlashFractionBatch, &p.SlashFractionBatch, validateSlashFractionBatch),
-		paramtypes.NewParamSetPair(ParamsStoreSlashFractionEVMSignature, &p.SlashFractionEvmSignature, validateSlashFractionEVMSignature),
-		paramtypes.NewParamSetPair(ParamsStoreSlashFractionConflictingEVMSignature, &p.SlashFractionConflictingEvmSignature, validateSlashFractionConflictingEVMSignature),
-		paramtypes.NewParamSetPair(ParamStoreUnbondSlashingSignerSetTxsWindow, &p.UnbondSlashingSignerSetTxsWindow, validateUnbondSlashingSignerSetTxsWindow),
-		paramtypes.NewParamSetPair(ParamStoreKeyChainIDs, &p.ChainIds, validateChainIDs),
+		paramtypes.NewParamSetPair(ParamsStoreKeyChainParams, &p.ChainParams, validateChainParams),
 	}
 }
 
@@ -224,6 +231,21 @@ func (p Params) Equal(p2 Params) bool {
 		panic(err)
 	}
 	return bytes.Equal(pb, p2b)
+}
+
+func validateChainParams(i interface{}) error {
+	v, ok := i.(map[uint32]*ChainParams)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	for _, cp := range v {
+		if err := cp.ValidateBasic(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func validateGravityID(i interface{}) error {

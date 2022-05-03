@@ -166,12 +166,12 @@ func (k Keeper) getLastOutgoingBatchByTokenType(ctx sdk.Context, chainID uint32,
 
 // SetLastSlashedOutgoingTxBlockHeight sets the latest slashed Batch block height
 func (k Keeper) SetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context, chainID uint32, blockHeight uint64) {
-	ctx.KVStore(k.storeKey).Set(types.MakeLastSlashedOutgoingTxBlockKey(chainID), sdk.Uint64ToBigEndian(blockHeight))
+	ctx.KVStore(k.StoreKey).Set(types.MakeLastSlashedOutgoingTxBlockKey(chainID), sdk.Uint64ToBigEndian(blockHeight))
 }
 
 // GetLastSlashedOutgoingTxBlockHeight returns the latest slashed Batch block
 func (k Keeper) GetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context, chainID uint32) uint64 {
-	if bz := ctx.KVStore(k.storeKey).Get(types.MakeLastSlashedOutgoingTxBlockKey(chainID)); bz == nil {
+	if bz := ctx.KVStore(k.StoreKey).Get(types.MakeLastSlashedOutgoingTxBlockKey(chainID)); bz == nil {
 		return 0
 	} else {
 		return binary.BigEndian.Uint64(bz)
@@ -190,7 +190,7 @@ func (k Keeper) GetUnSlashedOutgoingTxs(ctx sdk.Context, chainID uint32, maxHeig
 }
 
 func (k Keeper) incrementLastOutgoingBatchNonce(ctx sdk.Context, chainID uint32) uint64 {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	bz := store.Get(types.MakeLastOutgoingBatchNonceKey(chainID))
 	var id uint64 = 0
 	if bz != nil {
