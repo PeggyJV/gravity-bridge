@@ -161,7 +161,8 @@ func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper) {
 // 2. The proposed consensus heights from this process are greater than the values stored from the last time
 //    we observed an Ethereum event from the bridge
 func updateObservedEthereumHeight(ctx sdk.Context, k keeper.Keeper) {
-	if ctx.BlockHeight()%10 != 0 {
+	// wait some minutes before checking the height votes
+	if ctx.BlockHeight()%50 != 0 {
 		return
 	}
 
