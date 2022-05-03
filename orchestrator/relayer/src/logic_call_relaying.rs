@@ -40,7 +40,7 @@ pub async fn relay_logic_calls(
     let mut oldest_signatures: Option<Vec<LogicCallConfirmResponse>> = None;
     for call in latest_calls {
         if logic_call_skips.permanently_skipped(&call) {
-            info!("LogicCall {}/{} permanently skipped, on-chain timeout after eth height {}",
+            info!("LogicCall {}/{} permanently skipped until oracle confirms or on-chain timeout after eth height {}",
                 bytes_to_hex_str(&call.invalidation_id), call.invalidation_nonce, call.timeout
             );
             continue;
