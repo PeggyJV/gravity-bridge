@@ -242,7 +242,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 
 	// All unbonding validators
 	for ; unbondingValIterator.Valid(); unbondingValIterator.Next() {
-		unbondingValidators := k.GetUnbondingvalidators(unbondingValIterator.Value())
+		unbondingValidators := k.GetUnbondingValidators(unbondingValIterator.Value())
 		for _, valAddr := range unbondingValidators.Addresses {
 			addr, err := sdk.ValAddressFromBech32(valAddr)
 			if err != nil {

@@ -663,4 +663,4 @@ func TestKeeper_Migration(t *testing.T) {
 
 // TODO(levi) review/ensure coverage for:
 // PaginateOutgoingTxsByType
-// GetUnbondingvalidators(unbondingVals []byte) stakingtypes.ValAddresses
+// GetUnbondingValidators(unbondingVals []byte) stakingtypes.ValAddresses

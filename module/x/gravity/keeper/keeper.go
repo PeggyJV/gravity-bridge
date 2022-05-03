@@ -270,8 +270,7 @@ func (k Keeper) CreateSignerSetTx(ctx sdk.Context, chainID uint32) *types.Signer
 		sdk.NewEvent(
 			types.EventTypeMultisigUpdateRequest,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
-			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
+			sdk.NewAttribute(types.AttributeKeyChainID, fmt.Sprint(chainID)),
 			sdk.NewAttribute(types.AttributeKeySignerSetNonce, fmt.Sprint(nonce)),
 		),
 	)
@@ -344,29 +343,13 @@ func (k Keeper) SetParams(ctx sdk.Context, ps types.Params) {
 	k.ParamSpace.SetParamSet(ctx, &ps)
 }
 
-// getBridgeContractAddress returns the bridge contract address on ETH
-func (k Keeper) getBridgeContractAddress(ctx sdk.Context) string {
-	var a string
-	k.ParamSpace.Get(ctx, types.ParamsStoreKeyBridgeContractAddress, &a)
-	return a
-}
-
-// getBridgeChainID returns the chain id of the ETH chain we are running against
-func (k Keeper) getBridgeChainID(ctx sdk.Context) uint64 {
-	var a uint64
-	k.ParamSpace.Get(ctx, types.ParamsStoreKeyBridgeContractChainID, &a)
-	return a
-}
-
 func (k Keeper) chainIDsContains(ctx sdk.Context, chainID uint32) bool {
-	var cids []uint32
-	k.ParamSpace.Get(ctx, types.ParamStoreKeyChainIDs, &cids)
-	for _, cid := range cids {
-		if chainID == cid {
+	params := k.GetParams(ctx)
+	for id, _ := range params.ChainParams {
+		if chainID == id {
 			return true
 		}
 	}
-
 	return false
 }
 
@@ -380,10 +363,9 @@ func (k Keeper) chainIDsContains(ctx sdk.Context, chainID uint32) bool {
 // is deployed the GravityID CAN NOT BE CHANGED. Meaning that it can't just be the
 // same as the chain id since the chain id may be changed many times with each
 // successive chain in charge of the same bridge
-func (k Keeper) getGravityID(ctx sdk.Context) string {
-	var a string
-	k.ParamSpace.Get(ctx, types.ParamsStoreKeyGravityID, &a)
-	return a
+func (k Keeper) getGravityID(ctx sdk.Context, chainID uint32) string {
+	params := k.GetParams(ctx)
+	return params.ChainParams[chainID].GravityId
 }
 
 // getDelegateKeys iterates both the EthAddress and Orchestrator address indexes to produce
@@ -421,9 +403,9 @@ func (k Keeper) getDelegateKeys(ctx sdk.Context) (out []*types.MsgDelegateKeys) 
 	return out
 }
 
-// GetUnbondingvalidators returns UnbondingValidators.
+// GetUnbondingValidators returns UnbondingValidators.
 // Adding here in gravity keeper as cdc is available inside endblocker.
-func (k Keeper) GetUnbondingvalidators(unbondingVals []byte) stakingtypes.ValAddresses {
+func (k Keeper) GetUnbondingValidators(unbondingVals []byte) stakingtypes.ValAddresses {
 	unbondingValidators := stakingtypes.ValAddresses{}
 	k.Cdc.MustUnmarshal(unbondingVals, &unbondingValidators)
 	return unbondingValidators
@@ -563,8 +545,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 		sdk.NewEvent(
 			types.EventTypeMultisigUpdateRequest,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
-			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
+			sdk.NewAttribute(types.AttributeKeyChainID, fmt.Sprint(chainID)),
 			sdk.NewAttribute(types.AttributeKeyContractCallInvalidationNonce, fmt.Sprint(invalidationNonce)),
 			sdk.NewAttribute(types.AttributeKeyContractCallInvalidationScope, fmt.Sprint(invalidationScope)),
 			sdk.NewAttribute(types.AttributeKeyContractCallAddress, fmt.Sprint(address.String())),
@@ -577,8 +558,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 	k.SetOutgoingTx(ctx, chainID, newContractCallTx)
 	k.Logger(ctx).Info(
 		"ContractCallTx created",
-		"bridge_contract", k.getBridgeContractAddress(ctx),
-		"bridge_chain_id", strconv.Itoa(int(k.getBridgeChainID(ctx))),
+		"bridge_chain_id", fmt.Sprint(chainID),
 		"invalidation_nonce", newContractCallTx.InvalidationNonce,
 		"invalidation_scope", newContractCallTx.InvalidationScope,
 		"address", address.String(),

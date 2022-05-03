@@ -49,7 +49,7 @@ func TestMsgServer_SubmitEVMSignature(t *testing.T) {
 	signerSetTx := gk.CreateSignerSetTx(ctx, types.EthereumChainID)
 
 	// setup for ValidateEVMSignature
-	gravityId := gk.getGravityID(ctx)
+	gravityId := gk.getGravityID(ctx, types.EthereumChainID)
 	checkpoint := signerSetTx.GetCheckpoint([]byte(gravityId))
 	signature, err := types.NewEVMSignature(checkpoint, ethPrivKey)
 	require.NoError(t, err)

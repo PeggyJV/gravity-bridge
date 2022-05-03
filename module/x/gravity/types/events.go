@@ -20,7 +20,7 @@ const (
 	AttributeKeyNonce                         = "nonce"
 	AttributeKeySignerSetNonce                = "signerset_nonce"
 	AttributeKeyBatchNonce                    = "batch_nonce"
-	AttributeKeyBridgeChainID                 = "bridge_chain_id"
+	AttributeKeyChainID                       = "chain_id"
 	AttributeKeySetOrchestratorAddr           = "set_orchestrator_address"
 	AttributeKeySetEVMAddr                    = "set_ethereum_address"
 	AttributeKeyValidatorAddr                 = "validator_address"

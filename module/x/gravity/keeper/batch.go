@@ -3,8 +3,6 @@ package keeper
 import (
 	"encoding/binary"
 	"fmt"
-	"strconv"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 
@@ -48,8 +46,7 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, chainID uint32, contractAddress co
 	ctx.EventManager().EmitEvent(sdk.NewEvent(
 		types.EventTypeOutgoingBatch,
 		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
-		sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(chainID))),
+		sdk.NewAttribute(types.AttributeKeyChainID, fmt.Sprint(chainID)),
 		sdk.NewAttribute(types.AttributeKeyOutgoingBatchID, fmt.Sprint(batch.BatchNonce)),
 		sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(batch.BatchNonce)),
 	))
@@ -59,7 +56,7 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, chainID uint32, contractAddress co
 
 // This gets the batch timeout height in EVM blocks.
 func (k Keeper) getBatchTimeoutHeight(ctx sdk.Context, chainID uint32) uint64 {
-	params := k.GetParams(ctx)
+	params := k.GetParams(ctx).ChainParams[chainID]
 	currentCosmosHeight := ctx.BlockHeight()
 	// we store the last observed Cosmos and EVM heights, we do not concern ourselves if these values are zero because
 	// no batch can be produced if the last EVM block height is not first populated by a deposit event.
@@ -141,8 +138,7 @@ func (k Keeper) CancelBatchTx(ctx sdk.Context, chainID uint32, tokenContract com
 		sdk.NewEvent(
 			types.EventTypeOutgoingBatchCanceled,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
-			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
+			sdk.NewAttribute(types.AttributeKeyChainID, fmt.Sprint(chainID)),
 			sdk.NewAttribute(types.AttributeKeyOutgoingBatchID, fmt.Sprint(nonce)),
 			sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(nonce)),
 		),

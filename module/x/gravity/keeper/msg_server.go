@@ -133,7 +133,7 @@ func (k msgServer) SubmitEVMTxConfirmation(c context.Context, msg *types.MsgSubm
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "couldn't find outgoing tx")
 	}
 
-	gravityID := k.getGravityID(ctx)
+	gravityID := k.getGravityID(ctx, chainID)
 	checkpoint := otx.GetCheckpoint([]byte(gravityID))
 
 	ethAddress := k.GetValidatorEVMAddress(ctx, val)
@@ -237,8 +237,7 @@ func (k msgServer) SendToEVM(c context.Context, msg *types.MsgSendToEVM) (*types
 		sdk.NewEvent(
 			types.EventTypeBridgeWithdrawalReceived,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
-			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(chainID))),
+			sdk.NewAttribute(types.AttributeKeyChainID, strconv.Itoa(int(chainID))),
 			sdk.NewAttribute(types.AttributeKeyOutgoingTXID, strconv.Itoa(int(txID))),
 			sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(txID)),
 		),
@@ -277,7 +276,7 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 			sdk.NewAttribute(sdk.AttributeKeyModule, msg.Type()),
 			sdk.NewAttribute(types.AttributeKeyContract, tokenContract.Hex()),
 			sdk.NewAttribute(types.AttributeKeyBatchNonce, fmt.Sprint(batchID.BatchNonce)),
-			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(chainID))),
+			sdk.NewAttribute(types.AttributeKeyChainID, fmt.Sprint(chainID)),
 		),
 	)
 
@@ -301,8 +300,7 @@ func (k msgServer) CancelSendToEVM(c context.Context, msg *types.MsgCancelSendTo
 		sdk.NewEvent(
 			types.EventTypeBridgeWithdrawCanceled,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
-			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(chainID))),
+			sdk.NewAttribute(types.AttributeKeyChainID, fmt.Sprint(chainID)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

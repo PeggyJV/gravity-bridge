@@ -3,8 +3,6 @@ package keeper
 import (
 	"encoding/binary"
 	"fmt"
-	"strconv"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -98,8 +96,7 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, chainID uint32, eventVoteRec
 					types.EventTypeObservation,
 					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 					sdk.NewAttribute(types.AttributeKeyEVMEventType, fmt.Sprintf("%T", event)),
-					sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
-					sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
+					sdk.NewAttribute(types.AttributeKeyChainID, fmt.Sprint(chainID)),
 					sdk.NewAttribute(types.AttributeKeyEVMEventVoteRecordID,
 						string(types.MakeEVMEventVoteRecordKey(chainID, event.GetEventNonce(), event.Hash()))),
 					sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(event.GetEventNonce())),

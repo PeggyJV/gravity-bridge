@@ -22,53 +22,11 @@ var (
 	// ParamsStoreKeyChainParams stores a map of chain ID to chain specific params
 	ParamsStoreKeyChainParams = []byte("ChainParams")
 
-	// ParamsStoreKeyGravityID stores the gravity id
-	ParamsStoreKeyGravityID = []byte("GravityID")
-
-	// ParamsStoreKeyContractHash stores the contract hash
-	ParamsStoreKeyContractHash = []byte("ContractHash")
-
 	// ParamsStoreKeyBridgeContractAddress stores the contract address
 	ParamsStoreKeyBridgeContractAddress = []byte("BridgeContractAddress")
 
 	// ParamsStoreKeyBridgeContractChainID stores the bridge chain id
 	ParamsStoreKeyBridgeContractChainID = []byte("BridgeChainID")
-
-	// ParamsStoreKeySignedSignerSetTxsWindow stores the signed blocks window
-	ParamsStoreKeySignedSignerSetTxsWindow = []byte("SignedSignerSetTxWindow")
-
-	// ParamsStoreKeySignedBatchesWindow stores the signed blocks window
-	ParamsStoreKeySignedBatchesWindow = []byte("SignedBatchesWindow")
-
-	// ParamsStoreKeyEVMSignaturesWindow stores the signed blocks window
-	ParamsStoreKeyEVMSignaturesWindow = []byte("EVMSignaturesWindow")
-
-	// ParamsStoreKeyTargetEthTxTimeout stores the target EVM transaction timeout
-	ParamsStoreKeyTargetEthTxTimeout = []byte("TargetEthTxTimeout")
-
-	// ParamsStoreKeyAverageBlockTime stores the signed blocks window
-	ParamsStoreKeyAverageBlockTime = []byte("AverageBlockTime")
-
-	// ParamsStoreKeyAverageEVMBlockTime stores the signed blocks window
-	ParamsStoreKeyAverageEVMBlockTime = []byte("AverageEVMBlockTime")
-
-	// ParamsStoreSlashFractionSignerSetTx stores the slash fraction valset
-	ParamsStoreSlashFractionSignerSetTx = []byte("SlashFractionSignerSetTx")
-
-	// ParamsStoreSlashFractionBatch stores the slash fraction Batch
-	ParamsStoreSlashFractionBatch = []byte("SlashFractionBatch")
-
-	// ParamsStoreSlashFractionEVMSignature stores the slash fraction EVM siganture
-	ParamsStoreSlashFractionEVMSignature = []byte("SlashFractionEVMSignature")
-
-	// ParamsStoreSlashFractionConflictingEVMSignature stores the slash fraction ConflictingEVMSignature
-	ParamsStoreSlashFractionConflictingEVMSignature = []byte("SlashFractionConflictingEVMSignature")
-
-	//  ParamStoreUnbondSlashingSignerSetTxsWindow stores unbond slashing valset window
-	ParamStoreUnbondSlashingSignerSetTxsWindow = []byte("UnbondSlashingSignerSetTxsWindow")
-
-	//  ParamStoreKeyChainIDs stores the array of active chain IDs for this bridge
-	ParamStoreKeyChainIDs = []byte("ChainIDs")
 
 	// Ensure that params implements the proper interface
 	_ paramtypes.ParamSet = &Params{}
