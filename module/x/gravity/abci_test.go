@@ -313,9 +313,9 @@ func TestUpdateObservedEthereumHeight(t *testing.T) {
 
 	gravityKeeper.SetLastObservedEthereumBlockHeightWithCosmos(ctx, 2, 5)
 
-	// update runs on mod 10 block heights, no votes have been sent so it
+	// update runs on mod 50 block heights, no votes have been sent so it
 	// shoudl leave the set values alone
-	ctx = ctx.WithBlockHeight(10)
+	ctx = ctx.WithBlockHeight(50)
 	gravity.EndBlocker(ctx, gravityKeeper)
 
 	lastHeight := gravityKeeper.GetLastObservedEthereumBlockHeight(ctx)
@@ -337,7 +337,7 @@ func TestUpdateObservedEthereumHeight(t *testing.T) {
 	ctx = ctx.WithBlockHeight(123)
 	input.GravityKeeper.SetEthereumHeightVote(ctx, keeper.ValAddrs[4], 50)
 
-	// run endblocker on a non-mod 10 block to ensure the update isn't being
+	// run endblocker on a non-mod 50 block to ensure the update isn't being
 	// called and changing the set values
 	gravity.EndBlocker(ctx, gravityKeeper)
 
@@ -350,7 +350,7 @@ func TestUpdateObservedEthereumHeight(t *testing.T) {
 	// are equal to or less than their own observed block height, and since
 	// those are the highest heights with a consensus of validator power, they
 	// should be set
-	ctx = ctx.WithBlockHeight(130)
+	ctx = ctx.WithBlockHeight(150)
 	gravity.EndBlocker(ctx, gravityKeeper)
 
 	lastHeight = gravityKeeper.GetLastObservedEthereumBlockHeight(ctx)
