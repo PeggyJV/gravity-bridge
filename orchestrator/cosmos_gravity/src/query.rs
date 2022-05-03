@@ -155,6 +155,13 @@ pub async fn get_latest_logic_calls(
     for call in calls {
         out.push(LogicCall::from_proto(call)?);
     }
+
+    // as these calls are expected to be in oldest -> newest order, but
+    // the chain does not provide them as such, we will sort using the
+    // invalidation nonces as keys such that for any given scope, calls will
+    // be processed in nonce order
+    out.sort_by_key(|call| call.invalidation_nonce);
+
     Ok(out)
 }
 
