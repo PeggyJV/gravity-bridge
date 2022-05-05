@@ -307,6 +307,57 @@ func TestBatchTxTimeout(t *testing.T) {
 	require.NotNil(t, gotThirdBatch)
 }
 
+func TestUpdateObservedEthereumHeight(t *testing.T) {
+	input, ctx := keeper.SetupFiveValChain(t)
+	gravityKeeper := input.GravityKeeper
+
+	gravityKeeper.SetLastObservedEthereumBlockHeightWithCosmos(ctx, 2, 5)
+
+	// update runs on mod 50 block heights, no votes have been sent so it
+	// shoudl leave the set values alone
+	ctx = ctx.WithBlockHeight(50)
+	gravity.EndBlocker(ctx, gravityKeeper)
+
+	lastHeight := gravityKeeper.GetLastObservedEthereumBlockHeight(ctx)
+	require.Equal(t, lastHeight.EthereumHeight, uint64(2))
+	require.Equal(t, lastHeight.CosmosHeight, uint64(5))
+
+	ctx = ctx.WithBlockHeight(3)
+	input.GravityKeeper.SetEthereumHeightVote(ctx, keeper.ValAddrs[0], 10)
+
+	ctx = ctx.WithBlockHeight(33)
+	input.GravityKeeper.SetEthereumHeightVote(ctx, keeper.ValAddrs[1], 20)
+
+	ctx = ctx.WithBlockHeight(63)
+	input.GravityKeeper.SetEthereumHeightVote(ctx, keeper.ValAddrs[2], 30)
+
+	ctx = ctx.WithBlockHeight(93)
+	input.GravityKeeper.SetEthereumHeightVote(ctx, keeper.ValAddrs[3], 40)
+
+	ctx = ctx.WithBlockHeight(123)
+	input.GravityKeeper.SetEthereumHeightVote(ctx, keeper.ValAddrs[4], 50)
+
+	// run endblocker on a non-mod 50 block to ensure the update isn't being
+	// called and changing the set values
+	gravity.EndBlocker(ctx, gravityKeeper)
+
+	lastHeight = gravityKeeper.GetLastObservedEthereumBlockHeight(ctx)
+	require.Equal(t, lastHeight.EthereumHeight, uint64(2))
+	require.Equal(t, lastHeight.CosmosHeight, uint64(5))
+
+	// run update in endblocker and verify that 4/5 validators agree that
+	// block height 33 for cosmos and 20 for ethereum are possible, since they
+	// are equal to or less than their own observed block height, and since
+	// those are the highest heights with a consensus of validator power, they
+	// should be set
+	ctx = ctx.WithBlockHeight(150)
+	gravity.EndBlocker(ctx, gravityKeeper)
+
+	lastHeight = gravityKeeper.GetLastObservedEthereumBlockHeight(ctx)
+	require.Equal(t, lastHeight.EthereumHeight, uint64(20))
+	require.Equal(t, lastHeight.CosmosHeight, uint64(33))
+}
+
 func fundAccount(ctx sdk.Context, bankKeeper types.BankKeeper, addr sdk.AccAddress, amounts sdk.Coins) error {
 	if err := bankKeeper.MintCoins(ctx, types.ModuleName, amounts); err != nil {
 		return err

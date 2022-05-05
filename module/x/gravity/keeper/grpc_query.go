@@ -460,3 +460,14 @@ func (k Keeper) DelegateKeys(c context.Context, req *types.DelegateKeysRequest) 
 	}
 	return res, nil
 }
+
+func (k Keeper) LastObservedEthereumHeight(c context.Context, req *types.LastObservedEthereumHeightRequest) (*types.LastObservedEthereumHeightResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	lastObservedEthereumHeight := k.GetLastObservedEthereumBlockHeight(ctx)
+
+	res := &types.LastObservedEthereumHeightResponse{
+		LastObservedEthereumHeight: &lastObservedEthereumHeight,
+	}
+
+	return res, nil
+}

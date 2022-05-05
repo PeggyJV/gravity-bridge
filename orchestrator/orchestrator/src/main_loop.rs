@@ -105,7 +105,11 @@ pub async fn orchestrator_main_loop(
     }
 }
 
+// the amount of time to wait when encountering error conditions
 const DELAY: Duration = Duration::from_secs(5);
+
+// the number of loop iterations to wait between sending height update messages
+const HEIGHT_UPDATE_INTERVAL: u32 = 50;
 
 /// This function is responsible for making sure that Ethereum events are retrieved from the Ethereum blockchain
 /// and ferried over to Cosmos where they will be used to issue tokens or process batches.
@@ -140,6 +144,7 @@ pub async fn eth_oracle_main_loop(
     .await;
     info!("Oracle resync complete, Oracle now operational");
     let mut grpc_client = grpc_client;
+    let mut loop_count: u32 = 0;
 
     loop {
         let (async_resp, _) = tokio::join!(
@@ -155,6 +160,22 @@ pub async fn eth_oracle_main_loop(
                             latest_eth_block,
                             block_height,
                         );
+
+                        // send latest Ethereum height to the Cosmos chain periodically
+                        // subtract the block delay based on the environment, in order to have
+                        // more confidence we are attesting to a height that has not been re-orged
+                        if loop_count % HEIGHT_UPDATE_INTERVAL == 0 {
+                            let messages = build::ethereum_vote_height_messages(
+                                &contact,
+                                cosmos_key,
+                                latest_eth_block - block_delay,
+                            ).await;
+
+                            msg_sender
+                                .send(messages)
+                                .await
+                                .expect("Could not send Ethereum height votes");
+                        }
                     }
                     (Ok(_latest_eth_block), Ok(ChainStatus::Syncing)) => {
                         warn!("Cosmos node syncing, Eth oracle paused");
@@ -210,6 +231,8 @@ pub async fn eth_oracle_main_loop(
             },
             delay_for(ETH_ORACLE_LOOP_SPEED)
         );
+
+        loop_count += 1;
     }
 }
 

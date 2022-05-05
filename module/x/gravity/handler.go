@@ -41,6 +41,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
+		case *types.MsgEthereumHeightVote:
+			res, err := msgServer.SubmitEthereumHeightVote(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 		}

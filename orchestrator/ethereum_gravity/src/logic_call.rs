@@ -197,8 +197,17 @@ pub fn build_send_logic_call_contract_call(
     Ok(contract_call)
 }
 
+#[derive(Clone)]
 pub struct LogicCallSkips {
-    skip_map: HashMap<Vec<u8>, HashMap<u64, LogicCall>>,
+    skip_map: HashMap<Vec<u8>, HashMap<u64, LogicCallSkipState>>,
+}
+
+#[derive(Clone)]
+pub struct LogicCallSkipState {
+    logic_call: LogicCall,
+    starting_skip_counter: u32,
+    skips_left: u32,
+    permanently_skipped: bool,
 }
 
 impl LogicCallSkips {
@@ -208,12 +217,24 @@ impl LogicCallSkips {
         }
     }
 
-    pub fn should_skip(&self, call: &LogicCall) -> bool {
+    pub fn skips_left(&self, call: &LogicCall) -> u32 {
         let id_skips = self.skip_map.get(&call.invalidation_id);
         if id_skips.is_some() {
-            let nonce_skips = id_skips.unwrap().get(&call.invalidation_nonce);
-            if nonce_skips.is_some() {
-                return true;
+            let skip_state = id_skips.unwrap().get(&call.invalidation_nonce);
+            if skip_state.is_some() {
+                return skip_state.unwrap().skips_left;
+            }
+        }
+
+        0
+    }
+
+    pub fn permanently_skipped(&self, call: &LogicCall) -> bool {
+        let id_skips = self.skip_map.get(&call.invalidation_id);
+        if id_skips.is_some() {
+            let skip_state = id_skips.unwrap().get(&call.invalidation_nonce);
+            if skip_state.is_some() {
+                return skip_state.unwrap().permanently_skipped;
             }
         }
 
@@ -221,12 +242,45 @@ impl LogicCallSkips {
     }
 
     pub fn skip(&mut self, call: &LogicCall) {
+        self.skip_internal(call, false)
+    }
+
+    pub fn skip_permanently(&mut self, call: &LogicCall) {
+        self.skip_internal(call, true)
+    }
+
+    fn skip_internal(&mut self, call: &LogicCall, permanently_skip: bool) {
+        let new_skip_state = LogicCallSkipState {
+            logic_call: call.clone(),
+            starting_skip_counter: 2, // start by waiting 2 loop iterations
+            skips_left: 2,
+            permanently_skipped: permanently_skip,
+        };
+
         let id_skips = self.skip_map.get_mut(&call.invalidation_id);
         if id_skips.is_none() {
-            let new_id_skips = HashMap::from([(call.invalidation_nonce, call.clone())]);
+            // first time we've seen this invalidation id, start at 2 skips
+            let new_id_skips = HashMap::from([(call.invalidation_nonce, new_skip_state)]);
             self.skip_map.insert(call.invalidation_id.clone(), new_id_skips);
         } else {
-            id_skips.unwrap().insert(call.invalidation_nonce.clone(), call.clone());
+            let id_skips = id_skips.unwrap();
+            let skip_state = id_skips.get_mut(&call.invalidation_nonce);
+            if skip_state.is_none() {
+                // first time we've seen this invalidation id and nonce combo, start at 2 skips
+                id_skips.insert(call.invalidation_nonce.clone(), new_skip_state);
+            } else {
+                let mut skip_state = skip_state.unwrap();
+                if !skip_state.permanently_skipped {
+                    if skip_state.skips_left == 0 {
+                        // exponential backoff: double the number of skips and reset the skip counter
+                        skip_state.starting_skip_counter *= 2;
+                        skip_state.skips_left = skip_state.starting_skip_counter;
+                    } else {
+                        // decrement the existing skip counter
+                        skip_state.skips_left -= 1;
+                    }
+                }
+            }
         }
     }
 
@@ -234,7 +288,7 @@ impl LogicCallSkips {
         for id_skip_map in self.skip_map.iter_mut() {
             let nonce_map = id_skip_map.1;
             for nonce_skip_map in nonce_map.clone() {
-                let call = nonce_skip_map.1;
+                let call = &nonce_skip_map.1.logic_call;
                 // Contract calls are timed out based on the last observed ethereum event
                 // height, which means if there is not much bridge activity occurring,
                 // they will not get timed out. This adds a large (longer than a day)
@@ -280,46 +334,104 @@ fn test_logic_call_skips() {
         invalidation_nonce: 1,
     };
 
+    let logic_call_3 = LogicCall {
+        transfers: Vec::new(),
+        fees: Vec::new(),
+        logic_contract_address: EthAddress::default(),
+        payload: Vec::new(),
+        timeout: 1000,
+        invalidation_id: vec![6, 7, 8],
+        invalidation_nonce: 1,
+    };
+
     let mut skips = LogicCallSkips::new();
 
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), false);
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), false);
-    assert_eq!(skips.should_skip(&logic_call_2), false);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_1), 0);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_2), 0);
+    assert_eq!(skips.skips_left(&logic_call_2), 0);
+    assert_eq!(skips.skips_left(&logic_call_3), 0);
 
+    assert_eq!(skips.permanently_skipped(&logic_call_1_nonce_1), false);
+    assert_eq!(skips.permanently_skipped(&logic_call_1_nonce_2), false);
+    assert_eq!(skips.permanently_skipped(&logic_call_2), false);
+    assert_eq!(skips.permanently_skipped(&logic_call_3), false);
+
+    skips.skip_permanently(&logic_call_3);
+
+    assert_eq!(skips.permanently_skipped(&logic_call_1_nonce_1), false);
+    assert_eq!(skips.permanently_skipped(&logic_call_1_nonce_2), false);
+    assert_eq!(skips.permanently_skipped(&logic_call_2), false);
+    assert_eq!(skips.permanently_skipped(&logic_call_3), true);
+
+    // both will start with 2 skips
     skips.skip(&logic_call_1_nonce_1);
     skips.skip(&logic_call_2);
 
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), true);
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), false);
-    assert_eq!(skips.should_skip(&logic_call_2), true);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_1), 2);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_2), 0);
+    assert_eq!(skips.skips_left(&logic_call_2), 2);
 
+    // logic_call_1_nonce_2 will now start with 2 skips
     skips.skip(&logic_call_1_nonce_2);
 
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), true);
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), true);
-    assert_eq!(skips.should_skip(&logic_call_2), true);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_1), 2);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_2), 2);
+    assert_eq!(skips.skips_left(&logic_call_2), 2);
 
+    // burn down the remaining skips
+    skips.skip(&logic_call_1_nonce_1);
+    skips.skip(&logic_call_1_nonce_2);
+    skips.skip(&logic_call_2);
+
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_1), 1);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_2), 1);
+    assert_eq!(skips.skips_left(&logic_call_2), 1);
+
+    skips.skip(&logic_call_1_nonce_1);
+    skips.skip(&logic_call_1_nonce_2);
+    skips.skip(&logic_call_2);
+
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_1), 0);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_2), 0);
+    assert_eq!(skips.skips_left(&logic_call_2), 0);
+
+    // only skip one of each call and observe exponential backoff
+    skips.skip(&logic_call_1_nonce_1);
+    skips.skip(&logic_call_2);
+
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_1), 4);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_2), 0);
+    assert_eq!(skips.skips_left(&logic_call_2), 4);
+
+    // now skip the other nonce
+    skips.skip(&logic_call_1_nonce_2);
+
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_1), 4);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_2), 4);
+    assert_eq!(skips.skips_left(&logic_call_2), 4);
+
+    // clear out timed-out logic call skip state
     skips.clear_old_calls(6000);
 
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), true);
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), true);
-    assert_eq!(skips.should_skip(&logic_call_2), true);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_1), 4);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_2), 4);
+    assert_eq!(skips.skips_left(&logic_call_2), 4);
 
     skips.clear_old_calls(8850);
 
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), false);
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), true);
-    assert_eq!(skips.should_skip(&logic_call_2), true);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_1), 0);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_2), 4);
+    assert_eq!(skips.skips_left(&logic_call_2), 4);
 
     skips.clear_old_calls(8980);
 
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), false);
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), false);
-    assert_eq!(skips.should_skip(&logic_call_2), true);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_1), 0);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_2), 0);
+    assert_eq!(skips.skips_left(&logic_call_2), 4);
 
     skips.clear_old_calls(9001);
 
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_1), false);
-    assert_eq!(skips.should_skip(&logic_call_1_nonce_2), false);
-    assert_eq!(skips.should_skip(&logic_call_2), false);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_1), 0);
+    assert_eq!(skips.skips_left(&logic_call_1_nonce_2), 0);
+    assert_eq!(skips.skips_left(&logic_call_2), 0);
 }

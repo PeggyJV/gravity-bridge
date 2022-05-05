@@ -295,6 +295,19 @@ func (k msgServer) CancelSendToEthereum(c context.Context, msg *types.MsgCancelS
 	return &types.MsgCancelSendToEthereumResponse{}, nil
 }
 
+func (k msgServer) SubmitEthereumHeightVote(c context.Context, msg *types.MsgEthereumHeightVote) (*types.MsgEthereumHeightVoteResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	val, err := k.getSignerValidator(ctx, msg.Signer)
+	if err != nil {
+		return nil, err
+	}
+
+	k.Keeper.SetEthereumHeightVote(ctx, val, msg.EthereumHeight)
+
+	return &types.MsgEthereumHeightVoteResponse{}, nil
+}
+
 // getSignerValidator takes an sdk.AccAddress that represents either a validator or orchestrator address and returns
 // the assoicated validator address
 func (k Keeper) getSignerValidator(ctx sdk.Context, signerString string) (sdk.ValAddress, error) {

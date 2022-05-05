@@ -214,10 +214,15 @@ func (k Keeper) GetLastObservedEthereumBlockHeight(ctx sdk.Context) types.Latest
 
 // SetLastObservedEthereumBlockHeight sets the block height in the store.
 func (k Keeper) SetLastObservedEthereumBlockHeight(ctx sdk.Context, ethereumHeight uint64) {
+	k.SetLastObservedEthereumBlockHeightWithCosmos(ctx, ethereumHeight, uint64(ctx.BlockHeight()))
+}
+
+// SetLastObservedEthereumBlockHeight sets the block height in the store, specifying the cosmos height
+func (k Keeper) SetLastObservedEthereumBlockHeightWithCosmos(ctx sdk.Context, ethereumHeight uint64, cosmosHeight uint64) {
 	store := ctx.KVStore(k.storeKey)
 	height := types.LatestEthereumBlockHeight{
 		EthereumHeight: ethereumHeight,
-		CosmosHeight:   uint64(ctx.BlockHeight()),
+		CosmosHeight:   cosmosHeight,
 	}
 	store.Set([]byte{types.LastEthereumBlockHeightKey}, k.cdc.MustMarshal(&height))
 }

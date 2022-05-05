@@ -16,6 +16,7 @@ var (
 	_ sdk.Msg = &MsgRequestBatchTx{}
 	_ sdk.Msg = &MsgSubmitEthereumEvent{}
 	_ sdk.Msg = &MsgSubmitEthereumTxConfirmation{}
+	_ sdk.Msg = &MsgEthereumHeightVote{}
 
 	_ cdctypes.UnpackInterfacesMessage = &MsgSubmitEthereumEvent{}
 	_ cdctypes.UnpackInterfacesMessage = &MsgSubmitEthereumTxConfirmation{}
@@ -281,6 +282,48 @@ func (msg MsgCancelSendToEthereum) GetSignBytes() []byte {
 // GetSigners defines whose signature is required
 func (msg MsgCancelSendToEthereum) GetSigners() []sdk.AccAddress {
 	acc, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+
+	return []sdk.AccAddress{acc}
+}
+
+// NewMsgEthereumHeightVote returns a new MsgEthereumHeightVote
+func NewMsgEthereumHeightVote(ethereumHeight uint64, signer sdk.AccAddress) *MsgEthereumHeightVote {
+	return &MsgEthereumHeightVote{
+		EthereumHeight: ethereumHeight,
+		Signer:         signer.String(),
+	}
+}
+
+// Route should return the name of the module
+func (msg MsgEthereumHeightVote) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgEthereumHeightVote) Type() string { return "ethereum_height_vote" }
+
+// ValidateBasic performs stateless checks
+func (msg MsgEthereumHeightVote) ValidateBasic() error {
+	if msg.EthereumHeight == 0 {
+		return sdkerrors.Wrap(ErrInvalid, "ethereum height cannot be 0")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Signer)
+	}
+
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgEthereumHeightVote) GetSignBytes() []byte {
+	panic(fmt.Errorf("deprecated"))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgEthereumHeightVote) GetSigners() []sdk.AccAddress {
+	acc, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		panic(err)
 	}

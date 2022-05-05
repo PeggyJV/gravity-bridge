@@ -59,6 +59,9 @@ const (
 	LastUnBondingBlockHeightKey
 
 	LastObservedSignerSetKey
+
+	// EthereumHeightVoteKey indexes the latest heights observed by each validator
+	EthereumHeightVoteKey
 )
 
 ////////////////////
@@ -155,4 +158,8 @@ func MakeBatchTxKey(addr common.Address, nonce uint64) []byte {
 
 func MakeContractCallTxKey(invalscope []byte, invalnonce uint64) []byte {
 	return bytes.Join([][]byte{{ContractCallTxPrefixByte}, invalscope, sdk.Uint64ToBigEndian(invalnonce)}, []byte{})
+}
+
+func MakeEthereumHeightVoteKey(validator sdk.ValAddress) []byte {
+	return append([]byte{EthereumHeightVoteKey}, validator.Bytes()...)
 }

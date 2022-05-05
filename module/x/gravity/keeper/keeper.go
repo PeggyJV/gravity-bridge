@@ -592,6 +592,56 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 	return newContractCallTx
 }
 
+//////////////////////////////////////
+// Observed Ethereum/Cosmos heights //
+//////////////////////////////////////
+
+// GetEthereumHeightVoteRecord gets the latest observed heights per validator
+func (k Keeper) GetEthereumHeightVote(ctx sdk.Context, valAddress sdk.ValAddress) types.LatestEthereumBlockHeight {
+	store := ctx.KVStore(k.storeKey)
+	key := types.MakeEthereumHeightVoteKey(valAddress)
+	bytes := store.Get(key)
+
+	if len(bytes) == 0 {
+		return types.LatestEthereumBlockHeight{
+			CosmosHeight:   0,
+			EthereumHeight: 0,
+		}
+	}
+
+	height := types.LatestEthereumBlockHeight{}
+	k.cdc.MustUnmarshal(bytes, &height)
+	return height
+}
+
+// SetEthereumHeightVoteRecord sets the latest observed heights per validator
+func (k Keeper) SetEthereumHeightVote(ctx sdk.Context, valAddress sdk.ValAddress, ethereumHeight uint64) {
+	store := ctx.KVStore(k.storeKey)
+	height := types.LatestEthereumBlockHeight{
+		EthereumHeight: ethereumHeight,
+		CosmosHeight:   uint64(ctx.BlockHeight()),
+	}
+	key := types.MakeEthereumHeightVoteKey(valAddress)
+	store.Set(key, k.cdc.MustMarshal(&height))
+}
+
+func (k Keeper) IterateEthereumHeightVotes(ctx sdk.Context, cb func(val sdk.ValAddress, height types.LatestEthereumBlockHeight) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, []byte{types.EthereumHeightVoteKey})
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		var height types.LatestEthereumBlockHeight
+		key := bytes.NewBuffer(bytes.TrimPrefix(iter.Key(), []byte{types.EthereumHeightVoteKey}))
+		val := sdk.ValAddress(key.Next(20))
+
+		k.cdc.MustUnmarshal(iter.Value(), &height)
+		if cb(val, height) {
+			break
+		}
+	}
+}
+
 /////////////////
 // MIGRATE     //
 /////////////////

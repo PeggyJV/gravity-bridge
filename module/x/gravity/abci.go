@@ -28,6 +28,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	outgoingTxSlashing(ctx, k)
 	eventVoteRecordTally(ctx, k)
+	updateObservedEthereumHeight(ctx, k)
 }
 
 func createBatchTxs(ctx sdk.Context, k keeper.Keeper) {
@@ -147,6 +148,80 @@ func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper) {
 				k.TryEventVoteRecord(ctx, att)
 			}
 		}
+	}
+}
+
+// Periodically, every orchestrator will submit their latest observed Ethereum and Cosmos heights in
+// order to keep this information current regardless of the level of bridge activity.
+//
+// We determine if we should update the latest heights based on the following criteria:
+// 1. A consensus of validators agrees that the proposed height is equal to or less than their
+//    last observed height, in order to reconcile the many different heights that will be submitted.
+//    The highest height that meets this criteria will be the proposed height.
+// 2. The proposed consensus heights from this process are greater than the values stored from the last time
+//    we observed an Ethereum event from the bridge
+func updateObservedEthereumHeight(ctx sdk.Context, k keeper.Keeper) {
+	// wait some minutes before checking the height votes
+	if ctx.BlockHeight()%50 != 0 {
+		return
+	}
+
+	ethereumHeightPowers := make(map[uint64]sdk.Int)
+	cosmosHeightPowers := make(map[uint64]sdk.Int)
+	// we can use the same value as event vote records for this threshold
+	requiredPower := types.EventVoteRecordPowerThreshold(k.StakingKeeper.GetLastTotalPower(ctx))
+
+	// populate the list
+	k.IterateEthereumHeightVotes(ctx, func(valAddres sdk.ValAddress, height types.LatestEthereumBlockHeight) bool {
+		if _, ok := ethereumHeightPowers[height.EthereumHeight]; !ok {
+			ethereumHeightPowers[height.EthereumHeight] = sdk.NewInt(0)
+		}
+
+		if _, ok := cosmosHeightPowers[height.CosmosHeight]; !ok {
+			cosmosHeightPowers[height.CosmosHeight] = sdk.NewInt(0)
+		}
+
+		return false
+	})
+
+	// vote on acceptable height values (less than or equal to the validator's observed value)
+	k.IterateEthereumHeightVotes(ctx, func(valAddress sdk.ValAddress, height types.LatestEthereumBlockHeight) bool {
+		validatorPower := sdk.NewInt(k.StakingKeeper.GetLastValidatorPower(ctx, valAddress))
+
+		for ethereumVoteHeight, ethereumPower := range ethereumHeightPowers {
+			if ethereumVoteHeight <= height.EthereumHeight {
+				ethereumHeightPowers[ethereumVoteHeight] = ethereumPower.Add(validatorPower)
+			}
+		}
+
+		for cosmosVoteHeight, cosmosPower := range cosmosHeightPowers {
+			if cosmosVoteHeight <= height.CosmosHeight {
+				cosmosHeightPowers[cosmosVoteHeight] = cosmosPower.Add(validatorPower)
+			}
+		}
+
+		return false
+	})
+
+	// find the highest height submitted that a consensus of validators agreed was acceptable
+	ethereumHeight := uint64(0)
+	cosmosHeight := uint64(0)
+
+	for ethereumVoteHeight, ethereumPower := range ethereumHeightPowers {
+		if ethereumVoteHeight > ethereumHeight && ethereumPower.GTE(requiredPower) {
+			ethereumHeight = ethereumVoteHeight
+		}
+	}
+
+	for cosmosVoteHeight, cosmosPower := range cosmosHeightPowers {
+		if cosmosVoteHeight > cosmosHeight && cosmosPower.GTE(requiredPower) {
+			cosmosHeight = cosmosVoteHeight
+		}
+	}
+
+	lastObservedHeights := k.GetLastObservedEthereumBlockHeight(ctx)
+	if ethereumHeight > lastObservedHeights.EthereumHeight && cosmosHeight > lastObservedHeights.CosmosHeight {
+		k.SetLastObservedEthereumBlockHeightWithCosmos(ctx, ethereumHeight, cosmosHeight)
 	}
 }
 
