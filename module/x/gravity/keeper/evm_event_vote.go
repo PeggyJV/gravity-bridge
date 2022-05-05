@@ -85,7 +85,7 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, chainID uint32, eventVoteRec
 				if event.GetEventNonce() != lastEventNonce+1 {
 					panic("attempting to apply events to state out of order")
 				}
-				k.setLastObservedEventNonce(ctx, chainID, event.GetEventNonce())
+				k.SetLastObservedEventNonce(ctx, chainID, event.GetEventNonce())
 				k.SetLastObservedEVMBlockHeight(ctx, chainID, event.GetEVMHeight())
 
 				eventVoteRecord.Accepted = true
@@ -210,17 +210,17 @@ func (k Keeper) GetLastObservedEVMBlockHeight(ctx sdk.Context, chainID uint32) t
 }
 
 // SetLastObservedEVMBlockHeight sets the block height in the store.
-func (k Keeper) SetLastObservedEVMBlockHeight(ctx sdk.Context, chainID uint32, ethereumHeight uint64) {
+func (k Keeper) SetLastObservedEVMBlockHeight(ctx sdk.Context, chainID uint32, evmHeight uint64) {
 	store := ctx.KVStore(k.StoreKey)
 	height := types.LatestEVMBlockHeight{
-		EVMHeight:    ethereumHeight,
+		EVMHeight:    evmHeight,
 		CosmosHeight: uint64(ctx.BlockHeight()),
 	}
 	store.Set(types.MakeLastEVMBlockHeightKey(chainID), k.Cdc.MustMarshal(&height))
 }
 
-// setLastObservedEventNonce sets the latest observed event nonce
-func (k Keeper) setLastObservedEventNonce(ctx sdk.Context, chainID uint32, nonce uint64) {
+// SetLastObservedEventNonce sets the latest observed event nonce
+func (k Keeper) SetLastObservedEventNonce(ctx sdk.Context, chainID uint32, nonce uint64) {
 	store := ctx.KVStore(k.StoreKey)
 	store.Set(types.MakeLastObservedEventNonceKey(chainID), sdk.Uint64ToBigEndian(nonce))
 }

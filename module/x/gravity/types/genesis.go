@@ -3,8 +3,6 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"time"
-
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -13,20 +11,12 @@ import (
 
 // DefaultParamspace defines the default auth module parameter subspace
 const (
-	// todo: implement oracle constants as params
-	DefaultParamspace     = ModuleName
-	EventVoteRecordPeriod = 24 * time.Hour // TODO: value????
+	DefaultParamspace = ModuleName
 )
 
 var (
 	// ParamsStoreKeyChainParams stores a map of chain ID to chain specific params
 	ParamsStoreKeyChainParams = []byte("ChainParams")
-
-	// ParamsStoreKeyBridgeContractAddress stores the contract address
-	ParamsStoreKeyBridgeContractAddress = []byte("BridgeContractAddress")
-
-	// ParamsStoreKeyBridgeContractChainID stores the bridge chain id
-	ParamsStoreKeyBridgeContractChainID = []byte("BridgeChainID")
 
 	// Ensure that params implements the proper interface
 	_ paramtypes.ParamSet = &Params{}
@@ -315,14 +305,6 @@ func validateSlashFractionEVMSignature(i interface{}) error {
 func validateSlashFractionConflictingEVMSignature(i interface{}) error {
 	// TODO: do we want to set some bounds on this value?
 	if _, ok := i.(sdk.Dec); !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	return nil
-}
-
-func validateChainIDs(i interface{}) error {
-	// TODO: do we want to set some bounds on this value?
-	if _, ok := i.([]uint32); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil

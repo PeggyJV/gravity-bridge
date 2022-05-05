@@ -58,7 +58,7 @@ func initGenesisForChain(ctx sdk.Context, k Keeper, data types.ChainGenesisState
 	}
 
 	// reset last observed event nonce
-	k.setLastObservedEventNonce(ctx, data.ChainID, data.LastObservedEventNonce)
+	k.SetLastObservedEventNonce(ctx, data.ChainID, data.LastObservedEventNonce)
 
 	// reset attestation state of all validators
 	for _, eventVoteRecord := range data.EvmEventVoteRecords {

@@ -369,7 +369,7 @@ func (k Keeper) getGravityID(ctx sdk.Context, chainID uint32) string {
 }
 
 // getDelegateKeys iterates both the EthAddress and Orchestrator address indexes to produce
-// a vector of MsgDelegateKeys entries containing all the delgate keys for state
+// a vector of MsgDelegateKeys entries containing all the delegate keys for state
 // export / import. This may seem at first glance to be excessively complicated, why not combine
 // the EthAddress and Orchestrator address indexes and simply iterate one thing? The answer is that
 // even though we set the Eth and Orchestrator address in the same place we use them differently we
@@ -509,8 +509,8 @@ func (k Keeper) GetLastObservedSignerSetTx(ctx sdk.Context, chainID uint32) *typ
 	return nil
 }
 
-// setLastObservedSignerSetTx updates the last observed validator set in the stor e
-func (k Keeper) setLastObservedSignerSetTx(ctx sdk.Context, chainID uint32, signerSet types.SignerSetTx) {
+// SetLastObservedSignerSetTx updates the last observed validator set in the store
+func (k Keeper) SetLastObservedSignerSetTx(ctx sdk.Context, chainID uint32, signerSet types.SignerSetTx) {
 	key := types.MakeLastObservedSignerSetKey(chainID)
 	ctx.KVStore(k.StoreKey).Set(key, k.Cdc.MustMarshal(&signerSet))
 }
@@ -574,8 +574,8 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 // MIGRATE     //
 /////////////////
 
-// Clean up all state associated a previous gravity contract and set a new contract. This is intended to run in the upgrade handler.
-// This implementation is partial at best. It doees not contain necessary functionality to freeze the bridge.
+// MigrateGravityContract Cleans up all state associated a previous gravity contract and set a new contract. This is intended to run in the upgrade handler.
+// This implementation is partial at best. It does not contain necessary functionality to freeze the bridge.
 // We will have yet to implement functionality to Migrate the Cosmos ERC20 tokens or any other ERC20 tokens bridged to the gravity contracts.
 // This just does keeper state cleanup if a new gravity contract has been deployed
 func (k Keeper) MigrateGravityContract(ctx sdk.Context, chainID uint32, newBridgeAddress string, bridgeDeploymentHeight uint64) {
@@ -609,7 +609,7 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, chainID uint32, newBridg
 	store.Set(types.MakeLatestSignerSetTxNonceKey(chainID), sdk.Uint64ToBigEndian(0))
 
 	// Reset all ethereum event nonces to zero
-	k.setLastObservedEventNonce(ctx, chainID, 0)
+	k.SetLastObservedEventNonce(ctx, chainID, 0)
 	k.iterateEVMEventVoteRecords(ctx, chainID, func(_ []byte, voteRecord *types.EVMEventVoteRecord) bool {
 		for _, vote := range voteRecord.Votes {
 			val, err := sdk.ValAddressFromBech32(vote)
@@ -640,7 +640,7 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, chainID uint32, newBridg
 
 	store.Set(types.MakeLastEVMBlockHeightKey(chainID), k.Cdc.MustMarshal(&height))
 
-	k.setLastObservedSignerSetTx(ctx, chainID, types.SignerSetTx{
+	k.SetLastObservedSignerSetTx(ctx, chainID, types.SignerSetTx{
 		Nonce:   0,
 		Height:  0,
 		Signers: nil,

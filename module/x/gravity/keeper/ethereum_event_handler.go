@@ -70,7 +70,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EVMEvent) (err error) {
 		// TODO here we should check the contents of the validator set against
 		// the store, if they differ we should take some action to indicate to the
 		// user that bridge highjacking has occurred
-		k.setLastObservedSignerSetTx(ctx, event.ChainID(), types.SignerSetTx{
+		k.SetLastObservedSignerSetTx(ctx, event.ChainID(), types.SignerSetTx{
 			Nonce:   event.SignerSetTxNonce,
 			Signers: event.Members,
 		})

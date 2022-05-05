@@ -333,7 +333,7 @@ func TestKeeper_GetLastObservedSignerSetTx(t *testing.T) {
 		gk := env.GravityKeeper
 
 		{ // setup
-			gk.setLastObservedSignerSetTx(ctx, types.EthereumChainID, types.SignerSetTx{
+			gk.SetLastObservedSignerSetTx(ctx, types.EthereumChainID, types.SignerSetTx{
 				Nonce:   1,
 				Height:  1,
 				Signers: nil,
@@ -583,9 +583,9 @@ func TestKeeper_Migration(t *testing.T) {
 	require.NotNil(t, gotFirstBatch)
 
 	gk.setEVMEventVoteRecord(ctx, types.EthereumChainID, stce.GetEventNonce(), stce.Hash(), evr)
-	gk.setLastObservedEventNonce(ctx, types.EthereumChainID, stce.GetEventNonce())
+	gk.SetLastObservedEventNonce(ctx, types.EthereumChainID, stce.GetEventNonce())
 	gk.setEVMEventVoteRecord(ctx, types.EthereumChainID, cctxe.GetEventNonce(), cctxe.Hash(), evr2)
-	gk.setLastObservedEventNonce(ctx, types.EthereumChainID, cctxe.GetEventNonce())
+	gk.SetLastObservedEventNonce(ctx, types.EthereumChainID, cctxe.GetEventNonce())
 
 	stored := gk.GetEVMEventVoteRecord(ctx, types.EthereumChainID, stce.GetEventNonce(), stce.Hash())
 	require.NotNil(t, stored)
@@ -625,7 +625,7 @@ func TestKeeper_Migration(t *testing.T) {
 	nonce := gk.GetLastObservedEventNonce(ctx, types.EthereumChainID)
 	require.Equal(t, cctxe.GetEventNonce(), nonce)
 
-	gk.setLastObservedSignerSetTx(ctx, types.EthereumChainID, types.SignerSetTx{
+	gk.SetLastObservedSignerSetTx(ctx, types.EthereumChainID, types.SignerSetTx{
 		Nonce:   1,
 		Height:  1,
 		Signers: nil,
