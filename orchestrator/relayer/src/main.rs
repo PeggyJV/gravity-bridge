@@ -42,7 +42,7 @@ lazy_static! {
             --ethereum-key=<ekey>        An Ethereum private key containing non-trivial funds
             --cosmos-grpc=<gurl>         The Cosmos gRPC url
             --address-prefix=<prefix>    The prefix for addresses on this Cosmos chain
-            --ethereum-grpc=<eurl>       The Ethereum RPC url, Geth light clients work and sync fast
+            --ethereum-rpc=<eurl>        The Ethereum RPC url, Geth light clients work and sync fast
             --contract-address=<addr>    The Ethereum contract address for Gravity
         About:
             The Gravity relayer component, responsible for relaying data from the Cosmos blockchain
