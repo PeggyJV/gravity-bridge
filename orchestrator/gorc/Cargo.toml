@@ -31,7 +31,6 @@ rand_core = { version = "0.6", features = ["std"] }
 openssl-probe = "0.1.4"
 
 abscissa_tokio = { version = "0.6.0-rc.0", features = ["actix"] }
-web30 = "0.15"
 tokio = "1"
 tonic = "0.4"
 toml = "0.5"
