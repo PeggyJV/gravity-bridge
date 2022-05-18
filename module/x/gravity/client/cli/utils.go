@@ -7,8 +7,8 @@ import (
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
-// ParseCommunityPoolEthereumSpendProposal reads and parses a CommunityPoolEthereumSpendProposalForCLI from a file.
-func ParseCommunityPoolEthereumSpendProposal(cdc codec.JSONCodec, proposalFile string) (types.CommunityPoolEVMSpendProposalForCLI, error) {
+// ParseCommunityPoolEVMSpendProposal reads and parses a CommunityPoolEVMSpendProposalForCLI from a file.
+func ParseCommunityPoolEVMSpendProposal(cdc codec.JSONCodec, proposalFile string) (types.CommunityPoolEVMSpendProposalForCLI, error) {
 	proposal := types.CommunityPoolEVMSpendProposalForCLI{}
 
 	contents, err := ioutil.ReadFile(proposalFile)

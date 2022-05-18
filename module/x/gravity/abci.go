@@ -33,6 +33,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	for chainID, _ := range params.ChainParams {
 		outgoingTxSlashing(ctx, k, chainID)
 		eventVoteRecordTally(ctx, k, chainID)
+		updateObservedEVMHeight(ctx, k, chainID)
 	}
 }
 
@@ -156,7 +157,81 @@ func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	}
 }
 
-// cleanupTimedOutBatchTxs deletes batches that have passed their expiration on EVM
+// Periodically, every orchestrator will submit their latest observed Ethereum and Cosmos heights in
+// order to keep this information current regardless of the level of bridge activity.
+//
+// We determine if we should update the latest heights based on the following criteria:
+// 1. A consensus of validators agrees that the proposed height is equal to or less than their
+//    last observed height, in order to reconcile the many different heights that will be submitted.
+//    The highest height that meets this criteria will be the proposed height.
+// 2. The proposed consensus heights from this process are greater than the values stored from the last time
+//    we observed an EVM event from the bridge
+func updateObservedEVMHeight(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
+	// wait some minutes before checking the height votes
+	if ctx.BlockHeight()%50 != 0 {
+		return
+	}
+
+	evmHeightPowers := make(map[uint64]sdk.Int)
+	cosmosHeightPowers := make(map[uint64]sdk.Int)
+	// we can use the same value as event vote records for this threshold
+	requiredPower := types.EventVoteRecordPowerThreshold(k.StakingKeeper.GetLastTotalPower(ctx))
+
+	// populate the list
+	k.IterateEVMHeightVotes(ctx, func(valAddres sdk.ValAddress, height types.LatestEVMBlockHeight) bool {
+		if _, ok := evmHeightPowers[height.EVMHeight]; !ok {
+			evmHeightPowers[height.EVMHeight] = sdk.NewInt(0)
+		}
+
+		if _, ok := cosmosHeightPowers[height.CosmosHeight]; !ok {
+			cosmosHeightPowers[height.CosmosHeight] = sdk.NewInt(0)
+		}
+
+		return false
+	})
+
+	// vote on acceptable height values (less than or equal to the validator's observed value)
+	k.IterateEVMHeightVotes(ctx, func(valAddress sdk.ValAddress, height types.LatestEVMBlockHeight) bool {
+		validatorPower := sdk.NewInt(k.StakingKeeper.GetLastValidatorPower(ctx, valAddress))
+
+		for evmVoteHeight, evmPower := range evmHeightPowers {
+			if evmVoteHeight <= height.EVMHeight {
+				evmHeightPowers[evmVoteHeight] = evmPower.Add(validatorPower)
+			}
+		}
+
+		for cosmosVoteHeight, cosmosPower := range cosmosHeightPowers {
+			if cosmosVoteHeight <= height.CosmosHeight {
+				cosmosHeightPowers[cosmosVoteHeight] = cosmosPower.Add(validatorPower)
+			}
+		}
+
+		return false
+	})
+
+	// find the highest height submitted that a consensus of validators agreed was acceptable
+	evmHeight := uint64(0)
+	cosmosHeight := uint64(0)
+
+	for evmVoteHeight, evmPower := range evmHeightPowers {
+		if evmVoteHeight > evmHeight && evmPower.GTE(requiredPower) {
+			evmHeight = evmVoteHeight
+		}
+	}
+
+	for cosmosVoteHeight, cosmosPower := range cosmosHeightPowers {
+		if cosmosVoteHeight > cosmosHeight && cosmosPower.GTE(requiredPower) {
+			cosmosHeight = cosmosVoteHeight
+		}
+	}
+
+	lastObservedHeights := k.GetLastObservedEVMBlockHeight(ctx, chainID)
+	if evmHeight > lastObservedHeights.EVMHeight && cosmosHeight > lastObservedHeights.CosmosHeight {
+		k.SetLastObservedEVMBlockHeightWithCosmos(ctx, chainID, evmHeight, cosmosHeight)
+	}
+}
+
+// cleanupTimedOutBatchTxs deletes batches that have passed their expiration on Ethereum
 // keep in mind several things when modifying this function
 // A) unlike nonces timeouts are not monotonically increasing, meaning batch 5 can have a later timeout than batch 6
 //    this means that we MUST only cleanup a single batch at a time

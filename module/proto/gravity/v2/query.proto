@@ -148,6 +148,12 @@ service Query {
     // option (google.api.http).get =
     // "/gravity/v1/delegate_keys";
   }
+
+  rpc LastObservedEVMHeight(LastObservedEVMHeightRequest)
+      returns (LastObservedEVMHeightResponse) {
+    // option (google.api.http).get =
+    // "/gravity/v1/last_observed_evm_height"
+  }
 }
 
 //  rpc Params
@@ -354,4 +360,12 @@ message UnbatchedSendToEVMsRequest {
 message UnbatchedSendToEVMsResponse {
   repeated SendToEVM send_to_evms = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+
+message LastObservedEVMHeightRequest {
+  uint32 chain_id = 1;
+}
+message LastObservedEVMHeightResponse {
+  LatestEVMBlockHeight last_observed_evm_height = 1;
 }

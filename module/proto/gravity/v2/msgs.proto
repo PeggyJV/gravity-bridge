@@ -21,6 +21,9 @@ service Msg {
       returns (MsgSubmitEVMTxConfirmationResponse) {}
   rpc SubmitEVMEvent(MsgSubmitEVMEvent)
       returns (MsgSubmitEVMEventResponse) {}
+  rpc SubmitEVMHeightVote(MsgEVMHeightVote)
+      returns (MsgEVMHeightVoteResponse) {
+  }
 }
 
 // MsgSendToEVM submits a SendToEVM attempt to bridge an asset over to
@@ -136,6 +139,17 @@ message DelegateKeysSignMsg {
   string validator_address = 1;
   uint64 nonce = 2;
 }
+
+// Periodic update of latest observed EVM and Cosmos heights from the
+// orchestrator
+message MsgEVMHeightVote {
+  uint64 evm_height = 1;
+  string signer = 2;
+  uint32 chain_id = 3;
+}
+
+message MsgEVMHeightVoteResponse {}
+
 
 ////////////
 // Events //

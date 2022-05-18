@@ -15,6 +15,7 @@ var (
 	_ sdk.Msg = &MsgRequestBatchTx{}
 	_ sdk.Msg = &MsgSubmitEVMEvent{}
 	_ sdk.Msg = &MsgSubmitEVMTxConfirmation{}
+	_ sdk.Msg = &MsgEVMHeightVote{}
 
 	_ cdctypes.UnpackInterfacesMessage = &MsgSubmitEVMEvent{}
 	_ cdctypes.UnpackInterfacesMessage = &MsgSubmitEVMTxConfirmation{}
@@ -283,6 +284,49 @@ func (msg MsgCancelSendToEVM) GetSignBytes() []byte {
 // GetSigners defines whose signature is required
 func (msg MsgCancelSendToEVM) GetSigners() []sdk.AccAddress {
 	acc, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+
+	return []sdk.AccAddress{acc}
+}
+
+// NewMsgEVMHeightVote returns a new MsgEVMHeightVote
+func NewMsgEVMHeightVote(chainID uint32, ethereumHeight uint64, signer sdk.AccAddress) *MsgEVMHeightVote {
+	return &MsgEVMHeightVote{
+		EvmHeight: ethereumHeight,
+		Signer:    signer.String(),
+		ChainId:   chainID,
+	}
+}
+
+// Route should return the name of the module
+func (msg MsgEVMHeightVote) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgEVMHeightVote) Type() string { return "ethereum_height_vote" }
+
+// ValidateBasic performs stateless checks
+func (msg MsgEVMHeightVote) ValidateBasic() error {
+	if msg.EvmHeight == 0 {
+		return sdkerrors.Wrap(ErrInvalid, "ethereum height cannot be 0")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Signer)
+	}
+
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgEVMHeightVote) GetSignBytes() []byte {
+	panic(fmt.Errorf("deprecated"))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgEVMHeightVote) GetSigners() []sdk.AccAddress {
+	acc, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		panic(err)
 	}

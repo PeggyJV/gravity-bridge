@@ -45,6 +45,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdDelegateKeysByEthereumSigner(),
 		CmdDelegateKeysByOrchestrator(),
 		CmdDelegateKeys(),
+		CmdLastObservedEVMHeight(),
 	)
 
 	return gravityQueryCmd
@@ -798,6 +799,32 @@ func CmdDelegateKeys() *cobra.Command {
 			}
 
 			res, err := queryClient.DelegateKeys(cmd.Context(), &types.DelegateKeysRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdLastObservedEVMHeight() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "last-observed-evm-height [chain-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "query the last observed evm and cosmos heights",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
+			if err != nil {
+				return err
+			}
+
+			chainID := uint32(sdk.NewUintFromString(args[0]).Uint64())
+
+			res, err := queryClient.LastObservedEVMHeight(cmd.Context(), &types.LastObservedEVMHeightRequest{ChainId: chainID})
 			if err != nil {
 				return err
 			}

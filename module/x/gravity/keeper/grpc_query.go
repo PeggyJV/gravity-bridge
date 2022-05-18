@@ -482,3 +482,14 @@ func (k Keeper) DelegateKeys(c context.Context, req *types.DelegateKeysRequest) 
 	}
 	return res, nil
 }
+
+func (k Keeper) LastObservedEVMHeight(c context.Context, req *types.LastObservedEVMHeightRequest) (*types.LastObservedEVMHeightResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	lastObservedEthereumHeight := k.GetLastObservedEVMBlockHeight(ctx, req.ChainId)
+
+	res := &types.LastObservedEVMHeightResponse{
+		LastObservedEvmHeight: &lastObservedEthereumHeight,
+	}
+
+	return res, nil
+}

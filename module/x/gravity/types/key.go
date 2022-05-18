@@ -60,6 +60,9 @@ const (
 
 	// LastObservedSignerSetKey index the last observed signer set
 	LastObservedSignerSetKey
+
+	// EVMHeightVoteKey indexes the latest heights observed by each validator
+	EVMHeightVoteKey
 )
 
 ////////////////////
@@ -237,4 +240,8 @@ func ValidatorToEVMAddressKeyPrefix() []byte {
 
 func EVMToOrchestratorAddressKeyPrefix() []byte {
 	return []byte{EVMToOrchestratorAddressKey}
+}
+
+func MakeEVMHeightVoteKey(chainID uint32, validator sdk.ValAddress) []byte {
+	return bytes.Join([][]byte{{EVMHeightVoteKey}, Uint32ToBigEndian(chainID), validator.Bytes()}, []byte{})
 }

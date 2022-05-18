@@ -312,6 +312,19 @@ func (k msgServer) CancelSendToEVM(c context.Context, msg *types.MsgCancelSendTo
 	return &types.MsgCancelSendToEVMResponse{}, nil
 }
 
+func (k msgServer) SubmitEVMHeightVote(c context.Context, msg *types.MsgEVMHeightVote) (*types.MsgEVMHeightVoteResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	val, err := k.getSignerValidator(ctx, msg.Signer)
+	if err != nil {
+		return nil, err
+	}
+
+	k.Keeper.SetEVMHeightVote(ctx, msg.ChainId, val, msg.EvmHeight)
+
+	return &types.MsgEVMHeightVoteResponse{}, nil
+}
+
 // getSignerValidator takes an sdk.AccAddress that represents either a validator or orchestrator address and returns
 // the assoicated validator address
 func (k Keeper) getSignerValidator(ctx sdk.Context, signerString string) (sdk.ValAddress, error) {

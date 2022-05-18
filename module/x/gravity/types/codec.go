@@ -45,6 +45,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgSubmitEVMEvent{},
 		&MsgSubmitEVMTxConfirmation{},
 		&MsgDelegateKeys{},
+		&MsgEVMHeightVote{},
 	)
 
 	registry.RegisterInterface(

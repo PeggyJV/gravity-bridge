@@ -34,7 +34,7 @@ jobs:
       - name: checkout-code
         uses: actions/checkout@v2
         with: 
-          toolchain: 1.56 
+          toolchain: 1.58
       # Golang Cache
       - name: go-cache
         uses: actions/cache@v2

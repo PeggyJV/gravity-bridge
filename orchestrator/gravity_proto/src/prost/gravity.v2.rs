@@ -300,6 +300,17 @@ pub struct DelegateKeysSignMsg {
     #[prost(uint64, tag = "2")]
     pub nonce: u64,
 }
+/// Periodic update of latest observed Ethereum and Cosmos heights from the
+/// orchestrator
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MsgEthereumHeightVote {
+    #[prost(uint64, tag = "1")]
+    pub ethereum_height: u64,
+    #[prost(string, tag = "2")]
+    pub signer: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MsgEthereumHeightVoteResponse {}
 ////////////
 // Events //
 ////////////
@@ -511,6 +522,21 @@ pub mod msg_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/gravity.v2.Msg/SubmitEVMEvent");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn submit_ethereum_height_vote(
+            &mut self,
+            request: impl tonic::IntoRequest<super::MsgEthereumHeightVote>,
+        ) -> Result<tonic::Response<super::MsgEthereumHeightVoteResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path =
+                http::uri::PathAndQuery::from_static("/gravity.v1.Msg/SubmitEthereumHeightVote");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
