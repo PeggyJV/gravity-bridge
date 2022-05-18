@@ -23,5 +23,19 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 
 // Migrate2to3 migrates from consensus version 2 to 3.
 func (m Migrator) Migrate2to3(ctx sdk.Context) error {
-	return v2.MigrateStore(ctx, &m.keeper)
+	newKeeper := v2.NewKeeper{
+		StakingKeeper:          m.keeper.StakingKeeper,
+		StoreKey:               m.keeper.StoreKey,
+		ParamSpace:             m.keeper.ParamSpace,
+		Cdc:                    m.keeper.Cdc,
+		AccountKeeper:          m.keeper.AccountKeeper,
+		BankKeeper:             m.keeper.BankKeeper,
+		SlashingKeeper:         m.keeper.SlashingKeeper,
+		DistributionKeeper:     m.keeper.DistributionKeeper,
+		PowerReduction:         m.keeper.PowerReduction,
+		ReceiverModuleAccounts: m.keeper.ReceiverModuleAccounts,
+		SenderModuleAccounts:   m.keeper.SenderModuleAccounts,
+	}
+
+	return v2.MigrateStore(ctx, &newKeeper)
 }

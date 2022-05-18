@@ -8,8 +8,8 @@ import (
 )
 
 // ParseCommunityPoolEthereumSpendProposal reads and parses a CommunityPoolEthereumSpendProposalForCLI from a file.
-func ParseCommunityPoolEthereumSpendProposal(cdc codec.JSONCodec, proposalFile string) (types.CommunityPoolEthereumSpendProposalForCLI, error) {
-	proposal := types.CommunityPoolEthereumSpendProposalForCLI{}
+func ParseCommunityPoolEthereumSpendProposal(cdc codec.JSONCodec, proposalFile string) (types.CommunityPoolEVMSpendProposalForCLI, error) {
+	proposal := types.CommunityPoolEVMSpendProposalForCLI{}
 
 	contents, err := ioutil.ReadFile(proposalFile)
 	if err != nil {

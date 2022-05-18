@@ -6,7 +6,7 @@ import (
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/client/rest"
 )
 
-// ProposalHandler is the community Ethereum spend proposal handler.
+// ProposalHandler is the community EVM spend proposal handler.
 var (
-	ProposalHandler = govclient.NewProposalHandler(cli.CmdSubmitCommunityPoolEthereumSpendProposal, rest.ProposalRESTHandler)
+	ProposalHandler = govclient.NewProposalHandler(cli.CmdSubmitCommunityPoolEVMSpendProposal, rest.ProposalRESTHandler)
 )

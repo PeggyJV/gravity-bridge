@@ -31,7 +31,7 @@ func postProposalHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		content := types.NewCommunityPoolEthereumSpendProposal(req.Title, req.Description, req.Recipient, req.Amount, req.BridgeFee)
+		content := types.NewCommunityPoolEVMSpendProposal(req.Title, req.ChainID, req.Description, req.Recipient, req.Amount, req.BridgeFee)
 
 		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, req.Proposer)
 		if rest.CheckBadRequestError(w, err) {

@@ -18,7 +18,7 @@ import (
 // based on the events (i.e. orchestrators)
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	params := k.GetParams(ctx)
-	for _, chainID := range params.ChainIds {
+	for chainID, _ := range params.ChainParams {
 		cleanupTimedOutBatchTxs(ctx, k, chainID)
 		cleanupTimedOutContractCallTxs(ctx, k, chainID)
 		createSignerSetTxs(ctx, k, chainID)
@@ -30,7 +30,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 // EndBlocker is called at the end of every block
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	params := k.GetParams(ctx)
-	for _, chainID := range params.ChainIds {
+	for chainID, _ := range params.ChainParams {
 		outgoingTxSlashing(ctx, k, chainID)
 		eventVoteRecordTally(ctx, k, chainID)
 	}
@@ -91,7 +91,7 @@ func createSignerSetTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 }
 
 func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
-	params := k.GetParams(ctx)
+	params := k.GetParams(ctx).ChainParams[chainID]
 	// Validator set pruning
 	// prune all validator sets with a nonce less than the
 	// last observed nonce, they can't be submitted any longer
@@ -199,7 +199,7 @@ func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper, chainID ui
 }
 
 func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
-	params := k.GetParams(ctx)
+	params := k.GetParams(ctx).ChainParams[chainID]
 	maxHeight := uint64(0)
 	if uint64(ctx.BlockHeight()) > params.SignedBatchesWindow {
 		maxHeight = uint64(ctx.BlockHeight()) - params.SignedBatchesWindow

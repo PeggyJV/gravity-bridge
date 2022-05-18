@@ -250,10 +250,11 @@ func (msg MsgRequestBatchTx) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCancelSendToEVM returns a new MsgCancelSendToEVM
-func NewMsgCancelSendToEVM(id uint64, orchestrator sdk.AccAddress) *MsgCancelSendToEVM {
+func NewMsgCancelSendToEVM(chainID uint32, id uint64, orchestrator sdk.AccAddress) *MsgCancelSendToEVM {
 	return &MsgCancelSendToEVM{
-		Id:     id,
-		Sender: orchestrator.String(),
+		Id:      id,
+		Sender:  orchestrator.String(),
+		ChainId: chainID,
 	}
 }
 

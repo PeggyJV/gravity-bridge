@@ -12,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/spf13/cobra"
 
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
 func GetTxCmd(storeKey string) *cobra.Command {
@@ -71,7 +71,7 @@ func CmdSendToEthereum() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgSendToEthereum(uint32(chainID), from, common.HexToAddress(args[0]).Hex(), sendCoin, feeCoin)
+			msg := types.NewMsgSendToEVM(uint32(chainID), from, common.HexToAddress(args[0]).Hex(), sendCoin, feeCoin)
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -110,7 +110,7 @@ func CmdCancelSendToEthereum() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgCancelSendToEthereum(uint32(chainID), id, from)
+			msg := types.NewMsgCancelSendToEVM(uint32(chainID), id, from)
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}

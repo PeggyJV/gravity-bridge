@@ -10,6 +10,7 @@ type (
 	CommunityPoolEthereumSpendProposalReq struct {
 		BaseReq rest.BaseReq `json:"base_req" yaml:"base_req"`
 
+		ChainID     uint32         `json:"chain_id" yaml:"chain_id"`
 		Title       string         `json:"title" yaml:"title"`
 		Description string         `json:"description" yaml:"description"`
 		Recipient   string         `json:"recipient" yaml:"recipient"`

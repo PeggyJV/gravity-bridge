@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/peggyjv/gravity-bridge/module/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	"github.com/spf13/cobra"
 )
 
@@ -498,7 +498,7 @@ func CmdLatestSignerSetTx() *cobra.Command {
 
 func CmdLastSubmittedEthereumEvent() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "last-submitted-ethereum-event [validator-or-orchestrator-acc-address]",
+		Use:   "last-submitted-ethereum-event [chain-id] [validator-or-orchestrator-acc-address]",
 		Args:  cobra.ExactArgs(1),
 		Short: "query for the last event nonce that was submitted by a given validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -507,13 +507,16 @@ func CmdLastSubmittedEthereumEvent() *cobra.Command {
 				return err
 			}
 
-			address, err := sdk.AccAddressFromBech32(args[0])
+			chainID := sdk.NewUintFromString(args[0])
+
+			address, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			res, err := queryClient.LastSubmittedEthereumEvent(cmd.Context(), &types.LastSubmittedEthereumEventRequest{
+			res, err := queryClient.LastSubmittedEVMEvent(cmd.Context(), &types.LastSubmittedEVMEventRequest{
 				Address: address.String(),
+				ChainId: uint32(chainID.Uint64()),
 			})
 
 			if err != nil {
@@ -650,8 +653,8 @@ func CmdDenomToERC20() *cobra.Command {
 
 func CmdUnbatchedSendToEthereums() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unbatched-send-to-ethereums [sender-address]",
-		Args:  cobra.MaximumNArgs(1),
+		Use:   "unbatched-send-to-ethereums [sender-address] [chain-id]",
+		Args:  cobra.MaximumNArgs(2),
 		Short: "query all unbatched send to ethereum messages",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
@@ -669,9 +672,12 @@ func CmdUnbatchedSendToEthereums() *cobra.Command {
 				return err
 			}
 
-			res, err := queryClient.UnbatchedSendToEthereums(cmd.Context(), &types.UnbatchedSendToEthereumsRequest{
+			chainID := uint32(sdk.NewUintFromString(args[1]).Uint64())
+
+			res, err := queryClient.UnbatchedSendToEVMs(cmd.Context(), &types.UnbatchedSendToEVMsRequest{
 				SenderAddress: sender.String(),
 				Pagination:    pageReq,
+				ChainId:       chainID,
 			})
 
 			if err != nil {
@@ -733,9 +739,8 @@ func CmdDelegateKeysByEthereumSigner() *cobra.Command {
 			if !common.IsHexAddress(args[0]) {
 				return fmt.Errorf("address is not an etheruem address")
 			}
-
-			res, err := queryClient.DelegateKeysByEthereumSigner(cmd.Context(), &types.DelegateKeysByEthereumSignerRequest{
-				EthereumSigner: args[0],
+			res, err := queryClient.DelegateKeysByEVMSigner(cmd.Context(), &types.DelegateKeysByEVMSignerRequest{
+				EVMSigner: args[0],
 			})
 			if err != nil {
 				return err

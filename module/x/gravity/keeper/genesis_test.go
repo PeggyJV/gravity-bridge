@@ -23,12 +23,12 @@ func TestExportAndImport(t *testing.T) {
 	keeper.setEVMOrchestratorAddress(ctx, ethAddr, orchAddr)
 	keeper.SetOrchestratorValidatorAddress(ctx, valAddr, orchAddr)
 
-	exportedGenesis := ExportGenesis(ctx, keeper)
+	exportedGenesis := ExportGenesisMultiChain(ctx, keeper)
 	newEnv := CreateTestEnv(t)
 	newCtx := newEnv.Context
 	newKeeper := newEnv.GravityKeeper
 
-	InitGenesis(newCtx, newKeeper, exportedGenesis)
+	InitGenesisMultiChain(newCtx, newKeeper, exportedGenesis)
 
 	assert.Equal(t, newKeeper.GetValidatorEVMAddress(newCtx, valAddr), ethAddr)
 	assert.Equal(t, newKeeper.GetEVMOrchestratorAddress(newCtx, ethAddr), orchAddr)
