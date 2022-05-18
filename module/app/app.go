@@ -410,7 +410,7 @@ func NewGravityApp(
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.distrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.upgradeKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.ibcKeeper.ClientKeeper)).
-		AddRoute(gravitytypes.RouterKey, gravity.NewCommunityPoolEthereumSpendProposalHandler(app.gravityKeeper))
+		AddRoute(gravitytypes.RouterKey, gravity.NewCommunityPoolEVMSpendProposalHandler(app.gravityKeeper))
 
 	app.govKeeper = govkeeper.NewKeeper(
 		appCodec,
