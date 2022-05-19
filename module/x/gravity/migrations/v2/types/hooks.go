@@ -12,10 +12,6 @@ type GravityHooks interface {
 
 type MultiGravityHooks []GravityHooks
 
-func NewMultiGravityHooks(hooks ...GravityHooks) MultiGravityHooks {
-	return hooks
-}
-
 func (mghs MultiGravityHooks) AfterContractCallExecutedEvent(ctx sdk.Context, event ContractCallExecutedEvent) {
 	for i := range mghs {
 		mghs[i].AfterContractCallExecutedEvent(ctx, event)

@@ -61,6 +61,7 @@ func MigrateStore(ctx sdk.Context, newK *NewKeeper) error {
 	migrateEVMBlockHeight(ctx, newK, &oldK)
 	migrateSendToEVMs(ctx, newK, &oldK)
 	migrateEVMEventVoteRecords(ctx, newK, &oldK)
+	migrateEVMEventHeightVotes(ctx, newK, &oldK)
 
 	// delegate keys (not chain specific but need the new proto encoding)
 	migrateDelegateKeys(ctx, newK, &oldK)
@@ -374,18 +375,18 @@ func migrateBatchTXs(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
 }
 
 func migrateContractCallTxs(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
-	var oldBatchTxs []*oldTypes.ContractCallTx
+	var oldContractCallTxs []*oldTypes.ContractCallTx
 
 	oldK.IterateOutgoingTxsByType(ctx, oldTypes.ContractCallTxPrefixByte, func(key []byte, outgoing oldTypes.OutgoingTx) (stop bool) {
-		oldBatchTxs = append(oldBatchTxs, outgoing.(*oldTypes.ContractCallTx))
+		oldContractCallTxs = append(oldContractCallTxs, outgoing.(*oldTypes.ContractCallTx))
 		return false
 	})
 
-	for _, otx := range oldBatchTxs {
+	for _, otx := range oldContractCallTxs {
 		oldK.DeleteOutgoingTx(ctx, otx.GetStoreIndex())
 	}
 
-	for _, otx := range oldBatchTxs {
+	for _, otx := range oldContractCallTxs {
 		var tokens []types.ERC20Token
 		var fees []types.ERC20Token
 
@@ -487,6 +488,36 @@ func migrateEVMEventVoteRecords(ctx sdk.Context, newK *NewKeeper, oldK *oldKeepe
 			Votes:    oldRecord.Votes,
 			Accepted: oldRecord.Accepted,
 			ChainId:  types.EthereumChainID,
+		}
+
+		store.Set(newKey, newK.Cdc.MustMarshal(&newRecord))
+	}
+}
+
+func migrateEVMEventHeightVotes(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
+	store := ctx.KVStore(newK.StoreKey)
+	iter := prefix.NewStore(store, []byte{oldTypes.EthereumHeightVoteKey}).Iterator(nil, nil)
+	defer iter.Close()
+
+	var oldKeys [][]byte
+	var oldVotes []*oldTypes.LatestEthereumBlockHeight
+
+	for ; iter.Valid(); iter.Next() {
+		var oldVote oldTypes.LatestEthereumBlockHeight
+		oldK.Cdc.MustUnmarshal(iter.Value(), &oldVote)
+		oldKeys = append(oldKeys, iter.Key())
+		oldVotes = append(oldVotes, &oldVote)
+	}
+
+	for i, key := range oldKeys {
+		store.Delete(key)
+		newKey := bytes.Join([][]byte{{types.EVMHeightVoteKey}, types.Uint32ToBigEndian(types.EthereumChainID), key[:1]}, []byte{})
+
+		oldVote := oldVotes[i]
+		newRecord := types.LatestEVMBlockHeight{
+			EVMHeight:    oldVote.EthereumHeight,
+			CosmosHeight: oldVote.CosmosHeight,
+			ChainId:      types.EthereumChainID,
 		}
 
 		store.Set(newKey, newK.Cdc.MustMarshal(&newRecord))
