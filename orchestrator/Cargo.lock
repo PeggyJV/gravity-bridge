@@ -2227,7 +2227,7 @@ checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 
 [[package]]
 name = "gorc"
-version = "2.0.0"
+version = "2.0.1"
 dependencies = [
  "abscissa_core",
  "abscissa_tokio",
@@ -3252,7 +3252,7 @@ dependencies = [
 
 [[package]]
 name = "orchestrator"
-version = "2.0.0"
+version = "2.0.1"
 dependencies = [
  "actix-rt 2.5.0",
  "axum",

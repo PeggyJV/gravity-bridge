@@ -35,6 +35,7 @@ pub async fn check_for_events(
     gravity_contract_address: EthAddress,
     cosmos_key: CosmosPrivateKey,
     starting_block: U64,
+    blocks_to_search: U64,
     block_delay: U64,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) -> Result<U64, GravityError> {
@@ -42,6 +43,11 @@ pub async fn check_for_events(
     let our_cosmos_address = cosmos_key.to_address(&prefix).unwrap();
     let latest_block = get_block_number_with_retry(eth_client.clone()).await;
     let latest_block = latest_block - block_delay;
+
+    let mut ending_block = starting_block + blocks_to_search;
+    if ending_block > latest_block {
+        ending_block = latest_block;
+    }
 
     metrics::set_ethereum_check_for_events_starting_block(starting_block.as_u64());
     metrics::set_ethereum_check_for_events_end_block(latest_block.as_u64());
@@ -64,7 +70,7 @@ pub async fn check_for_events(
         .address(filter_gravity_contract_address.clone())
         .event(&ValsetUpdatedEventFilter::abi_signature());
 
-    let search_range = starting_block..latest_block;
+    let search_range = starting_block..ending_block;
 
     // select uses an inclusive version of the range
     erc20_deployed_filter = erc20_deployed_filter.select(search_range.clone());
@@ -233,8 +239,9 @@ pub async fn check_for_events(
         }
     }
 
-    Ok(latest_block)
+    Ok(ending_block)
 }
+
 
 /// The number of blocks behind the 'latest block' on Ethereum our event checking should be.
 /// Ethereum does not have finality and as such is subject to chain reorgs and temporary forks
