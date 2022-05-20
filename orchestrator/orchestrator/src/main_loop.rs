@@ -211,6 +211,7 @@ pub async fn eth_oracle_main_loop(
                     gravity_contract_address,
                     cosmos_key,
                     last_checked_block,
+                    blocks_to_search.into(),
                     block_delay,
                     msg_sender.clone(),
                 )
