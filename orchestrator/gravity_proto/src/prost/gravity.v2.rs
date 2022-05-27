@@ -122,7 +122,7 @@ pub struct IdSet {
     pub ids: ::prost::alloc::vec::Vec<u64>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CommunityPoolEthereumSpendProposal {
+pub struct CommunityPoolEvmSpendProposal {
     #[prost(string, tag = "1")]
     pub title: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
@@ -136,10 +136,10 @@ pub struct CommunityPoolEthereumSpendProposal {
     #[prost(uint32, tag = "6")]
     pub chain_id: u32,
 }
-/// This format of the community spend Ethereum proposal is specifically for
+/// This format of the community spend EVM proposal is specifically for
 /// the CLI to allow simple text serialization.
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CommunityPoolEthereumSpendProposalForCli {
+pub struct CommunityPoolEvmSpendProposalForCli {
     #[prost(string, tag = "1")]
     pub title: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
@@ -300,17 +300,19 @@ pub struct DelegateKeysSignMsg {
     #[prost(uint64, tag = "2")]
     pub nonce: u64,
 }
-/// Periodic update of latest observed Ethereum and Cosmos heights from the
+/// Periodic update of latest observed EVM and Cosmos heights from the
 /// orchestrator
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct MsgEthereumHeightVote {
+pub struct MsgEvmHeightVote {
     #[prost(uint64, tag = "1")]
-    pub ethereum_height: u64,
+    pub evm_height: u64,
     #[prost(string, tag = "2")]
     pub signer: ::prost::alloc::string::String,
+    #[prost(uint32, tag = "3")]
+    pub chain_id: u32,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct MsgEthereumHeightVoteResponse {}
+pub struct MsgEvmHeightVoteResponse {}
 ////////////
 // Events //
 ////////////
@@ -524,10 +526,10 @@ pub mod msg_client {
             let path = http::uri::PathAndQuery::from_static("/gravity.v2.Msg/SubmitEVMEvent");
             self.inner.unary(request.into_request(), path, codec).await
         }
-        pub async fn submit_ethereum_height_vote(
+        pub async fn submit_evm_height_vote(
             &mut self,
-            request: impl tonic::IntoRequest<super::MsgEthereumHeightVote>,
-        ) -> Result<tonic::Response<super::MsgEthereumHeightVoteResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::MsgEvmHeightVote>,
+        ) -> Result<tonic::Response<super::MsgEvmHeightVoteResponse>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
                     tonic::Code::Unknown,
@@ -535,8 +537,7 @@ pub mod msg_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Msg/SubmitEthereumHeightVote");
+            let path = http::uri::PathAndQuery::from_static("/gravity.v2.Msg/SubmitEVMHeightVote");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
@@ -592,7 +593,7 @@ pub mod msg_client {
 /// when the attestation is created, but only allows for slashing once the event
 /// has passed
 ///
-/// target_eth_tx_timeout:
+/// target_evm_tx_timeout:
 ///
 /// This is the 'target' value for when EVM transactions time out, this is a
 /// target because EVM is a probabilistic chain and you can't say for sure
@@ -616,6 +617,11 @@ pub mod msg_client {
 /// submitting a different EVM_signature for the same EVM event
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Params {
+    #[prost(map = "uint32, message", tag = "1")]
+    pub chain_params: ::std::collections::HashMap<u32, ChainParams>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ChainParams {
     #[prost(string, tag = "1")]
     pub gravity_id: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
@@ -627,7 +633,7 @@ pub struct Params {
     #[prost(uint64, tag = "5")]
     pub evm_signatures_window: u64,
     #[prost(uint64, tag = "6")]
-    pub target_eth_tx_timeout: u64,
+    pub target_evm_tx_timeout: u64,
     #[prost(uint64, tag = "7")]
     pub average_block_time: u64,
     #[prost(uint64, tag = "8")]
@@ -643,8 +649,6 @@ pub struct Params {
     pub slash_fraction_conflicting_evm_signature: ::prost::alloc::vec::Vec<u8>,
     #[prost(uint64, tag = "13")]
     pub unbond_slashing_signer_set_txs_window: u64,
-    #[prost(uint32, repeated, tag = "14")]
-    pub chain_ids: ::prost::alloc::vec::Vec<u32>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GenesisStateMultiChain {
@@ -998,7 +1002,7 @@ pub struct BatchedSendToEvMsRequest {
 pub struct BatchedSendToEvMsResponse {
     ///  cosmos.base.query.v1beta1.PageResponse pagination = 2;
     #[prost(message, repeated, tag = "1")]
-    pub send_to_ev_ms: ::prost::alloc::vec::Vec<SendToEvm>,
+    pub send_to_evms: ::prost::alloc::vec::Vec<SendToEvm>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UnbatchedSendToEvMsRequest {
@@ -1012,10 +1016,20 @@ pub struct UnbatchedSendToEvMsRequest {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UnbatchedSendToEvMsResponse {
     #[prost(message, repeated, tag = "1")]
-    pub send_to_ev_ms: ::prost::alloc::vec::Vec<SendToEvm>,
+    pub send_to_evms: ::prost::alloc::vec::Vec<SendToEvm>,
     #[prost(message, optional, tag = "2")]
     pub pagination:
         ::core::option::Option<cosmos_sdk_proto::cosmos::base::query::v1beta1::PageResponse>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct LastObservedEvmHeightRequest {
+    #[prost(uint32, tag = "1")]
+    pub chain_id: u32,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct LastObservedEvmHeightResponse {
+    #[prost(message, optional, tag = "1")]
+    pub last_observed_evm_height: ::core::option::Option<LatestEvmBlockHeight>,
 }
 #[doc = r" Generated client implementations."]
 pub mod query_client {
@@ -1433,6 +1447,21 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/gravity.v2.Query/DelegateKeys");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn last_observed_evm_height(
+            &mut self,
+            request: impl tonic::IntoRequest<super::LastObservedEvmHeightRequest>,
+        ) -> Result<tonic::Response<super::LastObservedEvmHeightResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path =
+                http::uri::PathAndQuery::from_static("/gravity.v2.Query/LastObservedEVMHeight");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }

@@ -2,7 +2,7 @@
 //! It's a common problem to have conflicts between ipv4 and ipv6 localhost and this module is first and foremost supposed to resolve that problem
 //! by trying more than one thing to handle potentially misconfigured inputs.
 
-use crate::ethereum::format_eth_address;
+use crate::ethereum::format_evm_address;
 use deep_space::client::ChainStatus;
 use deep_space::Address as CosmosAddress;
 use deep_space::Contact;
@@ -10,7 +10,7 @@ use ethers::prelude::*;
 use ethers::providers::Provider;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_proto::gravity::DelegateKeysByEthereumSignerRequest;
+use gravity_proto::gravity::DelegateKeysByEvmSignerRequest;
 use gravity_proto::gravity::DelegateKeysByOrchestratorRequest;
 use std::convert::TryFrom;
 use std::process::exit;
@@ -268,8 +268,8 @@ pub async fn check_delegate_addresses(
     prefix: &str,
 ) {
     let eth_response = client
-        .delegate_keys_by_ethereum_signer(DelegateKeysByEthereumSignerRequest {
-            ethereum_signer: format_eth_address(delegate_eth_address),
+        .delegate_keys_by_evm_signer(DelegateKeysByEvmSignerRequest {
+            evm_signer: format_evm_address(delegate_eth_address),
         })
         .await;
     let orchestrator_response = client
@@ -284,7 +284,7 @@ pub async fn check_delegate_addresses(
             let o = o.into_inner();
             let req_delegate_orchestrator_address: CosmosAddress =
                 e.orchestrator_address.parse().unwrap();
-            let req_delegate_eth_address: EthAddress = o.ethereum_signer.parse().unwrap();
+            let req_delegate_eth_address: EthAddress = o.evm_signer.parse().unwrap();
             if req_delegate_eth_address != delegate_eth_address
                 && req_delegate_orchestrator_address != delegate_orchestrator_address
             {

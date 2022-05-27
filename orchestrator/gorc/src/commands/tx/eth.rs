@@ -9,7 +9,7 @@ use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_utils::{
     connection_prep::{check_for_eth, create_rpc_connections},
-    ethereum::{downcast_to_u64, format_eth_address},
+    ethereum::{downcast_to_u64, format_evm_address},
 };
 use std::sync::Arc;
 
@@ -56,7 +56,7 @@ impl Runnable for SendToCosmos {
 
         println!(
             "Sending from Eth address {}",
-            format_eth_address(ethereum_wallet.address())
+            format_evm_address(ethereum_wallet.address())
         );
         let config = APP.config();
         let cosmos_prefix = config.cosmos.prefix.clone();

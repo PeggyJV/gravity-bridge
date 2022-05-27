@@ -26,7 +26,8 @@ pub async fn relay_logic_calls(
     eth_gas_price_multiplier: f32,
     logic_call_skips: &mut LogicCallSkips,
 ) {
-    let latest_calls = match get_latest_logic_calls(grpc_client).await {
+    let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
+    let latest_calls = match get_latest_logic_calls(grpc_client, chain_id).await {
         Ok(calls) => {
             debug!("Latest Logic calls {:?}", calls);
             calls
@@ -58,6 +59,7 @@ pub async fn relay_logic_calls(
 
         let sigs = get_logic_call_signatures(
             grpc_client,
+            chain_id,
             call.invalidation_id.clone(),
             call.invalidation_nonce,
         )

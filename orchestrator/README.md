@@ -29,7 +29,7 @@ Run `cargo run` in this folder to build `gravity_abi`.
 
 ### gravity_proto_build/
 
-Run `cargo run` in this folder to build `gravity_proto` also note, this will generate too many files. Only `gravity.v1.rs` is required.
+Run `cargo run` in this folder to build `gravity_proto` also note, this will generate too many files. Only `gravity.v2.rs` is required.
 
 ### gravity_utils/
 
