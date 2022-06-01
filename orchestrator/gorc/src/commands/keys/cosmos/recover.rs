@@ -7,11 +7,19 @@ use std::path;
 
 /// Recover a Cosmos Key
 #[derive(Command, Debug, Default, Parser)]
+#[clap(
+    long_about = "DESCRIPTION \n\n Recover an external Cosmos key.\n This command will recover a Cosmos key, storing it in the keystore. \n It takes a keyname and bip39-mnemonic."
+)]
 pub struct RecoverCosmosKeyCmd {
-    pub args: Vec<String>,
+    /// Cosmos keyname.
+    pub name: String,
 
+    /// Overwrite key with the same name in the keystore when set to true. Takes a Boolean.
     #[clap(short, long)]
     pub overwrite: bool,
+
+    /// bip39-mnemonic optional. When absent you'll be prompted to enter it.
+    pub mnemonic: Option<String>,
 }
 
 // `gorc keys cosmos recover [name] (bip39-mnemonic)`
@@ -23,8 +31,7 @@ impl Runnable for RecoverCosmosKeyCmd {
         let keystore = path::Path::new(&config.keystore);
         let keystore = FsKeyStore::create_or_open(keystore).expect("Could not open keystore");
 
-        let name = self.args.get(0).expect("name is required");
-        let name = name.parse().expect("Could not parse name");
+        let name = self.name.parse().expect("Could not parse name");
         if let Ok(_info) = keystore.info(&name) {
             if !self.overwrite {
                 eprintln!("Key already exists, exiting.");
@@ -32,8 +39,8 @@ impl Runnable for RecoverCosmosKeyCmd {
             }
         }
 
-        let mnemonic = match self.args.get(1) {
-            Some(mnemonic) => mnemonic.clone(),
+        let mnemonic = match self.mnemonic.clone() {
+            Some(mnemonic) => mnemonic,
             None => rpassword::read_password_from_tty(Some("> Enter your bip39-mnemonic:\n"))
                 .expect("Could not read mnemonic"),
         };
@@ -56,8 +63,8 @@ impl Runnable for RecoverCosmosKeyCmd {
 
         keystore.store(&name, &key).expect("Could not store key");
 
-        let args = vec![name.to_string()];
-        let show_cmd = ShowCosmosKeyCmd { args };
+        let name = name.to_string();
+        let show_cmd = ShowCosmosKeyCmd { name };
         show_cmd.run();
     }
 }

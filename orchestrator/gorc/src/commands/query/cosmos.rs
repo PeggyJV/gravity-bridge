@@ -6,8 +6,10 @@ use abscissa_core::{clap::Parser, Command, Runnable};
 /// Query cosmos chain
 #[derive(Command, Debug, Parser)]
 pub enum Cosmos {
+    /// Query the balance in a Cosmos account.
     Balance(Balance),
 
+    /// Query gravity keys.
     GravityKeys(GravityKeys),
 }
 
@@ -20,7 +22,8 @@ impl Runnable for Cosmos {
 
 #[derive(Command, Debug, Parser)]
 pub struct Balance {
-    free: Vec<String>,
+    /// Cosmos keyname
+    key_name: String,
 
     #[clap(short, long)]
     help: bool,
@@ -28,14 +31,14 @@ pub struct Balance {
 
 impl Runnable for Balance {
     fn run(&self) {
-        assert!(self.free.len() == 1);
-        let _key_name = self.free[0].clone();
+        let _key_name = self.key_name.clone();
     }
 }
 
 #[derive(Command, Debug, Parser)]
 pub struct GravityKeys {
-    free: Vec<String>,
+    /// Gravity keyname
+    key_name: String,
 
     #[clap(short, long)]
     help: bool,
@@ -44,8 +47,7 @@ pub struct GravityKeys {
 impl Runnable for GravityKeys {
     /// Start the application.
     fn run(&self) {
-        assert!(self.free.len() == 1);
-        let _key_name = self.free[0].clone();
+        let _key_name = self.key_name.clone();
 
         abscissa_tokio::run(&APP, async { unimplemented!() }).unwrap_or_else(|e| {
             status_err!("executor exited with error: {}", e);

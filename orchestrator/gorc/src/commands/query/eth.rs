@@ -6,8 +6,10 @@ use abscissa_core::{clap::Parser, Command, Runnable};
 /// Query Eth chain
 #[derive(Command, Debug, Parser)]
 pub enum Eth {
+    /// Query balance in an Ethereum account.
     Balance(Balance),
 
+    /// Query Ethereum Contract.
     Contract(Contract),
 }
 
@@ -20,7 +22,8 @@ impl Runnable for Eth {
 
 #[derive(Command, Debug, Parser)]
 pub struct Balance {
-    free: Vec<String>,
+    /// Eth keyname
+    key_name: String,
 
     #[clap(short, long)]
     help: bool,
@@ -28,8 +31,7 @@ pub struct Balance {
 
 impl Runnable for Balance {
     fn run(&self) {
-        assert!(self.free.len() == 1);
-        let _key_name = self.free[0].clone();
+        let _key_name = self.key_name.clone();
 
         abscissa_tokio::run(&APP, async { unimplemented!() }).unwrap_or_else(|e| {
             status_err!("executor exited with error: {}", e);

@@ -7,14 +7,23 @@ use std::path;
 
 /// Recover an Eth Key
 #[derive(Command, Debug, Default, Parser)]
+#[clap(
+    long_about = "DESCRIPTION \n\n Recover an external Eth key.\n This command will recover an Eth key, storing it in the keystore. \n It takes a keyname and bip39-mnemonic."
+)]
 pub struct RecoverEthKeyCmd {
-    pub args: Vec<String>,
+    /// Cosmos keyname.
+    pub name: String,
 
+    /// Overwrite key with the same name in the keystore when set to true. Takes a Boolean.
     #[clap(short, long)]
     pub overwrite: bool,
 
+    /// bip39-mnemonic optional. When absent you'll be prompted to enter it.
+    pub mnemonic: Option<String>,
+
+    /// Show private key when set to true. Takes a Boolean.
     #[clap(short, long)]
-    show_private_key: bool,
+    pub show_private_key: bool,
 }
 
 // Entry point for `gorc keys eth recover [name] (bip39-mnemonic)`
@@ -26,8 +35,7 @@ impl Runnable for RecoverEthKeyCmd {
         let keystore = path::Path::new(&config.keystore);
         let keystore = FsKeyStore::create_or_open(keystore).expect("Could not open keystore");
 
-        let name = self.args.get(0).expect("name is required");
-        let name = name.parse().expect("Could not parse name");
+        let name = self.name.parse().expect("Could not parse name");
         if let Ok(_info) = keystore.info(&name) {
             if !self.overwrite {
                 eprintln!("Key already exists, exiting.");
@@ -35,8 +43,8 @@ impl Runnable for RecoverEthKeyCmd {
             }
         }
 
-        let mnemonic = match self.args.get(1) {
-            Some(mnemonic) => mnemonic.clone(),
+        let mnemonic = match self.mnemonic.clone() {
+            Some(mnemonic) => mnemonic,
             None => rpassword::read_password_from_tty(Some("> Enter your bip39-mnemonic:\n"))
                 .expect("Could not read mnemonic"),
         };
@@ -60,7 +68,7 @@ impl Runnable for RecoverEthKeyCmd {
         keystore.store(&name, &key).expect("Could not store key");
 
         let show_cmd = ShowEthKeyCmd {
-            args: vec![name.to_string()],
+            name: name.to_string(),
             show_private_key: self.show_private_key,
             show_name: false,
         };

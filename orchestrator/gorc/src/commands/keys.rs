@@ -10,9 +10,10 @@ use crate::commands::keys::eth::EthKeysCmd;
 
 #[derive(Command, Debug, Parser, Runnable)]
 pub enum KeysCmd {
-    #[clap(subcommand)]
-    Cosmos(CosmosKeysCmd),
-
+    /// Manage Ethereum keys.
     #[clap(subcommand)]
     Eth(EthKeysCmd),
+    /// Manage Cosmos keys.
+    #[clap(subcommand)]
+    Cosmos(CosmosKeysCmd),
 }
