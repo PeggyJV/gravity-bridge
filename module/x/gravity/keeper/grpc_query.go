@@ -327,12 +327,21 @@ func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20Par
 			}
 		}
 
-		return &types.DenomToERC20ParamsResponse{
+		resp := &types.DenomToERC20ParamsResponse{
 			BaseDenom:     md.Base,
-			Erc20Name:     md.Display,
-			Erc20Symbol:   md.Display,
+			Erc20Name:     md.Name,
+			Erc20Symbol:   md.Symbol,
 			Erc20Decimals: erc20Decimals,
-		}, nil
+		}
+
+		if resp.Erc20Name == "" {
+			resp.Erc20Name = md.Display
+		}
+		if resp.Erc20Symbol == "" {
+			resp.Erc20Symbol = md.Display
+		}
+
+		return resp, nil
 	}
 
 	if supply := k.bankKeeper.GetSupply(ctx, req.Denom); supply.IsZero() {

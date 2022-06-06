@@ -146,17 +146,17 @@ func (k Keeper) verifyERC20DeployedEvent(ctx sdk.Context, event *types.ERC20Depl
 }
 
 func verifyERC20Token(metadata banktypes.Metadata, event *types.ERC20DeployedEvent) error {
-	if event.Erc20Name != metadata.Display {
+	if event.Erc20Name != metadata.Name {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidERC20Event,
-			"ERC20 name %s does not match the denom display %s", event.Erc20Name, metadata.Display,
+			"ERC20 name %s does not match the denom name %s", event.Erc20Name, metadata.Name,
 		)
 	}
 
-	if event.Erc20Symbol != metadata.Display {
+	if event.Erc20Symbol != metadata.Symbol {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidERC20Event,
-			"ERC20 symbol %s does not match denom display %s", event.Erc20Symbol, metadata.Display,
+			"ERC20 symbol %s does not match denom symbol %s", event.Erc20Symbol, metadata.Symbol,
 		)
 	}
 
