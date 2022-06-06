@@ -24,6 +24,8 @@ type DenomMetadata struct {
 	Description string      `json:"description"`
 	Display     string      `json:"display"`
 	Base        string      `json:"base"`
+	Name        string      `json:"name"`
+	Symbol      string      `json:"symbol"`
 	DenomUnits  []DenomUnit `json:"denom_units"`
 }
 
