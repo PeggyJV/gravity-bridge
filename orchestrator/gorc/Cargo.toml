@@ -9,7 +9,7 @@ rust-version = "1.58"
 clap = "3"
 serde = { version = "1", features = ["serde_derive"] }
 thiserror = "1"
-regex = "1.5.4"
+regex = "1.5.5"
 
 cosmos_gravity = { path = "../cosmos_gravity" }
 ethereum_gravity = { path = "../ethereum_gravity" }
