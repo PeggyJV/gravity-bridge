@@ -22,7 +22,7 @@ web30 = "0.15.4"
 tonic = "0.4"
 cosmos-sdk-proto = "0.6.3"
 prost = "0.7"
-prost-types = "0.7"
+prost-types = "0.8"
 bytes = "1"
 
 [dev-dependencies]
