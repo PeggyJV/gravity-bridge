@@ -424,7 +424,7 @@ func (k Keeper) DelegateKeysByValidator(c context.Context, req *types.DelegateKe
 func (k Keeper) DelegateKeysByEthereumSigner(c context.Context, req *types.DelegateKeysByEthereumSignerRequest) (*types.DelegateKeysByEthereumSignerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	if !common.IsHexAddress(req.EthereumSigner) {
-		return nil, nil // TODO(levi) make and return an error
+		return nil, sdkerrors.Wrapf(types.ErrInvalid, "ethereum signer needs to be a hex address")
 	}
 	ethAddr := common.HexToAddress(req.EthereumSigner)
 	orchAddr := k.GetEthereumOrchestratorAddress(ctx, ethAddr)
