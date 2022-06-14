@@ -41,7 +41,7 @@ func CmdSendToEthereum() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "send-to-ethereum [ethereum-reciever] [send-coins] [fee-coins] [chain-id]",
 		Aliases: []string{"send", "transfer"},
-		Args:    cobra.MaximumNArgs(4),
+		Args:    cobra.ExactArgs(4),
 		Short:   "Send tokens from cosmos chain to connected ethereum chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -69,10 +69,7 @@ func CmdSendToEthereum() *cobra.Command {
 				return err
 			}
 
-			chainID, err := strconv.Atoi(args[3])
-			if err != nil {
-				return err
-			}
+			chainID := uint32(sdk.NewUintFromString(args[3]).Uint64())
 
 			msg := types.NewMsgSendToEVM(uint32(chainID), from, common.HexToAddress(args[0]).Hex(), sendCoin, feeCoin)
 			if err = msg.ValidateBasic(); err != nil {
@@ -90,7 +87,7 @@ func CmdSendToEthereum() *cobra.Command {
 func CmdCancelSendToEthereum() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-send-to-ethereum [id] [chain-id]",
-		Args:  cobra.MaximumNArgs(3),
+		Args:  cobra.ExactArgs(2),
 		Short: "Cancel ethereum send by id",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -128,8 +125,8 @@ func CmdCancelSendToEthereum() *cobra.Command {
 
 func CmdRequestBatchTx() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "request-batch-tx [denom] [signer]",
-		Args:  cobra.MaximumNArgs(3),
+		Use:   "request-batch-tx [denom] [signer] [chain-id]",
+		Args:  cobra.ExactArgs(3),
 		Short: "Request batch transaction for denom by signer",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -143,7 +140,7 @@ func CmdRequestBatchTx() *cobra.Command {
 				return err
 			}
 
-			chainID, err := strconv.Atoi(args[3])
+			chainID, err := strconv.Atoi(args[2])
 			if err != nil {
 				return err
 			}

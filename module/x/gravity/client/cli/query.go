@@ -500,7 +500,7 @@ func CmdLatestSignerSetTx() *cobra.Command {
 func CmdLastSubmittedEthereumEvent() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "last-submitted-ethereum-event [chain-id] [validator-or-orchestrator-acc-address]",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		Short: "query for the last event nonce that was submitted by a given validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
@@ -654,8 +654,8 @@ func CmdDenomToERC20() *cobra.Command {
 
 func CmdUnbatchedSendToEthereums() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unbatched-send-to-ethereums [sender-address] [chain-id]",
-		Args:  cobra.MaximumNArgs(2),
+		Use:   "unbatched-send-to-ethereums [chain-id] [sender-address] ",
+		Args:  cobra.ExactArgs(2),
 		Short: "query all unbatched send to ethereum messages",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
@@ -668,12 +668,12 @@ func CmdUnbatchedSendToEthereums() *cobra.Command {
 				return err
 			}
 
-			sender, err := sdk.AccAddressFromBech32(args[0])
+			sender, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			chainID := uint32(sdk.NewUintFromString(args[1]).Uint64())
+			chainID := uint32(sdk.NewUintFromString(args[0]).Uint64())
 
 			res, err := queryClient.UnbatchedSendToEVMs(cmd.Context(), &types.UnbatchedSendToEVMsRequest{
 				SenderAddress: sender.String(),

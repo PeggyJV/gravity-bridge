@@ -222,7 +222,7 @@ func migrateParams(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
 	oldParams := oldK.GetParams(ctx)
 
 	newParams := types.Params{
-		ChainParams: map[uint32]*types.ChainParams{
+		ParamsForChain: map[uint32]*types.ParamsForChain{
 			types.EthereumChainID: {
 				GravityId:                            oldParams.GravityId,
 				ContractSourceHash:                   oldParams.ContractSourceHash,

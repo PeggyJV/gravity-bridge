@@ -87,7 +87,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // The first three refer to not submitting a particular message, the third for
 // submitting a different EVM_signature for the same EVM event
 type Params struct {
-	ChainParams map[uint32]*ChainParams `protobuf:"bytes,1,rep,name=chain_params,json=chainParams,proto3" json:"chain_params,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	ParamsForChain map[uint32]*ParamsForChain `protobuf:"bytes,1,rep,name=chain_params,json=ParamsForChain,proto3" json:"chain_params,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }
@@ -123,14 +123,14 @@ func (m *Params) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Params proto.InternalMessageInfo
 
-func (m *Params) GetChainParams() map[uint32]*ChainParams {
+func (m *Params) GetParamsForChain() map[uint32]*ParamsForChain {
 	if m != nil {
-		return m.ChainParams
+		return m.ParamsForChain
 	}
 	return nil
 }
 
-type ChainParams struct {
+type ParamsForChain struct {
 	GravityId                string `protobuf:"bytes,1,opt,name=gravity_id,json=gravityId,proto3" json:"gravity_id,omitempty"`
 	ContractSourceHash       string `protobuf:"bytes,2,opt,name=contract_source_hash,json=contractSourceHash,proto3" json:"contract_source_hash,omitempty"`
 	SignedSignerSetTxsWindow uint64 `protobuf:"varint,3,opt,name=signed_signer_set_txs_window,json=signedSignerSetTxsWindow,proto3" json:"signed_signer_set_txs_window,omitempty"`
@@ -147,18 +147,18 @@ type ChainParams struct {
 	UnbondSlashingSignerSetTxsWindow     uint64                                 `protobuf:"varint,13,opt,name=unbond_slashing_signer_set_txs_window,json=unbondSlashingSignerSetTxsWindow,proto3" json:"unbond_slashing_signer_set_txs_window,omitempty"`
 }
 
-func (m *ChainParams) Reset()         { *m = ChainParams{} }
-func (m *ChainParams) String() string { return proto.CompactTextString(m) }
-func (*ChainParams) ProtoMessage()    {}
-func (*ChainParams) Descriptor() ([]byte, []int) {
+func (m *ParamsForChain) Reset()         { *m = ParamsForChain{} }
+func (m *ParamsForChain) String() string { return proto.CompactTextString(m) }
+func (*ParamsForChain) ProtoMessage()    {}
+func (*ParamsForChain) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b7e9474ccb1d789c, []int{1}
 }
-func (m *ChainParams) XXX_Unmarshal(b []byte) error {
+func (m *ParamsForChain) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ChainParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ParamsForChain) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ChainParams.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ParamsForChain.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -168,99 +168,99 @@ func (m *ChainParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) 
 		return b[:n], nil
 	}
 }
-func (m *ChainParams) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ChainParams.Merge(m, src)
+func (m *ParamsForChain) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ParamsForChain.Merge(m, src)
 }
-func (m *ChainParams) XXX_Size() int {
+func (m *ParamsForChain) XXX_Size() int {
 	return m.Size()
 }
-func (m *ChainParams) XXX_DiscardUnknown() {
-	xxx_messageInfo_ChainParams.DiscardUnknown(m)
+func (m *ParamsForChain) XXX_DiscardUnknown() {
+	xxx_messageInfo_ParamsForChain.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ChainParams proto.InternalMessageInfo
+var xxx_messageInfo_ParamsForChain proto.InternalMessageInfo
 
-func (m *ChainParams) GetGravityId() string {
+func (m *ParamsForChain) GetGravityId() string {
 	if m != nil {
 		return m.GravityId
 	}
 	return ""
 }
 
-func (m *ChainParams) GetContractSourceHash() string {
+func (m *ParamsForChain) GetContractSourceHash() string {
 	if m != nil {
 		return m.ContractSourceHash
 	}
 	return ""
 }
 
-func (m *ChainParams) GetSignedSignerSetTxsWindow() uint64 {
+func (m *ParamsForChain) GetSignedSignerSetTxsWindow() uint64 {
 	if m != nil {
 		return m.SignedSignerSetTxsWindow
 	}
 	return 0
 }
 
-func (m *ChainParams) GetSignedBatchesWindow() uint64 {
+func (m *ParamsForChain) GetSignedBatchesWindow() uint64 {
 	if m != nil {
 		return m.SignedBatchesWindow
 	}
 	return 0
 }
 
-func (m *ChainParams) GetEvmSignaturesWindow() uint64 {
+func (m *ParamsForChain) GetEvmSignaturesWindow() uint64 {
 	if m != nil {
 		return m.EvmSignaturesWindow
 	}
 	return 0
 }
 
-func (m *ChainParams) GetTargetEvmTxTimeout() uint64 {
+func (m *ParamsForChain) GetTargetEvmTxTimeout() uint64 {
 	if m != nil {
 		return m.TargetEvmTxTimeout
 	}
 	return 0
 }
 
-func (m *ChainParams) GetAverageBlockTime() uint64 {
+func (m *ParamsForChain) GetAverageBlockTime() uint64 {
 	if m != nil {
 		return m.AverageBlockTime
 	}
 	return 0
 }
 
-func (m *ChainParams) GetAverageEvmBlockTime() uint64 {
+func (m *ParamsForChain) GetAverageEvmBlockTime() uint64 {
 	if m != nil {
 		return m.AverageEvmBlockTime
 	}
 	return 0
 }
 
-func (m *ChainParams) GetUnbondSlashingSignerSetTxsWindow() uint64 {
+func (m *ParamsForChain) GetUnbondSlashingSignerSetTxsWindow() uint64 {
 	if m != nil {
 		return m.UnbondSlashingSignerSetTxsWindow
 	}
 	return 0
 }
 
-type GenesisStateMultiChain struct {
+type GenesisState struct {
 	Params             *Params              `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
 	DelegateKeys       []*MsgDelegateKeys   `protobuf:"bytes,2,rep,name=delegate_keys,json=delegateKeys,proto3" json:"delegate_keys,omitempty"`
-	ChainGenesisStates []*ChainGenesisState `protobuf:"bytes,3,rep,name=chain_genesis_states,json=chainGenesisStates,proto3" json:"chain_genesis_states,omitempty"`
+	EVMSpecificGenesisStates []*EVMSpecificGenesisState `protobuf:"bytes,3,rep,name=chain_genesis_states,json=EVMSpecificGenesisStates,proto3" json:"chain_genesis_states,omitempty"`
 }
 
-func (m *GenesisStateMultiChain) Reset()         { *m = GenesisStateMultiChain{} }
-func (m *GenesisStateMultiChain) String() string { return proto.CompactTextString(m) }
-func (*GenesisStateMultiChain) ProtoMessage()    {}
-func (*GenesisStateMultiChain) Descriptor() ([]byte, []int) {
+func (m *GenesisState) Reset()         { *m = GenesisState{} }
+func (m *GenesisState) String() string { return proto.CompactTextString(m) }
+func (*GenesisState) ProtoMessage()    {}
+func (*GenesisState) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b7e9474ccb1d789c, []int{2}
 }
-func (m *GenesisStateMultiChain) XXX_Unmarshal(b []byte) error {
+func (m *GenesisState) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GenesisStateMultiChain) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *GenesisState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GenesisStateMultiChain.Marshal(b, m, deterministic)
+		return xxx_messageInfo_GenesisState.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -270,40 +270,40 @@ func (m *GenesisStateMultiChain) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *GenesisStateMultiChain) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GenesisStateMultiChain.Merge(m, src)
+func (m *GenesisState) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GenesisState.Merge(m, src)
 }
-func (m *GenesisStateMultiChain) XXX_Size() int {
+func (m *GenesisState) XXX_Size() int {
 	return m.Size()
 }
-func (m *GenesisStateMultiChain) XXX_DiscardUnknown() {
-	xxx_messageInfo_GenesisStateMultiChain.DiscardUnknown(m)
+func (m *GenesisState) XXX_DiscardUnknown() {
+	xxx_messageInfo_GenesisState.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GenesisStateMultiChain proto.InternalMessageInfo
+var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 
-func (m *GenesisStateMultiChain) GetParams() *Params {
+func (m *GenesisState) GetParams() *Params {
 	if m != nil {
 		return m.Params
 	}
 	return nil
 }
 
-func (m *GenesisStateMultiChain) GetDelegateKeys() []*MsgDelegateKeys {
+func (m *GenesisState) GetDelegateKeys() []*MsgDelegateKeys {
 	if m != nil {
 		return m.DelegateKeys
 	}
 	return nil
 }
 
-func (m *GenesisStateMultiChain) GetChainGenesisStates() []*ChainGenesisState {
+func (m *GenesisState) GetEVMSpecificGenesisStates() []*EVMSpecificGenesisState {
 	if m != nil {
-		return m.ChainGenesisStates
+		return m.EVMSpecificGenesisStates
 	}
 	return nil
 }
 
-type ChainGenesisState struct {
+type EVMSpecificGenesisState struct {
 	ChainID                uint32                `protobuf:"varint,1,opt,name=chainID,proto3" json:"chainID,omitempty"`
 	LastObservedEventNonce uint64                `protobuf:"varint,2,opt,name=last_observed_event_nonce,json=lastObservedEventNonce,proto3" json:"last_observed_event_nonce,omitempty"`
 	OutgoingTxs            []*types.Any          `protobuf:"bytes,3,rep,name=outgoing_txs,json=outgoingTxs,proto3" json:"outgoing_txs,omitempty"`
@@ -313,18 +313,18 @@ type ChainGenesisState struct {
 	UnbatchedSendToEvmTxs  []*SendToEVM          `protobuf:"bytes,7,rep,name=unbatched_send_to_evm_txs,json=unbatchedSendToEvmTxs,proto3" json:"unbatched_send_to_evm_txs,omitempty"`
 }
 
-func (m *ChainGenesisState) Reset()         { *m = ChainGenesisState{} }
-func (m *ChainGenesisState) String() string { return proto.CompactTextString(m) }
-func (*ChainGenesisState) ProtoMessage()    {}
-func (*ChainGenesisState) Descriptor() ([]byte, []int) {
+func (m *EVMSpecificGenesisState) Reset()         { *m = EVMSpecificGenesisState{} }
+func (m *EVMSpecificGenesisState) String() string { return proto.CompactTextString(m) }
+func (*EVMSpecificGenesisState) ProtoMessage()    {}
+func (*EVMSpecificGenesisState) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b7e9474ccb1d789c, []int{3}
 }
-func (m *ChainGenesisState) XXX_Unmarshal(b []byte) error {
+func (m *EVMSpecificGenesisState) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ChainGenesisState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EVMSpecificGenesisState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ChainGenesisState.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EVMSpecificGenesisState.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -334,61 +334,61 @@ func (m *ChainGenesisState) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *ChainGenesisState) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ChainGenesisState.Merge(m, src)
+func (m *EVMSpecificGenesisState) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EVMSpecificGenesisState.Merge(m, src)
 }
-func (m *ChainGenesisState) XXX_Size() int {
+func (m *EVMSpecificGenesisState) XXX_Size() int {
 	return m.Size()
 }
-func (m *ChainGenesisState) XXX_DiscardUnknown() {
-	xxx_messageInfo_ChainGenesisState.DiscardUnknown(m)
+func (m *EVMSpecificGenesisState) XXX_DiscardUnknown() {
+	xxx_messageInfo_EVMSpecificGenesisState.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ChainGenesisState proto.InternalMessageInfo
+var xxx_messageInfo_EVMSpecificGenesisState proto.InternalMessageInfo
 
-func (m *ChainGenesisState) GetChainID() uint32 {
+func (m *EVMSpecificGenesisState) GetChainID() uint32 {
 	if m != nil {
 		return m.ChainID
 	}
 	return 0
 }
 
-func (m *ChainGenesisState) GetLastObservedEventNonce() uint64 {
+func (m *EVMSpecificGenesisState) GetLastObservedEventNonce() uint64 {
 	if m != nil {
 		return m.LastObservedEventNonce
 	}
 	return 0
 }
 
-func (m *ChainGenesisState) GetOutgoingTxs() []*types.Any {
+func (m *EVMSpecificGenesisState) GetOutgoingTxs() []*types.Any {
 	if m != nil {
 		return m.OutgoingTxs
 	}
 	return nil
 }
 
-func (m *ChainGenesisState) GetConfirmations() []*types.Any {
+func (m *EVMSpecificGenesisState) GetConfirmations() []*types.Any {
 	if m != nil {
 		return m.Confirmations
 	}
 	return nil
 }
 
-func (m *ChainGenesisState) GetEvmEventVoteRecords() []*EVMEventVoteRecord {
+func (m *EVMSpecificGenesisState) GetEvmEventVoteRecords() []*EVMEventVoteRecord {
 	if m != nil {
 		return m.EvmEventVoteRecords
 	}
 	return nil
 }
 
-func (m *ChainGenesisState) GetErc20ToDenoms() []*ERC20ToDenom {
+func (m *EVMSpecificGenesisState) GetErc20ToDenoms() []*ERC20ToDenom {
 	if m != nil {
 		return m.Erc20ToDenoms
 	}
 	return nil
 }
 
-func (m *ChainGenesisState) GetUnbatchedSendToEvmTxs() []*SendToEVM {
+func (m *EVMSpecificGenesisState) GetUnbatchedSendToEvmTxs() []*SendToEVM {
 	if m != nil {
 		return m.UnbatchedSendToEvmTxs
 	}
@@ -451,10 +451,10 @@ func (m *ERC20ToDenom) GetDenom() string {
 
 func init() {
 	proto.RegisterType((*Params)(nil), "gravity.v2.Params")
-	proto.RegisterMapType((map[uint32]*ChainParams)(nil), "gravity.v2.Params.ChainParamsEntry")
-	proto.RegisterType((*ChainParams)(nil), "gravity.v2.ChainParams")
-	proto.RegisterType((*GenesisStateMultiChain)(nil), "gravity.v2.GenesisStateMultiChain")
-	proto.RegisterType((*ChainGenesisState)(nil), "gravity.v2.ChainGenesisState")
+	proto.RegisterMapType((map[uint32]*ParamsForChain)(nil), "gravity.v2.Params.ParamsForChainEntry")
+	proto.RegisterType((*ParamsForChain)(nil), "gravity.v2.ParamsForChain")
+	proto.RegisterType((*GenesisState)(nil), "gravity.v2.GenesisState")
+	proto.RegisterType((*EVMSpecificGenesisState)(nil), "gravity.v2.EVMSpecificGenesisState")
 	proto.RegisterType((*ERC20ToDenom)(nil), "gravity.v2.ERC20ToDenom")
 }
 
@@ -546,9 +546,9 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.ChainParams) > 0 {
-		for k := range m.ChainParams {
-			v := m.ChainParams[k]
+	if len(m.ParamsForChain) > 0 {
+		for k := range m.ParamsForChain {
+			v := m.ParamsForChain[k]
 			baseI := i
 			if v != nil {
 				{
@@ -573,7 +573,7 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ChainParams) Marshal() (dAtA []byte, err error) {
+func (m *ParamsForChain) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -583,12 +583,12 @@ func (m *ChainParams) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ChainParams) MarshalTo(dAtA []byte) (int, error) {
+func (m *ParamsForChain) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ChainParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ParamsForChain) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -685,7 +685,7 @@ func (m *ChainParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *GenesisStateMultiChain) Marshal() (dAtA []byte, err error) {
+func (m *GenesisState) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -695,20 +695,20 @@ func (m *GenesisStateMultiChain) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GenesisStateMultiChain) MarshalTo(dAtA []byte) (int, error) {
+func (m *GenesisState) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GenesisStateMultiChain) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.ChainGenesisStates) > 0 {
-		for iNdEx := len(m.ChainGenesisStates) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.EVMSpecificGenesisStates) > 0 {
+		for iNdEx := len(m.EVMSpecificGenesisStates) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.ChainGenesisStates[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.EVMSpecificGenesisStates[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -748,7 +748,7 @@ func (m *GenesisStateMultiChain) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *ChainGenesisState) Marshal() (dAtA []byte, err error) {
+func (m *EVMSpecificGenesisState) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -758,12 +758,12 @@ func (m *ChainGenesisState) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ChainGenesisState) MarshalTo(dAtA []byte) (int, error) {
+func (m *EVMSpecificGenesisState) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ChainGenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EVMSpecificGenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -905,8 +905,8 @@ func (m *Params) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.ChainParams) > 0 {
-		for k, v := range m.ChainParams {
+	if len(m.ParamsForChain) > 0 {
+		for k, v := range m.ParamsForChain {
 			_ = k
 			_ = v
 			l = 0
@@ -921,7 +921,7 @@ func (m *Params) Size() (n int) {
 	return n
 }
 
-func (m *ChainParams) Size() (n int) {
+func (m *ParamsForChain) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -967,7 +967,7 @@ func (m *ChainParams) Size() (n int) {
 	return n
 }
 
-func (m *GenesisStateMultiChain) Size() (n int) {
+func (m *GenesisState) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -983,8 +983,8 @@ func (m *GenesisStateMultiChain) Size() (n int) {
 			n += 1 + l + sovGenesis(uint64(l))
 		}
 	}
-	if len(m.ChainGenesisStates) > 0 {
-		for _, e := range m.ChainGenesisStates {
+	if len(m.EVMSpecificGenesisStates) > 0 {
+		for _, e := range m.EVMSpecificGenesisStates {
 			l = e.Size()
 			n += 1 + l + sovGenesis(uint64(l))
 		}
@@ -992,7 +992,7 @@ func (m *GenesisStateMultiChain) Size() (n int) {
 	return n
 }
 
-func (m *ChainGenesisState) Size() (n int) {
+func (m *EVMSpecificGenesisState) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1091,7 +1091,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ChainParams", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ParamsForChain", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1118,11 +1118,11 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.ChainParams == nil {
-				m.ChainParams = make(map[uint32]*ChainParams)
+			if m.ParamsForChain == nil {
+				m.ParamsForChain = make(map[uint32]*ParamsForChain)
 			}
 			var mapkey uint32
-			var mapvalue *ChainParams
+			var mapvalue *ParamsForChain
 			for iNdEx < postIndex {
 				entryPreIndex := iNdEx
 				var wire uint64
@@ -1182,7 +1182,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 					if postmsgIndex > l {
 						return io.ErrUnexpectedEOF
 					}
-					mapvalue = &ChainParams{}
+					mapvalue = &ParamsForChain{}
 					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
 						return err
 					}
@@ -1202,7 +1202,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 					iNdEx += skippy
 				}
 			}
-			m.ChainParams[mapkey] = mapvalue
+			m.ParamsForChain[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1225,7 +1225,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ChainParams) Unmarshal(dAtA []byte) error {
+func (m *ParamsForChain) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1248,10 +1248,10 @@ func (m *ChainParams) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ChainParams: wiretype end group for non-group")
+			return fmt.Errorf("proto: ParamsForChain: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ChainParams: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ParamsForChain: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1604,7 +1604,7 @@ func (m *ChainParams) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GenesisStateMultiChain) Unmarshal(dAtA []byte) error {
+func (m *GenesisState) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1627,10 +1627,10 @@ func (m *GenesisStateMultiChain) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GenesisStateMultiChain: wiretype end group for non-group")
+			return fmt.Errorf("proto: GenesisState: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GenesisStateMultiChain: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GenesisState: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1705,7 +1705,7 @@ func (m *GenesisStateMultiChain) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ChainGenesisStates", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field EVMSpecificGenesisStates", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1732,8 +1732,8 @@ func (m *GenesisStateMultiChain) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ChainGenesisStates = append(m.ChainGenesisStates, &ChainGenesisState{})
-			if err := m.ChainGenesisStates[len(m.ChainGenesisStates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.EVMSpecificGenesisStates = append(m.EVMSpecificGenesisStates, &EVMSpecificGenesisState{})
+			if err := m.EVMSpecificGenesisStates[len(m.EVMSpecificGenesisStates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1758,7 +1758,7 @@ func (m *GenesisStateMultiChain) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ChainGenesisState) Unmarshal(dAtA []byte) error {
+func (m *EVMSpecificGenesisState) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1781,10 +1781,10 @@ func (m *ChainGenesisState) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ChainGenesisState: wiretype end group for non-group")
+			return fmt.Errorf("proto: EVMSpecificGenesisState: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ChainGenesisState: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EVMSpecificGenesisState: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

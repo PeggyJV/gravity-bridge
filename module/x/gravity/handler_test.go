@@ -22,7 +22,7 @@ func TestHandleMsgSendToEVM(t *testing.T) {
 		userCosmosAddr, _               = sdk.AccAddressFromBech32("cosmos1990z7dqsvh8gthw9pa5sn4wuy2xrsd80mg5z6y")
 		blockTime                       = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
 		blockHeight           int64     = 200
-		denom                           = "gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"
+		denom                           = types.GravityDenom(common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"))
 		startingCoinAmount, _           = sdk.NewIntFromString("150000000000000000000") // 150 ETH worth, required to reach above u64 limit (which is about 18 ETH)
 		sendAmount, _                   = sdk.NewIntFromString("50000000000000000000")  // 50 ETH
 		feeAmount, _                    = sdk.NewIntFromString("5000000000000000000")   // 5 ETH
@@ -85,8 +85,9 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		myCosmosAddr, _                   = sdk.AccAddressFromBech32("cosmos16ahjkfqxpp6lvfy9fpfnfjg39xr96qett0alj5")
 		myValAddr                         = sdk.ValAddress(myOrchestratorAddr) // revisit when proper mapping is impl in keeper
 		myNonce                           = uint64(1)
-		anyETHAddr                        = "0xf9613b532673Cc223aBa451dFA8539B87e1F666D"
-		tokenETHAddr                      = "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"
+		anyETHAddr                        = common.HexToAddress("0xf9613b532673Cc223aBa451dFA8539B87e1F666D")
+		tokenETHAddr                      = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e")
+		denom                             = types.GravityDenom(tokenETHAddr)
 		myBlockTime                       = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
 		amountA, _                        = sdk.NewIntFromString("50000000000000000000")  // 50 ETH
 		amountB, _                        = sdk.NewIntFromString("100000000000000000000") // 100 ETH
@@ -101,14 +102,14 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 
 	myErc20 := types.ERC20Token{
 		Amount:   amountA,
-		Contract: tokenETHAddr,
+		Contract: tokenETHAddr.Hex(),
 	}
 
 	sendToCosmosEvent := &types.SendToCosmosEvent{
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EVMSender:      anyETHAddr,
+		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 
@@ -132,7 +133,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 	// and vouchers added to the account
 
 	balance := bk.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewCoin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", amountA)}, balance)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, amountA)}, balance)
 
 	// Test to reject duplicate deposit
 	// when
@@ -150,7 +151,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		EventNonce:     uint64(3),
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EVMSender:      anyETHAddr,
+		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 
@@ -171,14 +172,14 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 	gravity.EndBlocker(ctx, gk)
 	// then
 	balance = bk.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewCoin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", amountA)}, balance)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, amountA)}, balance)
 
 	// Test to finally accept consecutive nonce
 	sendToCosmosEvent = &types.SendToCosmosEvent{
 		EventNonce:     uint64(2),
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EVMSender:      anyETHAddr,
+		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 
@@ -194,7 +195,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	balance = bk.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewCoin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", amountB)}, balance)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, amountB)}, balance)
 }
 
 func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
@@ -207,8 +208,9 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		valAddr2             = sdk.ValAddress(orchestratorAddr2) // revisit when proper mapping is impl in keeper
 		valAddr3             = sdk.ValAddress(orchestratorAddr3) // revisit when proper mapping is impl in keeper
 		myNonce              = uint64(1)
-		anyETHAddr           = "0xf9613b532673Cc223aBa451dFA8539B87e1F666D"
-		tokenETHAddr         = "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"
+		anyETHAddr           = common.HexToAddress("0xf9613b532673Cc223aBa451dFA8539B87e1F666D")
+		tokenETHAddr         = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e")
+		denom                = types.GravityDenom(tokenETHAddr)
 		myBlockTime          = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
 	)
 	input := keeper.CreateTestEnv(t)
@@ -221,14 +223,14 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 
 	myErc20 := types.ERC20Token{
 		Amount:   sdk.NewInt(12),
-		Contract: tokenETHAddr,
+		Contract: tokenETHAddr.Hex(),
 	}
 
 	ethClaim1 := &types.SendToCosmosEvent{
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EVMSender:      anyETHAddr,
+		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 	ethClaim1a, err := types.PackEvent(ethClaim1)
@@ -238,7 +240,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EVMSender:      anyETHAddr,
+		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 	ethClaim2a, err := types.PackEvent(ethClaim2)
@@ -248,7 +250,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EVMSender:      anyETHAddr,
+		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
 	}
 	ethClaim3a, err := types.PackEvent(ethClaim3)
@@ -265,7 +267,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	require.NotNil(t, a1)
 	// and vouchers not yet added to the account
 	balance1 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
-	require.NotEqual(t, sdk.Coins{sdk.NewInt64Coin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", 12)}, balance1)
+	require.NotEqual(t, sdk.Coins{sdk.NewInt64Coin(denom, 12)}, balance1)
 
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
@@ -278,7 +280,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	require.NotNil(t, a2)
 	// and vouchers now added to the account
 	balance2 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", 12)}, balance2)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(denom, 12)}, balance2)
 
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
@@ -291,7 +293,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	require.NotNil(t, a3)
 	// and no additional added to the account
 	balance3 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", 12)}, balance3)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(denom, 12)}, balance3)
 }
 
 func TestMsgSetDelegateAddresses(t *testing.T) {

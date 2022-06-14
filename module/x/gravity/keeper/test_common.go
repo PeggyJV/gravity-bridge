@@ -180,7 +180,7 @@ var (
 	}
 
 	// TestingGravityParams is a set of gravity params for testing
-	ethereumChainParams = types.ChainParams{
+	ethereumParamsForChain = types.ParamsForChain{
 		GravityId:                            "testgravityid",
 		ContractSourceHash:                   "62328f7bc12efb28f86111d08c29b39285680a906ea0e524e0209d6f6657b713",
 		SignedBatchesWindow:                  10,
@@ -196,7 +196,7 @@ var (
 		SlashFractionConflictingEvmSignature: sdk.NewDecWithPrec(1, 2),
 	}
 	// TestingGravityParams is a set of gravity params for testing
-	TestingGravityParams = types.Params{ChainParams: map[uint32]*types.ChainParams{1: &ethereumChainParams}}
+	TestingGravityParams = types.Params{ParamsForChain: map[uint32]*types.ParamsForChain{1: &ethereumParamsForChain}}
 )
 
 // TestInput stores the various keepers required to test gravity

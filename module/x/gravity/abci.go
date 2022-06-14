@@ -18,7 +18,7 @@ import (
 // based on the events (i.e. orchestrators)
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	params := k.GetParams(ctx)
-	for chainID, _ := range params.ChainParams {
+	for chainID, _ := range params.ParamsForChain {
 		cleanupTimedOutBatchTxs(ctx, k, chainID)
 		cleanupTimedOutContractCallTxs(ctx, k, chainID)
 		createSignerSetTxs(ctx, k, chainID)
@@ -30,7 +30,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 // EndBlocker is called at the end of every block
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	params := k.GetParams(ctx)
-	for chainID, _ := range params.ChainParams {
+	for chainID, _ := range params.ParamsForChain {
 		outgoingTxSlashing(ctx, k, chainID)
 		eventVoteRecordTally(ctx, k, chainID)
 		updateObservedEVMHeight(ctx, k, chainID)
@@ -92,7 +92,7 @@ func createSignerSetTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 }
 
 func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
-	params := k.GetParams(ctx).ChainParams[chainID]
+	params := k.GetParams(ctx).ParamsForChain[chainID]
 	// Validator set pruning
 	// prune all validator sets with a nonce less than the
 	// last observed nonce, they can't be submitted any longer
@@ -178,7 +178,7 @@ func updateObservedEVMHeight(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	requiredPower := types.EventVoteRecordPowerThreshold(k.StakingKeeper.GetLastTotalPower(ctx))
 
 	// populate the list
-	k.IterateEVMHeightVotes(ctx, func(valAddres sdk.ValAddress, height types.LatestEVMBlockHeight) bool {
+	k.IterateEVMHeightVotes(ctx, chainID, func(valAddres sdk.ValAddress, height types.LatestEVMBlockHeight) bool {
 		if _, ok := evmHeightPowers[height.EVMHeight]; !ok {
 			evmHeightPowers[height.EVMHeight] = sdk.NewInt(0)
 		}
@@ -191,7 +191,7 @@ func updateObservedEVMHeight(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	})
 
 	// vote on acceptable height values (less than or equal to the validator's observed value)
-	k.IterateEVMHeightVotes(ctx, func(valAddress sdk.ValAddress, height types.LatestEVMBlockHeight) bool {
+	k.IterateEVMHeightVotes(ctx, chainID, func(valAddress sdk.ValAddress, height types.LatestEVMBlockHeight) bool {
 		validatorPower := sdk.NewInt(k.StakingKeeper.GetLastValidatorPower(ctx, valAddress))
 
 		for evmVoteHeight, evmPower := range evmHeightPowers {
@@ -274,7 +274,7 @@ func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper, chainID ui
 }
 
 func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
-	params := k.GetParams(ctx).ChainParams[chainID]
+	params := k.GetParams(ctx).ParamsForChain[chainID]
 	maxHeight := uint64(0)
 	if uint64(ctx.BlockHeight()) > params.SignedBatchesWindow {
 		maxHeight = uint64(ctx.BlockHeight()) - params.SignedBatchesWindow

@@ -15,14 +15,14 @@ const (
 )
 
 var (
-	// ParamsStoreKeyChainParams stores a map of chain ID to chain specific params
-	ParamsStoreKeyChainParams = []byte("ChainParams")
+	// ParamsStoreKeyParamsForChain stores a map of chain ID to chain specific params
+	ParamsStoreKeyParamsForChain = []byte("ParamsForChain")
 
 	// Ensure that params implements the proper interface
 	_ paramtypes.ParamSet = &Params{}
 )
 
-func (gs *ChainGenesisState) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+func (gs *EVMSpecificGenesisState) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 	for _, otx := range gs.OutgoingTxs {
 		var outgoing OutgoingTx
 		if err := unpacker.UnpackAny(otx, &outgoing); err != nil {
@@ -49,7 +49,7 @@ func EventVoteRecordPowerThreshold(totalPower sdk.Int) sdk.Int {
 
 // ValidateBasic validates genesis state by looping through the params and
 // calling their validation functions
-func (s GenesisStateMultiChain) ValidateBasic() error {
+func (s GenesisState) ValidateBasic() error {
 	if err := s.Params.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "params")
 	}
@@ -65,15 +65,15 @@ func (s GenesisStateMultiChain) ValidateBasic() error {
 
 // DefaultGenesisState returns empty genesis state
 // TODO: set some better defaults here
-func DefaultGenesisState() *GenesisStateMultiChain {
-	return &GenesisStateMultiChain{
+func DefaultGenesisState() *GenesisState {
+	return &GenesisState{
 		Params: DefaultParams(),
 	}
 }
 
 // DefaultParams returns a copy of the default params
 func DefaultParams() *Params {
-	cp := ChainParams{GravityId: "defaultgravityid",
+	cp := ParamsForChain{GravityId: "defaultgravityid",
 		SignedSignerSetTxsWindow:             10000,
 		SignedBatchesWindow:                  10000,
 		EvmSignaturesWindow:                  10000,
@@ -87,7 +87,7 @@ func DefaultParams() *Params {
 		UnbondSlashingSignerSetTxsWindow:     10000}
 
 	return &Params{
-		ChainParams: map[uint32]*ChainParams{EthereumChainID: &cp},
+		ParamsForChain: map[uint32]*ParamsForChain{EthereumChainID: &cp},
 	}
 }
 
@@ -95,7 +95,7 @@ func DefaultParams() *Params {
 func (p Params) ValidateBasic() error {
 	var gravityIDs []string
 
-	for _, cp := range p.ChainParams {
+	for _, cp := range p.ParamsForChain {
 		if err := cp.ValidateBasic(); err != nil {
 			return err
 		}
@@ -111,7 +111,7 @@ func (p Params) ValidateBasic() error {
 	return nil
 }
 
-func (cp ChainParams) ValidateBasic() error {
+func (cp ParamsForChain) ValidateBasic() error {
 	if err := validateGravityID(cp.GravityId); err != nil {
 		return sdkerrors.Wrap(err, "gravity id")
 	}
@@ -164,7 +164,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 // pairs of auth module's parameters.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(ParamsStoreKeyChainParams, &p.ChainParams, validateChainParams),
+		paramtypes.NewParamSetPair(ParamsStoreKeyParamsForChain, &p.ParamsForChain, validateParamsForChain),
 	}
 }
 
@@ -181,8 +181,8 @@ func (p Params) Equal(p2 Params) bool {
 	return bytes.Equal(pb, p2b)
 }
 
-func validateChainParams(i interface{}) error {
-	v, ok := i.(map[uint32]*ChainParams)
+func validateParamsForChain(i interface{}) error {
+	v, ok := i.(map[uint32]*ParamsForChain)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

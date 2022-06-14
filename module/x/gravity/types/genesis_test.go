@@ -9,18 +9,18 @@ import (
 func TestGenesisStateValidate(t *testing.T) {
 	var nilByteSlice []byte
 	specs := map[string]struct {
-		src    *GenesisStateMultiChain
+		src    *GenesisState
 		expErr bool
 	}{
 		"default params": {src: DefaultGenesisState(), expErr: false},
-		"empty params":   {src: &GenesisStateMultiChain{Params: &Params{}}, expErr: true},
-		"invalid params": {src: &GenesisStateMultiChain{
+		"empty params":   {src: &GenesisState{Params: &Params{}}, expErr: true},
+		"invalid params": {src: &GenesisState{
 			Params: &Params{
 				GravityId:          "foo",
 				ContractSourceHash: "laksdjflasdkfja",
 			},
 		}, expErr: true},
-		"valid delegate": {src: &GenesisStateMultiChain{
+		"valid delegate": {src: &GenesisState{
 			Params: DefaultParams(),
 			DelegateKeys: []*MsgDelegateKeys{
 				{
@@ -31,7 +31,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 			},
 		}, expErr: false},
-		"valid delegate with placeholder signature": {src: &GenesisStateMultiChain{
+		"valid delegate with placeholder signature": {src: &GenesisState{
 			Params: DefaultParams(),
 			DelegateKeys: []*MsgDelegateKeys{
 				{
@@ -42,7 +42,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 			},
 		}, expErr: false},
-		"valid delegate with nil signature": {src: &GenesisStateMultiChain{
+		"valid delegate with nil signature": {src: &GenesisState{
 			Params: DefaultParams(),
 			DelegateKeys: []*MsgDelegateKeys{
 				{
@@ -53,7 +53,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 			},
 		}, expErr: true},
-		"delegate with bad validator address": {src: &GenesisStateMultiChain{
+		"delegate with bad validator address": {src: &GenesisState{
 			Params: DefaultParams(),
 			DelegateKeys: []*MsgDelegateKeys{
 				{
@@ -64,7 +64,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 			},
 		}, expErr: true},
-		"delegate with bad orchestrator address": {src: &GenesisStateMultiChain{
+		"delegate with bad orchestrator address": {src: &GenesisState{
 			Params: DefaultParams(),
 			DelegateKeys: []*MsgDelegateKeys{
 				{
@@ -75,7 +75,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 			},
 		}, expErr: true},
-		"delegate with bad eth address": {src: &GenesisStateMultiChain{
+		"delegate with bad eth address": {src: &GenesisState{
 			Params: DefaultParams(),
 			DelegateKeys: []*MsgDelegateKeys{
 				{

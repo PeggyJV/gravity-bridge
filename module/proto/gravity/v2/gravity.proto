@@ -93,8 +93,6 @@ message ERC20Token {
   uint32 chain_id = 3;
 }
 
-message IDSet { repeated uint64 ids = 1; }
-
 message CommunityPoolEVMSpendProposal {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
@@ -120,5 +118,5 @@ message CommunityPoolEVMSpendProposalForCLI {
   string amount = 4 [ (gogoproto.moretags) = "yaml:\"amount\"" ];
   string bridge_fee = 5 [ (gogoproto.moretags) = "yaml:\"bridge_fee\"" ];
   string deposit = 6 [ (gogoproto.moretags) = "yaml:\"deposit\"" ];
-  uint32 chain_id = 7;
+  uint32 chain_id = 7 [ (gogoproto.moretags) = "yaml:\"chain_id\""];
 }

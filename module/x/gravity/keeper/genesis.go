@@ -10,7 +10,7 @@ import (
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
-func InitGenesisMultiChain(ctx sdk.Context, k Keeper, data types.GenesisStateMultiChain) {
+func InitGenesisMultiChain(ctx sdk.Context, k Keeper, data types.GenesisState) {
 	k.SetParams(ctx, *data.Params)
 
 	// reset delegate keys in state
@@ -30,8 +30,8 @@ func InitGenesisMultiChain(ctx sdk.Context, k Keeper, data types.GenesisStateMul
 		k.setEVMOrchestratorAddress(ctx, eth, orch)
 	}
 
-	for _, chainGS := range data.ChainGenesisStates {
-		if _, ok := data.Params.ChainParams[chainGS.ChainID]; ok != true {
+	for _, chainGS := range data.EVMSpecificGenesisStates {
+		if _, ok := data.Params.ParamsForChain[chainGS.ChainID]; ok != true {
 			panic(fmt.Sprintf("chain ID %d presented in state, but not in params", chainGS.ChainID))
 		}
 
@@ -39,7 +39,7 @@ func InitGenesisMultiChain(ctx sdk.Context, k Keeper, data types.GenesisStateMul
 	}
 }
 
-func initGenesisForChain(ctx sdk.Context, k Keeper, data types.ChainGenesisState) {
+func initGenesisForChain(ctx sdk.Context, k Keeper, data types.EVMSpecificGenesisState) {
 	// reset pool transactions in state
 	for _, tx := range data.UnbatchedSendToEvmTxs {
 		k.setUnbatchedSendToEVM(ctx, data.ChainID, tx)
@@ -104,15 +104,15 @@ func initGenesisForChain(ctx sdk.Context, k Keeper, data types.ChainGenesisState
 
 // ExportGenesisMultiChain exports all the state needed to restart the chain
 // from the current state of the chain
-func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisStateMultiChain {
+func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisState {
 	var (
 		p         = k.GetParams(ctx)
 		delegates = k.getDelegateKeys(ctx)
 	)
 
-	var chainGenesisStates []*types.ChainGenesisState
+	var EVMSpecificGenesisStates []*types.EVMSpecificGenesisState
 
-	for chainID, _ := range p.ChainParams {
+	for chainID, _ := range p.ParamsForChain {
 		var (
 			outgoingTxs              []*cdctypes.Any
 			ethereumTxConfirmations  []*cdctypes.Any
@@ -191,7 +191,7 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisStateMultiC
 			return false
 		})
 
-		cgs := &types.ChainGenesisState{
+		cgs := &types.EVMSpecificGenesisState{
 			ChainID:                chainID,
 			LastObservedEventNonce: lastobserved,
 			OutgoingTxs:            outgoingTxs,
@@ -201,7 +201,7 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisStateMultiC
 			UnbatchedSendToEvmTxs:  unbatchedSendToEVMTxs,
 		}
 
-		chainGenesisStates = append(chainGenesisStates, cgs)
+		EVMSpecificGenesisStates = append(EVMSpecificGenesisStates, cgs)
 	}
 
 	// this will marshal into "dW51c2Vk" as []byte will be encoded as base64
@@ -209,9 +209,9 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisStateMultiC
 		delegate.EthSignature = []byte("unused")
 	}
 
-	return types.GenesisStateMultiChain{
-		Params:             &p,
-		DelegateKeys:       delegates,
-		ChainGenesisStates: chainGenesisStates,
+	return types.GenesisState{
+		Params:                   &p,
+		DelegateKeys:             delegates,
+		EVMSpecificGenesisStates: EVMSpecificGenesisStates,
 	}
 }

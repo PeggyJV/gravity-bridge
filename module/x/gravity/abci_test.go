@@ -55,7 +55,7 @@ func TestSignerSetTxSlashing_SignerSetTxCreated_Before_ValidatorBonded(t *testin
 	params := input.GravityKeeper.GetParams(ctx)
 
 	signerSet := pk.CreateSignerSetTx(ctx, types.EthereumChainID)
-	height := uint64(ctx.BlockHeight()) - (params.SignedSignerSetTxsWindow + 1)
+	height := uint64(ctx.BlockHeight()) - (params.ParamsForChain[types.EthereumChainID].SignedSignerSetTxsWindow + 1)
 	signerSet.Height = height
 	pk.SetOutgoingTx(ctx, types.EthereumChainID, signerSet)
 
@@ -73,9 +73,9 @@ func TestSignerSetTxSlashing_SignerSetTxCreated_After_ValidatorBonded(t *testing
 	pk := input.GravityKeeper
 	params := input.GravityKeeper.GetParams(ctx)
 
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + int64(params.SignedSignerSetTxsWindow) + 2)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + int64(params.ParamsForChain[types.EthereumChainID].SignedSignerSetTxsWindow) + 2)
 	signerSet := pk.CreateSignerSetTx(ctx, types.EthereumChainID)
-	height := uint64(ctx.BlockHeight()) - (params.SignedSignerSetTxsWindow + 1)
+	height := uint64(ctx.BlockHeight()) - (params.ParamsForChain[types.EthereumChainID].SignedSignerSetTxsWindow + 1)
 	signerSet.Height = height
 	pk.SetOutgoingTx(ctx, types.EthereumChainID, signerSet)
 
@@ -110,12 +110,12 @@ func TestSignerSetTxSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testi
 	params := input.GravityKeeper.GetParams(ctx)
 
 	// Define slashing variables
-	validatorStartHeight := ctx.BlockHeight()                                                             // 0
-	signerSetTxHeight := validatorStartHeight + 1                                                         // 1
-	valUnbondingHeight := signerSetTxHeight + 1                                                           // 2
-	signerSetTxSlashedAt := signerSetTxHeight + int64(params.SignedSignerSetTxsWindow)                    // 11
-	validatorUnbondingWindowExpiry := valUnbondingHeight + int64(params.UnbondSlashingSignerSetTxsWindow) // 17
-	currentBlockHeight := signerSetTxSlashedAt + 1                                                        // 12
+	validatorStartHeight := ctx.BlockHeight()                                                                                                   // 0
+	signerSetTxHeight := validatorStartHeight + 1                                                                                               // 1
+	valUnbondingHeight := signerSetTxHeight + 1                                                                                                 // 2
+	signerSetTxSlashedAt := signerSetTxHeight + int64(params.ParamsForChain[types.EthereumChainID].SignedSignerSetTxsWindow)                    // 11
+	validatorUnbondingWindowExpiry := valUnbondingHeight + int64(params.ParamsForChain[types.EthereumChainID].UnbondSlashingSignerSetTxsWindow) // 17
+	currentBlockHeight := signerSetTxSlashedAt + 1                                                                                              // 12
 
 	require.True(t, signerSetTxSlashedAt < currentBlockHeight)
 	require.True(t, signerSetTxHeight < validatorUnbondingWindowExpiry)
@@ -166,14 +166,14 @@ func TestBatchSlashing(t *testing.T) {
 	gravityKeeper := input.GravityKeeper
 	params := gravityKeeper.GetParams(ctx)
 
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + int64(params.SignedBatchesWindow) + 2)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + int64(params.ParamsForChain[types.EthereumChainID].SignedBatchesWindow) + 2)
 
 	// First store a batch
 	batch := &types.BatchTx{
 		BatchNonce:    1,
 		Transactions:  []*types.SendToEVM{},
 		TokenContract: keeper.TokenContractAddrs[0],
-		Height:        uint64(ctx.BlockHeight() - int64(params.SignedBatchesWindow+1)),
+		Height:        uint64(ctx.BlockHeight() - int64(params.ParamsForChain[types.EthereumChainID].SignedBatchesWindow+1)),
 	}
 	gravityKeeper.SetOutgoingTx(ctx, types.EthereumChainID, batch)
 
@@ -247,8 +247,8 @@ func TestBatchTxTimeout(t *testing.T) {
 		allVouchers         = sdk.NewCoins(types.NewERC20Token(99999, myTokenContractAddr.Hex()).GravityCoin())
 	)
 
-	require.Greater(t, params.AverageBlockTime, uint64(0))
-	require.Greater(t, params.AverageEvmBlockTime, uint64(0))
+	require.Greater(t, params.ParamsForChain[types.EthereumChainID].AverageBlockTime, uint64(0))
+	require.Greater(t, params.ParamsForChain[types.EthereumChainID].AverageEvmBlockTime, uint64(0))
 
 	// mint some vouchers first
 	require.NoError(t, input.BankKeeper.MintCoins(ctx, types.ModuleName, allVouchers))
@@ -311,38 +311,38 @@ func TestUpdateObservedEthereumHeight(t *testing.T) {
 	input, ctx := keeper.SetupFiveValChain(t)
 	gravityKeeper := input.GravityKeeper
 
-	gravityKeeper.SetLastObservedEthereumBlockHeightWithCosmos(ctx, 2, 5)
+	gravityKeeper.SetLastObservedEVMBlockHeightWithCosmos(ctx, types.EthereumChainID, 2, 5)
 
 	// update runs on mod 50 block heights, no votes have been sent so it
 	// shoudl leave the set values alone
 	ctx = ctx.WithBlockHeight(50)
 	gravity.EndBlocker(ctx, gravityKeeper)
 
-	lastHeight := gravityKeeper.GetLastObservedEthereumBlockHeight(ctx)
-	require.Equal(t, lastHeight.EthereumHeight, uint64(2))
+	lastHeight := gravityKeeper.GetLastObservedEVMBlockHeight(ctx, types.EthereumChainID)
+	require.Equal(t, lastHeight.EVMHeight, uint64(2))
 	require.Equal(t, lastHeight.CosmosHeight, uint64(5))
 
 	ctx = ctx.WithBlockHeight(3)
-	input.GravityKeeper.SetEVMHeightVote(ctx, keeper.ValAddrs[0], 10)
+	input.GravityKeeper.SetEVMHeightVote(ctx, types.EthereumChainID, keeper.ValAddrs[0], 10)
 
 	ctx = ctx.WithBlockHeight(33)
-	input.GravityKeeper.SetEVMHeightVote(ctx, keeper.ValAddrs[1], 20)
+	input.GravityKeeper.SetEVMHeightVote(ctx, types.EthereumChainID, keeper.ValAddrs[1], 20)
 
 	ctx = ctx.WithBlockHeight(63)
-	input.GravityKeeper.SetEVMHeightVote(ctx, keeper.ValAddrs[2], 30)
+	input.GravityKeeper.SetEVMHeightVote(ctx, types.EthereumChainID, keeper.ValAddrs[2], 30)
 
 	ctx = ctx.WithBlockHeight(93)
-	input.GravityKeeper.SetEVMHeightVote(ctx, keeper.ValAddrs[3], 40)
+	input.GravityKeeper.SetEVMHeightVote(ctx, types.EthereumChainID, keeper.ValAddrs[3], 40)
 
 	ctx = ctx.WithBlockHeight(123)
-	input.GravityKeeper.SetEVMHeightVote(ctx, keeper.ValAddrs[4], 50)
+	input.GravityKeeper.SetEVMHeightVote(ctx, types.EthereumChainID, keeper.ValAddrs[4], 50)
 
 	// run endblocker on a non-mod 50 block to ensure the update isn't being
 	// called and changing the set values
 	gravity.EndBlocker(ctx, gravityKeeper)
 
-	lastHeight = gravityKeeper.GetLastObservedEthereumBlockHeight(ctx)
-	require.Equal(t, lastHeight.EthereumHeight, uint64(2))
+	lastHeight = gravityKeeper.GetLastObservedEVMBlockHeight(ctx, types.EthereumChainID)
+	require.Equal(t, lastHeight.EVMHeight, uint64(2))
 	require.Equal(t, lastHeight.CosmosHeight, uint64(5))
 
 	// run update in endblocker and verify that 4/5 validators agree that
@@ -353,8 +353,8 @@ func TestUpdateObservedEthereumHeight(t *testing.T) {
 	ctx = ctx.WithBlockHeight(150)
 	gravity.EndBlocker(ctx, gravityKeeper)
 
-	lastHeight = gravityKeeper.GetLastObservedEthereumBlockHeight(ctx)
-	require.Equal(t, lastHeight.EthereumHeight, uint64(20))
+	lastHeight = gravityKeeper.GetLastObservedEVMBlockHeight(ctx, types.EthereumChainID)
+	require.Equal(t, lastHeight.EVMHeight, uint64(20))
 	require.Equal(t, lastHeight.CosmosHeight, uint64(33))
 }
 

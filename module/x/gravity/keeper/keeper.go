@@ -345,7 +345,7 @@ func (k Keeper) SetParams(ctx sdk.Context, ps types.Params) {
 
 func (k Keeper) chainIDsContains(ctx sdk.Context, chainID uint32) bool {
 	params := k.GetParams(ctx)
-	for id, _ := range params.ChainParams {
+	for id, _ := range params.ParamsForChain {
 		if chainID == id {
 			return true
 		}
@@ -365,7 +365,7 @@ func (k Keeper) chainIDsContains(ctx sdk.Context, chainID uint32) bool {
 // successive chain in charge of the same bridge
 func (k Keeper) getGravityID(ctx sdk.Context, chainID uint32) string {
 	params := k.GetParams(ctx)
-	return params.ChainParams[chainID].GravityId
+	return params.ParamsForChain[chainID].GravityId
 }
 
 // getDelegateKeys iterates both the EthAddress and Orchestrator address indexes to produce
@@ -525,7 +525,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 		InvalidationScope: invalidationScope,
 		Address:           address.String(),
 		Payload:           payload,
-		Timeout:           params.ChainParams[chainID].TargetEvmTxTimeout,
+		Timeout:           params.ParamsForChain[chainID].TargetEvmTxTimeout,
 		Tokens:            tokens,
 		Fees:              fees,
 		Height:            uint64(ctx.BlockHeight()),
@@ -552,7 +552,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 			sdk.NewAttribute(types.AttributeKeyContractCallPayload, string(payload)),
 			sdk.NewAttribute(types.AttributeKeyContractCallTokens, strings.Join(tokenString, "|")),
 			sdk.NewAttribute(types.AttributeKeyContractCallFees, strings.Join(feeString, "|")),
-			sdk.NewAttribute(types.AttributeKeyEvmTxTimeout, strconv.FormatUint(params.ChainParams[chainID].TargetEvmTxTimeout, 10)),
+			sdk.NewAttribute(types.AttributeKeyEvmTxTimeout, strconv.FormatUint(params.ParamsForChain[chainID].TargetEvmTxTimeout, 10)),
 		),
 	)
 	k.SetOutgoingTx(ctx, chainID, newContractCallTx)
@@ -565,7 +565,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 		"payload", string(payload),
 		"tokens", strings.Join(tokenString, "|"),
 		"fees", strings.Join(feeString, "|"),
-		"eth_tx_timeout", strconv.FormatUint(params.ChainParams[chainID].TargetEvmTxTimeout, 10),
+		"eth_tx_timeout", strconv.FormatUint(params.ParamsForChain[chainID].TargetEvmTxTimeout, 10),
 	)
 	return newContractCallTx
 }
@@ -603,9 +603,9 @@ func (k Keeper) SetEVMHeightVote(ctx sdk.Context, chainID uint32, valAddress sdk
 	store.Set(key, k.Cdc.MustMarshal(&height))
 }
 
-func (k Keeper) IterateEVMHeightVotes(ctx sdk.Context, cb func(val sdk.ValAddress, height types.LatestEVMBlockHeight) (stop bool)) {
+func (k Keeper) IterateEVMHeightVotes(ctx sdk.Context, chainID uint32, cb func(val sdk.ValAddress, height types.LatestEVMBlockHeight) (stop bool)) {
 	store := ctx.KVStore(k.StoreKey)
-	iter := sdk.KVStorePrefixIterator(store, []byte{types.EVMHeightVoteKey})
+	iter := sdk.KVStorePrefixIterator(store, append([]byte{types.EVMHeightVoteKey}, types.Uint32ToBigEndian(chainID)...))
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {

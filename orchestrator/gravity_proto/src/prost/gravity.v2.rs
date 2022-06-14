@@ -618,10 +618,10 @@ pub mod msg_client {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Params {
     #[prost(map = "uint32, message", tag = "1")]
-    pub chain_params: ::std::collections::HashMap<u32, ChainParams>,
+    pub chain_params: ::std::collections::HashMap<u32, ParamsForChain>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ChainParams {
+pub struct ParamsForChain {
     #[prost(string, tag = "1")]
     pub gravity_id: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
@@ -651,16 +651,16 @@ pub struct ChainParams {
     pub unbond_slashing_signer_set_txs_window: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct GenesisStateMultiChain {
+pub struct GenesisState {
     #[prost(message, optional, tag = "1")]
     pub params: ::core::option::Option<Params>,
     #[prost(message, repeated, tag = "2")]
     pub delegate_keys: ::prost::alloc::vec::Vec<MsgDelegateKeys>,
     #[prost(message, repeated, tag = "3")]
-    pub chain_genesis_states: ::prost::alloc::vec::Vec<ChainGenesisState>,
+    pub chain_genesis_states: ::prost::alloc::vec::Vec<EVMSpecificGenesisState>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ChainGenesisState {
+pub struct EVMSpecificGenesisState {
     #[prost(uint32, tag = "1")]
     pub chain_id: u32,
     #[prost(uint64, tag = "2")]

@@ -72,10 +72,10 @@ option go_package = "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types
 message Params {
   option (gogoproto.stringer) = false;
 
-  map<uint32, ChainParams> chain_params = 1;
+  map<uint32, ParamsForChain> params_by_chain = 1;
 }
 
-message ChainParams {
+message ParamsForChain {
   option (gogoproto.stringer) = false;
 
   string gravity_id = 1;
@@ -106,13 +106,13 @@ message ChainParams {
   uint64 unbond_slashing_signer_set_txs_window = 13;
 }
 
-message GenesisStateMultiChain {
+message GenesisState {
   Params params = 1;
   repeated MsgDelegateKeys delegate_keys = 2;
-  repeated ChainGenesisState chain_genesis_states = 3;
+  repeated EVMSpecificGenesisState evm_genesis_states = 3;
 }
 
-message ChainGenesisState {
+message EVMSpecificGenesisState {
   uint32 chainID = 1;
   uint64 last_observed_event_nonce = 2;
   repeated google.protobuf.Any outgoing_txs = 3;

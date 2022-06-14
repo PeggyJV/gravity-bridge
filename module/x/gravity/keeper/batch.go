@@ -56,7 +56,7 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, chainID uint32, contractAddress co
 
 // This gets the batch timeout height in EVM blocks.
 func (k Keeper) getBatchTimeoutHeight(ctx sdk.Context, chainID uint32) uint64 {
-	params := k.GetParams(ctx).ChainParams[chainID]
+	params := k.GetParams(ctx).ParamsForChain[chainID]
 	currentCosmosHeight := ctx.BlockHeight()
 	// we store the last observed Cosmos and EVM heights, we do not concern ourselves if these values are zero because
 	// no batch can be produced if the last EVM block height is not first populated by a deposit event.
