@@ -79,7 +79,7 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 
 	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
 
-	if err = types.ValidateEVMSignature(hash, msg.EthSignature, ethAddr); err != nil {
+	if err = types.ValidateEVMSignature(hash, msg.EVMSignature, ethAddr); err != nil {
 		return nil, sdkerrors.Wrapf(
 			types.ErrDelegateKeys,
 			"failed to validate delegate keys signature for EVM address %X; %s ;%d",
@@ -119,9 +119,9 @@ func (k msgServer) SubmitEVMTxConfirmation(c context.Context, msg *types.MsgSubm
 		return nil, err
 	}
 
-	chainID := types.ChainIDOrDefault(msg.ChainId)
+	chainID := msg.ChainId
 	if !k.chainIDsContains(ctx, chainID) {
-		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
+		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupported chain ID: %d", chainID))
 	}
 
 	otx := k.GetOutgoingTx(ctx, chainID, confirmation.GetStoreIndex(chainID))
@@ -191,7 +191,7 @@ func (k msgServer) SubmitEVMEvent(c context.Context, msg *types.MsgSubmitEVMEven
 		return nil, err
 	}
 
-	chainID := types.ChainIDOrDefault(msg.ChainId)
+	chainID := msg.ChainId
 	if !k.chainIDsContains(ctx, chainID) {
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
 	}
@@ -223,7 +223,11 @@ func (k msgServer) SendToEVM(c context.Context, msg *types.MsgSendToEVM) (*types
 		return nil, err
 	}
 
-	chainID := types.ChainIDOrDefault(msg.GetChainId())
+	// ensure the denoms provided in the message will map correctly if they are gravity denoms
+	types.NormalizeCoinDenom(&msg.Amount)
+	types.NormalizeCoinDenom(&msg.BridgeFee)
+
+	chainID := msg.GetChainId()
 	if !k.chainIDsContains(ctx, chainID) {
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
 	}
@@ -256,19 +260,21 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 	// TODO: limit this to only orchestrators and validators?
 	ctx := sdk.UnwrapSDKContext(c)
 
-	chainID := types.ChainIDOrDefault(msg.GetChainId())
+	chainID := msg.GetChainId()
 	if !k.chainIDsContains(ctx, chainID) {
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
 	}
 
 	// Check if the denom is a gravity coin, if not, check if there is a deployed ERC20 representing it.
-	// If not, error out
-	_, tokenContract, err := k.DenomToERC20Lookup(ctx, chainID, msg.Denom)
+	_, tokenContract, err := k.DenomToERC20Lookup(ctx, chainID, types.NormalizeDenom(msg.Denom))
 	if err != nil {
 		return nil, err
 	}
 
 	batchID := k.BuildBatchTx(ctx, chainID, tokenContract, BatchTxSize)
+	if batchID == nil {
+		return nil, fmt.Errorf("no suitablmsg_)e batch to create")
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -286,7 +292,7 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 func (k msgServer) CancelSendToEVM(c context.Context, msg *types.MsgCancelSendToEVM) (*types.MsgCancelSendToEVMResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	chainID := types.ChainIDOrDefault(msg.GetChainId())
+	chainID := msg.GetChainId()
 	if !k.chainIDsContains(ctx, chainID) {
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
 	}

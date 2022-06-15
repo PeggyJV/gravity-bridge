@@ -121,16 +121,11 @@ func migrateSignerSetTxNonce(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.K
 	store.Set(types.MakeLatestSignerSetTxNonceKey(types.EthereumChainID), sdk.Uint64ToBigEndian(nonce))
 }
 
-func (k NewKeeper) SetLastObservedEventNonce(ctx sdk.Context, chainID uint32, nonce uint64) {
-	store := ctx.KVStore(k.StoreKey)
-	store.Set(types.MakeLastObservedEventNonceKey(chainID), sdk.Uint64ToBigEndian(nonce))
-}
-
 func migrateLastObservedEventNonce(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
 	nonce := oldK.GetLastObservedEventNonce(ctx)
 	store := ctx.KVStore(newK.StoreKey)
 	store.Delete([]byte{oldTypes.LastObservedEventNonceKey})
-	newK.SetLastObservedEventNonce(ctx, types.EthereumChainID, nonce)
+	store.Set(types.MakeLastObservedEventNonceKey(types.EthereumChainID), sdk.Uint64ToBigEndian(nonce))
 }
 
 func (k NewKeeper) setLastSlashedOutgoingTxBlockHeight(ctx sdk.Context, chainID uint32, blockHeight uint64) {

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	signaturePrefix = "\x19EVM Signed Message:\n32"
+	signaturePrefix = "\x19Ethereum Signed Message:\n32"
 )
 
 // NewEVMSignature creates a new signature over a given byte array

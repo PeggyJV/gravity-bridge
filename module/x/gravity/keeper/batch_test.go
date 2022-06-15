@@ -44,15 +44,15 @@ func TestBatches(t *testing.T) {
 	firstBatch := input.GravityKeeper.BuildBatchTx(ctx, types.EthereumChainID, myTokenContractAddr, 2)
 
 	// then batch is persisted
-	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, 1, firstBatch.GetStoreIndex())
+	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, firstBatch.GetStoreIndex())
 	require.NotNil(t, gotFirstBatch)
 
 	gfb := gotFirstBatch.(*types.BatchTx)
 	expFirstBatch := &types.BatchTx{
 		BatchNonce: 1,
 		Transactions: []*types.SendToEVM{
-			types.NewSendToEVMTx(2, myTokenContractAddr, mySender, myReceiver, 101, 3),
-			types.NewSendToEVMTx(3, myTokenContractAddr, mySender, myReceiver, 102, 2),
+			types.NewSendToEVMTx(types.EthereumChainID, 2, myTokenContractAddr, mySender, myReceiver, 101, 3),
+			types.NewSendToEVMTx(types.EthereumChainID, 3, myTokenContractAddr, mySender, myReceiver, 102, 2),
 		},
 		TokenContract: myTokenContractAddr.Hex(),
 		Height:        1234567,
@@ -67,8 +67,8 @@ func TestBatches(t *testing.T) {
 		return false
 	})
 	expUnbatchedTx := []*types.SendToEVM{
-		types.NewSendToEVMTx(1, myTokenContractAddr, mySender, myReceiver, 100, 2),
-		types.NewSendToEVMTx(4, myTokenContractAddr, mySender, myReceiver, 103, 1),
+		types.NewSendToEVMTx(types.EthereumChainID, 1, myTokenContractAddr, mySender, myReceiver, 100, 2),
+		types.NewSendToEVMTx(types.EthereumChainID, 4, myTokenContractAddr, mySender, myReceiver, 103, 1),
 	}
 	assert.Equal(t, expUnbatchedTx, gotUnbatchedTx)
 
@@ -87,8 +87,8 @@ func TestBatches(t *testing.T) {
 	expSecondBatch := &types.BatchTx{
 		BatchNonce: 2,
 		Transactions: []*types.SendToEVM{
-			types.NewSendToEVMTx(6, myTokenContractAddr, mySender, myReceiver, 101, 5),
-			types.NewSendToEVMTx(5, myTokenContractAddr, mySender, myReceiver, 100, 4),
+			types.NewSendToEVMTx(types.EthereumChainID, 6, myTokenContractAddr, mySender, myReceiver, 101, 5),
+			types.NewSendToEVMTx(types.EthereumChainID, 5, myTokenContractAddr, mySender, myReceiver, 100, 4),
 		},
 		TokenContract: myTokenContractAddr.Hex(),
 		Height:        1234567,
@@ -113,10 +113,10 @@ func TestBatches(t *testing.T) {
 		return false
 	})
 	expUnbatchedTx = []*types.SendToEVM{
-		types.NewSendToEVMTx(2, myTokenContractAddr, mySender, myReceiver, 101, 3),
-		types.NewSendToEVMTx(3, myTokenContractAddr, mySender, myReceiver, 102, 2),
-		types.NewSendToEVMTx(1, myTokenContractAddr, mySender, myReceiver, 100, 2),
-		types.NewSendToEVMTx(4, myTokenContractAddr, mySender, myReceiver, 103, 1),
+		types.NewSendToEVMTx(types.EthereumChainID, 2, myTokenContractAddr, mySender, myReceiver, 101, 3),
+		types.NewSendToEVMTx(types.EthereumChainID, 3, myTokenContractAddr, mySender, myReceiver, 102, 2),
+		types.NewSendToEVMTx(types.EthereumChainID, 1, myTokenContractAddr, mySender, myReceiver, 100, 2),
+		types.NewSendToEVMTx(types.EthereumChainID, 4, myTokenContractAddr, mySender, myReceiver, 103, 1),
 	}
 	assert.Equal(t, expUnbatchedTx, gotUnbatchedTx)
 }
@@ -353,4 +353,30 @@ func TestPoolTxRefund(t *testing.T) {
 	// make sure refund was issued
 	balances := input.BankKeeper.GetAllBalances(ctx, mySender)
 	require.Equal(t, sdk.NewInt(104), balances.AmountOf(myDenom))
+}
+
+func TestEmptyBatch(t *testing.T) {
+	input := CreateTestEnv(t)
+	ctx := input.Context
+
+	var (
+		now                 = time.Now().UTC()
+		mySender, _         = sdk.AccAddressFromBech32("cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn")
+		myTokenContractAddr = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5") // Pickle
+		allVouchers         = sdk.NewCoins(
+			types.NewERC20Token(99999, myTokenContractAddr).GravityCoin(),
+		)
+	)
+
+	// mint some voucher first
+	require.NoError(t, input.BankKeeper.MintCoins(ctx, types.ModuleName, allVouchers))
+	// set senders balance
+	input.AccountKeeper.NewAccountWithAddress(ctx, mySender)
+	require.NoError(t, fundAccount(ctx, input.BankKeeper, mySender, allVouchers))
+
+	// no transactions should be included in this batch
+	ctx = ctx.WithBlockTime(now)
+	batchTx := input.GravityKeeper.BuildBatchTx(ctx, types.EthereumChainID, myTokenContractAddr, 2)
+
+	require.Nil(t, batchTx)
 }

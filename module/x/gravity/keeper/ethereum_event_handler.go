@@ -26,7 +26,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EVMEvent) (err error) {
 	switch event := eve.(type) {
 	case *types.SendToCosmosEvent:
 		// Check if coin is Cosmos-originated asset and get denom
-		isCosmosOriginated, denom := k.ERC20ToDenomLookup(ctx, event.ChainID(), event.TokenContract)
+		isCosmosOriginated, denom := k.ERC20ToDenomLookup(ctx, event.ChainID(), common.HexToAddress(event.TokenContract))
 		addr, _ := sdk.AccAddressFromBech32(event.CosmosReceiver)
 		coins := sdk.Coins{sdk.NewCoin(denom, event.Amount)}
 
@@ -41,8 +41,14 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EVMEvent) (err error) {
 			}
 		}
 
-		if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
-			return err
+		if recipientModule, ok := k.ReceiverModuleAccounts[event.CosmosReceiver]; ok {
+			if err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, recipientModule, coins); err != nil {
+				return err
+			}
+		} else {
+			if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
+				return err
+			}
 		}
 		k.AfterSendToCosmosEvent(ctx, *event)
 		return nil
@@ -58,11 +64,12 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EVMEvent) (err error) {
 		}
 
 		// add to denom-erc20 mapping
-		k.setCosmosOriginatedDenomToERC20(ctx, event.ChainID(), event.CosmosDenom, event.TokenContract)
+		k.setCosmosOriginatedDenomToERC20(ctx, event.ChainID(), event.CosmosDenom, common.HexToAddress(event.TokenContract))
 		k.AfterERC20DeployedEvent(ctx, *event)
 		return nil
 
 	case *types.ContractCallExecutedEvent:
+		k.contractCallExecuted(ctx, event.ChainID(), event.InvalidationScope.Bytes(), event.InvalidationNonce)
 		k.AfterContractCallExecutedEvent(ctx, *event)
 		return nil
 

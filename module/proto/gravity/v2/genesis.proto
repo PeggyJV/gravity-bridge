@@ -79,31 +79,30 @@ message ParamsForChain {
   option (gogoproto.stringer) = false;
 
   string gravity_id = 1;
-  string contract_source_hash = 2;
-  uint64 signed_signer_set_txs_window = 3;
-  uint64 signed_batches_window = 4;
-  uint64 evm_signatures_window = 5;
-  uint64 target_evm_tx_timeout = 6;
-  uint64 average_block_time = 7;
-  uint64 average_evm_block_time = 8;
+  uint64 signed_signer_set_txs_window = 2;
+  uint64 signed_batches_window = 3;
+  uint64 evm_signatures_window = 4;
+  uint64 target_evm_tx_timeout = 5;
+  uint64 average_block_time = 6;
+  uint64 average_evm_block_time = 7;
   // TODO: slash fraction for contract call txs too
-  bytes slash_fraction_signer_set_tx = 9 [
+  bytes slash_fraction_signer_set_tx = 8 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  bytes slash_fraction_batch = 10 [
+  bytes slash_fraction_batch = 9 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  bytes slash_fraction_evm_signature = 11 [
+  bytes slash_fraction_evm_signature = 10 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  bytes slash_fraction_conflicting_evm_signature = 12 [
+  bytes slash_fraction_conflicting_evm_signature = 11 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  uint64 unbond_slashing_signer_set_txs_window = 13;
+  uint64 unbond_slashing_signer_set_txs_window = 12;
 }
 
 message GenesisState {

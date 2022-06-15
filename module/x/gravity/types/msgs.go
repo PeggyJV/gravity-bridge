@@ -28,7 +28,7 @@ func NewMsgDelegateKeys(val sdk.ValAddress, orchAddr sdk.AccAddress, ethAddr str
 		ValidatorAddress:    val.String(),
 		OrchestratorAddress: orchAddr.String(),
 		EVMAddress:          ethAddr,
-		EthSignature:        ethSig,
+		EVMSignature:        ethSig,
 	}
 }
 
@@ -49,7 +49,7 @@ func (msg *MsgDelegateKeys) ValidateBasic() (err error) {
 	if !common.IsHexAddress(msg.EVMAddress) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "EVM address")
 	}
-	if len(msg.EthSignature) == 0 {
+	if len(msg.EVMSignature) == 0 {
 		return ErrEmptyEVMSig
 	}
 
@@ -85,6 +85,10 @@ func (msg *MsgSubmitEVMEvent) ValidateBasic() (err error) {
 	event, err := UnpackEvent(msg.Event)
 	if err != nil {
 		return err
+	}
+
+	if msg.ChainId == 0 {
+		return sdkerrors.Wrap(ErrUnsupportedEVM, "chain id cannot be zero")
 	}
 	return event.Validate()
 }
@@ -125,6 +129,10 @@ func (msg *MsgSubmitEVMTxConfirmation) ValidateBasic() (err error) {
 
 	if err != nil {
 		return err
+	}
+
+	if msg.ChainId == 0 {
+		return sdkerrors.Wrap(ErrUnsupportedEVM, "chain id cannot be zero")
 	}
 
 	return event.Validate()
@@ -190,7 +198,9 @@ func (msg MsgSendToEVM) ValidateBasic() error {
 	if !common.IsHexAddress(msg.EVMRecipient) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "EVM address")
 	}
-
+	if msg.ChainId == 0 {
+		return sdkerrors.Wrap(ErrUnsupportedEVM, "chain id cannot be zero")
+	}
 	return nil
 }
 
@@ -231,6 +241,9 @@ func (msg MsgRequestBatchTx) ValidateBasic() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Signer)
+	}
+	if msg.ChainId == 0 {
+		return sdkerrors.Wrap(ErrUnsupportedEVM, "chain id cannot be zero")
 	}
 	return nil
 }
@@ -273,6 +286,9 @@ func (msg MsgCancelSendToEVM) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Sender)
 	}
+	if msg.ChainId == 0 {
+		return sdkerrors.Wrap(ErrUnsupportedEVM, "chain id cannot be zero")
+	}
 	return nil
 }
 
@@ -314,6 +330,9 @@ func (msg MsgEVMHeightVote) ValidateBasic() error {
 
 	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Signer)
+	}
+	if msg.ChainId == 0 {
+		return sdkerrors.Wrap(ErrUnsupportedEVM, "chain id cannot be zero")
 	}
 
 	return nil

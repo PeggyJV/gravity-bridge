@@ -186,7 +186,7 @@ func (k Keeper) GetOrchestratorValidatorAddress(ctx sdk.Context, orchAddr sdk.Ac
 // setValidatorEVMAddress sets the ethereum address for a given validator
 func (k Keeper) setValidatorEVMAddress(ctx sdk.Context, valAddr sdk.ValAddress, ethAddr common.Address) {
 	store := ctx.KVStore(k.StoreKey)
-	key := types.MakeValidatorEVMAddressKeyForValidator(valAddr)
+	key := types.MakeValidatorEVMAddressKey(valAddr)
 
 	store.Set(key, ethAddr.Bytes())
 }
@@ -194,7 +194,7 @@ func (k Keeper) setValidatorEVMAddress(ctx sdk.Context, valAddr sdk.ValAddress, 
 // GetValidatorEVMAddress returns the eth address for a given gravity validator.
 func (k Keeper) GetValidatorEVMAddress(ctx sdk.Context, valAddr sdk.ValAddress) common.Address {
 	store := ctx.KVStore(k.StoreKey)
-	key := types.MakeValidatorEVMAddressKeyForValidator(valAddr)
+	key := types.MakeValidatorEVMAddressKey(valAddr)
 
 	return common.BytesToAddress(store.Get(key))
 }
@@ -345,7 +345,7 @@ func (k Keeper) SetParams(ctx sdk.Context, ps types.Params) {
 
 func (k Keeper) chainIDsContains(ctx sdk.Context, chainID uint32) bool {
 	params := k.GetParams(ctx)
-	for id, _ := range params.ParamsForChain {
+	for id, _ := range params.ParamsByChain {
 		if chainID == id {
 			return true
 		}
@@ -365,7 +365,7 @@ func (k Keeper) chainIDsContains(ctx sdk.Context, chainID uint32) bool {
 // successive chain in charge of the same bridge
 func (k Keeper) getGravityID(ctx sdk.Context, chainID uint32) string {
 	params := k.GetParams(ctx)
-	return params.ParamsForChain[chainID].GravityId
+	return params.ParamsByChain[chainID].GravityId
 }
 
 // getDelegateKeys iterates both the EthAddress and Orchestrator address indexes to produce
@@ -409,6 +409,25 @@ func (k Keeper) GetUnbondingValidators(unbondingVals []byte) stakingtypes.ValAdd
 	unbondingValidators := stakingtypes.ValAddresses{}
 	k.Cdc.MustUnmarshal(unbondingVals, &unbondingValidators)
 	return unbondingValidators
+}
+
+func (k Keeper) getTimeoutHeight(ctx sdk.Context, chainID uint32) uint64 {
+	params := k.GetParams(ctx).ParamsByChain[chainID]
+	currentCosmosHeight := ctx.BlockHeight()
+	// we store the last observed Cosmos and EVM heights, we do not concern ourselves if these values are zero because
+	// no batch can be produced if the last EVM block height is not first populated by a deposit event.
+	heights := k.GetLastObservedEVMBlockHeight(ctx, chainID)
+	if heights.CosmosHeight == 0 || heights.EVMHeight == 0 {
+		return 0
+	}
+	// we project how long it has been in milliseconds since the last evm block height was observed
+	projectedMillis := (uint64(currentCosmosHeight) - heights.CosmosHeight) * params.AverageBlockTime
+	// we convert that projection into the current evm height using the average EVM block time in millis
+	projectedCurrentEVMHeight := (projectedMillis / params.AverageEvmBlockTime) + heights.EVMHeight
+	// we convert our target time for block timeouts (lets say 12 hours) into a number of blocks to
+	// place on top of our projection of the current EVM block height.
+	blocksToAdd := params.TargetEvmTxTimeout / params.AverageEvmBlockTime
+	return projectedCurrentEVMHeight + blocksToAdd
 }
 
 /////////////////
@@ -525,7 +544,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 		InvalidationScope: invalidationScope,
 		Address:           address.String(),
 		Payload:           payload,
-		Timeout:           params.ParamsForChain[chainID].TargetEvmTxTimeout,
+		Timeout:           params.ParamsByChain[chainID].TargetEvmTxTimeout,
 		Tokens:            tokens,
 		Fees:              fees,
 		Height:            uint64(ctx.BlockHeight()),
@@ -552,7 +571,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 			sdk.NewAttribute(types.AttributeKeyContractCallPayload, string(payload)),
 			sdk.NewAttribute(types.AttributeKeyContractCallTokens, strings.Join(tokenString, "|")),
 			sdk.NewAttribute(types.AttributeKeyContractCallFees, strings.Join(feeString, "|")),
-			sdk.NewAttribute(types.AttributeKeyEvmTxTimeout, strconv.FormatUint(params.ParamsForChain[chainID].TargetEvmTxTimeout, 10)),
+			sdk.NewAttribute(types.AttributeKeyEvmTxTimeout, strconv.FormatUint(params.ParamsByChain[chainID].TargetEvmTxTimeout, 10)),
 		),
 	)
 	k.SetOutgoingTx(ctx, chainID, newContractCallTx)
@@ -565,13 +584,13 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 		"payload", string(payload),
 		"tokens", strings.Join(tokenString, "|"),
 		"fees", strings.Join(feeString, "|"),
-		"eth_tx_timeout", strconv.FormatUint(params.ParamsForChain[chainID].TargetEvmTxTimeout, 10),
+		"eth_tx_timeout", strconv.FormatUint(params.ParamsByChain[chainID].TargetEvmTxTimeout, 10),
 	)
 	return newContractCallTx
 }
 
 //////////////////////////////////////
-// Observed Ethereum/Cosmos heights //
+// Observed EVM/Cosmos heights //
 //////////////////////////////////////
 
 // GetEVMHeightVote gets the height vote for a validator on an EVM chain
@@ -592,7 +611,7 @@ func (k Keeper) GetEVMHeightVote(ctx sdk.Context, chainID uint32, valAddress sdk
 	return height
 }
 
-// SetEthereumHeightVoteRecord sets the latest observed heights per validator
+// SetEVMHeightVoteRecord sets the latest observed heights per validator
 func (k Keeper) SetEVMHeightVote(ctx sdk.Context, chainID uint32, valAddress sdk.ValAddress, evmHeight uint64) {
 	store := ctx.KVStore(k.StoreKey)
 	height := types.LatestEVMBlockHeight{
@@ -628,78 +647,78 @@ func (k Keeper) IterateEVMHeightVotes(ctx sdk.Context, chainID uint32, cb func(v
 // This implementation is partial at best. It does not contain necessary functionality to freeze the bridge.
 // We will have yet to implement functionality to Migrate the Cosmos ERC20 tokens or any other ERC20 tokens bridged to the gravity contracts.
 // This just does keeper state cleanup if a new gravity contract has been deployed
-func (k Keeper) MigrateGravityContract(ctx sdk.Context, chainID uint32, newBridgeAddress string, bridgeDeploymentHeight uint64) {
-	// Delete Any Outgoing TXs.
-
-	prefixStoreOtx := prefix.NewStore(ctx.KVStore(k.StoreKey), types.OutgoingTxKeyPrefix(chainID))
-	iterOtx := prefixStoreOtx.ReverseIterator(nil, nil)
-	defer iterOtx.Close()
-	for ; iterOtx.Valid(); iterOtx.Next() {
-
-		var any cdctypes.Any
-		k.Cdc.MustUnmarshal(iterOtx.Value(), &any)
-		var otx types.OutgoingTx
-		if err := k.Cdc.UnpackAny(&any, &otx); err != nil {
-			panic(err)
-		}
-		// Delete any partial Eth Signatures handging around
-		prefixStoreSig := prefix.NewStore(ctx.KVStore(k.StoreKey), types.EVMSignatureKeyStoreIndexPrefix(chainID, otx.GetStoreIndex()))
-		iterSig := prefixStoreSig.Iterator(nil, nil)
-		defer iterSig.Close()
-
-		for ; iterSig.Valid(); iterSig.Next() {
-			prefixStoreSig.Delete(iterSig.Key())
-		}
-
-		prefixStoreOtx.Delete(iterOtx.Key())
-	}
-
-	// Reset the last observed signer set nonce
-	store := ctx.KVStore(k.StoreKey)
-	store.Set(types.MakeLatestSignerSetTxNonceKey(chainID), sdk.Uint64ToBigEndian(0))
-
-	// Reset all ethereum event nonces to zero
-	k.SetLastObservedEventNonce(ctx, chainID, 0)
-	k.iterateEVMEventVoteRecords(ctx, chainID, func(_ []byte, voteRecord *types.EVMEventVoteRecord) bool {
-		for _, vote := range voteRecord.Votes {
-			val, err := sdk.ValAddressFromBech32(vote)
-
-			if err != nil {
-				panic(err)
-			}
-
-			k.setLastEventNonceByValidator(ctx, chainID, val, 0)
-		}
-
-		return false
-	})
-
-	// Delete all EVM Events
-	prefixStoreEVMEvent := prefix.NewStore(ctx.KVStore(k.StoreKey), types.EVMEventVoteRecordPrefix(chainID))
-	iterEvent := prefixStoreEVMEvent.Iterator(nil, nil)
-	defer iterEvent.Close()
-	for ; iterEvent.Valid(); iterEvent.Next() {
-		prefixStoreEVMEvent.Delete(iterEvent.Key())
-	}
-
-	// Set the Last oberved EVM Blockheight to zero
-	height := types.LatestEVMBlockHeight{
-		EVMHeight:    (bridgeDeploymentHeight - 1),
-		CosmosHeight: uint64(ctx.BlockHeight()),
-	}
-
-	store.Set(types.MakeLastEVMBlockHeightKey(chainID), k.Cdc.MustMarshal(&height))
-
-	k.SetLastObservedSignerSetTx(ctx, chainID, types.SignerSetTx{
-		Nonce:   0,
-		Height:  0,
-		Signers: nil,
-	})
-
-	// Set the batch Nonce to zero
-	store.Set(types.MakeLastOutgoingBatchNonceKey(chainID), sdk.Uint64ToBigEndian(0))
-
-	// Update the bridge contract address
-	params := k.GetParams(ctx)
-	k.SetParams(ctx, params)
-}
+//func (k Keeper) MigrateGravityContract(ctx sdk.Context, chainID uint32, newBridgeAddress string, bridgeDeploymentHeight uint64) {
+//	// Delete Any Outgoing TXs.
+//
+//	prefixStoreOtx := prefix.NewStore(ctx.KVStore(k.StoreKey), types.OutgoingTxKeyPrefix(chainID))
+//	iterOtx := prefixStoreOtx.ReverseIterator(nil, nil)
+//	defer iterOtx.Close()
+//	for ; iterOtx.Valid(); iterOtx.Next() {
+//
+//		var any cdctypes.Any
+//		k.Cdc.MustUnmarshal(iterOtx.Value(), &any)
+//		var otx types.OutgoingTx
+//		if err := k.Cdc.UnpackAny(&any, &otx); err != nil {
+//			panic(err)
+//		}
+//		// Delete any partial Eth Signatures handging around
+//		prefixStoreSig := prefix.NewStore(ctx.KVStore(k.StoreKey), types.EVMSignatureKeyStoreIndexPrefix(chainID, otx.GetStoreIndex()))
+//		iterSig := prefixStoreSig.Iterator(nil, nil)
+//		defer iterSig.Close()
+//
+//		for ; iterSig.Valid(); iterSig.Next() {
+//			prefixStoreSig.Delete(iterSig.Key())
+//		}
+//
+//		prefixStoreOtx.Delete(iterOtx.Key())
+//	}
+//
+//	// Reset the last observed signer set nonce
+//	store := ctx.KVStore(k.StoreKey)
+//	store.Set(types.MakeLatestSignerSetTxNonceKey(chainID), sdk.Uint64ToBigEndian(0))
+//
+//	// Reset all ethereum event nonces to zero
+//	k.SetLastObservedEventNonce(ctx, chainID, 0)
+//	k.iterateEVMEventVoteRecords(ctx, chainID, func(_ []byte, voteRecord *types.EVMEventVoteRecord) bool {
+//		for _, vote := range voteRecord.Votes {
+//			val, err := sdk.ValAddressFromBech32(vote)
+//
+//			if err != nil {
+//				panic(err)
+//			}
+//
+//			k.setLastEventNonceByValidator(ctx, chainID, val, 0)
+//		}
+//
+//		return false
+//	})
+//
+//	// Delete all EVM Events
+//	prefixStoreEVMEvent := prefix.NewStore(ctx.KVStore(k.StoreKey), types.EVMEventVoteRecordPrefix(chainID))
+//	iterEvent := prefixStoreEVMEvent.Iterator(nil, nil)
+//	defer iterEvent.Close()
+//	for ; iterEvent.Valid(); iterEvent.Next() {
+//		prefixStoreEVMEvent.Delete(iterEvent.Key())
+//	}
+//
+//	// Set the Last oberved EVM Blockheight to zero
+//	height := types.LatestEVMBlockHeight{
+//		EVMHeight:    (bridgeDeploymentHeight - 1),
+//		CosmosHeight: uint64(ctx.BlockHeight()),
+//	}
+//
+//	store.Set(types.MakeLastEVMBlockHeightKey(chainID), k.Cdc.MustMarshal(&height))
+//
+//	k.SetLastObservedSignerSetTx(ctx, chainID, types.SignerSetTx{
+//		Nonce:   0,
+//		Height:  0,
+//		Signers: nil,
+//	})
+//
+//	// Set the batch Nonce to zero
+//	store.Set(types.MakeLastOutgoingBatchNonceKey(chainID), sdk.Uint64ToBigEndian(0))
+//
+//	// Update the bridge contract address
+//	params := k.GetParams(ctx)
+//	k.SetParams(ctx, params)
+//}

@@ -59,6 +59,9 @@ func (u *SignerSetTxConfirmation) Validate() error {
 	if u.Signature == nil {
 		return fmt.Errorf("signature must be set")
 	}
+	if u.ChainId == 0 {
+		return fmt.Errorf("chain id can not be zero")
+	}
 	return nil
 }
 
@@ -75,6 +78,9 @@ func (u *ContractCallTxConfirmation) Validate() error {
 	if u.Signature == nil {
 		return fmt.Errorf("signature must be set")
 	}
+	if u.ChainId == 0 {
+		return fmt.Errorf("chain id can not be zero")
+	}
 	return nil
 }
 
@@ -90,6 +96,9 @@ func (u *BatchTxConfirmation) Validate() error {
 	}
 	if u.Signature == nil {
 		return fmt.Errorf("signature must be set")
+	}
+	if u.ChainId == 0 {
+		return fmt.Errorf("chain id can not be zero")
 	}
 	return nil
 }

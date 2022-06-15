@@ -104,7 +104,7 @@ func (AppModule) Name() string {
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 {
-	return 1
+	return 3
 }
 
 // RegisterInvariants implements app module

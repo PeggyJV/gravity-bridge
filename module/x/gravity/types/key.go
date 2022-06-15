@@ -88,15 +88,15 @@ func BigEndianToUint32(bz []byte) uint32 {
 
 // MakeOrchestratorValidatorAddressKey returns the following key format
 // prefix
-// [0xe8][0001][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
+// [0xe8][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
 func MakeOrchestratorValidatorAddressKey(orc sdk.AccAddress) []byte {
 	return bytes.Join([][]byte{{OrchestratorToValidatorAddressKey}, orc.Bytes()}, []byte{})
 }
 
-// MakeValidatorEVMAddressKeyForValidator returns the following key format
+// MakeValidatorEVMAddressKey returns the following key format
 // prefix              cosmos-validator
 // [0x0][0001][cosmosvaloper1ahx7f8wyertuus9r20284ej0asrs085case3kn]
-func MakeValidatorEVMAddressKeyForValidator(validator sdk.ValAddress) []byte {
+func MakeValidatorEVMAddressKey(validator sdk.ValAddress) []byte {
 	return bytes.Join([][]byte{{ValidatorToEVMAddressKey}, validator.Bytes()}, []byte{})
 }
 
@@ -113,7 +113,7 @@ func MakeEVMOrchestratorAddressKey(eth common.Address) []byte {
 
 // MakeEVMSignatureKeyForValidator returns the following key format
 // prefix   nonce                    validator-address
-// [0x0][0 0 0 0 0 0 0 1][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
+// [0x0][0001][0 0 0 0 0 0 0 1][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
 func MakeEVMSignatureKeyForValidator(chainID uint32, storeIndex []byte, validator sdk.ValAddress) []byte {
 	return bytes.Join([][]byte{{EVMSignatureKey}, Uint32ToBigEndian(chainID), storeIndex, validator.Bytes()}, []byte{})
 }

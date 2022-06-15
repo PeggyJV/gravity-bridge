@@ -28,7 +28,7 @@ func (k Keeper) HandleCommunityPoolEVMSpendProposal(ctx sdk.Context, p *types.Co
 	}
 
 	k.DistributionKeeper.SetFeePool(ctx, feePool)
-	k.Logger(ctx).Info("transfer from the community pool created as unbatched send to EVM", "tx ID", txID, "amount", p.Amount.String(), "recipient", p.Recipient)
+	k.Logger(ctx).Info("transfer from the community pool created as unbatched send to EVM", "tx ID", txID, "amount", p.Amount.String(), "recipient", p.Recipient, "chain id", p.ChainId)
 
 	return nil
 }

@@ -218,13 +218,11 @@ func (k Keeper) SetLastObservedEVMBlockHeight(ctx sdk.Context, chainID uint32, e
 func (k Keeper) SetLastObservedEVMBlockHeightWithCosmos(ctx sdk.Context, chainID uint32, ethereumHeight uint64, cosmosHeight uint64) {
 	store := ctx.KVStore(k.StoreKey)
 	height := types.LatestEVMBlockHeight{
-		EVMHeight: ethereumHeight,
-		CosmosHeight:   cosmosHeight,
+		EVMHeight:    ethereumHeight,
+		CosmosHeight: cosmosHeight,
 	}
-	store.Set([]byte{types.LastEVMBlockHeightKey}, k.Cdc.MustMarshal(&height))
+	store.Set(types.MakeLastEVMBlockHeightKey(chainID), k.Cdc.MustMarshal(&height))
 }
-
-
 
 // SetLastObservedEventNonce sets the latest observed event nonce
 func (k Keeper) SetLastObservedEventNonce(ctx sdk.Context, chainID uint32, nonce uint64) {

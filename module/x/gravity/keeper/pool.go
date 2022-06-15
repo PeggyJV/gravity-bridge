@@ -30,8 +30,14 @@ func (k Keeper) createSendToEVM(ctx sdk.Context, chainID uint32, sender sdk.AccA
 		return 0, err
 	}
 
-	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, totalInVouchers); err != nil {
-		return 0, err
+	if senderModule, ok := k.SenderModuleAccounts[sender.String()]; ok {
+		if err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, senderModule, types.ModuleName, totalInVouchers); err != nil {
+			return 0, err
+		}
+	} else {
+		if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, totalInVouchers); err != nil {
+			return 0, err
+		}
 	}
 
 	// If it is no a cosmos-originated asset we burn
@@ -82,19 +88,18 @@ func (k Keeper) cancelSendToEVM(ctx sdk.Context, chainID uint32, id uint64, s st
 		return fmt.Errorf("can't cancel a message you didn't send")
 	}
 
-	totalToRefund := send.Erc20Token.GravityCoin()
-	totalToRefund.Amount = totalToRefund.Amount.Add(send.Erc20Fee.Amount)
-	totalToRefundCoins := sdk.NewCoins(totalToRefund)
-	isCosmosOriginated, _ := k.ERC20ToDenomLookup(ctx, chainID, send.Erc20Token.Contract)
+	isCosmosOriginated, denom := k.ERC20ToDenomLookup(ctx, chainID, common.HexToAddress(send.Erc20Token.Contract))
+	amountToRefund := send.Erc20Token.Amount.Add(send.Erc20Fee.Amount)
+	coinsToRefund := sdk.NewCoins(sdk.NewCoin(denom, amountToRefund))
 
 	// If it is not cosmos-originated the coins are minted
 	if !isCosmosOriginated {
-		if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, totalToRefundCoins); err != nil {
-			return sdkerrors.Wrapf(err, "mint vouchers coins: %s", totalToRefundCoins)
+		if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, coinsToRefund); err != nil {
+			return sdkerrors.Wrapf(err, "mint vouchers coins: %s", coinsToRefund)
 		}
 	}
 
-	if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, totalToRefundCoins); err != nil {
+	if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, coinsToRefund); err != nil {
 		return sdkerrors.Wrap(err, "sending coins from module account")
 	}
 

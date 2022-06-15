@@ -29,7 +29,7 @@ func TestHandleMsgSendToEVM(t *testing.T) {
 		startingCoins         sdk.Coins = sdk.Coins{sdk.NewCoin(denom, startingCoinAmount)}
 		sendingCoin           sdk.Coin  = sdk.NewCoin(denom, sendAmount)
 		feeCoin               sdk.Coin  = sdk.NewCoin(denom, feeAmount)
-		ethDestination                  = "0x3c9289da00b02dC623d0D8D907619890301D26d4"
+		ethDestination                  = common.HexToAddress("0x3c9289da00b02dC623d0D8D907619890301D26d4").Hex()
 	)
 
 	// we start by depositing some funds into the users balance to send
@@ -143,7 +143,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 	// then
 	require.Error(t, err)
 	balance = bk.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewCoin("gravity0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e", amountA)}, balance)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, amountA)}, balance)
 
 	// Test to reject skipped nonce
 

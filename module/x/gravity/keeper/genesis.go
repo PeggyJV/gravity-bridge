@@ -21,17 +21,17 @@ func InitGenesisMultiChain(ctx sdk.Context, k Keeper, data types.GenesisState) {
 
 		val, _ := sdk.ValAddressFromBech32(keys.ValidatorAddress)
 		orch, _ := sdk.AccAddressFromBech32(keys.OrchestratorAddress)
-		eth := common.HexToAddress(keys.EVMAddress)
+		evm := common.HexToAddress(keys.EVMAddress)
 
 		// set the orchestrator address
 		k.SetOrchestratorValidatorAddress(ctx, val, orch)
-		// set the ethereum address
+		// set the evm address
 		k.setValidatorEVMAddress(ctx, val, common.HexToAddress(keys.EVMAddress))
-		k.setEVMOrchestratorAddress(ctx, eth, orch)
+		k.setEVMOrchestratorAddress(ctx, evm, orch)
 	}
 
-	for _, chainGS := range data.EVMSpecificGenesisStates {
-		if _, ok := data.Params.ParamsForChain[chainGS.ChainID]; ok != true {
+	for _, chainGS := range data.EvmGenesisStates {
+		if _, ok := data.Params.ParamsByChain[chainGS.ChainID]; ok != true {
 			panic(fmt.Sprintf("chain ID %d presented in state, but not in params", chainGS.ChainID))
 		}
 
@@ -45,7 +45,7 @@ func initGenesisForChain(ctx sdk.Context, k Keeper, data types.EVMSpecificGenesi
 		k.setUnbatchedSendToEVM(ctx, data.ChainID, tx)
 	}
 
-	// reset ethereum event vote records in state
+	// reset evm event vote records in state
 	for _, evr := range data.EvmEventVoteRecords {
 		event, err := types.UnpackEvent(evr.Event)
 		if err != nil {
@@ -77,7 +77,7 @@ func initGenesisForChain(ctx sdk.Context, k Keeper, data types.EVMSpecificGenesi
 
 	// populate state with cosmos originated denom-erc20 mapping
 	for _, item := range data.Erc20ToDenoms {
-		k.setCosmosOriginatedDenomToERC20(ctx, data.ChainID, item.Denom, item.Erc20)
+		k.setCosmosOriginatedDenomToERC20(ctx, data.ChainID, item.Denom, common.HexToAddress(item.Erc20))
 	}
 
 	// reset outgoing txs in state
@@ -93,10 +93,10 @@ func initGenesisForChain(ctx sdk.Context, k Keeper, data types.EVMSpecificGenesi
 	for _, confa := range data.Confirmations {
 		conf, err := types.UnpackConfirmation(confa)
 		if err != nil {
-			panic(fmt.Sprintf("invalid etheruem signature in genesis: %s", err))
+			panic(fmt.Sprintf("invalid evm signature in genesis: %s", err))
 		}
 		// TODO: not currently an easy way to get the validator address from the
-		// etherum address here. once we implement the third index for keys
+		// evm address here. once we implement the third index for keys
 		// this will be easy.
 		k.SetEVMSignature(ctx, data.ChainID, conf, sdk.ValAddress{})
 	}
@@ -112,21 +112,21 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisState {
 
 	var EVMSpecificGenesisStates []*types.EVMSpecificGenesisState
 
-	for chainID, _ := range p.ParamsForChain {
+	for chainID, _ := range p.ParamsByChain {
 		var (
-			outgoingTxs              []*cdctypes.Any
-			ethereumTxConfirmations  []*cdctypes.Any
-			attmap                   = k.GetEVMEventVoteRecordMapping(ctx, chainID)
-			ethereumEventVoteRecords []*types.EVMEventVoteRecord
-			lastobserved             = k.GetLastObservedEventNonce(ctx, chainID)
-			erc20ToDenoms            []*types.ERC20ToDenom
-			unbatchedSendToEVMTxs    = k.getUnbatchedSendToEVMs(ctx, chainID)
+			outgoingTxs           []*cdctypes.Any
+			evmTxConfirmations    []*cdctypes.Any
+			attmap                = k.GetEVMEventVoteRecordMapping(ctx, chainID)
+			evmEventVoteRecords   []*types.EVMEventVoteRecord
+			lastobserved          = k.GetLastObservedEventNonce(ctx, chainID)
+			erc20ToDenoms         []*types.ERC20ToDenom
+			unbatchedSendToEVMTxs = k.getUnbatchedSendToEVMs(ctx, chainID)
 		)
 
-		// export ethereumEventVoteRecords from state
+		// export evmEventVoteRecords from state
 		for _, atts := range attmap {
 			// TODO: set height = 0?
-			ethereumEventVoteRecords = append(ethereumEventVoteRecords, atts...)
+			evmEventVoteRecords = append(evmEventVoteRecords, atts...)
 		}
 
 		// export erc20 to denom relations
@@ -147,7 +147,7 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisState {
 					Signature:      sig,
 					ChainId:        chainID,
 				})
-				ethereumTxConfirmations = append(ethereumTxConfirmations, siga)
+				evmTxConfirmations = append(evmTxConfirmations, siga)
 				return false
 			})
 			return false
@@ -166,7 +166,7 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisState {
 					Signature:     sig,
 					ChainId:       chainID,
 				})
-				ethereumTxConfirmations = append(ethereumTxConfirmations, siga)
+				evmTxConfirmations = append(evmTxConfirmations, siga)
 				return false
 			})
 			return false
@@ -185,7 +185,7 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisState {
 					Signature:         sig,
 					ChainId:           chainID,
 				})
-				ethereumTxConfirmations = append(ethereumTxConfirmations, siga)
+				evmTxConfirmations = append(evmTxConfirmations, siga)
 				return false
 			})
 			return false
@@ -195,8 +195,8 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisState {
 			ChainID:                chainID,
 			LastObservedEventNonce: lastobserved,
 			OutgoingTxs:            outgoingTxs,
-			Confirmations:          ethereumTxConfirmations,
-			EvmEventVoteRecords:    ethereumEventVoteRecords,
+			Confirmations:          evmTxConfirmations,
+			EvmEventVoteRecords:    evmEventVoteRecords,
 			Erc20ToDenoms:          erc20ToDenoms,
 			UnbatchedSendToEvmTxs:  unbatchedSendToEVMTxs,
 		}
@@ -206,12 +206,12 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisState {
 
 	// this will marshal into "dW51c2Vk" as []byte will be encoded as base64
 	for _, delegate := range delegates {
-		delegate.EthSignature = []byte("unused")
+		delegate.EVMSignature = []byte("unused")
 	}
 
 	return types.GenesisState{
-		Params:                   &p,
-		DelegateKeys:             delegates,
-		EVMSpecificGenesisStates: EVMSpecificGenesisStates,
+		Params:           &p,
+		DelegateKeys:     delegates,
+		EvmGenesisStates: EVMSpecificGenesisStates,
 	}
 }

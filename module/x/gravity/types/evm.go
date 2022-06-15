@@ -47,10 +47,10 @@ func EVMAddrLessThan(e, o string) bool {
 /////////////////////////
 
 // NewERC20Token returns a new instance of an ERC20
-func NewERC20Token(amount uint64, contract string) ERC20Token {
+func NewERC20Token(amount uint64, contract common.Address) ERC20Token {
 	return ERC20Token{
 		Amount:   sdk.NewIntFromUint64(amount),
-		Contract: contract,
+		Contract: contract.Hex(),
 	}
 }
 
@@ -98,12 +98,13 @@ func NormalizeDenom(denom string) string {
 	return denom
 }
 
-func NewSendToEVMTx(id uint64, tokenContract common.Address, sender sdk.AccAddress, recipient common.Address, amount, feeAmount uint64) *SendToEVM {
+func NewSendToEVMTx(chainID uint32, id uint64, tokenContract common.Address, sender sdk.AccAddress, recipient common.Address, amount, feeAmount uint64) *SendToEVM {
 	return &SendToEVM{
 		Id:           id,
-		Erc20Fee:     NewERC20Token(feeAmount, tokenContract.Hex()),
+		Erc20Fee:     NewERC20Token(feeAmount, tokenContract),
 		Sender:       sender.String(),
 		EVMRecipient: recipient.Hex(),
-		Erc20Token:   NewERC20Token(amount, tokenContract.Hex()),
+		Erc20Token:   NewERC20Token(amount, tokenContract),
+		ChainId:      chainID,
 	}
 }
