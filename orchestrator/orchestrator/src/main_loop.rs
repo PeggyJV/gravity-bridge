@@ -9,6 +9,7 @@ use crate::{
     ethereum_event_watcher::check_for_events, metrics::metrics_main_loop,
     oracle_resync::get_last_checked_block,
 };
+use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::send::send_main_loop;
 use cosmos_gravity::{
     build,
@@ -19,7 +20,6 @@ use cosmos_gravity::{
 };
 use deep_space::client::ChainStatus;
 use deep_space::error::CosmosGrpcError;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use deep_space::{Contact, Msg};
 use ethereum_gravity::types::EthClient;
 use ethereum_gravity::utils::get_gravity_id;
@@ -169,7 +169,8 @@ pub async fn eth_oracle_main_loop(
                                 &contact,
                                 cosmos_key,
                                 latest_eth_block - block_delay,
-                            ).await;
+                            )
+                            .await;
 
                             msg_sender
                                 .send(messages)

@@ -123,10 +123,7 @@ pub async fn ethereum_vote_height_messages(
     };
     let msg = Msg::new("/gravity.v1.MsgEthereumHeightVote", msg);
 
-    let mut msgs = Vec::new();
-    msgs.push(msg);
-
-    msgs
+    vec![msg]
 }
 
 pub fn ethereum_event_messages(
