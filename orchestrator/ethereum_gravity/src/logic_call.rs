@@ -370,7 +370,7 @@ fn test_logic_call_skips() {
     assert!(!skips.permanently_skipped(&logic_call_1_nonce_1));
     assert!(!skips.permanently_skipped(&logic_call_1_nonce_2));
     assert!(!skips.permanently_skipped(&logic_call_2));
-    assert!(!skips.permanently_skipped(&logic_call_3));
+    assert!(skips.permanently_skipped(&logic_call_3));
 
     // both will start with 2 skips
     skips.skip(&logic_call_1_nonce_1);
