@@ -97,6 +97,7 @@ pub struct CosmosSection {
     pub gas_adjustment: f64,
     pub msg_batch_size: u32,
     pub gas_price: GasPrice,
+    pub granter: Option<String>,
 }
 
 impl Default for CosmosSection {
@@ -108,6 +109,7 @@ impl Default for CosmosSection {
             gas_price: GasPrice::default(),
             gas_adjustment: 1.0f64,
             msg_batch_size: 5,
+            granter: None,
         }
     }
 }

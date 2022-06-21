@@ -169,6 +169,7 @@ pub async fn transaction_stress_test(
             };
             let res = send_to_eth(
                 c_key,
+                None,
                 e_dest_addr,
                 send_coin,
                 send_fee,
@@ -193,6 +194,7 @@ pub async fn transaction_stress_test(
         info!("Requesting batch for {}", denom);
         let res = send_request_batch_tx(
             keys[0].validator_key,
+            None,
             denom,
             (0f64, "".to_string()),
             contact,

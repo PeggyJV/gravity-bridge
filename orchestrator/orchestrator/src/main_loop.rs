@@ -48,6 +48,7 @@ pub const ETH_ORACLE_LOOP_SPEED: Duration = Duration::from_secs(13);
 #[allow(clippy::too_many_arguments)]
 pub async fn orchestrator_main_loop(
     cosmos_key: CosmosPrivateKey,
+    cosmos_granter: Option<String>,
     contact: Contact,
     eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
@@ -65,6 +66,7 @@ pub async fn orchestrator_main_loop(
     let a = send_main_loop(
         &contact,
         cosmos_key,
+        cosmos_granter,
         gas_price,
         rx,
         gas_adjustment,

@@ -36,6 +36,7 @@ impl Runnable for StartCommand {
 
         let cosmos_key = config.load_deep_space_key(self.cosmos_key.clone());
         let cosmos_address = cosmos_key.to_address(&cosmos_prefix).unwrap();
+        let cosmos_granter = config.cosmos.granter.clone();
 
         let ethereum_wallet = config.load_ethers_wallet(self.ethereum_key.clone());
         let ethereum_address = ethereum_wallet.address();
@@ -101,6 +102,7 @@ impl Runnable for StartCommand {
 
             orchestrator_main_loop(
                 cosmos_key,
+                cosmos_granter,
                 contact,
                 eth_client,
                 grpc,
