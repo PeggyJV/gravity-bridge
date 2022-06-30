@@ -14,12 +14,12 @@ import (
 // call stress_test for a range of nonce values
 
 /// Write test_valset_update test to get latest nonce value
-func (s *IntegrationTestSuite) TestValsetUpdate(val sdk.ValAddress) {
+func (s *IntegrationTestSuite) TestValsetUpdate() {
 	s.Run("Bring up chain, and test the valset update", func() {
 		ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
 		s.Require().NoError(err, "error setting up eth client")
 
-		starting_nonce, err := ethClient.PendingNonceAt(context.Background(), gravityContract)
+		startingNonce, err := ethClient.PendingNonceAt(context.Background(), gravityContract)
 		s.Require().NoError(err, "error getting starting nonce")
 
 		bondTokens := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
@@ -40,7 +40,7 @@ func (s *IntegrationTestSuite) TestValsetUpdate(val sdk.ValAddress) {
 
 			default:
 
-				s.T().Logf("Sending in valset request (starting_eth_valset_nonce %d)", starting_nonce)
+				s.T().Logf("Sending in valset request (starting_eth_valset_nonce %d)", startingNonce)
 
 				s.T().Logf("Delegating %v to %v in order to generate a validator set update", bondCoin, delegator)
 
@@ -51,22 +51,24 @@ func (s *IntegrationTestSuite) TestValsetUpdate(val sdk.ValAddress) {
 			}
 		}
 
-		current_nonce, err := ethClient.PendingNonceAt(context.Background(), gravityContract)
+		currentNonce, err := ethClient.PendingNonceAt(context.Background(), gravityContract)
 		s.Require().NoError(err, "error getting current nonce")
 
 	nonce:
-		for current_nonce == starting_nonce {
-			select {
-			case <-timeout:
-				break nonce
-			default:
-				s.Require().NoError(err, "Validator set is not yet updated")
-				current_nonce, err = ethClient.PendingNonceAt(context.Background(), gravityContract)
-				s.Require().NoError(err, "error getting current nonce")
+		for {
+			if currentNonce == startingNonce {
+				select {
+				case <-timeout:
+					break nonce
+				default:
+					s.Require().NoError(err, "Validator set is not yet updated")
+					currentNonce, err = ethClient.PendingNonceAt(context.Background(), gravityContract)
+					s.Require().NoError(err, "error getting current nonce")
+				}
 			}
 		}
 
-		if current_nonce != starting_nonce {
+		if currentNonce != startingNonce {
 			s.T().Logf("Validator set successfully updated!")
 		} else {
 			s.T().Logf("Failed to update validator set")
