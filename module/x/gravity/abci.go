@@ -366,7 +366,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 			for _, valInfo := range unbondingValInfos {
 				// Only slash validators who joined after valset is created and they are
 				// unbonding and UNBOND_SLASHING_WINDOW didn't pass.
-				if valInfo.exist && valInfo.sigs.StartHeight < int64(sstx.Nonce) &&
+				if valInfo.exist && valInfo.sigs.StartHeight < int64(sstx.Height) &&
 					valInfo.val.IsUnbonding() &&
 					sstx.Height < uint64(valInfo.val.UnbondingHeight)+params.UnbondSlashingSignerSetTxsWindow {
 					// check if validator has confirmed valset or not
