@@ -28,8 +28,8 @@ func GetTxCmd(storeKey string) *cobra.Command {
 	}
 
 	gravityTxCmd.AddCommand(
-		CmdSendToEthereum(),
-		CmdCancelSendToEthereum(),
+		CmdSendToEVM(),
+		CmdCancelSendToEVM(),
 		CmdRequestBatchTx(),
 		CmdSetDelegateKeys(),
 	)
@@ -37,12 +37,12 @@ func GetTxCmd(storeKey string) *cobra.Command {
 	return gravityTxCmd
 }
 
-func CmdSendToEthereum() *cobra.Command {
+func CmdSendToEVM() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "send-to-ethereum [ethereum-reciever] [send-coins] [fee-coins] [chain-id]",
+		Use:     "send-to-evm [chain-id] [evm-reciever] [send-coins] [fee-coins]",
 		Aliases: []string{"send", "transfer"},
 		Args:    cobra.ExactArgs(4),
-		Short:   "Send tokens from cosmos chain to connected ethereum chain",
+		Short:   "Send tokens from cosmos chain to connected evm chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -54,24 +54,25 @@ func CmdSendToEthereum() *cobra.Command {
 				return fmt.Errorf("must pass from flag")
 			}
 
-			if !common.IsHexAddress(args[0]) {
-				return fmt.Errorf("must be a valid ethereum address got %s", args[0])
+			chainID := uint32(sdk.NewUintFromString(args[0]).Uint64())
+
+			if !common.IsHexAddress(args[1]) {
+				return fmt.Errorf("must be a valid evm address got %s", args[1])
 			}
+			receiver := common.HexToAddress(args[1])
 
 			// Get amount of coins
-			sendCoin, err := sdk.ParseCoinNormalized(args[1])
+			sendCoin, err := sdk.ParseCoinNormalized(args[2])
 			if err != nil {
 				return err
 			}
 
-			feeCoin, err := sdk.ParseCoinNormalized(args[2])
+			feeCoin, err := sdk.ParseCoinNormalized(args[3])
 			if err != nil {
 				return err
 			}
 
-			chainID := uint32(sdk.NewUintFromString(args[3]).Uint64())
-
-			msg := types.NewMsgSendToEVM(uint32(chainID), from, common.HexToAddress(args[0]).Hex(), sendCoin, feeCoin)
+			msg := types.NewMsgSendToEVM(chainID, from, receiver.Hex(), sendCoin, feeCoin)
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -84,11 +85,11 @@ func CmdSendToEthereum() *cobra.Command {
 	return cmd
 }
 
-func CmdCancelSendToEthereum() *cobra.Command {
+func CmdCancelSendToEVM() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cancel-send-to-ethereum [id] [chain-id]",
+		Use:   "cancel-send-to-evm [id] [chain-id]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Cancel ethereum send by id",
+		Short: "Cancel evm send by id",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -105,10 +106,7 @@ func CmdCancelSendToEthereum() *cobra.Command {
 				return err
 			}
 
-			chainID, err := strconv.Atoi(args[2])
-			if err != nil {
-				return err
-			}
+			chainID := uint32(sdk.NewUintFromString(args[0]).Uint64())
 
 			msg := types.NewMsgCancelSendToEVM(uint32(chainID), id, from)
 			if err = msg.ValidateBasic(); err != nil {
@@ -125,7 +123,7 @@ func CmdCancelSendToEthereum() *cobra.Command {
 
 func CmdRequestBatchTx() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "request-batch-tx [denom] [signer] [chain-id]",
+		Use:   "request-batch-tx [chain-id] [denom] [signer]",
 		Args:  cobra.ExactArgs(3),
 		Short: "Request batch transaction for denom by signer",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -134,18 +132,15 @@ func CmdRequestBatchTx() *cobra.Command {
 				return err
 			}
 
-			denom := args[0]
-			signer, err := sdk.AccAddressFromHex(args[1])
+			chainID := uint32(sdk.NewUintFromString(args[0]).Uint64())
+
+			denom := args[1]
+			signer, err := sdk.AccAddressFromHex(args[2])
 			if err != nil {
 				return err
 			}
 
-			chainID, err := strconv.Atoi(args[2])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgRequestBatchTx(uint32(chainID), denom, signer)
+			msg := types.NewMsgRequestBatchTx(chainID, denom, signer)
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -159,10 +154,10 @@ func CmdRequestBatchTx() *cobra.Command {
 
 func CmdSetDelegateKeys() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "set-delegate-keys [validator-address] [orchestrator-address] [ethereum-address] [ethereum-signature]",
+		Use:   "set-delegate-keys [validator-address] [orchestrator-address] [evm-address] [evm-signature]",
 		Args:  cobra.ExactArgs(4),
 		Short: "Set gravity delegate keys",
-		Long: `Set a validator's Ethereum and orchestrator addresses. The validator must
+		Long: `Set a validator's EVM and orchestrator addresses. The validator must
 sign over a binary Proto-encoded DelegateKeysSignMsg message. The message contains
 the validator's address and operator account current nonce.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -225,7 +220,7 @@ Where proposal.json contains:
 	"title": "Community Pool EVM Spend",
 	"description": "Bridge me some tokens to the EVM chain!",
 	"recipient": "0x0000000000000000000000000000000000000000",
-	"amount": "20000stake"
+	"amount": "20000stake",
 	"bridge_fee": "1000stake",
 	"deposit": "1000stake",
 	"chain_id": 1

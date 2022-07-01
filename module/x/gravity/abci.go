@@ -18,7 +18,7 @@ import (
 // based on the events (i.e. orchestrators)
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	params := k.GetParams(ctx)
-	for chainID, _ := range params.ParamsForChain {
+	for chainID, _ := range params.ParamsByChain {
 		cleanupTimedOutBatchTxs(ctx, k, chainID)
 		cleanupTimedOutContractCallTxs(ctx, k, chainID)
 		createSignerSetTxs(ctx, k, chainID)
@@ -30,7 +30,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 // EndBlocker is called at the end of every block
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	params := k.GetParams(ctx)
-	for chainID, _ := range params.ParamsForChain {
+	for chainID, _ := range params.ParamsByChain {
 		outgoingTxSlashing(ctx, k, chainID)
 		eventVoteRecordTally(ctx, k, chainID)
 		updateObservedEVMHeight(ctx, k, chainID)
@@ -92,7 +92,7 @@ func createSignerSetTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 }
 
 func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
-	params := k.GetParams(ctx).ParamsForChain[chainID]
+	params := k.GetParams(ctx).ParamsByChain[chainID]
 	// Validator set pruning
 	// prune all validator sets with a nonce less than the
 	// last observed nonce, they can't be submitted any longer
@@ -246,7 +246,7 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 		btx, _ := otx.(*types.BatchTx)
 
 		if btx.Timeout < EVMHeight {
-			k.CancelBatchTx(ctx, chainID, common.HexToAddress(btx.TokenContract), btx.BatchNonce)
+			k.CancelBatchTx(ctx, chainID, btx)
 		}
 
 		return false
@@ -274,7 +274,7 @@ func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper, chainID ui
 }
 
 func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
-	params := k.GetParams(ctx).ParamsForChain[chainID]
+	params := k.GetParams(ctx).ParamsByChain[chainID]
 	maxHeight := uint64(0)
 	if uint64(ctx.BlockHeight()) > params.SignedBatchesWindow {
 		maxHeight = uint64(ctx.BlockHeight()) - params.SignedBatchesWindow
@@ -405,6 +405,6 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 		}
 
 		// then we set the latest slashed outgoing tx block
-		k.SetLastSlashedOutgoingTxBlockHeight(ctx, chainID, otx.GetCosmosHeight())
+		k.SetLastSlashedOutgoingTxBlockHeight(ctx, otx.GetCosmosHeight())
 	}
 }

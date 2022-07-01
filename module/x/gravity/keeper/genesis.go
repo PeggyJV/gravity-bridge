@@ -10,7 +10,7 @@ import (
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
-func InitGenesisMultiChain(ctx sdk.Context, k Keeper, data types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 	k.SetParams(ctx, *data.Params)
 
 	// reset delegate keys in state
@@ -31,7 +31,7 @@ func InitGenesisMultiChain(ctx sdk.Context, k Keeper, data types.GenesisState) {
 	}
 
 	for _, chainGS := range data.EvmGenesisStates {
-		if _, ok := data.Params.ParamsByChain[chainGS.ChainID]; ok != true {
+		if _, ok := data.Params.ParamsByChain[chainGS.ChainID]; !ok {
 			panic(fmt.Sprintf("chain ID %d presented in state, but not in params", chainGS.ChainID))
 		}
 
@@ -102,9 +102,9 @@ func initGenesisForChain(ctx sdk.Context, k Keeper, data types.EVMSpecificGenesi
 	}
 }
 
-// ExportGenesisMultiChain exports all the state needed to restart the chain
+// ExportGenesis exports all the state needed to restart the chain
 // from the current state of the chain
-func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisState {
+func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 	var (
 		p         = k.GetParams(ctx)
 		delegates = k.getDelegateKeys(ctx)
@@ -176,11 +176,11 @@ func ExportGenesisMultiChain(ctx sdk.Context, k Keeper) types.GenesisState {
 		k.IterateOutgoingTxsByType(ctx, chainID, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 			ota, _ := types.PackOutgoingTx(otx)
 			outgoingTxs = append(outgoingTxs, ota)
-			btx, _ := otx.(*types.ContractCallTx)
-			k.iterateEVMSignaturesByStoreIndex(ctx, chainID, btx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
+			cctx, _ := otx.(*types.ContractCallTx)
+			k.iterateEVMSignaturesByStoreIndex(ctx, chainID, cctx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
 				siga, _ := types.PackConfirmation(&types.ContractCallTxConfirmation{
-					InvalidationScope: btx.InvalidationScope,
-					InvalidationNonce: btx.InvalidationNonce,
+					InvalidationScope: cctx.InvalidationScope,
+					InvalidationNonce: cctx.InvalidationNonce,
 					EVMSigner:         k.GetValidatorEVMAddress(ctx, val).Hex(),
 					Signature:         sig,
 					ChainId:           chainID,

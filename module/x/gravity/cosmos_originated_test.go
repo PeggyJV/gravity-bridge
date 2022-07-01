@@ -32,7 +32,7 @@ func TestCosmosOriginated(t *testing.T) {
 type testingVars struct {
 	myOrchestratorAddr sdk.AccAddress
 	myValAddr          sdk.ValAddress
-	erc20              string
+	erc20              common.Address
 	denom              string
 	input              keeper.TestInput
 	ctx                sdk.Context
@@ -48,7 +48,7 @@ func initializeTestingVars(t *testing.T) *testingVars {
 	tv.myOrchestratorAddr = make([]byte, app.MaxAddrLen)
 	tv.myValAddr = sdk.ValAddress(tv.myOrchestratorAddr) // revisit when proper mapping is impl in keeper
 
-	tv.erc20 = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e").Hex()
+	tv.erc20 = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e")
 	tv.denom = "uatom"
 
 	tv.input = keeper.CreateTestEnv(t)
@@ -76,7 +76,7 @@ func addDenomToERC20Relation(tv *testingVars) {
 
 	deployedEvent := &types.ERC20DeployedEvent{
 		CosmosDenom:   tv.denom,
-		TokenContract: tv.erc20,
+		TokenContract: tv.erc20.String(),
 		Erc20Name:     "atom",
 		Erc20Symbol:   "atom",
 		Erc20Decimals: 6,
@@ -161,7 +161,7 @@ func acceptDepositEvent(tv *testingVars) {
 
 	myErc20 := types.ERC20Token{
 		Amount:   sdk.NewInt(12),
-		Contract: tv.erc20,
+		Contract: tv.erc20.String(),
 	}
 
 	sendToCosmosEvent := &types.SendToCosmosEvent{

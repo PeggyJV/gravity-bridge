@@ -412,7 +412,11 @@ func (k Keeper) GetUnbondingValidators(unbondingVals []byte) stakingtypes.ValAdd
 }
 
 func (k Keeper) getTimeoutHeight(ctx sdk.Context, chainID uint32) uint64 {
-	params := k.GetParams(ctx).ParamsByChain[chainID]
+	params := k.GetParams(ctx)
+	chainParams, ok := params.ParamsByChain[chainID]
+	if ok {
+		panic("chain doesn't exist in params")
+	}
 	currentCosmosHeight := ctx.BlockHeight()
 	// we store the last observed Cosmos and EVM heights, we do not concern ourselves if these values are zero because
 	// no batch can be produced if the last EVM block height is not first populated by a deposit event.
@@ -423,10 +427,10 @@ func (k Keeper) getTimeoutHeight(ctx sdk.Context, chainID uint32) uint64 {
 	// we project how long it has been in milliseconds since the last evm block height was observed
 	projectedMillis := (uint64(currentCosmosHeight) - heights.CosmosHeight) * params.AverageBlockTime
 	// we convert that projection into the current evm height using the average EVM block time in millis
-	projectedCurrentEVMHeight := (projectedMillis / params.AverageEvmBlockTime) + heights.EVMHeight
+	projectedCurrentEVMHeight := (projectedMillis / chainParams.AverageEvmBlockTime) + heights.EVMHeight
 	// we convert our target time for block timeouts (lets say 12 hours) into a number of blocks to
 	// place on top of our projection of the current EVM block height.
-	blocksToAdd := params.TargetEvmTxTimeout / params.AverageEvmBlockTime
+	blocksToAdd := chainParams.TargetEvmTxTimeout / chainParams.AverageEvmBlockTime
 	return projectedCurrentEVMHeight + blocksToAdd
 }
 

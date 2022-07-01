@@ -146,13 +146,13 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	keeper.InitGenesisMultiChain(ctx, am.keeper, genesisState)
+	keeper.InitGenesis(ctx, am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis exports the current genesis state to a json.RawMessage
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := keeper.ExportGenesisMultiChain(ctx, am.keeper)
+	gs := keeper.ExportGenesis(ctx, am.keeper)
 	return cdc.MustMarshalJSON(&gs)
 }
 

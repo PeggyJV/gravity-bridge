@@ -62,8 +62,8 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, chainID uint32, contractAddress co
 
 // batchTxExecuted is run when the Cosmos chain detects that a batch has been executed on EVM
 // It deletes all the transactions in the batch, then cancels all earlier batches
-func (k Keeper) batchTxExecuted(ctx sdk.Context, chaindID uint32, tokenContract common.Address, nonce uint64) {
-	otx := k.GetOutgoingTx(ctx, chaindID, types.MakeBatchTxKey(chaindID, tokenContract, nonce))
+func (k Keeper) batchTxExecuted(ctx sdk.Context, chainID uint32, tokenContract common.Address, nonce uint64) {
+	otx := k.GetOutgoingTx(ctx, chainID, types.MakeBatchTxKey(chainID, tokenContract, nonce))
 	if otx == nil {
 		k.Logger(ctx).Error("Failed to clean batches",
 			"token contract", tokenContract.Hex(),
@@ -71,15 +71,15 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, chaindID uint32, tokenContract 
 		return
 	}
 	batchTx, _ := otx.(*types.BatchTx)
-	k.IterateOutgoingTxsByType(ctx, chaindID, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
+	k.IterateOutgoingTxsByType(ctx, chainID, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		// If the iterated batches nonce is lower than the one that was just executed, cancel it
 		btx, _ := otx.(*types.BatchTx)
 		if (btx.BatchNonce < batchTx.BatchNonce) && (btx.TokenContract == batchTx.TokenContract) {
-			k.CancelBatchTx(ctx, chaindID, btx)
+			k.CancelBatchTx(ctx, chainID, btx)
 		}
 		return false
 	})
-	k.DeleteOutgoingTx(ctx, chaindID, batchTx.GetStoreIndex())
+	k.DeleteOutgoingTx(ctx, chainID, batchTx.GetStoreIndex())
 }
 
 // getBatchFeesByTokenType gets the fees the next batch of a given token type would
@@ -95,21 +95,6 @@ func (k Keeper) getBatchFeesByTokenType(ctx sdk.Context, chainID uint32, tokenCo
 		return i == maxElements
 	})
 
-	return feeAmount
-}
-
-// GetBatchFeesByTokenType gets the fees the next batch of a given token type would
-// have if created. This info is both presented to relayers for the purpose of determining
-// when to request batches and also used by the batch creation process to decide not to create
-// a new batch
-func (k Keeper) GetBatchFeesByTokenType(ctx sdk.Context, chainID uint32, tokenContractAddr common.Address, maxElements int) sdk.Int {
-	feeAmount := sdk.ZeroInt()
-	i := 0
-	k.iterateUnbatchedSendToEVMsByContract(ctx, chainID, tokenContractAddr, func(tx *types.SendToEVM) bool {
-		feeAmount = feeAmount.Add(tx.Erc20Fee.Amount)
-		i++
-		return i == maxElements
-	})
 	return feeAmount
 }
 
