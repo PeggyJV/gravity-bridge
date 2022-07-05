@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	ethCrypto "github.com/ethereum/go-ethereum/crypto"
-	"github.com/peggyjv/gravity-bridge/module/app"
+	"github.com/peggyjv/gravity-bridge/module/v3/app"
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity"
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/keeper"
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"

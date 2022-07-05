@@ -78,7 +78,6 @@ func DefaultParams() *Params {
 		SignedBatchesWindow:                  10000,
 		EvmSignaturesWindow:                  10000,
 		TargetEvmTxTimeout:                   43200000,
-		AverageBlockTime:                     5000,
 		AverageEvmBlockTime:                  15000,
 		SlashFractionSignerSetTx:             sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		SlashFractionBatch:                   sdk.NewDec(1).Quo(sdk.NewDec(1000)),
@@ -87,7 +86,8 @@ func DefaultParams() *Params {
 		UnbondSlashingSignerSetTxsWindow:     10000}
 
 	return &Params{
-		ParamsForChain: map[uint32]*ParamsForChain{EthereumChainID: &cp},
+		AverageBlockTime: 5000,
+		ParamsByChain:    map[uint32]*ParamsForChain{EthereumChainID: &cp},
 	}
 }
 
@@ -95,7 +95,11 @@ func DefaultParams() *Params {
 func (p Params) ValidateBasic() error {
 	var gravityIDs []string
 
-	for _, cp := range p.ParamsForChain {
+	if err := validateAverageBlockTime(p.AverageBlockTime); err != nil {
+		return sdkerrors.Wrap(err, "Block time")
+	}
+
+	for _, cp := range p.ParamsByChain {
 		if err := cp.ValidateBasic(); err != nil {
 			return err
 		}
@@ -115,14 +119,8 @@ func (cp ParamsForChain) ValidateBasic() error {
 	if err := validateGravityID(cp.GravityId); err != nil {
 		return sdkerrors.Wrap(err, "gravity id")
 	}
-	if err := validateContractHash(cp.ContractSourceHash); err != nil {
-		return sdkerrors.Wrap(err, "contract hash")
-	}
 	if err := validateTargetEthTxTimeout(cp.TargetEvmTxTimeout); err != nil {
 		return sdkerrors.Wrap(err, "Batch timeout")
-	}
-	if err := validateAverageBlockTime(cp.AverageBlockTime); err != nil {
-		return sdkerrors.Wrap(err, "Block time")
 	}
 	if err := validateAverageEVMBlockTime(cp.AverageEvmBlockTime); err != nil {
 		return sdkerrors.Wrap(err, "EVM block time")
@@ -164,7 +162,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 // pairs of auth module's parameters.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(ParamsStoreKeyParamsForChain, &p.ParamsForChain, validateParamsForChain),
+		paramtypes.NewParamSetPair(ParamsStoreKeyParamsForChain, &p.ParamsByChain, validateParamsForChain),
 	}
 }
 

@@ -187,7 +187,6 @@ var (
 		UnbondSlashingSignerSetTxsWindow:     15,
 		EvmSignaturesWindow:                  10,
 		TargetEvmTxTimeout:                   60001,
-		AverageBlockTime:                     5000,
 		AverageEvmBlockTime:                  15000,
 		SlashFractionSignerSetTx:             sdk.NewDecWithPrec(1, 2),
 		SlashFractionBatch:                   sdk.NewDecWithPrec(1, 2),
@@ -195,7 +194,9 @@ var (
 		SlashFractionConflictingEvmSignature: sdk.NewDecWithPrec(1, 2),
 	}
 	// TestingGravityParams is a set of gravity params for testing
-	TestingGravityParams = types.Params{ParamsByChain: map[uint32]*types.ParamsForChain{1: &ethereumParamsForChain}}
+	TestingGravityParams = types.Params{
+		AverageBlockTime: 5000,
+		ParamsByChain:    map[uint32]*types.ParamsForChain{1: &ethereumParamsForChain}}
 )
 
 // TestInput stores the various keepers required to test gravity
@@ -215,8 +216,8 @@ type TestInput struct {
 
 func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, tokenContract gethcommon.Address, sender sdk.AccAddress, receiver gethcommon.Address, ids ...uint64) {
 	for i, id := range ids {
-		amount := types.NewERC20Token(uint64(i+100), tokenContract.Hex()).GravityCoin()
-		fee := types.NewERC20Token(id, tokenContract.Hex()).GravityCoin()
+		amount := types.NewERC20Token(uint64(i+100), tokenContract).GravityCoin()
+		fee := types.NewERC20Token(id, tokenContract).GravityCoin()
 		_, err := input.GravityKeeper.createSendToEVM(ctx, types.EthereumChainID, sender, receiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}

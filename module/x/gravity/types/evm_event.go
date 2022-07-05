@@ -179,21 +179,21 @@ func (sse *SignerSetTxExecutedEvent) Validate() error {
 /////////////
 
 func (stce *SendToCosmosEvent) ChainID() uint32 {
-	return ChainIDOrDefault(stce.GetChainId())
+	return stce.GetChainId()
 }
 
 func (bee *BatchExecutedEvent) ChainID() uint32 {
-	return ChainIDOrDefault(bee.GetChainId())
+	return bee.GetChainId()
 }
 
 func (ccee *ContractCallExecutedEvent) ChainID() uint32 {
-	return ChainIDOrDefault(ccee.GetChainId())
+	return ccee.GetChainId()
 }
 
 func (e20de *ERC20DeployedEvent) ChainID() uint32 {
-	return ChainIDOrDefault(e20de.GetChainId())
+	return e20de.GetChainId()
 }
 
 func (sse *SignerSetTxExecutedEvent) ChainID() uint32 {
-	return ChainIDOrDefault(sse.GetChainId())
+	return sse.GetChainId()
 }

@@ -32,7 +32,6 @@ message LatestEVMBlockHeight {
 message EVMSigner {
   uint64 power = 1;
   string EVM_address = 2;
-  uint32 chain_id = 3;
 }
 
 // SignerSetTx is the EVM Bridge multisig set that relays
@@ -90,7 +89,6 @@ message ERC20Token {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
-  uint32 chain_id = 3;
 }
 
 message CommunityPoolEVMSpendProposal {

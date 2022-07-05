@@ -234,6 +234,8 @@ message ERC20ToDenomResponse {
   bool cosmos_originated = 2;
 }
 
+// DenomToERC20ParamsRequest: while chain ID is not specific to denom->erc20 params,
+// it is used to throw an error in case the denom is already deployed
 message DenomToERC20ParamsRequest {
   string denom = 1;
   uint32 chain_id = 2;

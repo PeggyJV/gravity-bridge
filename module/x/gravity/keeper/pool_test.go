@@ -19,7 +19,7 @@ func TestAddToOutgoingPool(t *testing.T) {
 		myTokenContractAddr = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
 	)
 	// mint some voucher first
-	allVouchers := sdk.Coins{types.NewERC20Token(99999, myTokenContractAddr.Hex()).GravityCoin()}
+	allVouchers := sdk.Coins{types.NewERC20Token(99999, myTokenContractAddr).GravityCoin()}
 	err := input.BankKeeper.MintCoins(ctx, types.ModuleName, allVouchers)
 	require.NoError(t, err)
 
@@ -38,10 +38,10 @@ func TestAddToOutgoingPool(t *testing.T) {
 	})
 
 	exp := []*types.SendToEVM{
-		types.NewSendToEVMTx(2, myTokenContractAddr, mySender, myReceiver, 101, 3),
-		types.NewSendToEVMTx(3, myTokenContractAddr, mySender, myReceiver, 102, 2),
-		types.NewSendToEVMTx(1, myTokenContractAddr, mySender, myReceiver, 100, 2),
-		types.NewSendToEVMTx(4, myTokenContractAddr, mySender, myReceiver, 103, 1),
+		types.NewSendToEVMTx(2, 1, myTokenContractAddr, mySender, myReceiver, 101, 3),
+		types.NewSendToEVMTx(3, 2, myTokenContractAddr, mySender, myReceiver, 102, 2),
+		types.NewSendToEVMTx(1, 3, myTokenContractAddr, mySender, myReceiver, 100, 2),
+		types.NewSendToEVMTx(4, 4, myTokenContractAddr, mySender, myReceiver, 103, 1),
 	}
 
 	require.Equal(t, exp, got)

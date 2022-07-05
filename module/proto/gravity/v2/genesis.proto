@@ -126,4 +126,5 @@ message EVMSpecificGenesisState {
 message ERC20ToDenom {
   string erc20 = 1;
   string denom = 2;
+  uint32 chainID = 3;
 }

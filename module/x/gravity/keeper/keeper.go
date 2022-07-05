@@ -651,78 +651,78 @@ func (k Keeper) IterateEVMHeightVotes(ctx sdk.Context, chainID uint32, cb func(v
 // This implementation is partial at best. It does not contain necessary functionality to freeze the bridge.
 // We will have yet to implement functionality to Migrate the Cosmos ERC20 tokens or any other ERC20 tokens bridged to the gravity contracts.
 // This just does keeper state cleanup if a new gravity contract has been deployed
-//func (k Keeper) MigrateGravityContract(ctx sdk.Context, chainID uint32, newBridgeAddress string, bridgeDeploymentHeight uint64) {
-//	// Delete Any Outgoing TXs.
-//
-//	prefixStoreOtx := prefix.NewStore(ctx.KVStore(k.StoreKey), types.OutgoingTxKeyPrefix(chainID))
-//	iterOtx := prefixStoreOtx.ReverseIterator(nil, nil)
-//	defer iterOtx.Close()
-//	for ; iterOtx.Valid(); iterOtx.Next() {
-//
-//		var any cdctypes.Any
-//		k.Cdc.MustUnmarshal(iterOtx.Value(), &any)
-//		var otx types.OutgoingTx
-//		if err := k.Cdc.UnpackAny(&any, &otx); err != nil {
-//			panic(err)
-//		}
-//		// Delete any partial Eth Signatures handging around
-//		prefixStoreSig := prefix.NewStore(ctx.KVStore(k.StoreKey), types.EVMSignatureKeyStoreIndexPrefix(chainID, otx.GetStoreIndex()))
-//		iterSig := prefixStoreSig.Iterator(nil, nil)
-//		defer iterSig.Close()
-//
-//		for ; iterSig.Valid(); iterSig.Next() {
-//			prefixStoreSig.Delete(iterSig.Key())
-//		}
-//
-//		prefixStoreOtx.Delete(iterOtx.Key())
-//	}
-//
-//	// Reset the last observed signer set nonce
-//	store := ctx.KVStore(k.StoreKey)
-//	store.Set(types.MakeLatestSignerSetTxNonceKey(chainID), sdk.Uint64ToBigEndian(0))
-//
-//	// Reset all ethereum event nonces to zero
-//	k.SetLastObservedEventNonce(ctx, chainID, 0)
-//	k.iterateEVMEventVoteRecords(ctx, chainID, func(_ []byte, voteRecord *types.EVMEventVoteRecord) bool {
-//		for _, vote := range voteRecord.Votes {
-//			val, err := sdk.ValAddressFromBech32(vote)
-//
-//			if err != nil {
-//				panic(err)
-//			}
-//
-//			k.setLastEventNonceByValidator(ctx, chainID, val, 0)
-//		}
-//
-//		return false
-//	})
-//
-//	// Delete all EVM Events
-//	prefixStoreEVMEvent := prefix.NewStore(ctx.KVStore(k.StoreKey), types.EVMEventVoteRecordPrefix(chainID))
-//	iterEvent := prefixStoreEVMEvent.Iterator(nil, nil)
-//	defer iterEvent.Close()
-//	for ; iterEvent.Valid(); iterEvent.Next() {
-//		prefixStoreEVMEvent.Delete(iterEvent.Key())
-//	}
-//
-//	// Set the Last oberved EVM Blockheight to zero
-//	height := types.LatestEVMBlockHeight{
-//		EVMHeight:    (bridgeDeploymentHeight - 1),
-//		CosmosHeight: uint64(ctx.BlockHeight()),
-//	}
-//
-//	store.Set(types.MakeLastEVMBlockHeightKey(chainID), k.Cdc.MustMarshal(&height))
-//
-//	k.SetLastObservedSignerSetTx(ctx, chainID, types.SignerSetTx{
-//		Nonce:   0,
-//		Height:  0,
-//		Signers: nil,
-//	})
-//
-//	// Set the batch Nonce to zero
-//	store.Set(types.MakeLastOutgoingBatchNonceKey(chainID), sdk.Uint64ToBigEndian(0))
-//
-//	// Update the bridge contract address
-//	params := k.GetParams(ctx)
-//	k.SetParams(ctx, params)
-//}
+func (k Keeper) MigrateGravityContract(ctx sdk.Context, chainID uint32, newBridgeAddress string, bridgeDeploymentHeight uint64) {
+	// Delete Any Outgoing TXs.
+
+	prefixStoreOtx := prefix.NewStore(ctx.KVStore(k.StoreKey), types.OutgoingTxKeyPrefix(chainID))
+	iterOtx := prefixStoreOtx.ReverseIterator(nil, nil)
+	defer iterOtx.Close()
+	for ; iterOtx.Valid(); iterOtx.Next() {
+
+		var any cdctypes.Any
+		k.Cdc.MustUnmarshal(iterOtx.Value(), &any)
+		var otx types.OutgoingTx
+		if err := k.Cdc.UnpackAny(&any, &otx); err != nil {
+			panic(err)
+		}
+		// Delete any partial Eth Signatures handging around
+		prefixStoreSig := prefix.NewStore(ctx.KVStore(k.StoreKey), types.EVMSignatureKeyStoreIndexPrefix(chainID, otx.GetStoreIndex()))
+		iterSig := prefixStoreSig.Iterator(nil, nil)
+		defer iterSig.Close()
+
+		for ; iterSig.Valid(); iterSig.Next() {
+			prefixStoreSig.Delete(iterSig.Key())
+		}
+
+		prefixStoreOtx.Delete(iterOtx.Key())
+	}
+
+	// Reset the last observed signer set nonce
+	store := ctx.KVStore(k.StoreKey)
+	store.Set(types.MakeLatestSignerSetTxNonceKey(chainID), sdk.Uint64ToBigEndian(0))
+
+	// Reset all ethereum event nonces to zero
+	k.SetLastObservedEventNonce(ctx, chainID, 0)
+	k.iterateEVMEventVoteRecords(ctx, chainID, func(_ []byte, voteRecord *types.EVMEventVoteRecord) bool {
+		for _, vote := range voteRecord.Votes {
+			val, err := sdk.ValAddressFromBech32(vote)
+
+			if err != nil {
+				panic(err)
+			}
+
+			k.setLastEventNonceByValidator(ctx, chainID, val, 0)
+		}
+
+		return false
+	})
+
+	// Delete all EVM Events
+	prefixStoreEVMEvent := prefix.NewStore(ctx.KVStore(k.StoreKey), types.EVMEventVoteRecordPrefix(chainID))
+	iterEvent := prefixStoreEVMEvent.Iterator(nil, nil)
+	defer iterEvent.Close()
+	for ; iterEvent.Valid(); iterEvent.Next() {
+		prefixStoreEVMEvent.Delete(iterEvent.Key())
+	}
+
+	// Set the Last oberved EVM Blockheight to zero
+	height := types.LatestEVMBlockHeight{
+		EVMHeight:    (bridgeDeploymentHeight - 1),
+		CosmosHeight: uint64(ctx.BlockHeight()),
+	}
+
+	store.Set(types.MakeLastEVMBlockHeightKey(chainID), k.Cdc.MustMarshal(&height))
+
+	k.SetLastObservedSignerSetTx(ctx, chainID, types.SignerSetTx{
+		Nonce:   0,
+		Height:  0,
+		Signers: nil,
+	})
+
+	// Set the batch Nonce to zero
+	store.Set(types.MakeLastOutgoingBatchNonceKey(chainID), sdk.Uint64ToBigEndian(0))
+
+	// Update the bridge contract address
+	params := k.GetParams(ctx)
+	k.SetParams(ctx, params)
+}

@@ -91,7 +91,6 @@ func migrateLastObservedSignerSet(ctx sdk.Context, newK *NewKeeper, oldK *oldKee
 		signers = append(signers, &types.EVMSigner{
 			Power:      s.Power,
 			EVMAddress: s.EthereumAddress,
-			ChainId:    types.EthereumChainID,
 		})
 	}
 
@@ -217,15 +216,14 @@ func migrateParams(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
 	oldParams := oldK.GetParams(ctx)
 
 	newParams := types.Params{
-		ParamsForChain: map[uint32]*types.ParamsForChain{
+		AverageBlockTime: oldParams.AverageBlockTime,
+		ParamsByChain: map[uint32]*types.ParamsForChain{
 			types.EthereumChainID: {
 				GravityId:                            oldParams.GravityId,
-				ContractSourceHash:                   oldParams.ContractSourceHash,
 				SignedSignerSetTxsWindow:             oldParams.SignedSignerSetTxsWindow,
 				SignedBatchesWindow:                  oldParams.SignedBatchesWindow,
 				EvmSignaturesWindow:                  oldParams.EthereumSignaturesWindow,
 				TargetEvmTxTimeout:                   oldParams.TargetEthTxTimeout,
-				AverageBlockTime:                     oldParams.AverageBlockTime,
 				AverageEvmBlockTime:                  oldParams.AverageEthereumBlockTime,
 				SlashFractionSignerSetTx:             oldParams.SlashFractionSignerSetTx,
 				SlashFractionBatch:                   oldParams.SlashFractionBatch,
@@ -301,7 +299,6 @@ func migrateSignerSetTxs(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keepe
 			evmSigners = append(evmSigners, &types.EVMSigner{
 				Power:      signer.Power,
 				EVMAddress: signer.EthereumAddress,
-				ChainId:    types.EthereumChainID,
 			})
 		}
 
@@ -345,12 +342,10 @@ func migrateBatchTXs(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
 				Erc20Token: types.ERC20Token{
 					Contract: t.Erc20Token.Contract,
 					Amount:   t.Erc20Token.Amount,
-					ChainId:  types.EthereumChainID,
 				},
 				Erc20Fee: types.ERC20Token{
 					Contract: t.Erc20Fee.Contract,
 					Amount:   t.Erc20Fee.Amount,
-					ChainId:  types.EthereumChainID,
 				},
 				ChainId: types.EthereumChainID,
 			})
@@ -389,7 +384,6 @@ func migrateContractCallTxs(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Ke
 			tokens = append(tokens, types.ERC20Token{
 				Contract: t.Contract,
 				Amount:   t.Amount,
-				ChainId:  types.EthereumChainID,
 			})
 		}
 
@@ -397,7 +391,6 @@ func migrateContractCallTxs(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Ke
 			fees = append(fees, types.ERC20Token{
 				Contract: f.Contract,
 				Amount:   f.Amount,
-				ChainId:  types.EthereumChainID,
 			})
 		}
 
@@ -444,12 +437,10 @@ func migrateSendToEVMs(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper)
 			Erc20Token: types.ERC20Token{
 				Contract: oldSend.Erc20Token.Contract,
 				Amount:   oldSend.Erc20Token.Amount,
-				ChainId:  types.EthereumChainID,
 			},
 			Erc20Fee: types.ERC20Token{
 				Contract: oldSend.Erc20Fee.Contract,
 				Amount:   oldSend.Erc20Fee.Amount,
-				ChainId:  types.EthereumChainID,
 			},
 			ChainId: types.EthereumChainID,
 		}

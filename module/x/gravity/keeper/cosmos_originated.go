@@ -12,7 +12,7 @@ import (
 
 func (k Keeper) getCosmosOriginatedDenom(ctx sdk.Context, chainID uint32, tokenContract common.Address) (string, bool) {
 	store := ctx.KVStore(k.StoreKey)
-	bz := store.Get(types.MakeERC20ToDenomKey(chainID, tokenContract))
+	bz := store.Get(types.MakeERC20ToDenomKey(chainID, tokenContract.Hex()))
 
 	if bz != nil {
 		return string(bz), true
@@ -33,7 +33,7 @@ func (k Keeper) getCosmosOriginatedERC20(ctx sdk.Context, chainID uint32, denom 
 func (k Keeper) setCosmosOriginatedDenomToERC20(ctx sdk.Context, chainID uint32, denom string, tokenContract common.Address) {
 	store := ctx.KVStore(k.StoreKey)
 	store.Set(types.MakeDenomToERC20Key(chainID, denom), tokenContract.Bytes())
-	store.Set(types.MakeERC20ToDenomKey(chainID, tokenContract), []byte(denom))
+	store.Set(types.MakeERC20ToDenomKey(chainID, tokenContract.Hex()), []byte(denom))
 }
 
 // DenomToERC20 returns (bool isCosmosOriginated, string ERC20, err)

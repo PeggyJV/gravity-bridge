@@ -226,14 +226,14 @@ func TestLastSlashedValsetNonce(t *testing.T) {
 	assert.Equal(t, uint64(i-1), latestValsetNonce)
 
 	//  lastSlashedValsetNonce should be zero initially.
-	lastSlashedValsetNonce := k.GetLastSlashedOutgoingTxBlockHeight(ctx, types.EthereumChainID)
+	lastSlashedValsetNonce := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
 	assert.Equal(t, uint64(0), lastSlashedValsetNonce)
 	unslashedValsets := k.GetUnSlashedOutgoingTxs(ctx, types.EthereumChainID, uint64(12))
 	assert.Equal(t, 9, len(unslashedValsets))
 
 	// check if last Slashed Valset nonce is set properly or not
-	k.SetLastSlashedOutgoingTxBlockHeight(ctx, types.EthereumChainID, uint64(3))
-	lastSlashedValsetNonce = k.GetLastSlashedOutgoingTxBlockHeight(ctx, types.EthereumChainID)
+	k.SetLastSlashedOutgoingTxBlockHeight(ctx, uint64(3))
+	lastSlashedValsetNonce = k.GetLastSlashedOutgoingTxBlockHeight(ctx)
 	assert.Equal(t, uint64(3), lastSlashedValsetNonce)
 
 	// when maxHeight < lastSlashedValsetNonce, len(unslashedValsets) should be zero
@@ -559,7 +559,7 @@ func TestKeeper_Migration(t *testing.T) {
 		myReceiver          = common.HexToAddress("0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7")
 		myTokenContractAddr = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5") // Pickle
 		allVouchers         = sdk.NewCoins(
-			types.NewERC20Token(99999, myTokenContractAddr.Hex()).GravityCoin(),
+			types.NewERC20Token(99999, myTokenContractAddr).GravityCoin(),
 		)
 	)
 
