@@ -19,18 +19,18 @@ func (s *IntegrationTestSuite) TestValsetUpdate() {
 		ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
 		s.Require().NoError(err, "error setting up eth client")
 
-		validator := s.chain.validators[1]
-		keyring, err := validator.keyring()
+		validator := s.chain.orchestrators[1]
+		keyring := validator.keyring
 
-		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", validator.keyInfo.GetAddress())
+		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", keyring, "orch", validator.keyInfo.GetAddress())
 		s.Require().NoError(err)
 
 		startingNonce, err := ethClient.NonceAt(context.Background(), gravityContract, nil)
 		s.Require().NoError(err, "error getting starting nonce")
 
-		bondTokens := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
+		bondTokens := sdk.TokensFromConsensusPower(700000, sdk.DefaultPowerReduction)
 
-		bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
+		bondCoin := sdk.NewCoin("testgb", bondTokens)
 
 		delegator := s.chain.orchestrators[1].keyInfo.GetAddress()
 
@@ -61,14 +61,19 @@ func (s *IntegrationTestSuite) TestValsetUpdate() {
 		s.Require().NoError(err, "error getting current nonce")
 
 		s.Require().Eventuallyf(func() bool {
-			s.Require().NoError(err, "Validator set is not yet updated")
-			currentNonce, err = ethClient.NonceAt(context.Background(), gravityContract, nil)
+			for currentNonce == startingNonce {
+				currentNonce, err = ethClient.NonceAt(context.Background(), gravityContract, nil)
+				if currentNonce != startingNonce {
+					return true
+				}
+			}
 			return true
-		}, 300*time.Second, 10*time.Second, "error getting current nonce")
+		}, 300*time.Second, 10*time.Second, "Validator set is not yet updated")
 
 		currentNonce, err = ethClient.NonceAt(context.Background(), gravityContract, nil)
 
 		if currentNonce != startingNonce {
+			s.T().Log(currentNonce)
 			s.T().Logf("Validator set successfully updated!")
 		} else {
 			s.T().Logf("Failed to update validator set")
