@@ -19,54 +19,54 @@ func (s *IntegrationTestSuite) TestValsetUpdate() {
 		ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
 		s.Require().NoError(err, "error setting up eth client")
 
-		startingNonce, err := ethClient.PendingNonceAt(context.Background(), gravityContract)
+		validator := s.chain.validators[1]
+		keyring, err := validator.keyring()
+
+		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", validator.keyInfo.GetAddress())
+		s.Require().NoError(err)
+
+		startingNonce, err := ethClient.NonceAt(context.Background(), gravityContract, nil)
 		s.Require().NoError(err, "error getting starting nonce")
 
-		bondTokens := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+		bondTokens := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
 
 		bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 
-		delegator := s.chain.orchestrators[0].keyInfo.GetAddress()
+		delegator := s.chain.orchestrators[1].keyInfo.GetAddress()
 
 		val := sdk.ValAddress(s.chain.validators[1].keyInfo.GetAddress())
 
-		timeout := time.After(300 * time.Second)
-		ch_err := make(chan error)
-	loop:
-		for {
-			select {
-			case <-timeout:
-				break loop
+		s.Require().Eventuallyf(func() bool {
+			s.T().Logf("Sending in valset request (starting_eth_valset_nonce %d)", startingNonce)
 
-			default:
+			s.T().Logf("Delegating %v to %v in order to generate a validator set update", bondCoin, delegator)
 
-				s.T().Logf("Sending in valset request (starting_eth_valset_nonce %d)", startingNonce)
-
-				s.T().Logf("Delegating %v to %v in order to generate a validator set update", bondCoin, delegator)
-
-				types.NewMsgDelegate(delegator, val, bondCoin)
-
-			case <-ch_err:
-				continue loop
+			delegate := types.NewMsgDelegate(delegator, val, bondCoin)
+			response, err := s.chain.sendMsgs(*clientCtx, delegate)
+			if err != nil {
+				s.T().Logf("error: %s", err)
+				return false
 			}
-		}
 
-		currentNonce, err := ethClient.PendingNonceAt(context.Background(), gravityContract)
+			if response.Code != 0 {
+				if response.Code != 32 {
+					s.T().Log(response)
+				}
+				return false
+			}
+			return true
+		}, 300*time.Second, 10*time.Second, "Delegate to validator failed will retry")
+
+		currentNonce, err := ethClient.NonceAt(context.Background(), gravityContract, nil)
 		s.Require().NoError(err, "error getting current nonce")
 
-	nonce:
-		for {
-			if currentNonce == startingNonce {
-				select {
-				case <-timeout:
-					break nonce
-				default:
-					s.Require().NoError(err, "Validator set is not yet updated")
-					currentNonce, err = ethClient.PendingNonceAt(context.Background(), gravityContract)
-					s.Require().NoError(err, "error getting current nonce")
-				}
-			}
-		}
+		s.Require().Eventuallyf(func() bool {
+			s.Require().NoError(err, "Validator set is not yet updated")
+			currentNonce, err = ethClient.NonceAt(context.Background(), gravityContract, nil)
+			return true
+		}, 300*time.Second, 10*time.Second, "error getting current nonce")
+
+		currentNonce, err = ethClient.NonceAt(context.Background(), gravityContract, nil)
 
 		if currentNonce != startingNonce {
 			s.T().Logf("Validator set successfully updated!")
