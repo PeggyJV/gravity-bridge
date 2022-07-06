@@ -22,19 +22,22 @@ const BatchTxSize = 100
 // - persist an outgoing batch object with an incrementing ID = nonce
 // - emit an event
 func (k Keeper) BuildBatchTx(ctx sdk.Context, contractAddress common.Address, maxElements int) *types.BatchTx {
-	// if there is a more profitable batch for this token type do not create a new batch
-	if lastBatch := k.getLastOutgoingBatchByTokenType(ctx, contractAddress); lastBatch != nil {
-		if lastBatch.GetFees().GTE(k.getBatchFeesByTokenType(ctx, contractAddress, maxElements)) {
-			return nil
-		}
-	}
-
 	var selectedStes []*types.SendToEthereum
+	feeAmount := sdk.ZeroInt()
+
 	k.iterateUnbatchedSendToEthereumsByContract(ctx, contractAddress, func(ste *types.SendToEthereum) bool {
+		feeAmount = feeAmount.Add(ste.Erc20Fee.Amount)
 		selectedStes = append(selectedStes, ste)
 		k.deleteUnbatchedSendToEthereum(ctx, ste.Id, ste.Erc20Fee)
 		return len(selectedStes) == maxElements
 	})
+
+	// if there is a more profitable batch for this token type do not create a new batch
+	if lastBatch := k.getLastOutgoingBatchByTokenType(ctx, contractAddress); lastBatch != nil {
+		if lastBatch.GetFees().GTE(feeAmount) {
+			return nil
+		}
+	}
 
 	// do not create batches that would contain no transactions, even if they are requested
 	if len(selectedStes) == 0 {
@@ -82,37 +85,6 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 		return false
 	})
 	k.DeleteOutgoingTx(ctx, batchTx.GetStoreIndex())
-}
-
-// getBatchFeesByTokenType gets the fees the next batch of a given token type would
-// have if created. This info is both presented to relayers for the purpose of determining
-// when to request batches and also used by the batch creation process to decide not to create
-// a new batch
-func (k Keeper) getBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr common.Address, maxElements int) sdk.Int {
-	feeAmount := sdk.ZeroInt()
-	i := 0
-	k.iterateUnbatchedSendToEthereumsByContract(ctx, tokenContractAddr, func(tx *types.SendToEthereum) bool {
-		feeAmount = feeAmount.Add(tx.Erc20Fee.Amount)
-		i++
-		return i == maxElements
-	})
-
-	return feeAmount
-}
-
-// GetBatchFeesByTokenType gets the fees the next batch of a given token type would
-// have if created. This info is both presented to relayers for the purpose of determining
-// when to request batches and also used by the batch creation process to decide not to create
-// a new batch
-func (k Keeper) GetBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr common.Address, maxElements int) sdk.Int {
-	feeAmount := sdk.ZeroInt()
-	i := 0
-	k.iterateUnbatchedSendToEthereumsByContract(ctx, tokenContractAddr, func(tx *types.SendToEthereum) bool {
-		feeAmount = feeAmount.Add(tx.Erc20Fee.Amount)
-		i++
-		return i == maxElements
-	})
-	return feeAmount
 }
 
 // CancelBatchTx releases all TX in the batch and deletes the batch
