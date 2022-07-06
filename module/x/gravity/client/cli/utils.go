@@ -1,6 +1,7 @@
 package cli
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"io/ioutil"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,4 +22,8 @@ func ParseCommunityPoolEVMSpendProposal(cdc codec.JSONCodec, proposalFile string
 	}
 
 	return proposal, nil
+}
+
+func stringToUint32(s string) uint32 {
+	return uint32(sdk.NewUintFromString(s).Uint64())
 }

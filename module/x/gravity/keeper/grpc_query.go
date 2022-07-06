@@ -289,7 +289,8 @@ func (k Keeper) BatchTxFees(c context.Context, req *types.BatchTxFeesRequest) (*
 	k.IterateOutgoingTxsByType(ctx, req.ChainId, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		btx, _ := otx.(*types.BatchTx)
 		for _, tx := range btx.Transactions {
-			res.Fees = append(res.Fees, tx.Erc20Fee.GravityCoin())
+			_, denom := k.ERC20ToDenomLookup(ctx, req.ChainId, common.HexToAddress(tx.Erc20Fee.Contract))
+			res.Fees = append(res.Fees, sdk.NewCoin(denom, tx.Erc20Fee.Amount))
 		}
 		return false
 	})

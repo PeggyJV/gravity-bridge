@@ -345,15 +345,11 @@ func (k Keeper) SetParams(ctx sdk.Context, ps types.Params) {
 
 func (k Keeper) chainIDsContains(ctx sdk.Context, chainID uint32) bool {
 	params := k.GetParams(ctx)
-	for id, _ := range params.ParamsByChain {
-		if chainID == id {
-			return true
-		}
-	}
-	return false
+	_, ok := params.ParamsByChain[chainID]
+	return ok
 }
 
-// getGravityID returns the GravityID the GravityID is essentially a salt value
+// getGravityID returns the GravityID. The GravityID is essentially a salt value
 // for bridge signatures, provided each chain running Gravity has a unique ID
 // it won't be possible to play back signatures from one bridge onto another
 // even if they share a validator set.
@@ -548,7 +544,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 		InvalidationScope: invalidationScope,
 		Address:           address.String(),
 		Payload:           payload,
-		Timeout:           params.ParamsByChain[chainID].TargetEvmTxTimeout,
+		Timeout:           k.getTimeoutHeight(ctx, chainID),
 		Tokens:            tokens,
 		Fees:              fees,
 		Height:            uint64(ctx.BlockHeight()),
@@ -588,7 +584,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 		"payload", string(payload),
 		"tokens", strings.Join(tokenString, "|"),
 		"fees", strings.Join(feeString, "|"),
-		"eth_tx_timeout", strconv.FormatUint(params.ParamsByChain[chainID].TargetEvmTxTimeout, 10),
+		"eth_tx_timeout", strconv.FormatUint(newContractCallTx.Timeout, 10),
 	)
 	return newContractCallTx
 }

@@ -67,7 +67,7 @@ func TestContractCallTxExecuted(t *testing.T) {
 
 	cctx2 := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeContractCallTxKey(types.EthereumChainID, scope, nonce2)).(*types.ContractCallTx)
 	assert.Equal(t, scope, cctx2.InvalidationScope)
-	assert.Equal(t, nonce1, cctx2.InvalidationNonce)
+	assert.Equal(t, nonce2, cctx2.InvalidationNonce)
 	assert.Equal(t, contract.Hex(), cctx2.Address)
 	assert.Equal(t, payload, cctx2.Payload)
 	assert.Equal(t, erc20Tokens, cctx2.Tokens)

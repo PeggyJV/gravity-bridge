@@ -668,7 +668,7 @@ func CmdUnbatchedSendToEthereums() *cobra.Command {
 				return err
 			}
 
-			chainID := uint32(sdk.NewUintFromString(args[0]).Uint64())
+			chainID := stringToUint32(args[0])
 
 			sender, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
@@ -822,7 +822,7 @@ func CmdLastObservedEVMHeight() *cobra.Command {
 				return err
 			}
 
-			chainID := uint32(sdk.NewUintFromString(args[0]).Uint64())
+			chainID := stringToUint32(args[0])
 
 			res, err := queryClient.LastObservedEVMHeight(cmd.Context(), &types.LastObservedEVMHeightRequest{ChainId: chainID})
 			if err != nil {

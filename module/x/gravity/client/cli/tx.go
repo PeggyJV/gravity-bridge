@@ -54,7 +54,7 @@ func CmdSendToEVM() *cobra.Command {
 				return fmt.Errorf("must pass from flag")
 			}
 
-			chainID := uint32(sdk.NewUintFromString(args[0]).Uint64())
+			chainID := stringToUint32(args[0])
 
 			if !common.IsHexAddress(args[1]) {
 				return fmt.Errorf("must be a valid evm address got %s", args[1])
@@ -106,7 +106,7 @@ func CmdCancelSendToEVM() *cobra.Command {
 				return err
 			}
 
-			chainID := uint32(sdk.NewUintFromString(args[0]).Uint64())
+			chainID := stringToUint32(args[0])
 
 			msg := types.NewMsgCancelSendToEVM(uint32(chainID), id, from)
 			if err = msg.ValidateBasic(); err != nil {
@@ -132,7 +132,7 @@ func CmdRequestBatchTx() *cobra.Command {
 				return err
 			}
 
-			chainID := uint32(sdk.NewUintFromString(args[0]).Uint64())
+			chainID := stringToUint32(args[0])
 
 			denom := args[1]
 			signer, err := sdk.AccAddressFromHex(args[2])
