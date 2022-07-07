@@ -624,12 +624,12 @@ func (k Keeper) SetEVMHeightVote(ctx sdk.Context, chainID uint32, valAddress sdk
 
 func (k Keeper) IterateEVMHeightVotes(ctx sdk.Context, chainID uint32, cb func(val sdk.ValAddress, height types.LatestEVMBlockHeight) (stop bool)) {
 	store := ctx.KVStore(k.StoreKey)
-	iter := sdk.KVStorePrefixIterator(store, append([]byte{types.EVMHeightVoteKey}, types.Uint32ToBigEndian(chainID)...))
+	iter := sdk.KVStorePrefixIterator(store, types.MakeEVMHeightVoteKeyPrefix(chainID))
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
 		var height types.LatestEVMBlockHeight
-		key := bytes.NewBuffer(bytes.TrimPrefix(iter.Key(), []byte{types.EVMHeightVoteKey}))
+		key := bytes.NewBuffer(bytes.TrimPrefix(iter.Key(), types.MakeEVMHeightVoteKeyPrefix(chainID)))
 		val := sdk.ValAddress(key.Next(20))
 
 		k.Cdc.MustUnmarshal(iter.Value(), &height)

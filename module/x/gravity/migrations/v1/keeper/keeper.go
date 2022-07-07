@@ -6,7 +6,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/migrations/v1/types"
+	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/migrations/v1/types"
 )
 
 // Keeper maintains the link to storage and exposes getter/setter methods for the various parts of the state machine

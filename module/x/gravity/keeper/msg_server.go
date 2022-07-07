@@ -105,6 +105,13 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 
 }
 
+func (k msgServer) errOnUnsupportedEVM(ctx sdk.Context, chainID uint32) error {
+	if !k.chainIDsContains(ctx, chainID) {
+		return sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupported chain ID: %d", chainID))
+	}
+	return nil
+}
+
 // SubmitEVMTxConfirmation handles MsgSubmitEVMTxConfirmation
 func (k msgServer) SubmitEVMTxConfirmation(c context.Context, msg *types.MsgSubmitEVMTxConfirmation) (*types.MsgSubmitEVMTxConfirmationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
@@ -119,21 +126,20 @@ func (k msgServer) SubmitEVMTxConfirmation(c context.Context, msg *types.MsgSubm
 		return nil, err
 	}
 
-	chainID := msg.ChainId
-	if !k.chainIDsContains(ctx, chainID) {
-		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupported chain ID: %d", chainID))
+	if err := k.errOnUnsupportedEVM(ctx, msg.ChainId); err != nil {
+		return nil, err
 	}
 
-	otx := k.GetOutgoingTx(ctx, chainID, confirmation.GetStoreIndex(chainID))
+	otx := k.GetOutgoingTx(ctx, msg.ChainId, confirmation.GetStoreIndex(msg.ChainId))
 	if otx == nil {
 		k.Logger(ctx).Error(
 			"no outgoing tx",
-			"store index", fmt.Sprintf("%x", confirmation.GetStoreIndex(chainID)),
+			"store index", fmt.Sprintf("%x", confirmation.GetStoreIndex(msg.ChainId)),
 		)
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "couldn't find outgoing tx")
 	}
 
-	gravityID := k.getGravityID(ctx, chainID)
+	gravityID := k.getGravityID(ctx, msg.ChainId)
 	checkpoint := otx.GetCheckpoint([]byte(gravityID))
 
 	ethAddress := k.GetValidatorEVMAddress(ctx, val)
@@ -160,11 +166,11 @@ func (k msgServer) SubmitEVMTxConfirmation(c context.Context, msg *types.MsgSubm
 		))
 	}
 	// TODO: should validators be able to overwrite their signatures?
-	if k.getEVMSignature(ctx, chainID, confirmation.GetStoreIndex(chainID), val) != nil {
+	if k.getEVMSignature(ctx, msg.ChainId, confirmation.GetStoreIndex(msg.ChainId), val) != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "signature duplicate")
 	}
 
-	key := k.SetEVMSignature(ctx, chainID, confirmation, val)
+	key := k.SetEVMSignature(ctx, msg.ChainId, confirmation, val)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -191,9 +197,8 @@ func (k msgServer) SubmitEVMEvent(c context.Context, msg *types.MsgSubmitEVMEven
 		return nil, err
 	}
 
-	chainID := msg.ChainId
-	if !k.chainIDsContains(ctx, chainID) {
-		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
+	if err := k.errOnUnsupportedEVM(ctx, msg.ChainId); err != nil {
+		return nil, err
 	}
 
 	// Add the claim to the store
@@ -208,7 +213,7 @@ func (k msgServer) SubmitEVMEvent(c context.Context, msg *types.MsgSubmitEVMEven
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, fmt.Sprintf("%T", event)),
 			// TODO: maybe return something better here? is this the right string representation?
-			sdk.NewAttribute(types.AttributeKeyEVMEventVoteRecordID, string(types.MakeEVMEventVoteRecordKey(chainID, event.GetEventNonce(), event.Hash()))),
+			sdk.NewAttribute(types.AttributeKeyEVMEventVoteRecordID, string(types.MakeEVMEventVoteRecordKey(msg.ChainId, event.GetEventNonce(), event.Hash()))),
 		),
 	)
 
@@ -227,12 +232,11 @@ func (k msgServer) SendToEVM(c context.Context, msg *types.MsgSendToEVM) (*types
 	types.NormalizeCoinDenom(&msg.Amount)
 	types.NormalizeCoinDenom(&msg.BridgeFee)
 
-	chainID := msg.GetChainId()
-	if !k.chainIDsContains(ctx, chainID) {
-		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
+	if err := k.errOnUnsupportedEVM(ctx, msg.ChainId); err != nil {
+		return nil, err
 	}
 
-	txID, err := k.createSendToEVM(ctx, chainID, sender, msg.EVMRecipient, msg.Amount, msg.BridgeFee)
+	txID, err := k.createSendToEVM(ctx, msg.ChainId, sender, msg.EVMRecipient, msg.Amount, msg.BridgeFee)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +245,7 @@ func (k msgServer) SendToEVM(c context.Context, msg *types.MsgSendToEVM) (*types
 		sdk.NewEvent(
 			types.EventTypeBridgeWithdrawalReceived,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyChainID, strconv.Itoa(int(chainID))),
+			sdk.NewAttribute(types.AttributeKeyChainID, strconv.Itoa(int(msg.ChainId))),
 			sdk.NewAttribute(types.AttributeKeyOutgoingTXID, strconv.Itoa(int(txID))),
 			sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(txID)),
 		),
@@ -260,20 +264,19 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 	// TODO: limit this to only orchestrators and validators?
 	ctx := sdk.UnwrapSDKContext(c)
 
-	chainID := msg.GetChainId()
-	if !k.chainIDsContains(ctx, chainID) {
-		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
+	if err := k.errOnUnsupportedEVM(ctx, msg.ChainId); err != nil {
+		return nil, err
 	}
 
 	// Check if the denom is a gravity coin, if not, check if there is a deployed ERC20 representing it.
-	_, tokenContract, err := k.DenomToERC20Lookup(ctx, chainID, types.NormalizeDenom(msg.Denom))
+	_, tokenContract, err := k.DenomToERC20Lookup(ctx, msg.ChainId, types.NormalizeDenom(msg.Denom))
 	if err != nil {
 		return nil, err
 	}
 
-	batchID := k.BuildBatchTx(ctx, chainID, tokenContract, BatchTxSize)
+	batchID := k.BuildBatchTx(ctx, msg.ChainId, tokenContract, BatchTxSize)
 	if batchID == nil {
-		return nil, fmt.Errorf("no suitablmsg_)e batch to create")
+		return nil, fmt.Errorf("no suitable batch to create")
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -282,7 +285,7 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 			sdk.NewAttribute(sdk.AttributeKeyModule, msg.Type()),
 			sdk.NewAttribute(types.AttributeKeyContract, tokenContract.Hex()),
 			sdk.NewAttribute(types.AttributeKeyBatchNonce, fmt.Sprint(batchID.BatchNonce)),
-			sdk.NewAttribute(types.AttributeKeyChainID, fmt.Sprint(chainID)),
+			sdk.NewAttribute(types.AttributeKeyChainID, fmt.Sprint(msg.ChainId)),
 		),
 	)
 
@@ -292,12 +295,11 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 func (k msgServer) CancelSendToEVM(c context.Context, msg *types.MsgCancelSendToEVM) (*types.MsgCancelSendToEVMResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	chainID := msg.GetChainId()
-	if !k.chainIDsContains(ctx, chainID) {
-		return nil, sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupport chain ID: %d", chainID))
+	if err := k.errOnUnsupportedEVM(ctx, msg.ChainId); err != nil {
+		return nil, err
 	}
 
-	err := k.Keeper.cancelSendToEVM(ctx, chainID, msg.Id, msg.Sender)
+	err := k.Keeper.cancelSendToEVM(ctx, msg.ChainId, msg.Id, msg.Sender)
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +308,7 @@ func (k msgServer) CancelSendToEVM(c context.Context, msg *types.MsgCancelSendTo
 		sdk.NewEvent(
 			types.EventTypeBridgeWithdrawCanceled,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyChainID, fmt.Sprint(chainID)),
+			sdk.NewAttribute(types.AttributeKeyChainID, fmt.Sprint(msg.ChainId)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

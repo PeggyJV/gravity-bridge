@@ -1,4 +1,4 @@
-package gravity
+package v2
 
 import (
 	"bytes"
@@ -49,22 +49,21 @@ func MigrateStore(ctx sdk.Context, newK *NewKeeper) error {
 
 	// nonces
 	migrateSignerSetTxNonce(ctx, newK, &oldK)
-	migrateLastEventNonceByValidators(ctx, newK, &oldK)
+	migrateLastEventNonceByValidators(ctx, newK)
 	migrateLastObservedEventNonce(ctx, newK, &oldK)
 	migrateLastSlashedOutgoingTxBlockHeight(ctx, newK, &oldK)
-	migrateLastOutgoingBatchNonce(ctx, newK, &oldK)
-	migrateLastUnbondingBlockHeight(ctx, newK, &oldK)
+	migrateLastOutgoingBatchNonce(ctx, newK)
 
 	// evm signatures
-	migrateEVMSignatures(ctx, newK, &oldK)
-	migrateSendToEVMID(ctx, newK, &oldK)
+	migrateEVMSignatures(ctx, newK)
+	migrateSendToEVMID(ctx, newK)
 	migrateEVMBlockHeight(ctx, newK, &oldK)
 	migrateSendToEVMs(ctx, newK, &oldK)
 	migrateEVMEventVoteRecords(ctx, newK, &oldK)
 	migrateEVMEventHeightVotes(ctx, newK, &oldK)
 
 	// delegate keys (not chain specific but need the new proto encoding)
-	migrateDelegateKeys(ctx, newK, &oldK)
+	migrateDelegateKeys(ctx, newK)
 
 	// outgoing txs
 	migrateSignerSetTxs(ctx, newK, &oldK)
@@ -74,7 +73,7 @@ func MigrateStore(ctx sdk.Context, newK *NewKeeper) error {
 
 	// denoms
 	migrateERC20ToDenom(ctx, newK, &oldK)
-	migrateDenomToERC20(ctx, newK, &oldK)
+	migrateDenomToERC20(ctx, newK)
 
 	ctx.Logger().Info("Gravity v2 to v3: Store migration complete")
 
@@ -104,14 +103,6 @@ func migrateLastObservedSignerSet(ctx sdk.Context, newK *NewKeeper, oldK *oldKee
 	store.Set(types.MakeLastObservedSignerSetKey(types.EthereumChainID), newK.Cdc.MustMarshal(&newSstx))
 }
 
-func migrateLastUnbondingBlockHeight(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
-	height := oldK.GetLastUnbondingBlockHeight(ctx)
-	store := ctx.KVStore(newK.StoreKey)
-	store.Delete([]byte{oldTypes.LastUnBondingBlockHeightKey})
-
-	store.Set(types.MakeLastUnBondingBlockHeightKey(), sdk.Uint64ToBigEndian(height))
-}
-
 func migrateSignerSetTxNonce(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
 	nonce := oldK.GetLatestSignerSetTxNonce(ctx)
 	store := ctx.KVStore(newK.StoreKey)
@@ -138,14 +129,14 @@ func migrateLastSlashedOutgoingTxBlockHeight(ctx sdk.Context, newK *NewKeeper, o
 	newK.setLastSlashedOutgoingTxBlockHeight(ctx, types.EthereumChainID, height)
 }
 
-func migrateLastOutgoingBatchNonce(ctx sdk.Context, newK *NewKeeper, _ *oldKeeper.Keeper) {
+func migrateLastOutgoingBatchNonce(ctx sdk.Context, newK *NewKeeper) {
 	store := ctx.KVStore(newK.StoreKey)
 	nonce := store.Get([]byte{oldTypes.LastOutgoingBatchNonceKey})
 	store.Delete([]byte{oldTypes.LastOutgoingBatchNonceKey})
 	store.Set(types.MakeLastOutgoingBatchNonceKey(types.EthereumChainID), nonce)
 }
 
-func migrateLastEventNonceByValidators(ctx sdk.Context, newK *NewKeeper, _ *oldKeeper.Keeper) {
+func migrateLastEventNonceByValidators(ctx sdk.Context, newK *NewKeeper) {
 	store := ctx.KVStore(newK.StoreKey)
 	prefixStore := prefix.NewStore(store, []byte{oldTypes.LastEventNonceByValidatorKey})
 	iter := prefixStore.Iterator(nil, nil)
@@ -161,12 +152,12 @@ func migrateLastEventNonceByValidators(ctx sdk.Context, newK *NewKeeper, _ *oldK
 
 	for i, key := range nonceByValidatorKeys {
 		store.Delete(key)
-		newKey := bytes.Join([][]byte{{types.LastEventNonceByValidatorKey}, types.Uint32ToBigEndian(types.EthereumChainID), key[:1]}, []byte{})
+		newKey := bytes.Join([][]byte{{types.LastEventNonceByValidatorKey}, types.Uint32ToBigEndian(types.EthereumChainID), key[1:]}, []byte{})
 		store.Set(newKey, nonceByValidatorValues[i])
 	}
 }
 
-func migrateEVMSignatures(ctx sdk.Context, newK *NewKeeper, _ *oldKeeper.Keeper) {
+func migrateEVMSignatures(ctx sdk.Context, newK *NewKeeper) {
 	store := ctx.KVStore(newK.StoreKey)
 	prefixStore := prefix.NewStore(store, []byte{oldTypes.EthereumSignatureKey})
 	iter := prefixStore.Iterator(nil, nil)
@@ -187,7 +178,7 @@ func migrateEVMSignatures(ctx sdk.Context, newK *NewKeeper, _ *oldKeeper.Keeper)
 	}
 }
 
-func migrateSendToEVMID(ctx sdk.Context, newK *NewKeeper, _ *oldKeeper.Keeper) {
+func migrateSendToEVMID(ctx sdk.Context, newK *NewKeeper) {
 	store := ctx.KVStore(newK.StoreKey)
 	id := store.Get([]byte{oldTypes.LastSendToEthereumIDKey})
 	store.Delete([]byte{oldTypes.LastSendToEthereumIDKey})
@@ -206,10 +197,6 @@ func migrateEVMBlockHeight(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Kee
 	}
 
 	store.Set(types.MakeLastEVMBlockHeightKey(types.EthereumChainID), newK.Cdc.MustMarshal(&newTypeHeight))
-}
-
-func (k NewKeeper) setParams(ctx sdk.Context, ps types.Params) {
-	k.ParamSpace.SetParamSet(ctx, &ps)
 }
 
 func migrateParams(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
@@ -235,26 +222,20 @@ func migrateParams(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
 	}
 
 	// todo: is there a way to delete the current paramset? will this clash?
-	newK.setParams(ctx, newParams)
+	newK.ParamSpace.SetParamSet(ctx, &newParams)
 }
 
-func (k NewKeeper) getEVMOrchestratorAddress(ctx sdk.Context, ethAddr common.Address) sdk.AccAddress {
-	store := ctx.KVStore(k.StoreKey)
-	key := types.MakeEVMOrchestratorAddressKey(ethAddr)
-
-	return store.Get(key)
-}
-
-func migrateDelegateKeys(ctx sdk.Context, newK *NewKeeper, _ *oldKeeper.Keeper) {
+func migrateDelegateKeys(ctx sdk.Context, newK *NewKeeper) {
 	store := ctx.KVStore(newK.StoreKey)
 	iter := prefix.NewStore(store, []byte{oldTypes.ValidatorEthereumAddressKey}).Iterator(nil, nil)
 
 	for ; iter.Valid(); iter.Next() {
-		ethAddr := common.BytesToAddress(iter.Value()).Hex()
+		ethAddr := common.BytesToAddress(iter.Value())
+		key := types.MakeEVMOrchestratorAddressKey(ethAddr)
 		msg := types.MsgDelegateKeys{
 			ValidatorAddress:    sdk.ValAddress(iter.Key()).String(),
-			EVMAddress:          ethAddr,
-			OrchestratorAddress: newK.getEVMOrchestratorAddress(ctx, common.HexToAddress(ethAddr)).String(),
+			EVMAddress:          ethAddr.Hex(),
+			OrchestratorAddress: sdk.AccAddress(store.Get(key)).String(),
 		}
 
 		store.Set(iter.Key(), newK.Cdc.MustMarshal(&msg))
@@ -273,11 +254,6 @@ func (k NewKeeper) setOutgoingTx(ctx sdk.Context, chainID uint32, outgoing types
 	)
 }
 
-func (k NewKeeper) setLastObservedSignerSetTx(ctx sdk.Context, chainID uint32, signerSet types.SignerSetTx) {
-	key := types.MakeLastObservedSignerSetKey(chainID)
-	ctx.KVStore(k.StoreKey).Set(key, k.Cdc.MustMarshal(&signerSet))
-}
-
 func migrateSignerSetTxs(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
 	var oldSignerSetTxs []*oldTypes.SignerSetTx
 
@@ -290,9 +266,7 @@ func migrateSignerSetTxs(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keepe
 
 	for _, otx := range oldSignerSetTxs {
 		oldK.DeleteOutgoingTx(ctx, otx.GetStoreIndex())
-	}
 
-	for _, otx := range oldSignerSetTxs {
 		var evmSigners types.EVMSigners
 
 		for _, signer := range otx.Signers {
@@ -313,7 +287,8 @@ func migrateSignerSetTxs(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keepe
 
 		if otx == oldLastObserved {
 			ctx.KVStore(newK.StoreKey).Delete([]byte{oldTypes.LastObservedSignerSetKey})
-			newK.setLastObservedSignerSetTx(ctx, types.EthereumChainID, newOtx)
+			key := types.MakeLastObservedSignerSetKey(types.EthereumChainID)
+			ctx.KVStore(newK.StoreKey).Set(key, newK.Cdc.MustMarshal(&newOtx))
 		}
 	}
 
@@ -538,7 +513,7 @@ func migrateERC20ToDenom(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keepe
 	}
 }
 
-func migrateDenomToERC20(ctx sdk.Context, newK *NewKeeper, _ *oldKeeper.Keeper) {
+func migrateDenomToERC20(ctx sdk.Context, newK *NewKeeper) {
 	store := ctx.KVStore(newK.StoreKey)
 	iter := prefix.NewStore(store, []byte{oldTypes.DenomToERC20Key}).Iterator(nil, nil)
 	defer iter.Close()

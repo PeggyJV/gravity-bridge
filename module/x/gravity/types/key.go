@@ -76,16 +76,6 @@ func Uint32ToBigEndian(i uint32) []byte {
 	return b
 }
 
-// BigEndianToUint32 returns a uint32 from big endian encoded bytes. If encoding
-// is empty, zero is returned.
-func BigEndianToUint32(bz []byte) uint32 {
-	if len(bz) == 0 {
-		return 0
-	}
-
-	return binary.BigEndian.Uint32(bz)
-}
-
 // MakeOrchestratorValidatorAddressKey returns the following key format
 // prefix
 // [0xe8][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
@@ -115,7 +105,7 @@ func MakeEVMOrchestratorAddressKey(eth common.Address) []byte {
 // prefix   nonce                    validator-address
 // [0x0][0001][0 0 0 0 0 0 0 1][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
 func MakeEVMSignatureKeyForValidator(chainID uint32, storeIndex []byte, validator sdk.ValAddress) []byte {
-	return bytes.Join([][]byte{{EVMSignatureKey}, Uint32ToBigEndian(chainID), storeIndex, validator.Bytes()}, []byte{})
+	return bytes.Join([][]byte{EVMSignatureKeyPrefix(chainID), storeIndex, validator.Bytes()}, []byte{})
 }
 
 func EVMSignatureKeyStoreIndexPrefix(chainID uint32, storeIndex []byte) []byte {
@@ -131,7 +121,7 @@ func EVMSignatureKeyPrefix(chainID uint32) []byte {
 /////////////////////////////////
 
 func MakeEVMEventVoteRecordKey(chainID uint32, eventNonce uint64, claimHash []byte) []byte {
-	return bytes.Join([][]byte{{EVMEventVoteRecordKey}, Uint32ToBigEndian(chainID), sdk.Uint64ToBigEndian(eventNonce), claimHash}, []byte{})
+	return bytes.Join([][]byte{EVMEventVoteRecordPrefix(chainID), sdk.Uint64ToBigEndian(eventNonce), claimHash}, []byte{})
 }
 
 func EVMEventVoteRecordPrefix(chainID uint32) []byte {
@@ -148,7 +138,7 @@ func MakeOutgoingTxKey(chainID uint32, storeIndex []byte) []byte {
 }
 
 func OutgoingTxKeyPrefixWithPrefixByte(chainID uint32, prefix byte) []byte {
-	return bytes.Join([][]byte{{OutgoingTxKey}, Uint32ToBigEndian(chainID), {prefix}}, []byte{})
+	return bytes.Join([][]byte{OutgoingTxKeyPrefix(chainID), {prefix}}, []byte{})
 }
 
 func OutgoingTxKeyPrefix(chainID uint32) []byte {
@@ -242,6 +232,10 @@ func EVMToOrchestratorAddressKeyPrefix() []byte {
 	return []byte{EVMToOrchestratorAddressKey}
 }
 
+func MakeEVMHeightVoteKeyPrefix(chainID uint32) []byte {
+	return bytes.Join([][]byte{{EVMHeightVoteKey}, Uint32ToBigEndian(chainID)}, []byte{})
+}
+
 func MakeEVMHeightVoteKey(chainID uint32, validator sdk.ValAddress) []byte {
-	return bytes.Join([][]byte{{EVMHeightVoteKey}, Uint32ToBigEndian(chainID), validator.Bytes()}, []byte{})
+	return bytes.Join([][]byte{MakeEVMHeightVoteKeyPrefix(chainID), validator.Bytes()}, []byte{})
 }

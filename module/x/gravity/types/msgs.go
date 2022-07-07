@@ -173,7 +173,7 @@ func NewMsgSendToEVM(chainID uint32, sender sdk.AccAddress, destAddress string, 
 func (msg MsgSendToEVM) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgSendToEVM) Type() string { return "send_to_eth" }
+func (msg MsgSendToEVM) Type() string { return "evm" }
 
 // ValidateBasic runs stateless checks on the message
 // Checks if the Eth address is valid
@@ -308,9 +308,9 @@ func (msg MsgCancelSendToEVM) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgEVMHeightVote returns a new MsgEVMHeightVote
-func NewMsgEVMHeightVote(chainID uint32, ethereumHeight uint64, signer sdk.AccAddress) *MsgEVMHeightVote {
+func NewMsgEVMHeightVote(chainID uint32, evmHeight uint64, signer sdk.AccAddress) *MsgEVMHeightVote {
 	return &MsgEVMHeightVote{
-		EvmHeight: ethereumHeight,
+		EvmHeight: evmHeight,
 		Signer:    signer.String(),
 		ChainId:   chainID,
 	}
@@ -320,12 +320,12 @@ func NewMsgEVMHeightVote(chainID uint32, ethereumHeight uint64, signer sdk.AccAd
 func (msg MsgEVMHeightVote) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgEVMHeightVote) Type() string { return "ethereum_height_vote" }
+func (msg MsgEVMHeightVote) Type() string { return "evm_height_vote" }
 
 // ValidateBasic performs stateless checks
 func (msg MsgEVMHeightVote) ValidateBasic() error {
 	if msg.EvmHeight == 0 {
-		return sdkerrors.Wrap(ErrInvalid, "ethereum height cannot be 0")
+		return sdkerrors.Wrap(ErrInvalid, "evm height cannot be 0")
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {

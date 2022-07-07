@@ -32,16 +32,16 @@ func TestAddToOutgoingPool(t *testing.T) {
 
 	// then
 	var got []*types.SendToEVM
-	input.GravityKeeper.IterateUnbatchedSendToEVMs(ctx, 1, func(tx *types.SendToEVM) bool {
+	input.GravityKeeper.IterateUnbatchedSendToEVMs(ctx, types.EthereumChainID, func(tx *types.SendToEVM) bool {
 		got = append(got, tx)
 		return false
 	})
 
 	exp := []*types.SendToEVM{
-		types.NewSendToEVMTx(2, 1, myTokenContractAddr, mySender, myReceiver, 101, 3),
-		types.NewSendToEVMTx(3, 2, myTokenContractAddr, mySender, myReceiver, 102, 2),
-		types.NewSendToEVMTx(1, 3, myTokenContractAddr, mySender, myReceiver, 100, 2),
-		types.NewSendToEVMTx(4, 4, myTokenContractAddr, mySender, myReceiver, 103, 1),
+		types.NewSendToEVMTx(types.EthereumChainID, 1, myTokenContractAddr, mySender, myReceiver, 101, 3),
+		types.NewSendToEVMTx(types.EthereumChainID, 2, myTokenContractAddr, mySender, myReceiver, 102, 2),
+		types.NewSendToEVMTx(types.EthereumChainID, 3, myTokenContractAddr, mySender, myReceiver, 100, 2),
+		types.NewSendToEVMTx(types.EthereumChainID, 4, myTokenContractAddr, mySender, myReceiver, 103, 1),
 	}
 
 	require.Equal(t, exp, got)

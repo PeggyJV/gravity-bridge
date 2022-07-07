@@ -93,7 +93,7 @@ func DefaultParams() *Params {
 
 // ValidateBasic checks that the parameters have valid values.
 func (p Params) ValidateBasic() error {
-	var gravityIDs []string
+	gravityIDs := make(map[string]bool)
 
 	if err := validateAverageBlockTime(p.AverageBlockTime); err != nil {
 		return sdkerrors.Wrap(err, "Block time")
@@ -104,12 +104,10 @@ func (p Params) ValidateBasic() error {
 			return err
 		}
 
-		for _, gid := range gravityIDs {
-			if gid == cp.GravityId {
-				return sdkerrors.Wrap(ErrDuplicateGravityID, "gravity id")
-			}
+		if _, ok := gravityIDs[cp.GravityId]; ok {
+			return sdkerrors.Wrap(ErrDuplicateGravityID, "gravity id")
 		}
-		gravityIDs = append(gravityIDs, cp.GravityId)
+		gravityIDs[cp.GravityId] = true
 	}
 
 	return nil
