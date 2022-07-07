@@ -13,6 +13,7 @@ pub struct LogicCall {
     pub timeout: u64,
     pub invalidation_id: Vec<u8>,
     pub invalidation_nonce: u64,
+    pub chain_id: u32,
 }
 
 impl LogicCall {
@@ -34,6 +35,7 @@ impl LogicCall {
             timeout: input.timeout,
             invalidation_id: input.invalidation_scope,
             invalidation_nonce: input.invalidation_nonce,
+            chain_id: input.chain_id,
         })
     }
 }
@@ -54,14 +56,14 @@ impl LogicCallConfirmResponse {
         Ok(LogicCallConfirmResponse {
             invalidation_id: input.invalidation_scope,
             invalidation_nonce: input.invalidation_nonce,
-            ethereum_signer: input.ethereum_signer.parse()?,
+            ethereum_signer: input.evm_signer.parse()?,
             eth_signature: EthSignature::try_from(input.signature.as_slice())?,
         })
     }
 }
 
 impl Confirm for LogicCallConfirmResponse {
-    fn get_eth_address(&self) -> EthAddress {
+    fn get_evm_address(&self) -> EthAddress {
         self.ethereum_signer
     }
     fn get_signature(&self) -> EthSignature {

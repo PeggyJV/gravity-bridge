@@ -44,7 +44,7 @@ func TestKeyGen(t *testing.T) {
 		"orch",
 	})
 	keyCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		return 	client.SetCmdClientContextHandler(initClientCtx, keyCmd)
+		return client.SetCmdClientContextHandler(initClientCtx, keyCmd)
 	}
 	keyCmd.SetIn(input)
 

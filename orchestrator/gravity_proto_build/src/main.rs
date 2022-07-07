@@ -46,7 +46,7 @@ fn compile_protos(out_dir: &Path, tmp_dir: &Path) {
     let root = root.parent().unwrap().parent().unwrap().to_path_buf();
 
     let mut gravity_proto_dir = root.clone();
-    gravity_proto_dir.push("module/proto/gravity/v1");
+    gravity_proto_dir.push("module/proto/gravity/v2");
     let mut gravity_proto_include_dir = root.clone();
     gravity_proto_include_dir.push("module/proto");
     let mut third_party_proto_include_dir = root;

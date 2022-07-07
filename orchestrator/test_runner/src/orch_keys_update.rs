@@ -11,7 +11,7 @@ use gravity_proto::gravity::{
     query_client::QueryClient as GravityQueryClient, DelegateKeysByEthereumSignerRequest,
     DelegateKeysByOrchestratorRequest,
 };
-use gravity_utils::ethereum::format_eth_address;
+use gravity_utils::ethereum::format_evm_address;
 use rand::Rng;
 use std::time::Duration;
 use tonic::transport::Channel;
@@ -32,7 +32,7 @@ pub async fn orch_keys_update(
         let orch_address = k.orch_key.to_address(&contact.get_prefix()).unwrap();
         let eth_response = grpc_client
             .delegate_keys_by_ethereum_signer(DelegateKeysByEthereumSignerRequest {
-                ethereum_signer: format_eth_address(eth_address),
+                ethereum_signer: format_evm_address(eth_address),
             })
             .await
             .unwrap()
@@ -72,7 +72,7 @@ pub async fn orch_keys_update(
 
         info!(
             "Signing and submitting Delegate addresses {} for validator {}",
-            format_eth_address(ethereum_wallet.address()),
+            format_evm_address(ethereum_wallet.address()),
             cosmos_address,
         );
         // send in the new delegate keys signed by the validator address

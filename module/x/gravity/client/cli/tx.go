@@ -2,6 +2,8 @@ package cli
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/version"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strconv"
 	"strings"
 
@@ -9,13 +11,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/spf13/cobra"
 
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
 func GetTxCmd(storeKey string) *cobra.Command {
@@ -28,8 +28,8 @@ func GetTxCmd(storeKey string) *cobra.Command {
 	}
 
 	gravityTxCmd.AddCommand(
-		CmdSendToEthereum(),
-		CmdCancelSendToEthereum(),
+		CmdSendToEVM(),
+		CmdCancelSendToEVM(),
 		CmdRequestBatchTx(),
 		CmdSetDelegateKeys(),
 	)
@@ -37,12 +37,12 @@ func GetTxCmd(storeKey string) *cobra.Command {
 	return gravityTxCmd
 }
 
-func CmdSendToEthereum() *cobra.Command {
+func CmdSendToEVM() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "send-to-ethereum [ethereum-reciever] [send-coins] [fee-coins]",
+		Use:     "send-to-evm [chain-id] [evm-reciever] [send-coins] [fee-coins]",
 		Aliases: []string{"send", "transfer"},
-		Args:    cobra.ExactArgs(3),
-		Short:   "Send tokens from cosmos chain to connected ethereum chain",
+		Args:    cobra.ExactArgs(4),
+		Short:   "Send tokens from cosmos chain to connected evm chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -54,22 +54,25 @@ func CmdSendToEthereum() *cobra.Command {
 				return fmt.Errorf("must pass from flag")
 			}
 
-			if !common.IsHexAddress(args[0]) {
-				return fmt.Errorf("must be a valid ethereum address got %s", args[0])
+			chainID := stringToUint32(args[0])
+
+			if !common.IsHexAddress(args[1]) {
+				return fmt.Errorf("must be a valid evm address got %s", args[1])
 			}
+			receiver := common.HexToAddress(args[1])
 
 			// Get amount of coins
-			sendCoin, err := sdk.ParseCoinNormalized(args[1])
+			sendCoin, err := sdk.ParseCoinNormalized(args[2])
 			if err != nil {
 				return err
 			}
 
-			feeCoin, err := sdk.ParseCoinNormalized(args[2])
+			feeCoin, err := sdk.ParseCoinNormalized(args[3])
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgSendToEthereum(from, common.HexToAddress(args[0]).Hex(), sendCoin, feeCoin)
+			msg := types.NewMsgSendToEVM(chainID, from, receiver.Hex(), sendCoin, feeCoin)
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -82,11 +85,11 @@ func CmdSendToEthereum() *cobra.Command {
 	return cmd
 }
 
-func CmdCancelSendToEthereum() *cobra.Command {
+func CmdCancelSendToEVM() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cancel-send-to-ethereum [id]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Cancel ethereum send by id",
+		Use:   "cancel-send-to-evm [id] [chain-id]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Cancel evm send by id",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -103,7 +106,9 @@ func CmdCancelSendToEthereum() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgCancelSendToEthereum(id, from)
+			chainID := stringToUint32(args[0])
+
+			msg := types.NewMsgCancelSendToEVM(uint32(chainID), id, from)
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -118,8 +123,8 @@ func CmdCancelSendToEthereum() *cobra.Command {
 
 func CmdRequestBatchTx() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "request-batch-tx [denom] [signer]",
-		Args:  cobra.ExactArgs(2),
+		Use:   "request-batch-tx [chain-id] [denom] [signer]",
+		Args:  cobra.ExactArgs(3),
 		Short: "Request batch transaction for denom by signer",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -127,13 +132,15 @@ func CmdRequestBatchTx() *cobra.Command {
 				return err
 			}
 
-			denom := args[0]
-			signer, err := sdk.AccAddressFromHex(args[1])
+			chainID := stringToUint32(args[0])
+
+			denom := args[1]
+			signer, err := sdk.AccAddressFromHex(args[2])
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgRequestBatchTx(denom, signer)
+			msg := types.NewMsgRequestBatchTx(chainID, denom, signer)
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -147,10 +154,10 @@ func CmdRequestBatchTx() *cobra.Command {
 
 func CmdSetDelegateKeys() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "set-delegate-keys [validator-address] [orchestrator-address] [ethereum-address] [ethereum-signature]",
+		Use:   "set-delegate-keys [validator-address] [orchestrator-address] [evm-address] [evm-signature]",
 		Args:  cobra.ExactArgs(4),
 		Short: "Set gravity delegate keys",
-		Long: `Set a validator's Ethereum and orchestrator addresses. The validator must
+		Long: `Set a validator's EVM and orchestrator addresses. The validator must
 sign over a binary Proto-encoded DelegateKeysSignMsg message. The message contains
 the validator's address and operator account current nonce.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -192,30 +199,31 @@ the validator's address and operator account current nonce.`,
 	return cmd
 }
 
-func CmdSubmitCommunityPoolEthereumSpendProposal() *cobra.Command {
+func CmdSubmitCommunityPoolEVMSpendProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "community-pool-ethereum-spend [proposal-file]",
+		Use:   "community-pool-evm-spend [proposal-file]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Submit a community pool Ethereum spend proposal",
+		Short: "Submit a community pool EVM spend proposal",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a community pool Ethereum spend proposal along with an initial deposit.
+			fmt.Sprintf(`Submit a community pool EVM spend proposal along with an initial deposit.
 The proposal details must be supplied via a JSON file. The funds from the community pool
-will be bridged to Ethereum to the supplied recipient Ethereum address. Only one denomination
+will be bridged to the EVM chain to the supplied recipient EVM address. Only one denomination
 of Cosmos token can be sent, and the bridge fee supplied along with the amount must be of the
 same denomination.
 
 Example:
-$ %s tx gov submit-proposal community-pool-ethereum-spend <path/to/proposal.json> --from=<key_or_address>
+$ %s tx gov submit-proposal community-pool-evm-spend <path/to/proposal.json> --from=<key_or_address>
 
 Where proposal.json contains:
 
 {
-	"title": "Community Pool Ethereum Spend",
-	"description": "Bridge me some tokens to Ethereum!",
+	"title": "Community Pool EVM Spend",
+	"description": "Bridge me some tokens to the EVM chain!",
 	"recipient": "0x0000000000000000000000000000000000000000",
 	"amount": "20000stake",
 	"bridge_fee": "1000stake",
-	"deposit": "1000stake"
+	"deposit": "1000stake",
+	"chain_id": 1
 }
 `,
 				version.AppName,
@@ -227,7 +235,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			proposal, err := ParseCommunityPoolEthereumSpendProposal(clientCtx.Codec, args[0])
+			proposal, err := ParseCommunityPoolEVMSpendProposal(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
@@ -241,7 +249,7 @@ Where proposal.json contains:
 			}
 
 			if !common.IsHexAddress(proposal.Recipient) {
-				return fmt.Errorf("recipient is not a valid Ethereum address")
+				return fmt.Errorf("recipient is not a valid EVM address")
 			}
 
 			amount, err := sdk.ParseCoinNormalized(proposal.Amount)
@@ -265,7 +273,7 @@ Where proposal.json contains:
 
 			from := clientCtx.GetFromAddress()
 
-			content := types.NewCommunityPoolEthereumSpendProposal(proposal.Title, proposal.Description, proposal.Recipient, amount, bridgeFee)
+			content := types.NewCommunityPoolEVMSpendProposal(proposal.Title, proposal.ChainId, proposal.Description, proposal.Recipient, amount, bridgeFee)
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {

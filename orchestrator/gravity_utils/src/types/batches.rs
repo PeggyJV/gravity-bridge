@@ -11,13 +11,13 @@ use std::{convert::TryFrom, result::Result};
 pub struct BatchTransaction {
     pub id: u64,
     pub sender: CosmosAddress,
-    pub ethereum_recipient: EthAddress,
+    pub evm_recipient: EthAddress,
     pub erc20_token: Erc20Token,
     pub erc20_fee: Erc20Token,
 }
 
 impl BatchTransaction {
-    pub fn from_proto(input: gravity_proto::gravity::SendToEthereum) -> Result<Self, GravityError> {
+    pub fn from_proto(input: gravity_proto::gravity::SendToEvm) -> Result<Self, GravityError> {
         if input.erc20_fee.is_none() || input.erc20_token.is_none() {
             return Err(GravityError::InvalidBridgeStateError(
                 "Can not have tx with null erc20_token!".to_string(),
@@ -27,7 +27,7 @@ impl BatchTransaction {
         Ok(BatchTransaction {
             id: input.id,
             sender: input.sender.parse()?,
-            ethereum_recipient: input.ethereum_recipient.parse()?,
+            evm_recipient: input.evm_recipient.parse()?,
             erc20_token: Erc20Token::from_proto(input.erc20_token.unwrap())?,
             erc20_fee: Erc20Token::from_proto(input.erc20_fee.unwrap())?,
         })
@@ -56,7 +56,7 @@ impl TransactionBatch {
         let destinations: Vec<EthAddress> = self
             .transactions
             .iter()
-            .map(|tx| tx.ethereum_recipient)
+            .map(|tx| tx.evm_recipient)
             .collect();
         let fees: Vec<U256> = self
             .transactions
@@ -127,8 +127,8 @@ impl TransactionBatch {
 pub struct BatchConfirmResponse {
     pub nonce: u64,
     pub token_contract: EthAddress,
-    pub ethereum_signer: EthAddress,
-    pub eth_signature: EthSignature,
+    pub evm_signer: EthAddress,
+    pub evm_signature: EthSignature,
 }
 
 impl BatchConfirmResponse {
@@ -138,17 +138,17 @@ impl BatchConfirmResponse {
         Ok(BatchConfirmResponse {
             nonce: input.batch_nonce,
             token_contract: input.token_contract.parse()?,
-            ethereum_signer: input.ethereum_signer.parse()?,
-            eth_signature: EthSignature::try_from(input.signature.as_slice())?,
+            evm_signer: input.evm_signer.parse()?,
+            evm_signature: EthSignature::try_from(input.signature.as_slice())?,
         })
     }
 }
 
 impl Confirm for BatchConfirmResponse {
-    fn get_eth_address(&self) -> EthAddress {
-        self.ethereum_signer
+    fn get_evm_address(&self) -> EthAddress {
+        self.evm_signer
     }
     fn get_signature(&self) -> EthSignature {
-        self.eth_signature
+        self.evm_signature
     }
 }

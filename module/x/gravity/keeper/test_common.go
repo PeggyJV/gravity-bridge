@@ -54,7 +54,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
 var (
@@ -180,23 +180,23 @@ var (
 	}
 
 	// TestingGravityParams is a set of gravity params for testing
-	TestingGravityParams = types.Params{
-		GravityId:                                 "testgravityid",
-		ContractSourceHash:                        "62328f7bc12efb28f86111d08c29b39285680a906ea0e524e0209d6f6657b713",
-		BridgeEthereumAddress:                     "0x8858eeb3dfffa017d4bce9801d340d36cf895ccf",
-		BridgeChainId:                             11,
-		SignedBatchesWindow:                       10,
-		SignedSignerSetTxsWindow:                  10,
-		UnbondSlashingSignerSetTxsWindow:          15,
-		EthereumSignaturesWindow:                  10,
-		TargetEthTxTimeout:                        60001,
-		AverageBlockTime:                          5000,
-		AverageEthereumBlockTime:                  15000,
-		SlashFractionSignerSetTx:                  sdk.NewDecWithPrec(1, 2),
-		SlashFractionBatch:                        sdk.NewDecWithPrec(1, 2),
-		SlashFractionEthereumSignature:            sdk.NewDecWithPrec(1, 2),
-		SlashFractionConflictingEthereumSignature: sdk.NewDecWithPrec(1, 2),
+	ethereumParamsForChain = types.ParamsForChain{
+		GravityId:                            "testgravityid",
+		SignedBatchesWindow:                  10,
+		SignedSignerSetTxsWindow:             10,
+		UnbondSlashingSignerSetTxsWindow:     15,
+		EvmSignaturesWindow:                  10,
+		TargetEvmTxTimeout:                   60001,
+		AverageEvmBlockTime:                  15000,
+		SlashFractionSignerSetTx:             sdk.NewDecWithPrec(1, 2),
+		SlashFractionBatch:                   sdk.NewDecWithPrec(1, 2),
+		SlashFractionEvmSignature:            sdk.NewDecWithPrec(1, 2),
+		SlashFractionConflictingEvmSignature: sdk.NewDecWithPrec(1, 2),
 	}
+	// TestingGravityParams is a set of gravity params for testing
+	TestingGravityParams = types.Params{
+		AverageBlockTime: 5000,
+		ParamsByChain:    map[uint32]*types.ParamsForChain{1: &ethereumParamsForChain}}
 )
 
 // TestInput stores the various keepers required to test gravity
@@ -218,7 +218,7 @@ func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, toke
 	for i, id := range ids {
 		amount := types.NewERC20Token(uint64(i+100), tokenContract).GravityCoin()
 		fee := types.NewERC20Token(id, tokenContract).GravityCoin()
-		_, err := input.GravityKeeper.createSendToEthereum(ctx, sender, receiver.Hex(), amount, fee)
+		_, err := input.GravityKeeper.createSendToEVM(ctx, types.EthereumChainID, sender, receiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}
 }
@@ -267,9 +267,9 @@ func SetupFiveValChain(t *testing.T) (TestInput, sdk.Context) {
 
 	// Register eth addresses for each validator
 	for i, addr := range ValAddrs {
-		input.GravityKeeper.setValidatorEthereumAddress(input.Context, addr, EthAddrs[i])
+		input.GravityKeeper.setValidatorEVMAddress(input.Context, addr, EthAddrs[i])
 		input.GravityKeeper.SetOrchestratorValidatorAddress(input.Context, addr, AccAddrs[i])
-		input.GravityKeeper.setEthereumOrchestratorAddress(input.Context, EthAddrs[i], AccAddrs[i])
+		input.GravityKeeper.setEVMOrchestratorAddress(input.Context, EthAddrs[i], AccAddrs[i])
 	}
 
 	// Return the test input
@@ -441,7 +441,7 @@ func CreateTestEnv(t *testing.T) TestInput {
 		),
 	)
 
-	k.setParams(ctx, TestingGravityParams)
+	k.SetParams(ctx, TestingGravityParams)
 
 	return TestInput{
 		GravityKeeper:   k,
@@ -491,9 +491,9 @@ func MakeTestMarshaler() codec.Codec {
 func MintVouchersFromAir(t *testing.T, ctx sdk.Context, k Keeper, dest sdk.AccAddress, amount types.ERC20Token) sdk.Coin {
 	coin := amount.GravityCoin()
 	vouchers := sdk.Coins{coin}
-	err := k.bankKeeper.MintCoins(ctx, types.ModuleName, vouchers)
+	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, vouchers)
 	require.NoError(t, err)
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, dest, vouchers)
+	err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, dest, vouchers)
 	require.NoError(t, err)
 	return coin
 }

@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/cosmos/cosmos-sdk/std"
-	gravityparams "github.com/peggyjv/gravity-bridge/module/v2/app/params"
+	gravityparams "github.com/peggyjv/gravity-bridge/module/v3/app/params"
 )
 
 // MakeEncodingConfig creates an EncodingConfig for gravity.

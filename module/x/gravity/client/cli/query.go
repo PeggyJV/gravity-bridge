@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	"github.com/spf13/cobra"
 )
 
@@ -45,7 +45,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdDelegateKeysByEthereumSigner(),
 		CmdDelegateKeysByOrchestrator(),
 		CmdDelegateKeys(),
-		CmdLastObservedEthereumHeight(),
+		CmdLastObservedEVMHeight(),
 	)
 
 	return gravityQueryCmd
@@ -272,7 +272,7 @@ func CmdContractCallTxs() *cobra.Command {
 
 func CmdSignerSetTxConfirmations() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "signer-set-tx-ethereum-signatures [nonce]",
+		Use:   "signer-set-tx-evm-signatures [nonce]",
 		Args:  cobra.ExactArgs(1),
 		Short: "query signer set transaction signatures from the validators identified by nonce",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -303,7 +303,7 @@ func CmdSignerSetTxConfirmations() *cobra.Command {
 
 func CmdBatchTxConfirmations() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "batch-tx-ethereum-signatures [nonce] [contract-address]",
+		Use:   "batch-tx-evm-signatures [nonce] [contract-address]",
 		Args:  cobra.ExactArgs(2),
 		Short: "query signatures for a given batch transaction identified by nonce and contract",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -341,7 +341,7 @@ func CmdBatchTxConfirmations() *cobra.Command {
 
 func CmdContractCallTxConfirmations() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "contract-call-tx-ethereum-signatures [invalidation-scope] [invalidation-nonce]",
+		Use:   "contract-call-tx-evm-signatures [invalidation-scope] [invalidation-nonce]",
 		Args:  cobra.MinimumNArgs(2),
 		Short: "query signatures for a given contract call transaction identified by invalidation nonce and invalidation scope",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -377,7 +377,7 @@ func CmdContractCallTxConfirmations() *cobra.Command {
 
 func CmdUnsignedSignerSetTxs() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pending-signer-set-tx-ethereum-signatures [validator-or-orchestrator-acc-address]",
+		Use:   "pending-signer-set-tx-evm-signatures [validator-or-orchestrator-acc-address]",
 		Args:  cobra.ExactArgs(1),
 		Short: "query signatures for any pending signer set transactions given a validator or orchestrator address (sdk.AccAddress format)",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -409,7 +409,7 @@ func CmdUnsignedSignerSetTxs() *cobra.Command {
 
 func CmdUnsignedBatchTxs() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pending-batch-tx-ethereum-signatures [validator-or-orchestrator-acc-address]",
+		Use:   "pending-batch-tx-evm-signatures [validator-or-orchestrator-acc-address]",
 		Args:  cobra.ExactArgs(1),
 		Short: "query signatures for any pending batch transactions given a validator or orchestrator address (sdk.AccAddress format)",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -441,7 +441,7 @@ func CmdUnsignedBatchTxs() *cobra.Command {
 
 func CmdUnsignedContractCallTxs() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pending-contract-call-tx-ethereum-signatures [validator-or-orchestrator-acc-address]",
+		Use:   "pending-contract-call-tx-evm-signatures [validator-or-orchestrator-acc-address]",
 		Args:  cobra.ExactArgs(1),
 		Short: "query signatures for any pending contract call transactions given a validator or orchestrator address (sdk.AccAddress format)",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -499,8 +499,8 @@ func CmdLatestSignerSetTx() *cobra.Command {
 
 func CmdLastSubmittedEthereumEvent() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "last-submitted-ethereum-event [validator-or-orchestrator-acc-address]",
-		Args:  cobra.ExactArgs(1),
+		Use:   "last-submitted-evm-event [chain-id] [validator-or-orchestrator-acc-address]",
+		Args:  cobra.ExactArgs(2),
 		Short: "query for the last event nonce that was submitted by a given validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
@@ -508,13 +508,16 @@ func CmdLastSubmittedEthereumEvent() *cobra.Command {
 				return err
 			}
 
-			address, err := sdk.AccAddressFromBech32(args[0])
+			chainID := sdk.NewUintFromString(args[0])
+
+			address, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			res, err := queryClient.LastSubmittedEthereumEvent(cmd.Context(), &types.LastSubmittedEthereumEventRequest{
+			res, err := queryClient.LastSubmittedEVMEvent(cmd.Context(), &types.LastSubmittedEVMEventRequest{
 				Address: address.String(),
+				ChainId: uint32(chainID.Uint64()),
 			})
 
 			if err != nil {
@@ -651,9 +654,9 @@ func CmdDenomToERC20() *cobra.Command {
 
 func CmdUnbatchedSendToEthereums() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unbatched-send-to-ethereums [sender-address]",
-		Args:  cobra.MaximumNArgs(1),
-		Short: "query all unbatched send to ethereum messages",
+		Use:   "unbatched-send-to-evms [chain-id] [sender-address] ",
+		Args:  cobra.ExactArgs(2),
+		Short: "query all unbatched send to evm messages",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
@@ -665,14 +668,17 @@ func CmdUnbatchedSendToEthereums() *cobra.Command {
 				return err
 			}
 
-			sender, err := sdk.AccAddressFromBech32(args[0])
+			chainID := stringToUint32(args[0])
+
+			sender, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			res, err := queryClient.UnbatchedSendToEthereums(cmd.Context(), &types.UnbatchedSendToEthereumsRequest{
+			res, err := queryClient.UnbatchedSendToEVMs(cmd.Context(), &types.UnbatchedSendToEVMsRequest{
 				SenderAddress: sender.String(),
 				Pagination:    pageReq,
+				ChainId:       chainID,
 			})
 
 			if err != nil {
@@ -684,7 +690,7 @@ func CmdUnbatchedSendToEthereums() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "unbatched-send-to-ethereums")
+	flags.AddPaginationFlagsToCmd(cmd, "unbatched-send-to-evms")
 	return cmd
 }
 
@@ -722,7 +728,7 @@ func CmdDelegateKeysByValidator() *cobra.Command {
 
 func CmdDelegateKeysByEthereumSigner() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delegate-keys-by-ethereum-signer [ethereum-signer]",
+		Use:   "delegate-keys-by-evm-signer [evm-signer]",
 		Args:  cobra.ExactArgs(1),
 		Short: "query the valdiator and orchestartor keys for a given ethsigner",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -734,9 +740,8 @@ func CmdDelegateKeysByEthereumSigner() *cobra.Command {
 			if !common.IsHexAddress(args[0]) {
 				return fmt.Errorf("address is not an etheruem address")
 			}
-
-			res, err := queryClient.DelegateKeysByEthereumSigner(cmd.Context(), &types.DelegateKeysByEthereumSignerRequest{
-				EthereumSigner: args[0],
+			res, err := queryClient.DelegateKeysByEVMSigner(cmd.Context(), &types.DelegateKeysByEVMSignerRequest{
+				EVMSigner: args[0],
 			})
 			if err != nil {
 				return err
@@ -806,18 +811,20 @@ func CmdDelegateKeys() *cobra.Command {
 	return cmd
 }
 
-func CmdLastObservedEthereumHeight() *cobra.Command {
+func CmdLastObservedEVMHeight() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "last-observed-ethereum-height",
-		Args:  cobra.NoArgs,
-		Short: "query the last observed ethereum and cosmos heights",
+		Use:   "last-observed-evm-height [chain-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "query the last observed evm and cosmos heights",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
 				return err
 			}
 
-			res, err := queryClient.LastObservedEthereumHeight(cmd.Context(), &types.LastObservedEthereumHeightRequest{})
+			chainID := stringToUint32(args[0])
+
+			res, err := queryClient.LastObservedEVMHeight(cmd.Context(), &types.LastObservedEVMHeightRequest{ChainId: chainID})
 			if err != nil {
 				return err
 			}

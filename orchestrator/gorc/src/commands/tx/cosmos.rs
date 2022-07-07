@@ -54,7 +54,7 @@ fn get_cosmos_key(_key_name: &str) -> CosmosPrivateKey {
 
 impl Runnable for SendToEth {
     fn run(&self) {
-        assert!(self.free.len() == 3);
+        assert_eq!(self.free.len(), 3);
         let from_cosmos_key = self.free[0].clone();
         let to_eth_addr = self.free[1].clone(); //TODO parse this to an Eth Address
         let erc_20_coin = self.free[2].clone(); // 1231234uatom
@@ -73,6 +73,8 @@ impl Runnable for SendToEth {
         let cosmos_prefix = config.cosmos.prefix.clone();
         let cosmso_grpc = config.cosmos.grpc.clone();
 
+        let chain_id = 0; // todo: where does the chain id come from in this context?
+
         abscissa_tokio::run_with_actix(&APP, async {
             let connections =
                 create_rpc_connections(cosmos_prefix, Some(cosmso_grpc), None, TIMEOUT).await;
@@ -82,6 +84,7 @@ impl Runnable for SendToEth {
             let res = grpc
                 .denom_to_erc20(DenomToErc20Request{
                     denom: denom.clone(),
+                    chain_id,
                 })
                 .await;
                 match res {
@@ -129,6 +132,7 @@ impl Runnable for SendToEth {
             );
             let res = send_to_eth(
                 cosmos_key,
+                chain_id,
                 eth_dest,
                 amount.clone(),
                 bridge_fee.clone(),

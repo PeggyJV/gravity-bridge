@@ -10,66 +10,66 @@ import (
 )
 
 const (
-	// ProposalTypeCommunityPoolEthereumSpend defines the type for a CommunityPoolEthereumSpendProposal
-	ProposalTypeCommunityPoolEthereumSpend = "CommunityPoolEthereumSpend"
+	// ProposalTypeCommunityPoolEVMSpend defines the type for a CommunityPoolEVMSpendProposal
+	ProposalTypeCommunityPoolEVMSpend = "CommunityPoolEVMSpend"
 )
 
-// Assert CommunityPoolEthereumSpendProposal implements govtypes.Content at compile-time
-var _ govtypes.Content = &CommunityPoolEthereumSpendProposal{}
+// Assert CommunityPoolEVMSpendProposal implements govtypes.Content at compile-time
+var _ govtypes.Content = &CommunityPoolEVMSpendProposal{}
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeCommunityPoolEthereumSpend)
-	govtypes.RegisterProposalTypeCodec(&CommunityPoolEthereumSpendProposal{}, "gravity/CommunityPoolEthereumSpendProposal")
+	govtypes.RegisterProposalType(ProposalTypeCommunityPoolEVMSpend)
+	govtypes.RegisterProposalTypeCodec(&CommunityPoolEVMSpendProposal{}, "gravity/CommunityPoolEVMSpendProposal")
 }
 
-// NewCommunityPoolEthereumSpendProposal creates a new community pool spend proposal.
+// NewCommunityPoolEVMSpendProposal creates a new community pool spend proposal.
 //nolint:interfacer
-func NewCommunityPoolEthereumSpendProposal(title, description string, recipient string, amount sdk.Coin, bridgeFee sdk.Coin) *CommunityPoolEthereumSpendProposal {
-	return &CommunityPoolEthereumSpendProposal{title, description, recipient, amount, bridgeFee}
+func NewCommunityPoolEVMSpendProposal(title string, chainID uint32, description string, recipient string, amount sdk.Coin, bridgeFee sdk.Coin) *CommunityPoolEVMSpendProposal {
+	return &CommunityPoolEVMSpendProposal{title, description, recipient, amount, bridgeFee, chainID}
 }
 
-// GetTitle returns the title of a community pool Ethereum spend proposal.
-func (csp *CommunityPoolEthereumSpendProposal) GetTitle() string { return csp.Title }
+// GetTitle returns the title of a community pool EVM spend proposal.
+func (csp *CommunityPoolEVMSpendProposal) GetTitle() string { return csp.Title }
 
-// GetDescription returns the description of a community pool Ethereum spend proposal.
-func (csp *CommunityPoolEthereumSpendProposal) GetDescription() string { return csp.Description }
+// GetDescription returns the description of a community pool EVM spend proposal.
+func (csp *CommunityPoolEVMSpendProposal) GetDescription() string { return csp.Description }
 
-// GetDescription returns the routing key of a community pool Ethereum spend proposal.
-func (csp *CommunityPoolEthereumSpendProposal) ProposalRoute() string { return RouterKey }
+// GetDescription returns the routing key of a community pool EVM spend proposal.
+func (csp *CommunityPoolEVMSpendProposal) ProposalRoute() string { return RouterKey }
 
-// ProposalType returns the type of a community pool Ethereum spend proposal.
-func (csp *CommunityPoolEthereumSpendProposal) ProposalType() string {
-	return ProposalTypeCommunityPoolEthereumSpend
+// ProposalType returns the type of a community pool EVM spend proposal.
+func (csp *CommunityPoolEVMSpendProposal) ProposalType() string {
+	return ProposalTypeCommunityPoolEVMSpend
 }
 
 // ValidateBasic runs basic stateless validity checks
-func (csp *CommunityPoolEthereumSpendProposal) ValidateBasic() error {
+func (csp *CommunityPoolEVMSpendProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(csp)
 	if err != nil {
 		return err
 	}
 
 	if !common.IsHexAddress(csp.Recipient) {
-		return ErrInvalidEthereumProposalRecipient
+		return ErrInvalidEVMProposalRecipient
 	}
 
 	if !csp.Amount.IsValid() || csp.Amount.IsZero() {
-		return ErrInvalidEthereumProposalAmount
+		return ErrInvalidEVMProposalAmount
 	}
 
 	if !csp.BridgeFee.IsValid() {
-		return ErrInvalidEthereumProposalBridgeFee
+		return ErrInvalidEVMProposalBridgeFee
 	}
 
 	if csp.Amount.Denom != csp.BridgeFee.Denom {
-		return ErrEthereumProposalDenomMismatch
+		return ErrEVMProposalDenomMismatch
 	}
 
 	return nil
 }
 
 // String implements the Stringer interface.
-func (csp CommunityPoolEthereumSpendProposal) String() string {
+func (csp CommunityPoolEVMSpendProposal) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Community Pool Spend Proposal:
   Title:       %s

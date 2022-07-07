@@ -126,7 +126,7 @@ impl FromLog for ValsetUpdatedEvent {
             .zip(event.validators.iter())
             .map(|(power, validator)| ValsetMember {
                 power: *power,
-                eth_address: Some(*validator),
+                evm_address: Some(*validator),
             })
             .collect();
 

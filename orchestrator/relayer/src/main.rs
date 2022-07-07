@@ -9,7 +9,7 @@ use ethers::signers::LocalWallet as EthWallet;
 use ethers::types::Address as EthAddress;
 use gravity_utils::{
     connection_prep::{check_for_eth, create_rpc_connections, wait_for_cosmos_node_ready},
-    ethereum::{downcast_to_u64, format_eth_address},
+    ethereum::{downcast_to_u64, format_evm_address},
 };
 
 pub mod batch_relaying;
@@ -95,7 +95,7 @@ async fn main() {
 
     let public_eth_key = eth_client.address();
     info!("Starting Gravity Relayer");
-    info!("Ethereum Address: {}", format_eth_address(public_eth_key));
+    info!("Ethereum Address: {}", format_evm_address(public_eth_key));
 
     let contact = connections.contact.clone().unwrap();
 
