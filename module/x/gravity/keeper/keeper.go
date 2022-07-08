@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -26,7 +27,7 @@ import (
 // Keeper maintains the link to storage and exposes getter/setter methods for the various parts of the state machine
 type Keeper struct {
 	StakingKeeper          types.StakingKeeper
-	storeKey               sdk.StoreKey
+	storeKey               storetypes.StoreKey
 	paramSpace             paramtypes.Subspace
 	cdc                    codec.Codec
 	accountKeeper          types.AccountKeeper
@@ -42,7 +43,7 @@ type Keeper struct {
 // NewKeeper returns a new instance of the gravity keeper
 func NewKeeper(
 	cdc codec.Codec,
-	storeKey sdk.StoreKey,
+	storeKey storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
 	accKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper,
