@@ -18,6 +18,7 @@ pub async fn relayer_main_loop(
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     eth_gas_price_multiplier: f32,
+    eth_gas_multiplier: f32,
 ) {
     let mut grpc_client = grpc_client;
     let gravity_id = get_gravity_id(gravity_contract_address, eth_client.clone()).await;
@@ -50,6 +51,8 @@ pub async fn relayer_main_loop(
                     gravity_contract_address,
                     gravity_id.clone(),
                     LOOP_SPEED,
+                    eth_gas_price_multiplier,
+                    eth_gas_multiplier,
                 )
                 .await;
 
@@ -61,6 +64,7 @@ pub async fn relayer_main_loop(
                     gravity_id.clone(),
                     LOOP_SPEED,
                     eth_gas_price_multiplier,
+                    eth_gas_multiplier,
                 )
                 .await;
 
@@ -72,6 +76,7 @@ pub async fn relayer_main_loop(
                     gravity_id.clone(),
                     LOOP_SPEED,
                     eth_gas_price_multiplier,
+                    eth_gas_multiplier,
                     &mut logic_call_skips,
                 )
                 .await;

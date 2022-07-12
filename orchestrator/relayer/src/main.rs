@@ -110,6 +110,7 @@ async fn main() {
         connections.grpc.unwrap(),
         gravity_contract_address,
         1f32,
+        1f32,
     )
     .await
 }
