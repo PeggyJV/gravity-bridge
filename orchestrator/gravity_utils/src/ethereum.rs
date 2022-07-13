@@ -125,21 +125,21 @@ fn encode_bytes() {
 #[test]
 fn decode_bytes() {
     assert_eq!(
-        hex_str_to_bytes(&"deadbeef".to_owned()).expect("Unable to decode"),
+        hex_str_to_bytes("deadbeef").expect("Unable to decode"),
         [222, 173, 190, 239]
     );
 }
 
 #[test]
 fn decode_odd_amount_of_bytes() {
-    assert_eq!(hex_str_to_bytes(&"f".to_owned()).unwrap(), vec![15]);
+    assert_eq!(hex_str_to_bytes("f").unwrap(), vec![15]);
 }
 
 #[test]
 fn bytes_raises_decode_error() {
     use crate::error::GravityError;
 
-    let e = hex_str_to_bytes(&"\u{012345}deadbeef".to_owned()).unwrap_err();
+    let e = hex_str_to_bytes("\u{012345}deadbeef").unwrap_err();
 
     match e {
         GravityError::FromUtf8Error(_) => {}
@@ -151,7 +151,7 @@ fn bytes_raises_decode_error() {
 fn bytes_raises_parse_error() {
     use crate::error::GravityError;
 
-    let e = hex_str_to_bytes(&"Lorem ipsum".to_owned()).unwrap_err();
+    let e = hex_str_to_bytes("Lorem ipsum").unwrap_err();
     match e {
         GravityError::ParseIntError(_) => {}
         _ => panic!(),
@@ -160,16 +160,13 @@ fn bytes_raises_parse_error() {
 
 #[test]
 fn parse_prefixed_empty() {
-    assert_eq!(
-        hex_str_to_bytes(&"0x".to_owned()).unwrap(),
-        Vec::<u8>::new()
-    );
+    assert_eq!(hex_str_to_bytes("0x").unwrap(), Vec::<u8>::new());
 }
 
 #[test]
 fn parse_prefixed_non_empty() {
     assert_eq!(
-        hex_str_to_bytes(&"0xdeadbeef".to_owned()).unwrap(),
+        hex_str_to_bytes("0xdeadbeef").unwrap(),
         vec![0xde, 0xad, 0xbe, 0xef]
     );
 }

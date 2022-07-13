@@ -2291,15 +2291,10 @@ dependencies = [
  "cosmos_gravity",
  "ethereum_gravity",
  "gorc",
- "gravity_abi",
- "gravity_abi_build",
  "gravity_proto",
- "gravity_proto_build",
  "gravity_utils",
  "orchestrator",
- "register_delegate_keys",
  "relayer",
- "test_runner",
 ]
 
 [[package]]

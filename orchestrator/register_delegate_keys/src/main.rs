@@ -6,15 +6,15 @@ extern crate serde_derive;
 extern crate lazy_static;
 
 use clarity::PrivateKey as EthPrivateKey;
+use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::send::update_gravity_delegate_addresses;
-use deep_space::{coin::Coin, mnemonic::Mnemonic};
+use deep_space::mnemonic::Mnemonic;
 use docopt::Docopt;
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::prelude::*;
 use gravity_utils::connection_prep::check_for_fee_denom;
 use gravity_utils::connection_prep::{create_rpc_connections, wait_for_cosmos_node_ready};
 use log::error;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use rand::{thread_rng, Rng};
 use std::time::Duration;
 
