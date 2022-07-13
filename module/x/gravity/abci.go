@@ -29,6 +29,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	outgoingTxSlashing(ctx, k)
 	eventVoteRecordTally(ctx, k)
 	updateObservedEthereumHeight(ctx, k)
+	pruneAttestations(ctx, k)
 }
 
 func createBatchTxs(ctx sdk.Context, k keeper.Keeper) {
@@ -400,5 +401,49 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 
 		// then we set the latest slashed outgoing tx block
 		k.SetLastSlashedOutgoingTxBlockHeight(ctx, otx.GetCosmosHeight())
+	}
+}
+
+// Iterate over all attestations currently being voted on in order of nonce
+// and prune those that are older than the current nonce and no longer have any
+// use. This could be combined with create attestation and save some computation
+// but (A) pruning keeps the iteration small in the first place and (B) there is
+// already enough nuance in the other handler that it's best not to complicate it further
+func pruneAttestations(ctx sdk.Context, k keeper.Keeper) {
+	attmap := k.GetEthereumEventVoteRecordMapping(ctx)
+
+	// We make a slice with all the event nonce's that are in the attestation mapping
+	keys := make([]uint64, 0, len(attmap))
+	for k := range attmap {
+		keys = append(keys, k)
+	}
+	// Then we sort it
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+
+	// we delete all attestations earlier than the current event nonce
+	// minus some buffer value. This buffer value is purely to allow
+	// frontends and other UI components to view recent oracle history
+	const eventsToKeep = 1000
+	lastNonce := uint64(k.GetLastObservedEventNonce(ctx))
+	var cutoff uint64
+	if lastNonce <= eventsToKeep {
+		return
+	} else {
+		cutoff = lastNonce - eventsToKeep
+	}
+
+	// This iterates over all keys (event nonces) in the attestation mapping. Each value contains
+	// a slice with one or more attestations at that event nonce. There can be multiple attestations
+	// at one event nonce when validators disagree about what event happened at that nonce.
+	for _, nonce := range keys {
+		// This iterates over all attestations at a particular event nonce.
+		// They are ordered by when the first attestation at the event nonce was received.
+		// This order is not important.
+		for _, att := range attmap[nonce] {
+			// delete all before the cutoff
+			if nonce < cutoff {
+				k.DeleteEthereumEventVoteRecord(ctx, att)
+			}
+		}
 	}
 }
