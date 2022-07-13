@@ -50,7 +50,8 @@ pub async fn send_eth_valset_update(
     )?;
     let contract_call = contract_call
         .gas(gas_cost.gas)
-        .gas_price(gas_cost.gas_price);
+        .gas_price(gas_cost.gas_price)
+        .legacy(); // must submit transactions as legacy due to bug in manually-specified EIP1559 gas limits
 
     let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;

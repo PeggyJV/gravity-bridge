@@ -37,6 +37,7 @@ pub async fn relay_batches(
     gravity_id: String,
     timeout: Duration,
     eth_gas_price_multiplier: f32,
+    eth_gas_multiplier: f32,
 ) {
     let possible_batches =
         get_batches_and_signatures(current_valset.clone(), grpc_client, gravity_id.clone()).await;
@@ -50,6 +51,7 @@ pub async fn relay_batches(
         gravity_id,
         timeout,
         eth_gas_price_multiplier,
+        eth_gas_multiplier,
         possible_batches,
     )
     .await;
@@ -132,6 +134,7 @@ async fn submit_batches(
     gravity_id: String,
     timeout: Duration,
     eth_gas_price_multiplier: f32,
+    eth_gas_multiplier: f32,
     possible_batches: HashMap<EthAddress, Vec<SubmittableBatch>>,
 ) {
     let ethereum_block_height = if let Ok(bn) = eth_client.get_block_number().await {
@@ -198,6 +201,7 @@ async fn submit_batches(
                 }
                 let total_cost = total_cost.unwrap();
                 let gas_price_as_f32 = downcast_to_f32(cost.gas_price).unwrap(); // if the total cost isn't greater, this isn't
+                let gas_as_f32 = downcast_to_f32(cost.gas).unwrap(); // same as above re: total cost
 
                 info!(
                     "We have detected latest batch {} but latest on Ethereum is {} This batch is estimated to cost {} Gas / {:.4} ETH to submit",
@@ -208,6 +212,7 @@ async fn submit_batches(
                 );
 
                 cost.gas_price = ((gas_price_as_f32 * eth_gas_price_multiplier) as u128).into();
+                cost.gas = ((gas_as_f32 * eth_gas_multiplier) as u128).into();
 
                 let res = send_eth_transaction_batch(
                     current_valset.clone(),

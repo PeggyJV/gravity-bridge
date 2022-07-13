@@ -109,7 +109,8 @@ async fn main() {
         eth_client,
         connections.grpc.unwrap(),
         gravity_contract_address,
-        1f32,
+        1.1f32,
+        1.1f32,
     )
     .await
 }

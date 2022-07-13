@@ -108,6 +108,7 @@ impl Runnable for StartCommand {
                 gas_price,
                 &config.metrics.listen_addr,
                 config.ethereum.gas_price_multiplier,
+                config.ethereum.gas_multiplier,
                 config.ethereum.blocks_to_search,
                 config.cosmos.gas_adjustment,
                 self.orchestrator_only,

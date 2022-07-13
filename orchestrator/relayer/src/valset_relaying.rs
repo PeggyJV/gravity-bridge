@@ -24,6 +24,8 @@ pub async fn relay_valsets(
     gravity_contract_address: EthAddress,
     gravity_id: String,
     timeout: Duration,
+    eth_gas_price_multiplier: f32,
+    eth_gas_multiplier: f32,
 ) {
     // we have to start with the current ethereum valset, we need to know what's currently
     // in the contract in order to determine if a new validator set is valid.
@@ -162,7 +164,7 @@ pub async fn relay_valsets(
             );
             return;
         }
-        let cost = cost.unwrap();
+        let mut cost = cost.unwrap();
         let total_cost = downcast_to_f32(cost.get_total());
         if total_cost.is_none() {
             error!(
@@ -172,6 +174,8 @@ pub async fn relay_valsets(
             return;
         }
         let total_cost = total_cost.unwrap();
+        let gas_price_as_f32 = downcast_to_f32(cost.gas_price).unwrap(); // if the total cost isn't greater, this isn't
+        let gas_as_f32 = downcast_to_f32(cost.gas).unwrap(); // same as above re: total cost
 
         info!(
            "We have detected latest valset {} but latest on Ethereum is {} This valset is estimated to cost {} Gas / {:.4} ETH to submit",
@@ -179,6 +183,9 @@ pub async fn relay_valsets(
             cost.gas_price.clone(),
             total_cost / one_eth_f32()
         );
+
+        cost.gas_price = ((gas_price_as_f32 * eth_gas_price_multiplier) as u128).into();
+        cost.gas = ((gas_as_f32 * eth_gas_multiplier) as u128).into();
 
         let relay_response = send_eth_valset_update(
             latest_cosmos_valset.clone(),

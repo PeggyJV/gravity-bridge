@@ -24,6 +24,7 @@ pub async fn relay_logic_calls(
     gravity_id: String,
     timeout: Duration,
     eth_gas_price_multiplier: f32,
+    eth_gas_multiplier: f32,
     logic_call_skips: &mut LogicCallSkips,
 ) {
     let latest_calls = match get_latest_logic_calls(grpc_client).await {
@@ -141,6 +142,7 @@ pub async fn relay_logic_calls(
         }
         let total_cost = total_cost.unwrap();
         let gas_price_as_f32 = downcast_to_f32(cost.gas_price).unwrap(); // if the total cost isn't greater, this isn't
+        let gas_as_f32 = downcast_to_f32(cost.gas).unwrap(); // same as above re: total cost
 
         info!(
             "We have detected latest LogicCall {} but latest on Ethereum is {} This LogicCall is estimated to cost {} Gas / {:.4} ETH to submit",
@@ -151,6 +153,7 @@ pub async fn relay_logic_calls(
         );
 
         cost.gas_price = ((gas_price_as_f32 * eth_gas_price_multiplier) as u128).into();
+        cost.gas = ((gas_as_f32 * eth_gas_multiplier) as u128).into();
 
         let res = send_eth_logic_call(
             current_valset,
