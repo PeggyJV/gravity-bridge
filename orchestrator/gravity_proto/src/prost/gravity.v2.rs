@@ -31,8 +31,6 @@ pub struct EvmSigner {
     pub power: u64,
     #[prost(string, tag = "2")]
     pub evm_address: ::prost::alloc::string::String,
-    #[prost(uint32, tag = "3")]
-    pub chain_id: u32,
 }
 /// SignerSetTx is the EVM Bridge multisig set that relays
 /// transactions the two chains. The staking validators keep EVM keys which
@@ -113,13 +111,6 @@ pub struct Erc20Token {
     pub contract: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
     pub amount: ::prost::alloc::string::String,
-    #[prost(uint32, tag = "3")]
-    pub chain_id: u32,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct IdSet {
-    #[prost(uint64, repeated, tag = "1")]
-    pub ids: ::prost::alloc::vec::Vec<u64>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CommunityPoolEvmSpendProposal {
@@ -286,13 +277,13 @@ pub struct MsgDelegateKeys {
     #[prost(string, tag = "3")]
     pub evm_address: ::prost::alloc::string::String,
     #[prost(bytes = "vec", tag = "4")]
-    pub eth_signature: ::prost::alloc::vec::Vec<u8>,
+    pub evm_signature: ::prost::alloc::vec::Vec<u8>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgDelegateKeysResponse {}
 /// DelegateKeysSignMsg defines the message structure an operator is expected to
 /// sign when submitting a MsgDelegateKeys message. The resulting signature
-/// should populate the eth_signature field.
+/// should populate the evm_signature field.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DelegateKeysSignMsg {
     #[prost(string, tag = "1")]
@@ -617,37 +608,35 @@ pub mod msg_client {
 /// submitting a different EVM_signature for the same EVM event
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Params {
-    #[prost(map = "uint32, message", tag = "1")]
-    pub chain_params: ::std::collections::HashMap<u32, ParamsForChain>,
+    #[prost(uint64, tag = "1")]
+    pub average_block_time: u64,
+    #[prost(map = "uint32, message", tag = "2")]
+    pub params_by_chain: ::std::collections::HashMap<u32, ParamsForChain>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ParamsForChain {
     #[prost(string, tag = "1")]
     pub gravity_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub contract_source_hash: ::prost::alloc::string::String,
-    #[prost(uint64, tag = "3")]
+    #[prost(uint64, tag = "2")]
     pub signed_signer_set_txs_window: u64,
-    #[prost(uint64, tag = "4")]
+    #[prost(uint64, tag = "3")]
     pub signed_batches_window: u64,
-    #[prost(uint64, tag = "5")]
+    #[prost(uint64, tag = "4")]
     pub evm_signatures_window: u64,
-    #[prost(uint64, tag = "6")]
+    #[prost(uint64, tag = "5")]
     pub target_evm_tx_timeout: u64,
-    #[prost(uint64, tag = "7")]
-    pub average_block_time: u64,
-    #[prost(uint64, tag = "8")]
+    #[prost(uint64, tag = "6")]
     pub average_evm_block_time: u64,
     /// TODO: slash fraction for contract call txs too
-    #[prost(bytes = "vec", tag = "9")]
+    #[prost(bytes = "vec", tag = "7")]
     pub slash_fraction_signer_set_tx: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes = "vec", tag = "10")]
+    #[prost(bytes = "vec", tag = "8")]
     pub slash_fraction_batch: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes = "vec", tag = "11")]
+    #[prost(bytes = "vec", tag = "9")]
     pub slash_fraction_evm_signature: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes = "vec", tag = "12")]
+    #[prost(bytes = "vec", tag = "10")]
     pub slash_fraction_conflicting_evm_signature: ::prost::alloc::vec::Vec<u8>,
-    #[prost(uint64, tag = "13")]
+    #[prost(uint64, tag = "11")]
     pub unbond_slashing_signer_set_txs_window: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -657,10 +646,10 @@ pub struct GenesisState {
     #[prost(message, repeated, tag = "2")]
     pub delegate_keys: ::prost::alloc::vec::Vec<MsgDelegateKeys>,
     #[prost(message, repeated, tag = "3")]
-    pub chain_genesis_states: ::prost::alloc::vec::Vec<EVMSpecificGenesisState>,
+    pub evm_genesis_states: ::prost::alloc::vec::Vec<EvmSpecificGenesisState>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct EVMSpecificGenesisState {
+pub struct EvmSpecificGenesisState {
     #[prost(uint32, tag = "1")]
     pub chain_id: u32,
     #[prost(uint64, tag = "2")]
@@ -684,6 +673,8 @@ pub struct Erc20ToDenom {
     pub erc20: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
     pub denom: ::prost::alloc::string::String,
+    #[prost(uint32, tag = "3")]
+    pub chain_id: u32,
 }
 ///  rpc Params
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -851,7 +842,7 @@ pub struct UnsignedContractCallTxsResponse {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct BatchTxFeesRequest {
-    #[prost(uint32, tag = "2")]
+    #[prost(uint32, tag = "1")]
     pub chain_id: u32,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -913,6 +904,8 @@ pub struct Erc20ToDenomResponse {
     #[prost(bool, tag = "2")]
     pub cosmos_originated: bool,
 }
+/// DenomToERC20ParamsRequest: while chain ID is not specific to denom->erc20 params,
+/// it is used to throw an error in case the denom is already deployed
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DenomToErc20ParamsRequest {
     #[prost(string, tag = "1")]
@@ -953,7 +946,7 @@ pub struct DelegateKeysByValidatorRequest {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DelegateKeysByValidatorResponse {
     #[prost(string, tag = "1")]
-    pub eth_address: ::prost::alloc::string::String,
+    pub evm_address: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
     pub orchestrator_address: ::prost::alloc::string::String,
 }

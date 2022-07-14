@@ -240,12 +240,12 @@ pub fn ethereum_event_messages(
         // reward token, which is fine since we are not actually using them at the
         // moment, but it is part of the contract-defined event
         let members: Vec<EvmSigner> = valset.members.iter().map(|v| v.into()).collect();
-        let chain_members: Vec<EvmSigner> = members.map(|v| v.clone().chain_id = chain_id).collect_vec();
+        // let chain_members: Vec<EvmSigner> = members.map(|v| v.clone().chain_id = chain_id).collect_vec();
         let event = proto::SignerSetTxExecutedEvent {
             event_nonce: downcast_to_u64(valset.event_nonce).unwrap(),
             signer_set_tx_nonce: downcast_to_u64(valset.valset_nonce).unwrap(),
             evm_height: downcast_to_u64(valset.block_height).unwrap(),
-            members: chain_members,
+            members,
             chain_id,
         };
         let msg = proto::MsgSubmitEvmEvent {

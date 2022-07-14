@@ -63,7 +63,7 @@ pub async fn update_gravity_delegate_addresses(
         validator_address: our_valoper_address.to_string(),
         orchestrator_address: delegate_cosmos_address.to_string(),
         evm_address: format_evm_address(delegate_eth_address),
-        eth_signature: eth_signature.to_vec(),
+        evm_signature: eth_signature.to_vec(),
     };
     let msg = Msg::new("/gravity.v1.MsgDelegateKeys", msg);
 

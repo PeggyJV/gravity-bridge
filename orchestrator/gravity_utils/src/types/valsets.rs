@@ -409,7 +409,6 @@ impl From<&ValsetMember> for gravity_proto::gravity::EvmSigner {
         gravity_proto::gravity::EvmSigner {
             power: input.power,
             evm_address,
-            chain_id: 0,
         }
     }
 }
