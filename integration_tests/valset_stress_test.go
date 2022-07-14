@@ -28,7 +28,7 @@ func (s *IntegrationTestSuite) TestValsetUpdate() {
 		startingNonce, err := ethClient.NonceAt(context.Background(), gravityContract, nil)
 		s.Require().NoError(err, "error getting starting nonce")
 
-		bondTokens := sdk.TokensFromConsensusPower(700000, sdk.DefaultPowerReduction)
+		bondTokens := sdk.TokensFromConsensusPower(500000, sdk.DefaultPowerReduction)
 
 		bondCoin := sdk.NewCoin("testgb", bondTokens)
 
@@ -56,6 +56,20 @@ func (s *IntegrationTestSuite) TestValsetUpdate() {
 			}
 			return true
 		}, 300*time.Second, 10*time.Second, "Delegate to validator failed will retry")
+
+		s.T().Logf("verifying delegation")
+		s.Require().Eventuallyf(func() bool {
+
+			s.Require().NoError(err, "error querying delegator bonded validators")
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.Delegation(context.Background(), &types.QueryDelegationRequest{DelegatorAddr: delegator.String(), ValidatorAddr: val.String()})
+			if err != nil {
+				s.T().Logf("error: %s", err)
+				return false
+			}
+			s.T().Logf("Here's the delegation response: %s", res.DelegationResponse.Delegation)
+			return true
+		}, 200*time.Second, 1*time.Second, "Delegation wasn't successful")
 
 		currentNonce, err := ethClient.NonceAt(context.Background(), gravityContract, nil)
 		s.Require().NoError(err, "error getting current nonce")
