@@ -11,7 +11,6 @@ use gravity_utils::message_signatures::{
 };
 use gravity_utils::types::*;
 use std::collections::BTreeMap;
-use actix::ActorStreamExt;
 use gravity_proto::gravity::EvmSigner;
 
 use crate::crypto::PrivateKey as CosmosPrivateKey;
@@ -33,7 +32,6 @@ pub async fn signer_set_tx_confirmation_messages(
         // Signer trait responds with a Result, but we use a LocalWallet and it
         // will never throw an error
         let signature = eth_client.signer().sign_message(data).await.unwrap();
-        let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
         let confirmation = proto::SignerSetTxConfirmation {
             evm_signer: format_evm_address(ethereum_address),
             signer_set_nonce: valset.nonce,
@@ -68,7 +66,6 @@ pub async fn batch_tx_confirmation_messages(
         // Signer trait responds with a Result, but we use a LocalWallet and it
         // will never throw an error
         let signature = eth_client.signer().sign_message(data).await.unwrap();
-        let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
         let confirmation = proto::BatchTxConfirmation {
             token_contract: format_evm_address(batch.token_contract),
             batch_nonce: batch.nonce,
@@ -105,7 +102,6 @@ pub async fn contract_call_tx_confirmation_messages(
         // Signer trait responds with a Result, but we use a LocalWallet and it
         // will never throw an error
         let signature = eth_client.signer().sign_message(data).await.unwrap();
-        let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
         let confirmation = proto::ContractCallTxConfirmation {
             evm_signer: format_evm_address(ethereum_address),
             signature: signature.into(),

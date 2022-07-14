@@ -13,6 +13,7 @@ use gravity_utils::types::{LogicCallConfirmResponse, Valset};
 use gravity_utils::{message_signatures::encode_logic_call_confirm_hashed, types::LogicCall};
 use std::time::Duration;
 use tonic::transport::Channel;
+use ethers::prelude::*;
 
 #[allow(clippy::too_many_arguments)]
 pub async fn relay_logic_calls(

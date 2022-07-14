@@ -13,6 +13,7 @@ use gravity_utils::{
     message_signatures::encode_valset_confirm_hashed, types::Valset,
 };
 use tonic::transport::Channel;
+use ethers::prelude::*;
 
 /// Check the last validator set on Ethereum, if it's lower than our latest validator
 /// set then we should package and submit the update as an Ethereum transaction
