@@ -124,7 +124,7 @@ func eventVoteRecordPruneAndTally(ctx sdk.Context, k keeper.Keeper) {
 	// we delete all attestations earlier than the current event nonce
 	// minus some buffer value. This buffer value is purely to allow
 	// frontends and other UI components to view recent oracle history
-	const eventsToKeep = 1000
+	const eventsToKeep = 100
 	lastNonce := uint64(k.GetLastObservedEventNonce(ctx))
 	var cutoff uint64
 	if lastNonce <= eventsToKeep {
