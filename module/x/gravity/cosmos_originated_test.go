@@ -70,6 +70,8 @@ func addDenomToERC20Relation(tv *testingVars) {
 		},
 		Base:    "uatom",
 		Display: "atom",
+		Name:    "Cosmos Token",
+		Symbol:  "ATOM",
 	})
 
 	var myNonce = uint64(1)
@@ -77,8 +79,8 @@ func addDenomToERC20Relation(tv *testingVars) {
 	deployedEvent := &types.ERC20DeployedEvent{
 		CosmosDenom:   tv.denom,
 		TokenContract: tv.erc20,
-		Erc20Name:     "atom",
-		Erc20Symbol:   "atom",
+		Erc20Name:     "Cosmos Token",
+		Erc20Symbol:   "ATOM",
 		Erc20Decimals: 6,
 		EventNonce:    myNonce,
 	}

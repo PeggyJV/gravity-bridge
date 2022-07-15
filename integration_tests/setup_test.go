@@ -263,6 +263,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 		Display:     testDenom,
 		Base:        testDenom,
 		Name:        testDenom,
+		Symbol:      testDenom,
 		DenomUnits: []*banktypes.DenomUnit{
 			{
 				Denom:    testDenom,
