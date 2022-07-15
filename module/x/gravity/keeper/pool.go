@@ -25,7 +25,7 @@ func (k Keeper) createSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, cou
 	// If the coin is a gravity voucher, burn the coins. If not, check if there is a deployed ERC20 contract representing it.
 	// If there is, lock the coins.
 
-	isCosmosOriginated, tokenContract, err := k.DenomToERC20Lookup(ctx, totalAmount.Denom)
+	_, tokenContract, err := k.DenomToERC20Lookup(ctx, totalAmount.Denom)
 	if err != nil {
 		return 0, err
 	}
@@ -37,13 +37,6 @@ func (k Keeper) createSendToEthereum(ctx sdk.Context, sender sdk.AccAddress, cou
 	} else {
 		if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, totalInVouchers); err != nil {
 			return 0, err
-		}
-	}
-
-	// If it is no a cosmos-originated asset we burn
-	if !isCosmosOriginated {
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, totalInVouchers); err != nil {
-			panic(err)
 		}
 	}
 
@@ -88,16 +81,9 @@ func (k Keeper) cancelSendToEthereum(ctx sdk.Context, id uint64, s string) error
 		return fmt.Errorf("can't cancel a message you didn't send")
 	}
 
-	isCosmosOriginated, denom := k.ERC20ToDenomLookup(ctx, common.HexToAddress(send.Erc20Token.Contract))
+	_, denom := k.ERC20ToDenomLookup(ctx, common.HexToAddress(send.Erc20Token.Contract))
 	amountToRefund := send.Erc20Token.Amount.Add(send.Erc20Fee.Amount)
 	coinsToRefund := sdk.NewCoins(sdk.NewCoin(denom, amountToRefund))
-
-	// If it is not cosmos-originated the coins are minted
-	if !isCosmosOriginated {
-		if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coinsToRefund); err != nil {
-			return sdkerrors.Wrapf(err, "mint vouchers coins: %s", coinsToRefund)
-		}
-	}
 
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, coinsToRefund); err != nil {
 		return sdkerrors.Wrap(err, "sending coins from module account")

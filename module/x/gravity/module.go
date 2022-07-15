@@ -109,8 +109,7 @@ func (AppModule) ConsensusVersion() uint64 {
 
 // RegisterInvariants implements app module
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	// TODO: make some invariants in the gravity module to ensure that
-	// coins aren't being fraudlently minted etc...
+	ir.RegisterRoute(types.ModuleName, "module-balance", keeper.ModuleBalanceInvariant(am.keeper))
 }
 
 // Route implements app module
