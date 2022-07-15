@@ -22,6 +22,7 @@ use std::time::Duration;
 struct Args {
     flag_validator_phrase: String,
     flag_cosmos_phrase: Option<String>,
+    flag_cosmos_granter: Option<String>,
     flag_ethereum_key: Option<String>,
     flag_address_prefix: String,
     flag_cosmos_grpc: String,
@@ -30,12 +31,13 @@ struct Args {
 
 lazy_static! {
     pub static ref USAGE: String = format!(
-        "Usage: {} --validator-phrase=<key> --address-prefix=<prefix> [--cosmos-phrase=<key>] [--ethereum-key=<key>] --cosmos-grpc=<url> --fees=<denom>
+        "Usage: {} --validator-phrase=<key> --address-prefix=<prefix> [--cosmos-phrase=<key>] [--cosmos-granter=<cosmos-address>] [--ethereum-key=<key>] --cosmos-grpc=<url> --fees=<denom>
         Options:
             -h --help                 Show this screen.
             --validator-phrase=<vkey> The Cosmos private key of the validator. Must be saved when you generate your key
             --ethereum-key=<ekey>     (Optional) The Ethereum private key to register, will be generated if not provided
             --cosmos-phrase=<ckey>    (Optional) The phrase for the Cosmos key to register, will be generated if not provided.
+            --cosmos-granter=<caddress> (Optional) The granter address to pay the fee for cosmos tx, will be None if not provided.
             --address-prefix=<prefix> The prefix for Addresses on this chain (eg 'cosmos')
             --cosmos-grpc=<curl>      The Cosmos RPC url, usually the validator. This will need to be manually enabled
             --fees=<denom>            The Cosmos Denom in which to pay Cosmos chain fees
@@ -115,12 +117,14 @@ async fn main() {
 
     let ethereum_address = ethereum_wallet.address();
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
+    let cosmos_granter = args.flag_cosmos_granter;
 
     let res = update_gravity_delegate_addresses(
         &contact,
         ethereum_address,
         cosmos_address,
         validator_key,
+        cosmos_granter,
         ethereum_wallet,
         (0f64, "".to_string()),
         1.0f64,

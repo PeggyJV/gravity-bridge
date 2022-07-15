@@ -151,6 +151,7 @@ pub async fn happy_path_test_v2(
 
     let res = send_to_eth(
         user.cosmos_key,
+        None,
         user.eth_address,
         send_to_eth_coin,
         get_fee(),
@@ -168,6 +169,7 @@ pub async fn happy_path_test_v2(
 
     let res = send_request_batch_tx(
         keys[0].validator_key,
+        None,
         token_to_send_to_eth.clone(),
         (10f64, "footoken".to_string()),
         contact,
