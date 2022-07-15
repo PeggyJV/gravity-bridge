@@ -126,20 +126,16 @@ pub async fn send_messages(
     gas_adjustment: f64,
 ) -> Result<TxResponse, GravityError> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let min_gas_limit = 500000 * messages.len() as u64;
 
-    // compute the fee as fee=ceil(gas_limit * gas_price)
-    let fee_amount: f64 = min_gas_limit as f64 * gas_price.0;
-    let fee_amount: u64 = fee_amount.abs().ceil() as u64;
     let fee_amount = Coin {
         denom: gas_price.1.clone(),
-        amount: fee_amount.into(),
+        amount: 0u32.into(),
     };
 
     let fee = Fee {
         amount: vec![fee_amount],
-        gas_limit: min_gas_limit,
-        granter: cosmos_granter,
+        gas_limit: 0,
+        granter: None,
         payer: None,
     };
 
@@ -150,7 +146,7 @@ pub async fn send_messages(
 
     // multiply the estimated gas by the configured gas adjustment
     let gas_limit: f64 = (gas.gas_used as f64) * gas_adjustment;
-    args.fee.gas_limit = cmp::max(gas_limit as u64, min_gas_limit);
+    args.fee.gas_limit = cmp::max(gas_limit as u64, 500000 * messages.len() as u64);
 
     // compute the fee as fee=ceil(gas_limit * gas_price)
     let fee_amount: f64 = args.fee.gas_limit as f64 * gas_price.0;
