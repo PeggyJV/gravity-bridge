@@ -72,8 +72,10 @@ impl Erc20 {
 
         check_for_eth(eth_client.address(), eth_client.clone()).await;
 
+        let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
         let req = DenomToErc20ParamsRequest {
             denom: denom.clone(),
+            chain_id,
         };
 
         let res = grpc
@@ -104,6 +106,7 @@ impl Erc20 {
             loop {
                 let req = DenomToErc20Request {
                     denom: denom.clone(),
+                    chain_id,
                 };
 
                 let res = grpc.denom_to_erc20(req).await;

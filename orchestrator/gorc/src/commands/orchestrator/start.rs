@@ -6,13 +6,14 @@ use gravity_utils::{
         check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
         wait_for_cosmos_node_ready,
     },
-    ethereum::{downcast_to_u64, format_evm_address},
+    ethereum::{format_evm_address},
 };
 use orchestrator::main_loop::{
     orchestrator_main_loop, ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED,
 };
 use relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
 use std::{cmp::min, sync::Arc};
+use ethers::prelude::*;
 
 /// Start the Orchestrator
 #[derive(Command, Debug, Parser)]
@@ -70,7 +71,7 @@ impl Runnable for StartCommand {
                 .await
                 .expect("Could not retrieve chain ID during orchestrator start");
 
-            let chain_ids = [1, 31173]; // todo: how to get this from a config?
+            let chain_ids = [1 as u64, 31173]; // todo: how to get this from a config?
             for chain_id in chain_ids {
                 let eth_client =
                     SignerMiddleware::new(provider.clone(), ethereum_wallet.clone().with_chain_id(chain_id));
