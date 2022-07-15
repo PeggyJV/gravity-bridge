@@ -145,7 +145,11 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 			}
 
 			// validate validator account in genesis
-			if err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, key.GetAddress(), coins, cdc); err != nil {
+			addr, err := key.GetAddress()
+			if err != nil {
+				return err
+			}
+			if err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, addr, coins, cdc); err != nil {
 				return errors.Wrap(err, "failed to validate validator account in genesis")
 			}
 
@@ -158,7 +162,11 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 				txFactory = txFactory.WithMemo(fmt.Sprintf("%s@%s:26656", createValCfg.NodeID, createValCfg.IP))
 			}
 
-			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(key.GetAddress())
+			addr, err = key.GetAddress()
+			if err != nil {
+				return err
+			}
+			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(addr)
 
 			// The following line comes from a discrepancy between the `gentx`
 			// and `create-validator` commands:
@@ -184,8 +192,12 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 				return err
 			}
 
+			addr, err = key.GetAddress()
+			if err != nil {
+				return err
+			}
 			delegateGravityMsg := &gravitytypes.MsgDelegateKeys{
-				ValidatorAddress:    sdk.ValAddress(key.GetAddress()).String(),
+				ValidatorAddress:    sdk.ValAddress(addr).String(),
 				OrchestratorAddress: orchAddress.String(),
 				EthereumAddress:     ethAddress,
 				EthSignature:        ethSig,
@@ -195,14 +207,14 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 
 			if key.GetType() == keyring.TypeOffline || key.GetType() == keyring.TypeMulti {
 				cmd.PrintErrln("Offline key passed in. Use `tx sign` command to sign.")
-				return tx.GenerateTx(clientCtx, txFactory, msgs...)
+				return txFactory.PrintUnsignedTx(clientCtx, msgs...)
 			}
 
 			// write the unsigned transaction to the buffer
 			w := bytes.NewBuffer([]byte{})
 			clientCtx = clientCtx.WithOutput(w)
 
-			if err = tx.GenerateTx(clientCtx, txFactory, msgs...); err != nil {
+			if err = txFactory.PrintUnsignedTx(clientCtx, msgs...); err != nil {
 				return errors.Wrap(err, "failed to print unsigned std tx")
 			}
 
