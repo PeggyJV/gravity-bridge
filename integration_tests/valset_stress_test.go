@@ -9,33 +9,33 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	gravity "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 )
 
 // call stress_test for a range of nonce values
 
 /// Write test_valset_update test to get latest nonce value
-func (s *IntegrationTestSuite) TestValsetUpdate() {
+func (s *IntegrationTestSuite) TestValsetStressUpdate() {
 	s.Run("Bring up chain, and test the valset update", func() {
 		ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
 		s.Require().NoError(err, "error setting up eth client")
 
-		validator := s.chain.orchestrators[1]
-		keyring := validator.keyring
+		orchKey := s.chain.orchestrators[1]
+		keyring := orchKey.keyring
 
-		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", keyring, "orch", validator.keyInfo.GetAddress())
+		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", keyring, "orch", orchKey.keyInfo.GetAddress())
 		s.Require().NoError(err)
 
-		startingNonce, err := ethClient.NonceAt(context.Background(), gravityContract, nil)
+		startingNonce, err := ethClient.PendingNonceAt(context.Background(), gravityContract)
 		s.Require().NoError(err, "error getting starting nonce")
 
 		bondTokens := sdk.TokensFromConsensusPower(500000, sdk.DefaultPowerReduction)
-
 		bondCoin := sdk.NewCoin("testgb", bondTokens)
 
 		delegator := s.chain.orchestrators[1].keyInfo.GetAddress()
+		val := sdk.ValAddress(s.chain.validators[3].keyInfo.GetAddress())
 
-		val := sdk.ValAddress(s.chain.validators[1].keyInfo.GetAddress())
-
+		// Delegate about 5% of the total staking power.
 		s.Require().Eventuallyf(func() bool {
 			s.T().Logf("Sending in valset request (starting_eth_valset_nonce %d)", startingNonce)
 
@@ -57,6 +57,7 @@ func (s *IntegrationTestSuite) TestValsetUpdate() {
 			return true
 		}, 300*time.Second, 10*time.Second, "Delegate to validator failed will retry")
 
+		// Verify that delegation went through.
 		s.T().Logf("verifying delegation")
 		s.Require().Eventuallyf(func() bool {
 
@@ -67,24 +68,39 @@ func (s *IntegrationTestSuite) TestValsetUpdate() {
 				s.T().Logf("error: %s", err)
 				return false
 			}
-			s.T().Logf("Here's the delegation response: %s", res.DelegationResponse.Delegation)
+			s.T().Logf("Here's the delegation response: %s", res.DelegationResponse)
 			return true
-		}, 200*time.Second, 1*time.Second, "Delegation wasn't successful")
+		}, 20*time.Second, 1*time.Second, "Delegation wasn't successful")
 
-		currentNonce, err := ethClient.NonceAt(context.Background(), gravityContract, nil)
+		// Query signer set, to make sure valset was updated.
+		s.T().Logf("verifying signerset")
+		s.Require().Eventuallyf(func() bool {
+
+			s.Require().NoError(err, "error querying signerset")
+			queryClient := gravity.NewQueryClient(clientCtx)
+			res, err := queryClient.LatestSignerSetTx(context.Background(), &gravity.LatestSignerSetTxRequest{})
+			if err != nil {
+				s.T().Logf("error: %s", err)
+				return false
+			}
+			s.T().Logf("Here's the last signerset response: %s", res.SignerSet)
+			return true
+		}, 20*time.Second, 1*time.Second, "Signerset can't be retrieved")
+
+		// Grab current nonce.
+		currentNonce, err := ethClient.PendingNonceAt(context.Background(), gravityContract)
 		s.Require().NoError(err, "error getting current nonce")
 
+		// Run a loop until you get a nonce higher than the initial nonce
 		s.Require().Eventuallyf(func() bool {
 			for currentNonce == startingNonce {
-				currentNonce, err = ethClient.NonceAt(context.Background(), gravityContract, nil)
+				currentNonce, err = ethClient.PendingNonceAt(context.Background(), gravityContract)
 				if currentNonce != startingNonce {
 					return true
 				}
 			}
 			return true
 		}, 300*time.Second, 10*time.Second, "Validator set is not yet updated")
-
-		currentNonce, err = ethClient.NonceAt(context.Background(), gravityContract, nil)
 
 		if currentNonce != startingNonce {
 			s.T().Log(currentNonce)
@@ -94,4 +110,14 @@ func (s *IntegrationTestSuite) TestValsetUpdate() {
 		}
 
 	})
+}
+
+// loop and test valset update from a range of nonces
+func (s *IntegrationTestSuite) TestValsetUpdate() {
+	s.Run("Bring up chain, and test the valset update", func() {
+		for nonce := 0; nonce <= 10; nonce++ {
+			s.TestValsetStressUpdate()
+		}
+	})
+
 }
