@@ -3,12 +3,10 @@ package integration_tests
 // package imports
 import (
 	"context"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ethereum/go-ethereum/ethclient"
 	gravity "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 )
 
@@ -17,19 +15,16 @@ import (
 /// Write test_valset_update test to get latest nonce value
 func (s *IntegrationTestSuite) TestValsetStressUpdate() {
 	s.Run("Bring up chain, and test the valset update", func() {
-		ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
-		s.Require().NoError(err, "error setting up eth client")
-
 		orchKey := s.chain.orchestrators[1]
 		keyring := orchKey.keyring
 
 		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", keyring, "orch", orchKey.keyInfo.GetAddress())
 		s.Require().NoError(err)
 
-		startingNonce, err := ethClient.PendingNonceAt(context.Background(), gravityContract)
+		startingNonce, err := s.getLastValsetNonce(gravityContract)
 		s.Require().NoError(err, "error getting starting nonce")
 
-		bondTokens := sdk.TokensFromConsensusPower(500000, sdk.DefaultPowerReduction)
+		bondTokens := sdk.TokensFromConsensusPower(50000, sdk.DefaultPowerReduction)
 		bondCoin := sdk.NewCoin("testgb", bondTokens)
 
 		delegator := s.chain.orchestrators[1].keyInfo.GetAddress()
@@ -88,13 +83,13 @@ func (s *IntegrationTestSuite) TestValsetStressUpdate() {
 		}, 20*time.Second, 1*time.Second, "Signerset can't be retrieved")
 
 		// Grab current nonce.
-		currentNonce, err := ethClient.PendingNonceAt(context.Background(), gravityContract)
+		currentNonce, err := s.getLastValsetNonce(gravityContract)
 		s.Require().NoError(err, "error getting current nonce")
 
 		// Run a loop until you get a nonce higher than the initial nonce
 		s.Require().Eventuallyf(func() bool {
 			for currentNonce == startingNonce {
-				currentNonce, err = ethClient.PendingNonceAt(context.Background(), gravityContract)
+				currentNonce, err = s.getLastValsetNonce(gravityContract)
 				if currentNonce != startingNonce {
 					return true
 				}

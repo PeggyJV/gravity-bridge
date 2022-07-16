@@ -833,3 +833,25 @@ func (s *IntegrationTestSuite) SendEthTransaction(validator *validator, toAddres
 
 	return nil
 }
+
+func (s *IntegrationTestSuite) getLastValsetNonce(erc20contract common.Address) (*sdk.Int, error) {
+	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
+	if err != nil {
+		return nil, err
+	}
+
+	data := PackLastValsetNonce()
+
+	response, err := ethClient.CallContract(context.Background(), ethereum.CallMsg{
+		To:   &erc20contract,
+		Gas:  0,
+		Data: data,
+	}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	nonce := UnpackEthUInt(response)
+
+	return &nonce, err
+}
