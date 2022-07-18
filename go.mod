@@ -8,10 +8,12 @@ require (
 	github.com/ethereum/go-ethereum v1.10.11
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.1
 	github.com/ory/dockertest/v3 v3.8.1
-	github.com/peggyjv/gravity-bridge/module/v2 v2.0.1
+	github.com/peggyjv/gravity-bridge/module/v3 v3.0.0-00010101000000-000000000000 // indirect
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/tendermint v0.34.14
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
+replace github.com/peggyjv/gravity-bridge/module/v3 => ./module

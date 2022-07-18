@@ -117,7 +117,7 @@ func (cp ParamsForChain) ValidateBasic() error {
 	if err := validateGravityID(cp.GravityId); err != nil {
 		return sdkerrors.Wrap(err, "gravity id")
 	}
-	if err := validateTargetEthTxTimeout(cp.TargetEvmTxTimeout); err != nil {
+	if err := validateTargetEvmTxTimeout(cp.TargetEvmTxTimeout); err != nil {
 		return sdkerrors.Wrap(err, "Batch timeout")
 	}
 	if err := validateAverageEVMBlockTime(cp.AverageEvmBlockTime); err != nil {
@@ -212,7 +212,7 @@ func validateContractHash(i interface{}) error {
 	return nil
 }
 
-func validateTargetEthTxTimeout(i interface{}) error {
+func validateTargetEvmTxTimeout(i interface{}) error {
 	val, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

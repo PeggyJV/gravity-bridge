@@ -102,7 +102,8 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		}, 105*time.Second, 10*time.Second, "balance never found on cosmos")
 
 		s.T().Logf("sending to ethereum")
-		sendToEthereumMsg := types.NewMsgSendToEthereum(
+		sendToEthereumMsg := types.NewMsgSendToEVM(
+			types.EthereumChainID,
 			s.chain.validators[1].keyInfo.GetAddress(),
 			s.chain.validators[1].ethereumKey.address,
 			sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(100)},
@@ -193,7 +194,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		clientCtx, err = s.chain.clientContext("tcp://localhost:26657", orch.keyring, "orch", orch.keyInfo.GetAddress())
 		s.Require().NoError(err)
 
-		proposal := types.CommunityPoolEthereumSpendProposal{
+		proposal := types.CommunityPoolEVMSpendProposal{
 			Title:       "community pool spend ethereum",
 			Description: "community pool spend ethereum",
 			Recipient:   s.chain.validators[2].ethereumKey.address,
