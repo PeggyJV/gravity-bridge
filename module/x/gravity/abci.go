@@ -122,16 +122,7 @@ func eventVoteRecordPruneAndTally(ctx sdk.Context, k keeper.Keeper) {
 	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
 
 	// we delete all attestations earlier than the current event nonce
-	// minus some buffer value. This buffer value is purely to allow
-	// frontends and other UI components to view recent oracle history
-	const eventsToKeep = 100
 	lastNonce := uint64(k.GetLastObservedEventNonce(ctx))
-	var cutoff uint64
-	if lastNonce <= eventsToKeep {
-		cutoff = 0
-	} else {
-		cutoff = lastNonce - eventsToKeep
-	}
 
 	// This iterates over all keys (event nonces) in the attestation mapping. Each value contains
 	// a slice with one or more attestations at that event nonce. There can be multiple attestations
@@ -141,8 +132,8 @@ func eventVoteRecordPruneAndTally(ctx sdk.Context, k keeper.Keeper) {
 		// They are ordered by when the first attestation at the event nonce was received.
 		// This order is not important.
 		for _, att := range attmap[nonce] {
-			// delete all before the cutoff
-			if nonce < cutoff {
+			// delete all before the last nonce
+			if nonce < lastNonce {
 				k.DeleteEthereumEventVoteRecord(ctx, att)
 			}
 			// We check if the event nonce is exactly 1 higher than the last attestation that was
