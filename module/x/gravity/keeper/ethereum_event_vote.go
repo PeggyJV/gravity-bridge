@@ -256,30 +256,9 @@ func (k Keeper) getLastEventNonceByValidator(ctx sdk.Context, validator sdk.ValA
 		// them to replay the entire history of all events ever we can't start
 		// at zero
 		//
-		// We could start at the LastObservedEventNonce but if we do that this
-		// validator will be slashed, because they are responsible for making a claim
-		// on any attestation that has not yet passed the slashing window.
-		//
-		// Therefore we need to return to them the lowest attestation that is still within
-		// the slashing window. Since we delete attestations after the slashing window that's
-		// just the lowest observed event in the store. If no claims have been submitted in for
-		// params.SignedClaimsWindow we may have no attestations in our nonce. At which point
-		// the last observed which is a persistent and never cleaned counter will suffice.
+		// We return the LastObservedEventNonce
 		lowestObserved := k.GetLastObservedEventNonce(ctx)
-		attmap := k.GetEthereumEventVoteRecordMapping(ctx)
-		// no new claims in params.SignedClaimsWindow, we can return the current value
-		// because the validator can't be slashed for an event that has already passed.
-		// so they only have to worry about the *next* event to occur
-		if len(attmap) == 0 {
-			return lowestObserved
-		}
-		for nonce, atts := range attmap {
-			for att := range atts {
-				if atts[att].Accepted && nonce < lowestObserved {
-					lowestObserved = nonce
-				}
-			}
-		}
+		
 		// return the latest event minus one so that the validator
 		// can submit that event and avoid slashing. special case
 		// for zero
