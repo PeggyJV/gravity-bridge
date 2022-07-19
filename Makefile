@@ -64,4 +64,7 @@ fail:
 	@false
 
 e2e_happy_path: e2e_clean_slate
-	@E2E_SKIP_CLEANUP=true integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m TestHappyPath || make -s fail
+	integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m TestHappyPath || make -s fail
+
+e2e_valset_update: e2e_clean_slate
+	integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m TestValsetUpdate || make -s fail
