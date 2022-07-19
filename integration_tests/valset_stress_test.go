@@ -50,7 +50,7 @@ func (s *IntegrationTestSuite) TestValsetStressUpdate() {
 				return false
 			}
 			return true
-		}, 300*time.Second, 10*time.Second, "Delegate to validator failed will retry")
+		}, 5*time.Minute, 10*time.Second, "Delegate to validator failed will retry")
 
 		// Verify that delegation went through.
 		s.T().Logf("verifying delegation")
@@ -95,11 +95,10 @@ func (s *IntegrationTestSuite) TestValsetStressUpdate() {
 				}
 			}
 			return true
-		}, 300*time.Second, 10*time.Second, "Validator set is not yet updated")
+		}, 5*time.Minute, 10*time.Second, "Validator set is not yet updated")
 
 		if currentNonce != startingNonce {
-			s.T().Log(currentNonce)
-			s.T().Logf("Validator set successfully updated!")
+			s.T().Logf("Validator set successfully updated! nonce: %d", currentNonce)
 		} else {
 			s.T().Logf("Failed to update validator set")
 		}
