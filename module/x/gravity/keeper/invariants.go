@@ -2,10 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/ethereum/go-ethereum/common"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	accType "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
 )
 

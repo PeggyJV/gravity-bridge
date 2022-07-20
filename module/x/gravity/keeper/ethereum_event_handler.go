@@ -55,7 +55,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 
 	case *types.BatchExecutedEvent:
 		if err := k.batchTxExecuted(ctx, common.HexToAddress(event.TokenContract), event.BatchNonce); err != nil {
-		return err
+			return err
 		}
 		k.AfterBatchExecutedEvent(ctx, *event)
 		return nil
