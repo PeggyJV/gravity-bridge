@@ -4,7 +4,9 @@ package integration_tests
 
 // Start the chain with validators
 func (s *IntegrationTestSuite) TestValidatorOut() {
-	s.Run("Bring up chain, and test the valset update", func() {})
+	s.Run("Bring up chain, and test the valset update", func() {
+		s.dockerPool.RemoveContainerByName("orchestrator3")
+	})
 }
 
 // Check that there's no slashing and validator orchestrator are working fine.
