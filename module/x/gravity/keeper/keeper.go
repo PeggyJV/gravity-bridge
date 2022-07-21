@@ -345,8 +345,32 @@ func (k Keeper) SetParams(ctx sdk.Context, ps types.Params) {
 
 func (k Keeper) chainIDsContains(ctx sdk.Context, chainID uint32) bool {
 	params := k.GetParams(ctx)
-	_, ok := params.ParamsByChain[chainID]
+	chainIDStr := strconv.Itoa(int(chainID))
+	_, ok := params.ParamsByChain[chainIDStr]
 	return ok
+}
+
+func (k Keeper) GetParamsForChain(ctx sdk.Context, chainID uint32) *types.ParamsForChain {
+	params := k.GetParams(ctx)
+	chainIDStr := strconv.Itoa(int(chainID))
+	cp, ok := params.ParamsByChain[chainIDStr]
+	if !ok {
+		panic(fmt.Errorf("no chain with id %d found", chainID))
+	}
+	return cp
+}
+
+func (k Keeper) GetChainIDs(ctx sdk.Context) (ids []uint32) {
+	params := k.GetParams(ctx)
+	for chainIDStr := range params.ParamsByChain {
+		chainIDInt, err := strconv.Atoi(chainIDStr)
+		if err != nil {
+			panic(err)
+		}
+		ids = append(ids, uint32(chainIDInt))
+	}
+
+	return ids
 }
 
 // getGravityID returns the GravityID. The GravityID is essentially a salt value
@@ -360,8 +384,8 @@ func (k Keeper) chainIDsContains(ctx sdk.Context, chainID uint32) bool {
 // same as the chain id since the chain id may be changed many times with each
 // successive chain in charge of the same bridge
 func (k Keeper) getGravityID(ctx sdk.Context, chainID uint32) string {
-	params := k.GetParams(ctx)
-	return params.ParamsByChain[chainID].GravityId
+	chainParams := k.GetParamsForChain(ctx, chainID)
+	return chainParams.GravityId
 }
 
 // getDelegateKeys iterates both the EthAddress and Orchestrator address indexes to produce
@@ -409,10 +433,7 @@ func (k Keeper) GetUnbondingValidators(unbondingVals []byte) stakingtypes.ValAdd
 
 func (k Keeper) getTimeoutHeight(ctx sdk.Context, chainID uint32) uint64 {
 	params := k.GetParams(ctx)
-	chainParams, ok := params.ParamsByChain[chainID]
-	if ok {
-		panic("chain doesn't exist in params")
-	}
+	chainParams := k.GetParamsForChain(ctx, chainID)
 	currentCosmosHeight := ctx.BlockHeight()
 	// we store the last observed Cosmos and EVM heights, we do not concern ourselves if these values are zero because
 	// no batch can be produced if the last EVM block height is not first populated by a deposit event.
@@ -537,7 +558,7 @@ func (k Keeper) SetLastObservedSignerSetTx(ctx sdk.Context, chainID uint32, sign
 // CreateContractCallTx xxx
 func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidationNonce uint64, invalidationScope tmbytes.HexBytes,
 	address common.Address, payload []byte, tokens []types.ERC20Token, fees []types.ERC20Token) *types.ContractCallTx {
-	params := k.GetParams(ctx)
+	chainParams := k.GetParamsForChain(ctx, chainID)
 
 	newContractCallTx := &types.ContractCallTx{
 		InvalidationNonce: invalidationNonce,
@@ -571,7 +592,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 			sdk.NewAttribute(types.AttributeKeyContractCallPayload, string(payload)),
 			sdk.NewAttribute(types.AttributeKeyContractCallTokens, strings.Join(tokenString, "|")),
 			sdk.NewAttribute(types.AttributeKeyContractCallFees, strings.Join(feeString, "|")),
-			sdk.NewAttribute(types.AttributeKeyEvmTxTimeout, strconv.FormatUint(params.ParamsByChain[chainID].TargetEvmTxTimeout, 10)),
+			sdk.NewAttribute(types.AttributeKeyEvmTxTimeout, strconv.FormatUint(chainParams.TargetEvmTxTimeout, 10)),
 		),
 	)
 	k.SetOutgoingTx(ctx, chainID, newContractCallTx)

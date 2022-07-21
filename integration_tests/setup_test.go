@@ -342,7 +342,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	// set contract addr
 	var gravityGenState gravitytypes.GenesisState
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
-	gravityGenState.Params.ParamsByChain[gravitytypes.EthereumChainID].GravityId = "gravitytest"
+	gravityGenState.Params.ParamsByChain[strconv.Itoa(gravitytypes.EthereumChainID)].GravityId = "gravitytest"
 
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)

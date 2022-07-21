@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"strconv"
 )
 
 // DefaultParamspace defines the default auth module parameter subspace
@@ -16,7 +17,8 @@ const (
 
 var (
 	// ParamsStoreKeyParamsForChain stores a map of chain ID to chain specific params
-	ParamsStoreKeyParamsForChain = []byte("ParamsForChain")
+	ParamsStoreKeyParamsForChain   = []byte("ParamsForChain")
+	ParamsStoreKeyAverageBlockTime = []byte("AverageBlockTime")
 
 	// Ensure that params implements the proper interface
 	_ paramtypes.ParamSet = &Params{}
@@ -87,7 +89,7 @@ func DefaultParams() *Params {
 
 	return &Params{
 		AverageBlockTime: 5000,
-		ParamsByChain:    map[uint32]*ParamsForChain{EthereumChainID: &cp},
+		ParamsByChain:    map[string]*ParamsForChain{strconv.Itoa(EthereumChainID): &cp},
 	}
 }
 
@@ -160,6 +162,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 // pairs of auth module's parameters.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
+		paramtypes.NewParamSetPair(ParamsStoreKeyAverageBlockTime, &p.AverageBlockTime, validateAverageBlockTime),
 		paramtypes.NewParamSetPair(ParamsStoreKeyParamsForChain, &p.ParamsByChain, validateParamsForChain),
 	}
 }
@@ -178,7 +181,7 @@ func (p Params) Equal(p2 Params) bool {
 }
 
 func validateParamsForChain(i interface{}) error {
-	v, ok := i.(map[uint32]*ParamsForChain)
+	v, ok := i.(map[string]*ParamsForChain)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

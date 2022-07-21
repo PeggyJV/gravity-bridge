@@ -73,7 +73,7 @@ message Params {
   option (gogoproto.stringer) = false;
 
   uint64 average_block_time = 1;
-  map<uint32, ParamsForChain> params_by_chain = 2;
+  map<string, ParamsForChain> params_by_chain = 2;
 }
 
 message ParamsForChain {

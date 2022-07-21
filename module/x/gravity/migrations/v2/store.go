@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/cosmos/cosmos-sdk/codec"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -204,8 +205,8 @@ func migrateParams(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
 
 	newParams := types.Params{
 		AverageBlockTime: oldParams.AverageBlockTime,
-		ParamsByChain: map[uint32]*types.ParamsForChain{
-			types.EthereumChainID: {
+		ParamsByChain: map[string]*types.ParamsForChain{
+			strconv.Itoa(types.EthereumChainID): {
 				GravityId:                            oldParams.GravityId,
 				SignedSignerSetTxsWindow:             oldParams.SignedSignerSetTxsWindow,
 				SignedBatchesWindow:                  oldParams.SignedBatchesWindow,

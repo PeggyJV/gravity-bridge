@@ -1667,6 +1667,8 @@ func (m *ERC20ToDenomResponse) GetCosmosOriginated() bool {
 	return false
 }
 
+// DenomToERC20ParamsRequest: while chain ID is not specific to denom->erc20 params,
+// it is used to throw an error in case the denom is already deployed
 type DenomToERC20ParamsRequest struct {
 	Denom   string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`

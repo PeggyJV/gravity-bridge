@@ -196,7 +196,7 @@ var (
 	// TestingGravityParams is a set of gravity params for testing
 	TestingGravityParams = types.Params{
 		AverageBlockTime: 5000,
-		ParamsByChain:    map[uint32]*types.ParamsForChain{1: &ethereumParamsForChain}}
+		ParamsByChain:    map[string]*types.ParamsForChain{"1": &ethereumParamsForChain}}
 )
 
 // TestInput stores the various keepers required to test gravity

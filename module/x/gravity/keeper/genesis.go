@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,7 +32,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 	}
 
 	for _, chainGS := range data.EvmGenesisStates {
-		if _, ok := data.Params.ParamsByChain[chainGS.ChainID]; !ok {
+		if _, ok := data.Params.ParamsByChain[strconv.Itoa(int(chainGS.ChainID))]; !ok {
 			panic(fmt.Sprintf("chain ID %d presented in state, but not in params", chainGS.ChainID))
 		}
 
@@ -112,7 +113,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 
 	var EVMSpecificGenesisStates []*types.EVMSpecificGenesisState
 
-	for chainID, _ := range p.ParamsByChain {
+	for _, chainID := range k.GetChainIDs(ctx) {
 		var (
 			outgoingTxs           []*cdctypes.Any
 			evmTxConfirmations    []*cdctypes.Any
