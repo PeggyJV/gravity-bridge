@@ -14,39 +14,33 @@ description = """
 [workspace]
 default-members = ["gorc", "orchestrator", "test_runner"]
 members = [
-	"orchestrator",
-	"cosmos_gravity",
-	"ethereum_gravity",
-	"gravity_utils",
-	"gravity_proto_build",
-	"test_runner",
-	"gravity_proto",
-	"relayer",
-	"register_delegate_keys",
-	"gorc",
-	"gravity_abi_build",
-	"gravity_abi",
+  "orchestrator",
+  "cosmos_gravity",
+  "ethereum_gravity",
+  "gravity_utils",
+  "gravity_proto_build",
+  "test_runner",
+  "gravity_proto",
+  "relayer",
+  "register_delegate_keys",
+  "gorc",
+  "gravity_abi_build",
+  "gravity_abi",
 ]
 
 [dependencies]
-orchestrator = { path = "./orchestrator" }
 cosmos_gravity = { path = "./cosmos_gravity" }
 ethereum_gravity = { path = "./ethereum_gravity" }
-gravity_utils = { path = "./gravity_utils" }
-gravity_proto_build = { path = "./gravity_proto_build" }
-test_runner = { path = "./test_runner" }
-gravity_proto = { path = "./gravity_proto" }
-register_delegate_keys = { path = "./register_delegate_keys" }
 gorc = { path = "./gorc" }
+gravity_proto = { path = "./gravity_proto" }
+gravity_utils = { path = "./gravity_utils" }
+orchestrator = { path = "./orchestrator" }
 relayer = { path = "./relayer" }
-gravity_abi_build = { path = "./gravity_abi_build" }
-gravity_abi = { path = "./gravity_abi" }
 
 [features]
 ethermint = [
-    "orchestrator/ethermint",
-    "cosmos_gravity/ethermint",
-    "relayer/ethermint",
-    "gorc/ethermint",
-    "register_delegate_keys/ethermint",
+  "orchestrator/ethermint",
+  "cosmos_gravity/ethermint",
+  "relayer/ethermint",
+  "gorc/ethermint",
 ]
