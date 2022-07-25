@@ -121,14 +121,14 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down e2e integration test suite...")
 
 	s.Require().NoError(os.RemoveAll(s.chain.dataDir))
-	s.Require().NoError(s.dockerPool.Purge(s.ethResource))
+	s.Require().NoError(s.dockerPool.RemoveContainerByName(s.ethResource.Container.Name))
 
 	for _, vc := range s.valResources {
-		s.Require().NoError(s.dockerPool.Purge(vc))
+		s.Require().NoError(s.dockerPool.RemoveContainerByName(vc.Container.Name))
 	}
 
 	for _, oc := range s.orchResources {
-		s.Require().NoError(s.dockerPool.Purge(oc))
+		s.Require().NoError(s.dockerPool.RemoveContainerByName(oc.Container.Name))
 	}
 
 	s.Require().NoError(s.dockerPool.RemoveNetwork(s.dockerNetwork))
