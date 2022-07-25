@@ -8,6 +8,8 @@ task(
     'Sets up contracts for the integration test',
     async (args, hre) => {
 
+        console.log(`starting with network: ${hre.network.name}, chain id: ${hre.network.config.chainId}`);
+
         // Take over vitalik.eth
         await hre.network.provider.request({
             method: 'hardhat_impersonateAccount',
@@ -57,6 +59,7 @@ const ARCHIVE_NODE_URL = process.env.ARCHIVE_NODE_URL;
 module.exports = {
     networks: {
         hardhat: {
+            chainId: 1,
             forking: {
                 url: ARCHIVE_NODE_URL,
                 blockNumber: 13405367,
