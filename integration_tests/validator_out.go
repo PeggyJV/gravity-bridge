@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -14,8 +13,11 @@ import (
 // Start the chain with validators
 func (s *IntegrationTestSuite) TestValidatorOut() {
 	s.Run("Bring up chain, and test the valset update", func() {
+		// remove fourth validator's orchestrator
 		s.dockerPool.RemoveContainerByName("orchestrator3")
 		val := s.chain.validators[1]
+
+		firstValidator := sdk.ValAddress(s.chain.validators[3].keyInfo.GetAddress()).String()
 
 		orchKey := s.chain.orchestrators[1]
 		keyring := orchKey.keyring
@@ -23,7 +25,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", keyring, "orch", orchKey.keyInfo.GetAddress())
 		s.Require().NoError(err)
 
-		bondTokens := sdk.TokensFromConsensusPower(50000, sdk.DefaultPowerReduction)
+		bondTokens := sdk.TokensFromConsensusPower(900000, sdk.DefaultPowerReduction)
 		bondCoin := sdk.NewCoin("testgb", bondTokens)
 
 		delegator := s.chain.orchestrators[1].keyInfo.GetAddress()
@@ -47,23 +49,18 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			}
 			return true
 		}, 5*time.Minute, 10*time.Second, "Delegate to validator failed will retry")
+
 		// Check jail status of validators
 		s.Require().Eventuallyf(func() bool {
-			kb, err := val.keyring()
-			s.Require().NoError(err)
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", val.keyInfo.GetAddress())
-			s.Require().NoError(err)
-
-			sdk.GetConsAddress(val.keyInfo.GetPubKey())
-
-			queryClient := slashing.NewQueryClient(clientCtx)
-			res, err := queryClient.SigningInfos(context.Background(), &slashing.QuerySigningInfosRequest{})
+			newQ := types.NewQueryClient(clientCtx)
+			res, err := newQ.Validator(context.Background(), &types.QueryValidatorRequest{ValidatorAddr: firstValidator})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
-			s.T().Logf("response: %s", res)
+			s.T().Logf("validator response: %s", res)
 			return true
 		}, 20*time.Second, 1*time.Second, "can't find slashing info")
+
 	})
 }
