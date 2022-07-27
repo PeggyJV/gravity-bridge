@@ -43,7 +43,7 @@ pub async fn signer_set_tx_confirmation_messages(
             confirmation: confirmation.to_any(),
             chain_id,
         };
-        let msg = Msg::new("/gravity.v2.MsgSubmitEvmTxConfirmation", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEVMTxConfirmation", msg);
         msgs.push(msg);
     }
     msgs
