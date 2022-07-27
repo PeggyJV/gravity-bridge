@@ -66,7 +66,7 @@ var (
 
 type IntegrationTestSuite struct {
 	suite.Suite
-
+	
 	chain         *chain
 	dockerPool    *dockertest.Pool
 	dockerNetwork *dockertest.Network
@@ -92,6 +92,17 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	mnemonics := MNEMONICS()
 	s.initNodesWithMnemonics(mnemonics...)
 	s.initEthereumFromMnemonics(mnemonics)
+
+	// TODO Add genisis creation for 100 mnemonics for stress testing.
+	// addGenesisAccount
+	fmt.Println("---------------------------------")
+	fmt.Println("TransactionStressTest:", os.Getenv("TransactionStressTest"))
+	if os.Getenv("TransactionStressTest") == "true" {
+		fmt.Println("we did it")
+	}
+	fmt.Println("---------------------------------")
+
+
 	s.initGenesis()
 	s.initValidatorConfigs()
 
