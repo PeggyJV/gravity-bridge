@@ -46,6 +46,7 @@ const (
 	initBalanceStr      = "1000000000000testgb"
 	minGasPrice         = "2"
 	ethChainID     uint = 15
+	STRESS_TEST_NUM_USERS int = 100
 )
 
 func MNEMONICS() []string {
@@ -62,6 +63,7 @@ var (
 	stakeAmountCoin   = sdk.NewCoin(testDenom, stakeAmount)
 	gravityContract   = common.HexToAddress("0x04C89607413713Ec9775E14b954286519d836FEf")
 	testERC20contract = common.HexToAddress("0x4C4a2f8c81640e47606d3fd77B353E87Ba015584")
+	stress_test_eth_addresses = make([]*ethereumKey, STRESS_TEST_NUM_USERS)
 )
 
 type IntegrationTestSuite struct {
@@ -93,15 +95,23 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.initNodesWithMnemonics(mnemonics...)
 	s.initEthereumFromMnemonics(mnemonics)
 
-	// TODO Add genisis creation for 100 mnemonics for stress testing.
-	// addGenesisAccount
-	fmt.Println("---------------------------------")
-	fmt.Println("TransactionStressTest:", os.Getenv("TransactionStressTest"))
+	// TransactionStressTest specific setup code
 	if os.Getenv("TransactionStressTest") == "true" {
-		fmt.Println("we did it")
-	}
-	fmt.Println("---------------------------------")
+		fmt.Println("TransactionStressTest specific setup detected and starting.")
 
+		for i := 0; i < STRESS_TEST_NUM_USERS; i++ {
+			mnemonic, err := createMnemonic()
+			s.Require().NoError(err)
+		
+			stress_test_eth_addresses[i], err = ethereumKeyFromMnemonic(mnemonic)
+			s.Require().NoError(err)
+
+			val0ConfigDir := s.chain.validators[0].configDir()
+
+			addGenesisAccount(val0ConfigDir, "", initBalanceStr, sdk.AccAddress(stress_test_eth_addresses[i].address))
+		}
+		fmt.Println("TransactionStressTest specific setup completed.")
+	}
 
 	s.initGenesis()
 	s.initValidatorConfigs()
