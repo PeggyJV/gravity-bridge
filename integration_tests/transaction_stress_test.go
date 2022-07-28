@@ -4,7 +4,6 @@ package integration_tests
 import (
 	"context"
 	"fmt"
-	"os"
 	"crypto/ecdsa"
 	"math/big"
 
@@ -19,8 +18,6 @@ import (
 var erc20s = [...]string{"testgb"}
 
 func (s *IntegrationTestSuite) TestTransactionStress() {
-	os.Setenv("TransactionStressTest", "true")
-
 	s.Run("Transaction stress test", func() {
 		fmt.Println("StressTestTransaction starting")
 
@@ -30,6 +27,8 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 			s.Require().NoError(err, "error getting balance")
 			s.Require().Equal(sdk.NewUint(10000).BigInt(), balance.BigInt(), "balance was %s, expected 10000", balance.String())	
 		}
+
+		// TODO: need to approve spend first?
 
 		// Send many tx's through to cosmos
 		for _, acct := range stress_test_eth_addresses {
