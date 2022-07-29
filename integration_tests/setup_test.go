@@ -66,7 +66,7 @@ var (
 
 type IntegrationTestSuite struct {
 	suite.Suite
-	
+
 	chain         *chain
 	dockerPool    *dockertest.Pool
 	dockerNetwork *dockertest.Network
