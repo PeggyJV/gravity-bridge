@@ -46,7 +46,6 @@ const (
 	initBalanceStr      = "1000000000000testgb"
 	minGasPrice         = "2"
 	ethChainID     uint = 15
-	STRESS_TEST_NUM_USERS int = 100
 )
 
 func MNEMONICS() []string {
@@ -63,7 +62,6 @@ var (
 	stakeAmountCoin   = sdk.NewCoin(testDenom, stakeAmount)
 	gravityContract   = common.HexToAddress("0x04C89607413713Ec9775E14b954286519d836FEf")
 	testERC20contract = common.HexToAddress("0x4C4a2f8c81640e47606d3fd77B353E87Ba015584")
-	stress_test_eth_addresses = make([]*ethereumKey, STRESS_TEST_NUM_USERS)
 )
 
 type IntegrationTestSuite struct {
@@ -221,18 +219,12 @@ func (s *IntegrationTestSuite) initEthereum() {
 }
 
 func (s *IntegrationTestSuite) initEthereumFromMnemonics(mnemonics []string) {
-	additional_genesis_accounts := 0
-	// TransactionStressTest specific setup code for additional genesis accounts
-	if os.Getenv("TransactionStressTest") == "true" {
-		additional_genesis_accounts += STRESS_TEST_NUM_USERS
-	}
-
 	// generate ethereum keys for validators add them to the ethereum genesis
 	ethGenesis := EthereumGenesis{
 		Difficulty: "0x400",
 		GasLimit:   "0xB71B00",
 		Config:     EthereumConfig{ChainID: ethChainID},
-		Alloc:      make(map[string]Allocation, len(s.chain.validators)+1+additional_genesis_accounts),
+		Alloc:      make(map[string]Allocation, len(s.chain.validators)+1),
 	}
 
 	alloc := Allocation{
@@ -243,22 +235,6 @@ func (s *IntegrationTestSuite) initEthereumFromMnemonics(mnemonics []string) {
 	for i, val := range s.chain.validators {
 		s.Require().NoError(val.generateEthereumKeyFromMnemonic(mnemonics[i]))
 		ethGenesis.Alloc[val.ethereumKey.address] = alloc
-	}
-
-	// TransactionStressTest specific setup code for additional genesis accounts
-	if os.Getenv("TransactionStressTest") == "true" {
-		fmt.Println("TransactionStressTest specific setup detected and starting.")
-
-		for i := 0; i < STRESS_TEST_NUM_USERS; i++ {
-			mnemonic, err := createMnemonic()
-			s.Require().NoError(err)
-		
-			stress_test_eth_addresses[i], err = ethereumKeyFromMnemonic(mnemonic)
-			s.Require().NoError(err)
-
-			ethGenesis.Alloc[stress_test_eth_addresses[i].address] = alloc
-		}
-		fmt.Println("TransactionStressTest specific setup completed.")
 	}
 
 	ethGenBz, err := json.MarshalIndent(ethGenesis, "", "  ")
