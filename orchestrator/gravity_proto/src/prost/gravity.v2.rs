@@ -610,8 +610,9 @@ pub mod msg_client {
 pub struct Params {
     #[prost(uint64, tag = "1")]
     pub average_block_time: u64,
-    #[prost(map = "uint32, message", tag = "2")]
-    pub params_by_chain: ::std::collections::HashMap<u32, ParamsForChain>,
+    #[prost(map = "string, message", tag = "2")]
+    pub params_by_chain:
+        ::std::collections::HashMap<::prost::alloc::string::String, ParamsForChain>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ParamsForChain {
