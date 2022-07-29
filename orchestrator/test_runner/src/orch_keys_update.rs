@@ -81,7 +81,8 @@ pub async fn orch_keys_update(
             ethereum_wallet.address(),
             cosmos_address,
             k.validator_key,
-            ethereum_wallet,
+            None,
+             ethereum_wallet,
             (0f64, "".to_string()),
             2.0,
         )

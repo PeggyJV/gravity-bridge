@@ -332,6 +332,7 @@ async fn test_batch(
     );
     let res = send_to_eth(
         dest_cosmos_private_key,
+        None,
         dest_eth_address,
         Coin {
             denom: token_name.clone(),
@@ -349,6 +350,7 @@ async fn test_batch(
     info!("Requesting transaction batch");
     send_request_batch_tx(
         requester_cosmos_private_key,
+        None,
         token_name.clone(),
         (10f64, "footoken".to_string()),
         contact,
@@ -466,7 +468,7 @@ async fn submit_duplicate_erc20_send(
         );
 
         let gas_price = get_gas_price();
-        let res = send::send_messages(contact, cosmos_key, gas_price, messages, 1.0).await;
+        let res = send::send_messages(contact, cosmos_key,None, gas_price, messages, 1.0).await;
         let res = res.unwrap();
         trace!("Submitted duplicate sendToCosmos event: {:?}", res);
     }

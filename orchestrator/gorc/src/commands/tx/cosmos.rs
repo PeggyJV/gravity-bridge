@@ -72,6 +72,7 @@ impl Runnable for SendToEth {
         let config = APP.config();
         let cosmos_prefix = config.cosmos.prefix.clone();
         let cosmso_grpc = config.cosmos.grpc.clone();
+        let cosmos_granter = config.cosmos.granter.clone();
 
         abscissa_tokio::run_with_actix(&APP, async {
             let connections =
@@ -84,44 +85,47 @@ impl Runnable for SendToEth {
                     denom: denom.clone(),
                 })
                 .await;
-                match res {
-                    Ok(val) => println!(
-                        "Asset {} has ERC20 representation {}",
-                        denom,
-                        val.into_inner().erc20
-                    ),
-                    Err(_e) => {
-                        println!(
-                            "Asset {} has no ERC20 representation, you may need to deploy an ERC20 for it!",
-                            denom.clone()
-                        );
-                        exit(1);
-                    } }
-                    let amount = Coin {
-                        amount: amount.clone(),
-                        denom: denom.clone(),
-                    };
-                    let bridge_fee = Coin {
-                        denom: denom.clone(),
-                        amount: 1u64.into(),
-                    };
-                    let eth_dest: EthAddress = to_eth_addr.parse().unwrap();
-                    check_for_fee_denom(&denom, cosmos_address, &contact).await;
+            match res {
+                Ok(val) => println!(
+                    "Asset {} has ERC20 representation {}",
+                    denom,
+                    val.into_inner().erc20
+                ),
+                Err(_e) => {
+                    println!(
+                        "Asset {} has no ERC20 representation, you may need to deploy an ERC20 for it!",
+                        denom.clone()
+                    );
+                    exit(1);
+                }
+            }
+            let amount = Coin {
+                amount: amount.clone(),
+                denom: denom.clone(),
+            };
+            let bridge_fee = Coin {
+                denom: denom.clone(),
+                amount: 1u64.into(),
+            };
+            let eth_dest: EthAddress = to_eth_addr.parse().unwrap();
+            check_for_fee_denom(&denom, cosmos_address, &contact).await;
 
-                    let balances = contact
+            let balances = contact
             .get_balances(cosmos_address)
             .await
             .expect("Failed to get balances!");
-        let mut found = None;
-        for coin in balances.iter() {
-            if coin.denom == denom {
-                found = Some(coin);
-            }
-        }
-        println!("Cosmos balances {:?}", balances);
 
-        if found.is_none() {
-            panic!("You don't have any {} tokens!", denom);}
+            let mut found = None;
+            for coin in balances.iter() {
+                if coin.denom == denom {
+                    found = Some(coin);
+                }
+            }
+            println!("Cosmos balances {:?}", balances);
+
+            if found.is_none() {
+                panic!("You don't have any {} tokens!", denom);
+            }
             println!(
                 "Locking {:?} / {} into the batch pool",
                 amount,
@@ -129,6 +133,7 @@ impl Runnable for SendToEth {
             );
             let res = send_to_eth(
                 cosmos_key,
+                cosmos_granter,
                 eth_dest,
                 amount.clone(),
                 bridge_fee.clone(),
