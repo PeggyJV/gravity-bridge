@@ -104,7 +104,7 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 		earliestToPrune := currentBlock - params.SignedSignerSetTxsWindow
 		for _, set := range k.GetSignerSetTxs(ctx, chainID) {
 			if set.Nonce < lastObserved.Nonce && set.Height < earliestToPrune {
-				k.DeleteOutgoingTx(ctx, chainID, set.GetStoreIndex())
+				k.DeleteOutgoingTx(ctx, set)
 			}
 		}
 	}
@@ -265,7 +265,7 @@ func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper, chainID ui
 	k.IterateOutgoingTxsByType(ctx, chainID, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		cctx, _ := otx.(*types.ContractCallTx)
 		if cctx.Timeout < EVMHeight {
-			k.DeleteOutgoingTx(ctx, chainID, cctx.GetStoreIndex())
+			k.DeleteOutgoingTx(ctx, cctx)
 		}
 		return true
 	})

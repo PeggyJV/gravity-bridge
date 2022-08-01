@@ -9,7 +9,7 @@ import (
 )
 
 func (k Keeper) contractCallExecuted(ctx sdk.Context, chainID uint32, invalidationScope []byte, invalidationNonce uint64) {
-	otx := k.GetOutgoingTx(ctx, chainID, types.MakeContractCallTxKey(chainID, invalidationScope, invalidationNonce))
+	otx := k.GetOutgoingTx(ctx, types.MakeContractCallTxStoreIndex(chainID, invalidationScope, invalidationNonce))
 	if otx == nil {
 		k.Logger(ctx).Error("Failed to clean contract calls",
 			"invalidation scope", hex.EncodeToString(invalidationScope),
@@ -23,10 +23,10 @@ func (k Keeper) contractCallExecuted(ctx sdk.Context, chainID uint32, invalidati
 		cctx, _ := otx.(*types.ContractCallTx)
 		if (cctx.InvalidationNonce < completedCallTx.InvalidationNonce) &&
 			bytes.Equal(cctx.InvalidationScope, completedCallTx.InvalidationScope) {
-			k.DeleteOutgoingTx(ctx, chainID, cctx.GetStoreIndex())
+			k.DeleteOutgoingTx(ctx, cctx)
 		}
 		return false
 	})
 
-	k.DeleteOutgoingTx(ctx, chainID, completedCallTx.GetStoreIndex())
+	k.DeleteOutgoingTx(ctx, completedCallTx)
 }

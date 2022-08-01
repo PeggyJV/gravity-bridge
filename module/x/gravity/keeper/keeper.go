@@ -253,8 +253,8 @@ func (k Keeper) getEVMAddressesByOrchestrator(ctx sdk.Context, orch sdk.AccAddre
 
 // GetLatestSignerSetTx returns the latest validator set in state
 func (k Keeper) GetLatestSignerSetTx(ctx sdk.Context, chainID uint32) *types.SignerSetTx {
-	key := types.MakeSignerSetTxKey(chainID, k.GetLatestSignerSetTxNonce(ctx, chainID))
-	otx := k.GetOutgoingTx(ctx, chainID, key)
+	storeIndex := types.MakeSignerSetTxStoreIndex(chainID, k.GetLatestSignerSetTxNonce(ctx, chainID))
+	otx := k.GetOutgoingTx(ctx, storeIndex)
 	out, _ := otx.(*types.SignerSetTx)
 	return out
 }
@@ -274,7 +274,7 @@ func (k Keeper) CreateSignerSetTx(ctx sdk.Context, chainID uint32) *types.Signer
 			sdk.NewAttribute(types.AttributeKeySignerSetNonce, fmt.Sprint(nonce)),
 		),
 	)
-	k.SetOutgoingTx(ctx, chainID, newSignerSetTx)
+	k.SetOutgoingTx(ctx, newSignerSetTx)
 	k.Logger(ctx).Info(
 		"SignerSetTx created",
 		"nonce", newSignerSetTx.Nonce,
@@ -370,6 +370,10 @@ func (k Keeper) GetChainIDs(ctx sdk.Context) (ids []uint32) {
 		ids = append(ids, uint32(chainIDInt))
 	}
 
+	// because golang maps have non-deterministic order, we need to force chain order
+	sort.Slice(ids, func(i, j int) bool {
+		return ids[i] < ids[j]
+	})
 	return ids
 }
 
@@ -456,31 +460,31 @@ func (k Keeper) getTimeoutHeight(ctx sdk.Context, chainID uint32) uint64 {
 /////////////////
 
 // GetOutgoingTx todo: outgoingTx prefix byte
-func (k Keeper) GetOutgoingTx(ctx sdk.Context, chainID uint32, storeIndex []byte) (out types.OutgoingTx) {
-	if err := k.Cdc.UnmarshalInterface(ctx.KVStore(k.StoreKey).Get(types.MakeOutgoingTxKey(chainID, storeIndex)), &out); err != nil {
+func (k Keeper) GetOutgoingTx(ctx sdk.Context, storeIndex []byte) (out types.OutgoingTx) {
+	if err := k.Cdc.UnmarshalInterface(ctx.KVStore(k.StoreKey).Get(types.MakeOutgoingTxKey(storeIndex)), &out); err != nil {
 		panic(err)
 	}
 	return out
 }
 
-func (k Keeper) SetOutgoingTx(ctx sdk.Context, chainID uint32, outgoing types.OutgoingTx) {
-	outgoingTx, err := types.PackOutgoingTx(outgoing)
+func (k Keeper) SetOutgoingTx(ctx sdk.Context, otx types.OutgoingTx) {
+	outgoingTx, err := types.PackOutgoingTx(otx)
 	if err != nil {
 		panic(err)
 	}
 	ctx.KVStore(k.StoreKey).Set(
-		types.MakeOutgoingTxKey(chainID, outgoing.GetStoreIndex()),
+		types.MakeOutgoingTxKey(otx.GetStoreIndex()),
 		k.Cdc.MustMarshal(outgoingTx),
 	)
 }
 
-// DeleteOutgoingTx deletes a given outgoingtx
-func (k Keeper) DeleteOutgoingTx(ctx sdk.Context, chainID uint32, storeIndex []byte) {
-	ctx.KVStore(k.StoreKey).Delete(types.MakeOutgoingTxKey(chainID, storeIndex))
+// DeleteOutgoingTx deletes a given OutgoingTx
+func (k Keeper) DeleteOutgoingTx(ctx sdk.Context, otx types.OutgoingTx) {
+	ctx.KVStore(k.StoreKey).Delete(types.MakeOutgoingTxKey(otx.GetStoreIndex()))
 }
 
 func (k Keeper) PaginateOutgoingTxsByType(ctx sdk.Context, chainID uint32, pageReq *query.PageRequest, prefixByte byte, cb func(key []byte, outgoing types.OutgoingTx) bool) (*query.PageResponse, error) {
-	prefixStore := prefix.NewStore(ctx.KVStore(k.StoreKey), types.MakeOutgoingTxKey(chainID, []byte{prefixByte}))
+	prefixStore := prefix.NewStore(ctx.KVStore(k.StoreKey), types.OutgoingTxKeyPrefixWithPrefixByte(chainID, prefixByte))
 
 	return query.FilteredPaginate(prefixStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		if !accumulate {
@@ -503,7 +507,7 @@ func (k Keeper) PaginateOutgoingTxsByType(ctx sdk.Context, chainID uint32, pageR
 
 // IterateOutgoingTxsByType iterates over a specific type of outgoing transaction denoted by the chosen prefix byte
 func (k Keeper) IterateOutgoingTxsByType(ctx sdk.Context, chainID uint32, prefixByte byte, cb func(key []byte, outgoing types.OutgoingTx) (stop bool)) {
-	prefixStore := prefix.NewStore(ctx.KVStore(k.StoreKey), types.MakeOutgoingTxKey(chainID, []byte{prefixByte}))
+	prefixStore := prefix.NewStore(ctx.KVStore(k.StoreKey), types.OutgoingTxKeyPrefixWithPrefixByte(chainID, prefixByte))
 	iter := prefixStore.ReverseIterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
@@ -595,7 +599,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 			sdk.NewAttribute(types.AttributeKeyEvmTxTimeout, strconv.FormatUint(chainParams.TargetEvmTxTimeout, 10)),
 		),
 	)
-	k.SetOutgoingTx(ctx, chainID, newContractCallTx)
+	k.SetOutgoingTx(ctx, newContractCallTx)
 	k.Logger(ctx).Info(
 		"ContractCallTx created",
 		"bridge_chain_id", fmt.Sprint(chainID),

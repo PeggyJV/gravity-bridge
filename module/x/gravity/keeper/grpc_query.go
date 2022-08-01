@@ -50,8 +50,8 @@ func (k Keeper) LatestSignerSetTx(c context.Context, req *types.LatestSignerSetT
 func (k Keeper) SignerSetTx(c context.Context, req *types.SignerSetTxRequest) (*types.SignerSetTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	key := types.MakeSignerSetTxKey(req.ChainId, req.SignerSetNonce)
-	otx := k.GetOutgoingTx(ctx, req.ChainId, key)
+	key := types.MakeSignerSetTxStoreIndex(req.ChainId, req.SignerSetNonce)
+	otx := k.GetOutgoingTx(ctx, key)
 	if otx == nil {
 		return &types.SignerSetTxResponse{}, nil
 	}
@@ -71,8 +71,8 @@ func (k Keeper) BatchTx(c context.Context, req *types.BatchTxRequest) (*types.Ba
 
 	res := &types.BatchTxResponse{}
 
-	key := types.MakeBatchTxKey(req.ChainId, common.HexToAddress(req.TokenContract), req.BatchNonce)
-	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), req.ChainId, key)
+	storeIndex := types.MakeBatchTxStoreIndex(req.ChainId, common.HexToAddress(req.TokenContract), req.BatchNonce)
+	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), storeIndex)
 	if otx == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "no batch tx found for %d %s", req.BatchNonce, req.TokenContract)
 	}
@@ -86,8 +86,8 @@ func (k Keeper) BatchTx(c context.Context, req *types.BatchTxRequest) (*types.Ba
 }
 
 func (k Keeper) ContractCallTx(c context.Context, req *types.ContractCallTxRequest) (*types.ContractCallTxResponse, error) {
-	key := types.MakeContractCallTxKey(req.ChainId, req.InvalidationScope, req.InvalidationNonce)
-	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), req.ChainId, key)
+	storeIndex := types.MakeContractCallTxStoreIndex(req.ChainId, req.InvalidationScope, req.InvalidationNonce)
+	otx := k.GetOutgoingTx(sdk.UnwrapSDKContext(c), storeIndex)
 	if otx == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "no contract call found for %d %s", req.InvalidationNonce, req.InvalidationScope)
 	}
@@ -154,7 +154,7 @@ func (k Keeper) ContractCallTxs(c context.Context, req *types.ContractCallTxsReq
 
 func (k Keeper) SignerSetTxConfirmations(c context.Context, req *types.SignerSetTxConfirmationsRequest) (*types.SignerSetTxConfirmationsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	key := types.MakeSignerSetTxKey(req.ChainId, req.SignerSetNonce)
+	key := types.MakeSignerSetTxStoreIndex(req.ChainId, req.SignerSetNonce)
 
 	var out []*types.SignerSetTxConfirmation
 	k.iterateEVMSignaturesByStoreIndex(ctx, req.ChainId, key, func(val sdk.ValAddress, sig []byte) bool {
@@ -171,7 +171,7 @@ func (k Keeper) SignerSetTxConfirmations(c context.Context, req *types.SignerSet
 
 func (k Keeper) BatchTxConfirmations(c context.Context, req *types.BatchTxConfirmationsRequest) (*types.BatchTxConfirmationsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	key := types.MakeBatchTxKey(req.ChainId, common.HexToAddress(req.TokenContract), req.BatchNonce)
+	key := types.MakeBatchTxStoreIndex(req.ChainId, common.HexToAddress(req.TokenContract), req.BatchNonce)
 
 	var out []*types.BatchTxConfirmation
 	k.iterateEVMSignaturesByStoreIndex(ctx, req.ChainId, key, func(val sdk.ValAddress, sig []byte) bool {
@@ -188,7 +188,7 @@ func (k Keeper) BatchTxConfirmations(c context.Context, req *types.BatchTxConfir
 
 func (k Keeper) ContractCallTxConfirmations(c context.Context, req *types.ContractCallTxConfirmationsRequest) (*types.ContractCallTxConfirmationsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	key := types.MakeContractCallTxKey(req.ChainId, req.InvalidationScope, req.InvalidationNonce)
+	key := types.MakeContractCallTxStoreIndex(req.ChainId, req.InvalidationScope, req.InvalidationNonce)
 
 	var out []*types.ContractCallTxConfirmation
 	k.iterateEVMSignaturesByStoreIndex(ctx, req.ChainId, key, func(val sdk.ValAddress, sig []byte) bool {

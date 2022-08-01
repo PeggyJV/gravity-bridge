@@ -87,7 +87,7 @@ func initGenesisForChain(ctx sdk.Context, k Keeper, data types.EVMSpecificGenesi
 		if err != nil {
 			panic(fmt.Sprintf("invalid outgoing tx any in genesis file: %s", err))
 		}
-		k.SetOutgoingTx(ctx, data.ChainID, otx)
+		k.SetOutgoingTx(ctx, otx)
 	}
 
 	// reset signatures in state

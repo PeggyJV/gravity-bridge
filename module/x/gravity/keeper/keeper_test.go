@@ -380,9 +380,9 @@ func TestKeeper_GetEVMSignatures(t *testing.T) {
 		gk := env.GravityKeeper
 
 		storeIndexes := [][]byte{
-			types.MakeSignerSetTxKey(types.EthereumChainID, 1),
-			types.MakeBatchTxKey(types.EthereumChainID, common.HexToAddress(""), 1), // weird that empty address is okay
-			types.MakeContractCallTxKey(types.EthereumChainID, nil, 0),
+			types.MakeSignerSetTxStoreIndex(types.EthereumChainID, 1),
+			types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(""), 1), // weird that empty address is okay
+			types.MakeContractCallTxStoreIndex(types.EthereumChainID, nil, 0),
 		}
 		for _, storeIndex := range storeIndexes {
 			got := gk.GetEVMSignatures(ctx, types.EthereumChainID, storeIndex)
@@ -412,7 +412,7 @@ func TestKeeper_GetEVMSignatures(t *testing.T) {
 		}
 
 		{ // validate
-			storeIndex := types.MakeSignerSetTxKey(types.EthereumChainID, signerSetNonce)
+			storeIndex := types.MakeSignerSetTxStoreIndex(types.EthereumChainID, signerSetNonce)
 
 			{ // getEVMSignature
 				got := gk.getEVMSignature(ctx, types.EthereumChainID, storeIndex, valAddr)
@@ -451,7 +451,7 @@ func TestKeeper_GetEVMSignatures(t *testing.T) {
 		}
 
 		{ // validate
-			storeIndex := types.MakeBatchTxKey(types.EthereumChainID, common.HexToAddress(tokenContract), batchNonce)
+			storeIndex := types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(tokenContract), batchNonce)
 
 			{ // getEVMSignature
 				got := gk.getEVMSignature(ctx, types.EthereumChainID, storeIndex, valAddr)
@@ -491,7 +491,7 @@ func TestKeeper_GetEVMSignatures(t *testing.T) {
 		}
 
 		{ // validate
-			storeIndex := types.MakeContractCallTxKey(types.EthereumChainID, []byte(invalidationScope), invalidationNonce)
+			storeIndex := types.MakeContractCallTxStoreIndex(types.EthereumChainID, []byte(invalidationScope), invalidationNonce)
 
 			{ // getEVMSignature
 				got := gk.getEVMSignature(ctx, types.EthereumChainID, storeIndex, valAddr)

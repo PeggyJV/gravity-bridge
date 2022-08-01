@@ -133,8 +133,8 @@ func EVMEventVoteRecordPrefix(chainID uint32) []byte {
 //////////////////
 
 // MakeOutgoingTxKey returns the store index passed with a prefix
-func MakeOutgoingTxKey(chainID uint32, storeIndex []byte) []byte {
-	return bytes.Join([][]byte{{OutgoingTxKey}, Uint32ToBigEndian(chainID), storeIndex}, []byte{})
+func MakeOutgoingTxKey(storeIndex []byte) []byte {
+	return bytes.Join([][]byte{{OutgoingTxKey}, storeIndex}, []byte{})
 }
 
 func OutgoingTxKeyPrefixWithPrefixByte(chainID uint32, prefix byte) []byte {
@@ -178,16 +178,16 @@ func MakeERC20ToDenomKeyPrefix(chainID uint32) []byte {
 	return bytes.Join([][]byte{{ERC20ToDenomKey}, Uint32ToBigEndian(chainID)}, []byte{})
 }
 
-func MakeSignerSetTxKey(chainID uint32, nonce uint64) []byte {
+func MakeSignerSetTxStoreIndex(chainID uint32, nonce uint64) []byte {
 	return bytes.Join([][]byte{{SignerSetTxPrefixByte}, Uint32ToBigEndian(chainID), sdk.Uint64ToBigEndian(nonce)}, []byte{})
 }
 
-func MakeBatchTxKey(chainID uint32, addr common.Address, nonce uint64) []byte {
+func MakeBatchTxStoreIndex(chainID uint32, addr common.Address, nonce uint64) []byte {
 	return bytes.Join([][]byte{{BatchTxPrefixByte}, Uint32ToBigEndian(chainID), addr.Bytes(), sdk.Uint64ToBigEndian(nonce)}, []byte{})
 }
 
-func MakeContractCallTxKey(chainID uint32, invalscope []byte, invalnonce uint64) []byte {
-	return bytes.Join([][]byte{{ContractCallTxPrefixByte}, Uint32ToBigEndian(chainID), invalscope, sdk.Uint64ToBigEndian(invalnonce)}, []byte{})
+func MakeContractCallTxStoreIndex(chainID uint32, invalidationScope []byte, invalidationNonce uint64) []byte {
+	return bytes.Join([][]byte{{ContractCallTxPrefixByte}, Uint32ToBigEndian(chainID), invalidationScope, sdk.Uint64ToBigEndian(invalidationNonce)}, []byte{})
 }
 
 func MakeLatestSignerSetTxNonceKey(chainID uint32) []byte {

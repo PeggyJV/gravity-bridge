@@ -177,7 +177,7 @@ pub fn ethereum_event_messages(
             event: event.to_any(),
             chain_id,
         };
-        let msg = Msg::new("/gravity.v2.MsgSubmitEvmEvent", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEVMEvent", msg);
         unordered_msgs.insert(deposit.event_nonce, msg);
     }
     for batch in batches {
@@ -193,7 +193,7 @@ pub fn ethereum_event_messages(
             event: event.to_any(),
             chain_id,
         };
-        let msg = Msg::new("/gravity.v2.MsgSubmitEvmEvent", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEVMEvent", msg);
         unordered_msgs.insert(batch.event_nonce, msg);
     }
     for deploy in erc20_deploys {
@@ -212,7 +212,7 @@ pub fn ethereum_event_messages(
             event: event.to_any(),
             chain_id,
         };
-        let msg = Msg::new("/gravity.v2.MsgSubmitEvmEvent", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEVMEvent", msg);
         unordered_msgs.insert(deploy.event_nonce, msg);
     }
     for logic_call in logic_calls {
@@ -228,7 +228,7 @@ pub fn ethereum_event_messages(
             event: event.to_any(),
             chain_id,
         };
-        let msg = Msg::new("/gravity.v2.MsgSubmitEvmEvent", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEVMEvent", msg);
         unordered_msgs.insert(logic_call.event_nonce, msg);
     }
     for valset in valsets {
@@ -249,7 +249,7 @@ pub fn ethereum_event_messages(
             event: event.to_any(),
             chain_id,
         };
-        let msg = Msg::new("/gravity.v2.MsgSubmitEvmEvent", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEVMEvent", msg);
         unordered_msgs.insert(valset.event_nonce, msg);
     }
 

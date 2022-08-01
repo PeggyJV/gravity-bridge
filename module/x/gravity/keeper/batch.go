@@ -47,7 +47,7 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, chainID uint32, contractAddress co
 		TokenContract: contractAddress.Hex(),
 		Height:        uint64(ctx.BlockHeight()),
 	}
-	k.SetOutgoingTx(ctx, chainID, batch)
+	k.SetOutgoingTx(ctx, batch)
 
 	ctx.EventManager().EmitEvent(sdk.NewEvent(
 		types.EventTypeOutgoingBatch,
@@ -63,7 +63,7 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, chainID uint32, contractAddress co
 // batchTxExecuted is run when the Cosmos chain detects that a batch has been executed on EVM
 // It deletes all the transactions in the batch, then cancels all earlier batches
 func (k Keeper) batchTxExecuted(ctx sdk.Context, chainID uint32, tokenContract common.Address, nonce uint64) {
-	otx := k.GetOutgoingTx(ctx, chainID, types.MakeBatchTxKey(chainID, tokenContract, nonce))
+	otx := k.GetOutgoingTx(ctx, types.MakeBatchTxStoreIndex(chainID, tokenContract, nonce))
 	if otx == nil {
 		k.Logger(ctx).Error("Failed to clean batches",
 			"token contract", tokenContract.Hex(),
@@ -79,7 +79,7 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, chainID uint32, tokenContract c
 		}
 		return false
 	})
-	k.DeleteOutgoingTx(ctx, chainID, batchTx.GetStoreIndex())
+	k.DeleteOutgoingTx(ctx, batchTx)
 }
 
 // getBatchFeesByTokenType gets the fees the next batch of a given token type would
@@ -106,7 +106,7 @@ func (k Keeper) CancelBatchTx(ctx sdk.Context, chainID uint32, batch *types.Batc
 	}
 
 	// Delete batch since it is finished
-	k.DeleteOutgoingTx(ctx, chainID, batch.GetStoreIndex())
+	k.DeleteOutgoingTx(ctx, batch)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

@@ -22,7 +22,7 @@ func TestSignerSetTxCreationIfNotAvailable(t *testing.T) {
 
 	// BeginBlocker should set a new validator set if not available
 	gravity.BeginBlocker(ctx, gravityKeeper)
-	otx := gravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeSignerSetTxKey(types.EthereumChainID, 1))
+	otx := gravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeSignerSetTxStoreIndex(types.EthereumChainID, 1))
 	require.NotNil(t, otx)
 	_, ok := otx.(*types.SignerSetTx)
 	require.True(t, ok)
@@ -223,7 +223,7 @@ func TestSignerSetTxEmission(t *testing.T) {
 
 	// BeginBlocker should set a new validator set
 	gravity.BeginBlocker(ctx, gravityKeeper)
-	require.NotNil(t, gravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeSignerSetTxKey(types.EthereumChainID, 2)))
+	require.NotNil(t, gravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeSignerSetTxStoreIndex(types.EthereumChainID, 2)))
 	require.EqualValues(t, 2, len(gravityKeeper.GetSignerSetTxs(ctx, types.EthereumChainID)))
 }
 
@@ -274,9 +274,9 @@ func TestBatchTxTimeout(t *testing.T) {
 	require.Equal(t, b2.Timeout, uint64(504))
 
 	// make sure the batches got stored in the first place
-	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxKey(types.EthereumChainID, common.HexToAddress(b1.TokenContract), b1.BatchNonce))
+	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b1.TokenContract), b1.BatchNonce))
 	require.NotNil(t, gotFirstBatch)
-	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxKey(types.EthereumChainID, common.HexToAddress(b2.TokenContract), b2.BatchNonce))
+	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b2.TokenContract), b2.BatchNonce))
 	require.NotNil(t, gotSecondBatch)
 
 	// when, way into the future
@@ -287,24 +287,24 @@ func TestBatchTxTimeout(t *testing.T) {
 	gravity.BeginBlocker(ctx, gravityKeeper)
 
 	// this had a timeout of zero should be deleted.
-	gotFirstBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxKey(types.EthereumChainID, common.HexToAddress(b1.TokenContract), b1.BatchNonce))
+	gotFirstBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b1.TokenContract), b1.BatchNonce))
 	require.Nil(t, gotFirstBatch)
 	// make sure the end blocker does not delete these, as the block height has not officially
 	// been updated by a relay event
-	gotSecondBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxKey(types.EthereumChainID, common.HexToAddress(b2.TokenContract), b2.BatchNonce))
+	gotSecondBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b2.TokenContract), b2.BatchNonce))
 	require.NotNil(t, gotSecondBatch)
-	gotThirdBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxKey(types.EthereumChainID, common.HexToAddress(b3.TokenContract), b3.BatchNonce))
+	gotThirdBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b3.TokenContract), b3.BatchNonce))
 	require.NotNil(t, gotThirdBatch)
 
 	gravityKeeper.SetLastObservedEVMBlockHeight(ctx, types.EthereumChainID, 5000)
 	gravity.BeginBlocker(ctx, gravityKeeper)
 
 	// make sure the end blocker does delete these, as we've got a new Ethereum block height
-	gotFirstBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxKey(types.EthereumChainID, common.HexToAddress(b1.TokenContract), b1.BatchNonce))
+	gotFirstBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b1.TokenContract), b1.BatchNonce))
 	require.Nil(t, gotFirstBatch)
-	gotSecondBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxKey(types.EthereumChainID, common.HexToAddress(b2.TokenContract), b2.BatchNonce))
+	gotSecondBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b2.TokenContract), b2.BatchNonce))
 	require.Nil(t, gotSecondBatch)
-	gotThirdBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxKey(types.EthereumChainID, common.HexToAddress(b3.TokenContract), b3.BatchNonce))
+	gotThirdBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b3.TokenContract), b3.BatchNonce))
 	require.NotNil(t, gotThirdBatch)
 }
 

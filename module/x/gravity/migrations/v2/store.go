@@ -250,7 +250,7 @@ func (k NewKeeper) setOutgoingTx(ctx sdk.Context, chainID uint32, outgoing types
 		panic(err)
 	}
 	ctx.KVStore(k.StoreKey).Set(
-		types.MakeOutgoingTxKey(chainID, outgoing.GetStoreIndex()),
+		types.MakeOutgoingTxKey(outgoing.GetStoreIndex()),
 		k.Cdc.MustMarshal(outgoingTx),
 	)
 }

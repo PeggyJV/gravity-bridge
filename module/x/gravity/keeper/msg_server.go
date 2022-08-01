@@ -130,11 +130,12 @@ func (k msgServer) SubmitEVMTxConfirmation(c context.Context, msg *types.MsgSubm
 		return nil, err
 	}
 
-	otx := k.GetOutgoingTx(ctx, msg.ChainId, confirmation.GetStoreIndex(msg.ChainId))
+	otx := k.GetOutgoingTx(ctx, confirmation.GetStoreIndex(msg.ChainId))
 	if otx == nil {
 		k.Logger(ctx).Error(
 			"no outgoing tx",
 			"store index", fmt.Sprintf("%x", confirmation.GetStoreIndex(msg.ChainId)),
+			"chain id", msg.ChainId,
 		)
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "couldn't find outgoing tx")
 	}
