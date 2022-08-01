@@ -44,11 +44,10 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 		}
 
 		var gravityDenom string
-		for i := 0; i < len(s.chain.validators); i++ {
+		for i, validator := range s.chain.validators {
 			s.Require().Eventuallyf(func() bool {
 				s.T().Logf("Checking validator %d", i+1)
 
-				validator := s.chain.validators[i]
 				kb, err := validator.keyring()
 				s.Require().NoError(err)
 				clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", validator.keyInfo.GetAddress())
@@ -90,11 +89,10 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 		}
 		fmt.Println("Ethereum -> Cosmos stress test completed.")
 
-		for i := 0; i < len(s.chain.validators); i++ {
+		for i, validator := range s.chain.validators {
 			s.Require().Eventuallyf(func() bool {
 				s.T().Logf("sending %d tx's to ethereum for validator %d ..", transactions_per_validator, i+1)
 
-				validator := s.chain.validators[i]
 				sendToEthereumMsg := types.NewMsgSendToEthereum(
 					validator.keyInfo.GetAddress(),
 					s.chain.validators[len(s.chain.validators)-1-i].ethereumKey.address,
@@ -126,11 +124,11 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 			}, 105*time.Second, 10*time.Second, "unable to send to ethereum")
 		}
 
-		for i := 0; i < len(s.chain.validators); i++ {
+		for i, validator := range s.chain.validators {
 			s.Require().Eventuallyf(func() bool {
 				s.T().Logf("Checking validator %d", i+1)
 
-				balance, err := s.getEthTokenBalanceOf(common.HexToAddress(s.chain.validators[i].ethereumKey.address), testERC20contract)
+				balance, err := s.getEthTokenBalanceOf(common.HexToAddress(validator.ethereumKey.address), testERC20contract)
 				s.Require().NoError(err, "error getting destination balance")
 
 				if balance.LT(sdk.NewInt(10000 - (cosmos_sent_amt * transactions_per_validator) + (eth_sent_amt * transactions_per_validator))) {
