@@ -33,11 +33,11 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 
 		sendAmt := sdk.NewInt(cosmos_sent_amt)
 		// Send many tx's through to cosmos
-		for i := 0; i < len(s.chain.validators); i++ {
+		for i, validator := range s.chain.validators {
 			s.T().Logf("sending %d tx's to cosmos for validator %d ..", transactions_per_validator, i+1)
 
 			for j := 0; j < int(transactions_per_validator); j++ {
-				s.Require().NoError(s.SendEthTransaction(&s.chain.validators[i].ethereumKey, gravityContract, PackSendToCosmos(testERC20contract, s.chain.validators[len(s.chain.validators)-1-i].keyInfo.GetAddress(), sendAmt)))
+				s.Require().NoError(s.SendEthTransaction(&validator.ethereumKey, gravityContract, PackSendToCosmos(testERC20contract, s.chain.validators[len(s.chain.validators)-1-i].keyInfo.GetAddress(), sendAmt)))
 			}
 			
 			s.T().Logf("%d Tx sent.", transactions_per_validator)
@@ -60,6 +60,7 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 						Address: validator.keyInfo.GetAddress().String(),
 					})
 				if err != nil {
+					s.T().Logf("error: %s", err)
 					return false
 				}
 
