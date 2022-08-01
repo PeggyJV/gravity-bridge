@@ -177,11 +177,12 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		s.Require().Eventuallyf(func() bool {
 			erc20Res, err := gbQueryClient.DenomToERC20(context.Background(),
 				&types.DenomToERC20Request{
-					Denom: testDenom,
+					Denom:   testDenom,
+					ChainId: types.EthereumChainID,
 				},
 			)
 			if err != nil {
-				s.T().Logf("erc20 not deployed yet, waiting")
+				s.T().Logf("erc20 not deployed yet, waiting. err: %e", err)
 				return false
 			}
 
@@ -200,6 +201,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			Recipient:   s.chain.validators[2].ethereumKey.address,
 			Amount:      sdk.NewCoin(testDenom, sdk.NewInt(900000000)),
 			BridgeFee:   sdk.NewCoin(testDenom, sdk.NewInt(1000000)),
+			ChainId:     types.EthereumChainID,
 		}
 
 		proposalMsg, err := govtypes.NewMsgSubmitProposal(
@@ -250,6 +252,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		erc20Res, err := gbQueryClient.DenomToERC20(context.Background(),
 			&types.DenomToERC20Request{
 				Denom: testDenom,
+				ChainId: types.EthereumChainID,
 			},
 		)
 		s.Require().NoError(err, "error querying ERC20 for testgb denom")
