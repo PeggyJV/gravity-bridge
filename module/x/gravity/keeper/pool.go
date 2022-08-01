@@ -40,7 +40,7 @@ func (k Keeper) createSendToEVM(ctx sdk.Context, chainID uint32, sender sdk.AccA
 		}
 	}
 
-	// If it is no a cosmos-originated asset we burn
+	// If it is not a cosmos-originated asset we burn
 	if !isCosmosOriginated {
 		if err := k.BankKeeper.BurnCoins(ctx, types.ModuleName, totalInVouchers); err != nil {
 			panic(err)
