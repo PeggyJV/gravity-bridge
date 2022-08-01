@@ -101,6 +101,9 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			return false
 		}, 105*time.Second, 10*time.Second, "balance never found on cosmos")
 
+		beforeBalance, err := s.getEthTokenBalanceOf(common.HexToAddress(s.chain.validators[1].ethereumKey.address), testERC20contract)
+		s.Require().NoError(err, "error getting eth balance")
+
 		s.T().Logf("sending to ethereum")
 		sendToEthereumMsg := types.NewMsgSendToEVM(
 			types.EthereumChainID,
@@ -130,6 +133,21 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			}
 			return true
 		}, 105*time.Second, 10*time.Second, "unable to send to ethereum")
+
+		s.T().Log("verifying send to ethereum")
+		s.Require().Eventuallyf(func() bool {
+			balance, err := s.getEthTokenBalanceOf(common.HexToAddress(s.chain.validators[1].ethereumKey.address), testERC20contract)
+			s.Require().NoError(err, "error getting destination balance")
+
+			if balance.LTE(*beforeBalance) {
+				s.T().Logf("funds not received yet, dest balance: %s", balance.String())
+				return false
+			}
+
+			s.Require().Equal(balance.BigInt(), sdk.NewInt(10100).BigInt(), "balance was %s, expected 10100", balance.String())
+			return true
+		}, time.Second*90, time.Second*10, "send to ethereum did not reach destination")
+
 
 		s.T().Logf("funding community pool")
 		orch := s.chain.orchestrators[0]
@@ -190,6 +208,15 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			return true
 		}, 180*time.Second, 10*time.Second, "unable to verify ERC20 deployment")
 
+		erc20Res, err := gbQueryClient.DenomToERC20(context.Background(),
+			&types.DenomToERC20Request{
+				Denom: testDenom,
+				ChainId: types.EthereumChainID,
+			},
+		)
+		s.Require().NoError(err, "error querying ERC20 for testgb denom")
+		erc20Contract := common.HexToAddress(erc20Res.Erc20)
+
 		s.T().Logf("create governance proposal to fund an ethereum address")
 		orch = s.chain.orchestrators[0]
 		clientCtx, err = s.chain.clientContext("tcp://localhost:26657", orch.keyring, "orch", orch.keyInfo.GetAddress())
@@ -248,15 +275,6 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			s.Require().NoError(err)
 			return govtypes.StatusPassed == proposalQueryResponse.Proposal.Status
 		}, time.Second*30, time.Second*5, "proposal was never accepted")
-
-		erc20Res, err := gbQueryClient.DenomToERC20(context.Background(),
-			&types.DenomToERC20Request{
-				Denom: testDenom,
-				ChainId: types.EthereumChainID,
-			},
-		)
-		s.Require().NoError(err, "error querying ERC20 for testgb denom")
-		erc20Contract := common.HexToAddress(erc20Res.Erc20)
 
 		s.T().Log("waiting for community funds to reach destination")
 		s.Require().Eventuallyf(func() bool {
