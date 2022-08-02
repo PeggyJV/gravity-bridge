@@ -10,7 +10,7 @@ import (
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
-// TODO: should we make this a parameter or a a call arg?
+// BatchTxSize TODO: should we make this a parameter or a call arg?
 const BatchTxSize = 100
 
 // BuildBatchTx starts the following process chain:

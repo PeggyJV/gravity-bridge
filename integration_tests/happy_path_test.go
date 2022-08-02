@@ -141,13 +141,54 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 			if balance.LTE(*beforeBalance) {
 				s.T().Logf("funds not received yet, dest balance: %s", balance.String())
+
+				// evaluate transactions when balance isn't updated
+				kb, err := s.chain.validators[0].keyring()
+				s.Require().NoError(err)
+				clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", s.chain.validators[0].keyInfo.GetAddress())
+				s.Require().NoError(err)
+				gbQueryClient := types.NewQueryClient(clientCtx)
+
+				unbatchedSendToEVMS, err := gbQueryClient.UnbatchedSendToEVMs(context.Background(),
+					&types.UnbatchedSendToEVMsRequest{
+						SenderAddress: s.chain.validators[1].keyInfo.GetAddress().String(),
+						Pagination:    nil,
+						ChainId:       types.EthereumChainID,
+					})
+				s.Require().NoError(err)
+				s.T().Logf("unbatched send to evms: %v", unbatchedSendToEVMS.SendToEvms)
+
+				batchedSendToEVMS, err := gbQueryClient.BatchedSendToEVMs(context.Background(),
+					&types.BatchedSendToEVMsRequest{
+						SenderAddress: s.chain.validators[1].keyInfo.GetAddress().String(),
+						ChainId:       types.EthereumChainID,
+					})
+				s.Require().NoError(err)
+				s.T().Logf("batched send to evms: %v", batchedSendToEVMS.SendToEvms)
+
+				for _, val := range s.chain.validators {
+					unsignedBatchTxs, err := gbQueryClient.UnsignedBatchTxs(context.Background(),
+						&types.UnsignedBatchTxsRequest{
+							Address: val.keyInfo.GetAddress().String(),
+							ChainId:       types.EthereumChainID,
+						})
+					s.Require().NoError(err)
+					s.T().Logf("unsigned batches for val %s: %v", val.keyInfo.GetAddress().String(), unsignedBatchTxs.Batches)
+				}
+
+				batchTxs, err := gbQueryClient.BatchTxs(context.Background(),
+					&types.BatchTxsRequest{
+						ChainId:       types.EthereumChainID,
+					})
+				s.Require().NoError(err)
+				s.T().Logf("batches: %v", batchTxs.Batches)
+
 				return false
 			}
 
 			s.Require().Equal(balance.BigInt(), sdk.NewInt(10100).BigInt(), "balance was %s, expected 10100", balance.String())
 			return true
-		}, time.Second*90, time.Second*10, "send to ethereum did not reach destination")
-
+		}, time.Second*30, time.Second, "send to ethereum did not reach destination")
 
 		s.T().Logf("funding community pool")
 		orch := s.chain.orchestrators[0]
@@ -210,7 +251,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 		erc20Res, err := gbQueryClient.DenomToERC20(context.Background(),
 			&types.DenomToERC20Request{
-				Denom: testDenom,
+				Denom:   testDenom,
 				ChainId: types.EthereumChainID,
 			},
 		)

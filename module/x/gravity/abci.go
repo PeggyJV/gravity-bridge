@@ -38,15 +38,15 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 func createBatchTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	// TODO: this needs some more work, it is super naive
 	if ctx.BlockHeight()%10 == 0 {
-		cm := map[string]bool{}
+		contractSet := map[string]bool{}
 		k.IterateUnbatchedSendToEVMs(ctx, chainID, func(ste *types.SendToEVM) bool {
-			cm[ste.Erc20Token.Contract] = true
+			contractSet[ste.Erc20Token.Contract] = true
 			return false
 		})
 
 		var contracts []string
-		for k := range cm {
-			contracts = append(contracts, k)
+		for c := range contractSet {
+			contracts = append(contracts, c)
 		}
 		sort.Strings(contracts)
 
