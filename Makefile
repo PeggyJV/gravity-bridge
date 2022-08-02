@@ -13,6 +13,7 @@ e2e_slow_loris:
 	@make -s e2e_validator_out
 	@make -s e2e_batch_stress
 	@make -s e2e_valset_stress
+	@make -s e2e_transaction_stress
 
 e2e_clean_slate:
 	@docker rm --force \
@@ -68,3 +69,6 @@ e2e_happy_path: e2e_clean_slate
 
 e2e_valset_update: e2e_clean_slate
 	integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m TestValsetUpdate || make -s fail
+
+e2e_transaction_stress: e2e_clean_slate
+	integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m TestTransactionStress || make -s fail
