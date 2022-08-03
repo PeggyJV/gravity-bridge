@@ -37,15 +37,15 @@ type ABIEncodedValsetArgs struct {
 
 // TODO: do we need a prefix byte for the different types?
 func (sstx *SignerSetTx) GetStoreIndex() []byte {
-	return MakeSignerSetTxStoreIndex(sstx.GetChainId(), sstx.Nonce)
+	return MakeSignerSetTxStoreIndex(sstx.ChainId, sstx.Nonce)
 }
 
 func (btx *BatchTx) GetStoreIndex() []byte {
-	return MakeBatchTxStoreIndex(btx.GetChainId(), gethcommon.HexToAddress(btx.TokenContract), btx.BatchNonce)
+	return MakeBatchTxStoreIndex(btx.ChainId, gethcommon.HexToAddress(btx.TokenContract), btx.BatchNonce)
 }
 
 func (cctx *ContractCallTx) GetStoreIndex() []byte {
-	return MakeContractCallTxStoreIndex(cctx.GetChainId(), cctx.InvalidationScope, cctx.InvalidationNonce)
+	return MakeContractCallTxStoreIndex(cctx.ChainId, cctx.InvalidationScope, cctx.InvalidationNonce)
 }
 
 ///////////////////

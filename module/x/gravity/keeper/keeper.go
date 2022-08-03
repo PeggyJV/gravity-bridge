@@ -264,7 +264,7 @@ func (k Keeper) GetLatestSignerSetTx(ctx sdk.Context, chainID uint32) *types.Sig
 func (k Keeper) CreateSignerSetTx(ctx sdk.Context, chainID uint32) *types.SignerSetTx {
 	nonce := k.incrementLatestSignerSetTxNonce(ctx, chainID)
 	currSignerSet := k.CurrentSignerSet(ctx)
-	newSignerSetTx := types.NewSignerSetTx(nonce, uint64(ctx.BlockHeight()), currSignerSet)
+	newSignerSetTx := types.NewSignerSetTx(chainID, nonce, uint64(ctx.BlockHeight()), currSignerSet)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -280,6 +280,7 @@ func (k Keeper) CreateSignerSetTx(ctx sdk.Context, chainID uint32) *types.Signer
 		"nonce", newSignerSetTx.Nonce,
 		"height", newSignerSetTx.Height,
 		"signers", len(newSignerSetTx.Signers),
+		"chain id", chainID,
 	)
 	return newSignerSetTx
 }

@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -25,25 +24,8 @@ func (k Keeper) Params(c context.Context, req *types.ParamsRequest) (*types.Para
 func (k Keeper) LatestSignerSetTx(c context.Context, req *types.LatestSignerSetTxRequest) (*types.SignerSetTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := prefix.NewStore(ctx.KVStore(k.StoreKey), types.OutgoingTxKeyPrefixWithPrefixByte(req.ChainId, types.SignerSetTxPrefixByte))
-	iter := store.ReverseIterator(nil, nil)
-	defer iter.Close()
-
-	if !iter.Valid() {
-		return nil, status.Errorf(codes.NotFound, "latest signer set not found")
-	}
-
-	var any cdctypes.Any
-	k.Cdc.MustUnmarshal(iter.Value(), &any)
-
-	var otx types.OutgoingTx
-	if err := k.Cdc.UnpackAny(&any, &otx); err != nil {
-		return nil, err
-	}
-	ss, ok := otx.(*types.SignerSetTx)
-	if !ok {
-		return nil, status.Errorf(codes.InvalidArgument, "couldn't cast to signer set for latest")
-	}
+	ss := k.GetLatestSignerSetTx(ctx, req.ChainId)
+	
 	return &types.SignerSetTxResponse{SignerSet: ss}, nil
 }
 

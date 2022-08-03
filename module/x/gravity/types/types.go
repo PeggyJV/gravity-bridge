@@ -113,13 +113,18 @@ func (b EVMSigners) GetPowers() []uint64 {
 }
 
 // NewSignerSetTx returns a new valset
-func NewSignerSetTx(nonce, height uint64, members EVMSigners) *SignerSetTx {
+func NewSignerSetTx(chainId uint32, nonce, height uint64, members EVMSigners) *SignerSetTx {
 	members.Sort()
 	var mem []*EVMSigner
 	for _, val := range members {
 		mem = append(mem, val)
 	}
-	return &SignerSetTx{Nonce: nonce, Height: height, Signers: mem}
+	return &SignerSetTx{
+		Nonce:   nonce,
+		Height:  height,
+		Signers: mem,
+		ChainId: chainId,
+	}
 }
 
 // GetFees returns the total fees contained within a given batch
