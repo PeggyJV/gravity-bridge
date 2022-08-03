@@ -170,7 +170,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 					unsignedBatchTxs, err := gbQueryClient.UnsignedBatchTxs(context.Background(),
 						&types.UnsignedBatchTxsRequest{
 							Address: val.keyInfo.GetAddress().String(),
-							ChainId:       types.EthereumChainID,
+							ChainId: types.EthereumChainID,
 						})
 					s.Require().NoError(err)
 					s.T().Logf("unsigned batches for val %s: %v", val.keyInfo.GetAddress().String(), unsignedBatchTxs.Batches)
@@ -178,7 +178,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 				batchTxs, err := gbQueryClient.BatchTxs(context.Background(),
 					&types.BatchTxsRequest{
-						ChainId:       types.EthereumChainID,
+						ChainId: types.EthereumChainID,
 					})
 				s.Require().NoError(err)
 				s.T().Logf("batches: %v", batchTxs.Batches)
@@ -188,7 +188,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 			s.Require().Equal(balance.BigInt(), sdk.NewInt(10100).BigInt(), "balance was %s, expected 10100", balance.String())
 			return true
-		}, time.Second*30, time.Second, "send to ethereum did not reach destination")
+		}, time.Second*240, time.Second, "send to ethereum did not reach destination")
 
 		s.T().Logf("funding community pool")
 		orch := s.chain.orchestrators[0]

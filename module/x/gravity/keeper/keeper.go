@@ -581,6 +581,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 		Tokens:            tokens,
 		Fees:              fees,
 		Height:            uint64(ctx.BlockHeight()),
+		ChainId:           chainID,
 	}
 
 	var tokenString []string

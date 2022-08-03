@@ -46,6 +46,7 @@ func (k Keeper) BuildBatchTx(ctx sdk.Context, chainID uint32, contractAddress co
 		Transactions:  selectedStes,
 		TokenContract: contractAddress.Hex(),
 		Height:        uint64(ctx.BlockHeight()),
+		ChainId:       chainID,
 	}
 	k.SetOutgoingTx(ctx, batch)
 
