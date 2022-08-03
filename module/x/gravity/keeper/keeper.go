@@ -526,11 +526,18 @@ func (k Keeper) IterateOutgoingTxsByType(ctx sdk.Context, chainID uint32, prefix
 
 // iterateOutgoingTxs iterates over a specific type of outgoing transaction denoted by the chosen prefix byte
 func (k Keeper) iterateOutgoingTxs(ctx sdk.Context, chainID uint32, cb func(key []byte, outgoing types.OutgoingTx) bool) {
-	prefixKey := types.OutgoingTxKeyPrefix(chainID)
+	prefixKey := types.OutgoingTxKeyPrefix()
 	prefixStore := prefix.NewStore(ctx.KVStore(k.StoreKey), prefixKey)
 	iter := prefixStore.ReverseIterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
+		key := bytes.NewBuffer(bytes.TrimPrefix(iter.Key(), types.OutgoingTxKeyPrefix()))
+		key.Next(1) // drop the prefix type of the call
+		otxChain := binary.BigEndian.Uint32(key.Next(8))
+		if otxChain != chainID {
+			continue
+		}
+
 		var anyOTx cdctypes.Any
 		k.Cdc.MustUnmarshal(iter.Value(), &anyOTx)
 		var otx types.OutgoingTx
@@ -676,7 +683,7 @@ func (k Keeper) IterateEVMHeightVotes(ctx sdk.Context, chainID uint32, cb func(v
 func (k Keeper) MigrateGravityContract(ctx sdk.Context, chainID uint32, newBridgeAddress string, bridgeDeploymentHeight uint64) {
 	// Delete Any Outgoing TXs.
 
-	prefixStoreOtx := prefix.NewStore(ctx.KVStore(k.StoreKey), types.OutgoingTxKeyPrefix(chainID))
+	prefixStoreOtx := prefix.NewStore(ctx.KVStore(k.StoreKey), types.OutgoingTxKeyPrefix())
 	iterOtx := prefixStoreOtx.ReverseIterator(nil, nil)
 	defer iterOtx.Close()
 	for ; iterOtx.Valid(); iterOtx.Next() {

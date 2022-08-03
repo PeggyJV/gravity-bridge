@@ -138,11 +138,11 @@ func MakeOutgoingTxKey(storeIndex []byte) []byte {
 }
 
 func OutgoingTxKeyPrefixWithPrefixByte(chainID uint32, prefix byte) []byte {
-	return bytes.Join([][]byte{OutgoingTxKeyPrefix(chainID), {prefix}}, []byte{})
+	return bytes.Join([][]byte{OutgoingTxKeyPrefix(), {prefix}, Uint32ToBigEndian(chainID)}, []byte{})
 }
 
-func OutgoingTxKeyPrefix(chainID uint32) []byte {
-	return bytes.Join([][]byte{{OutgoingTxKey}, Uint32ToBigEndian(chainID)}, []byte{})
+func OutgoingTxKeyPrefix() []byte {
+	return []byte{OutgoingTxKey}
 }
 
 //////////////////////
