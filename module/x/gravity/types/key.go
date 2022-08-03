@@ -19,7 +19,7 @@ const (
 	// RouterKey is the module name router key
 	RouterKey = ModuleName
 
-	// QuerierRoute to be used for querierer msgs
+	// QuerierRoute to be used for query msgs
 	QuerierRoute = ModuleName
 )
 
@@ -77,22 +77,21 @@ func Uint32ToBigEndian(i uint32) []byte {
 }
 
 // MakeOrchestratorValidatorAddressKey returns the following key format
-// prefix
-// [0xe8][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
+// [0x2][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
 func MakeOrchestratorValidatorAddressKey(orc sdk.AccAddress) []byte {
 	return bytes.Join([][]byte{{OrchestratorToValidatorAddressKey}, orc.Bytes()}, []byte{})
 }
 
 // MakeValidatorEVMAddressKey returns the following key format
-// prefix              cosmos-validator
-// [0x0][0001][cosmosvaloper1ahx7f8wyertuus9r20284ej0asrs085case3kn]
+// prefix chain  cosmos-validator
+// [0x1][0001][cosmosvaloper1ahx7f8wyertuus9r20284ej0asrs085case3kn]
 func MakeValidatorEVMAddressKey(validator sdk.ValAddress) []byte {
 	return bytes.Join([][]byte{{ValidatorToEVMAddressKey}, validator.Bytes()}, []byte{})
 }
 
 // MakeEVMOrchestratorAddressKey returns the following key format
-// prefix              cosmos-validator
-// [0x0][0001][cosmosvaloper1ahx7f8wyertuus9r20284ej0asrs085case3kn]
+// prefix chain  cosmos-validator
+// [0x3][0001][0xc783df8a850f42e7F7e57013759C285caa701eB6]
 func MakeEVMOrchestratorAddressKey(eth common.Address) []byte {
 	return bytes.Join([][]byte{{EVMToOrchestratorAddressKey}, eth.Bytes()}, []byte{})
 }
@@ -102,8 +101,8 @@ func MakeEVMOrchestratorAddressKey(eth common.Address) []byte {
 /////////////////////////
 
 // MakeEVMSignatureKeyForValidator returns the following key format
-// prefix   nonce                    validator-address
-// [0x0][0 0 0 0 0 0 0 1][][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
+// prefix chain  nonce                    validator-address
+// [0x4][0001][0 0 0 0 0 0 0 1][][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
 func MakeEVMSignatureKeyForValidator(storeIndex []byte, validator sdk.ValAddress) []byte {
 	return bytes.Join([][]byte{EVMSignatureKeyStoreIndexPrefix(storeIndex), validator.Bytes()}, []byte{})
 }
@@ -117,7 +116,7 @@ func EVMSignatureKeyPrefix() []byte {
 }
 
 /////////////////////////////////
-// Etheruem Event Vote Records //
+// Ethereum Event Vote Records //
 /////////////////////////////////
 
 func MakeEVMEventVoteRecordKey(chainID uint32, eventNonce uint64, claimHash []byte) []byte {
@@ -145,10 +144,13 @@ func OutgoingTxKeyPrefix() []byte {
 	return []byte{OutgoingTxKey}
 }
 
-//////////////////////
-// Send To Etheruem //
-//////////////////////
+/////////////////
+// Send To EVM //
+/////////////////
 
+// MakeSendToEVMKey returns the following key format
+// prefix chain           eth-contract-address            fee_amount        id
+// [0x7][0001][0xc783df8a850f42e7F7e57013759C285caa701eB6][1000000000][0 0 0 0 0 0 0 1]
 func MakeSendToEVMKey(chainID uint32) []byte {
 	return bytes.Join([][]byte{{SendToEVMKey}, Uint32ToBigEndian(chainID)}, []byte{})
 }
@@ -162,6 +164,10 @@ func MakeSendToEVMKeyForEvent(chainID uint32, id uint64, fee ERC20Token) []byte 
 	return bytes.Join([][]byte{MakeSendToEVMKeyForContract(chainID, common.HexToAddress(fee.Contract)), fee.Amount.BigInt().FillBytes(amount), sdk.Uint64ToBigEndian(id)}, []byte{})
 }
 
+// MakeLastEventNonceByValidatorKey indexes lateset event nonce by validator
+// MakeLastEventNonceByValidatorKey returns the following key format
+// prefix chain              cosmos-validator
+// [0x8][0001][cosmosvaloper1ahx7f8wyertuus9r20284ej0asrs085case3kn]
 func MakeLastEventNonceByValidatorKey(chainID uint32, validator sdk.ValAddress) []byte {
 	return bytes.Join([][]byte{{LastEventNonceByValidatorKey}, Uint32ToBigEndian(chainID), validator.Bytes()}, []byte{})
 }

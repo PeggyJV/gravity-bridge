@@ -118,6 +118,22 @@ const allowanceERC20ABIJSON = `
 ]
 `
 
+const stateLastValsetNonceABIJSON = `[
+	{
+		"inputs": [],
+		"name": "state_lastValsetNonce",
+		"outputs": [
+		  {
+			"internalType": "uint256",
+			"name": "",
+			"type": "uint256"
+		  }
+		],
+		"stateMutability": "view",
+		"type": "function"
+	  }
+]`
+
 func packCall(abiString, method string, args []interface{}) []byte {
 	encodedCall, err := abi.JSON(strings.NewReader(abiString))
 	if err != nil {
@@ -170,6 +186,10 @@ func PackAllowance(owner common.Address, spender common.Address) []byte {
 		owner,
 		spender,
 	})
+}
+
+func PackLastValsetNonce() []byte {
+	return packCall(stateLastValsetNonceABIJSON, "state_lastValsetNonce", []interface{}{})
 }
 
 func UnpackEthUInt(bz []byte) sdk.Int {

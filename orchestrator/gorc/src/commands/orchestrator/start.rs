@@ -102,22 +102,23 @@ impl Runnable for StartCommand {
 
                 let gas_price = config.cosmos.gas_price.as_tuple();
 
-                orchestrator_main_loop(
-                    cosmos_key,
-                    contact.clone(),
-                    eth_client,
-                    grpc.clone(),
-                    contract_address,
-                    gas_price,
-                    &config.metrics.listen_addr,
-                    config.ethereum.gas_price_multiplier,
-                    config.ethereum.blocks_to_search,
-                    config.cosmos.gas_adjustment,
-                    self.orchestrator_only,
-                    config.cosmos.msg_batch_size,
-                )
-                    .await;
-            }
+            orchestrator_main_loop(
+                cosmos_key,
+                contact.clone(),
+                eth_client,
+                grpc.clone(),
+                contract_address,
+                gas_price,
+                &config.metrics.listen_addr,
+                config.ethereum.gas_price_multiplier,
+                config.ethereum.gas_multiplier,
+                config.ethereum.blocks_to_search,
+                config.cosmos.gas_adjustment,
+                self.orchestrator_only,
+                config.cosmos.msg_batch_size,
+            )
+            .await;
+                }
         })
             .unwrap_or_else(|e| {
                 status_err!("executor exited with error: {}", e);

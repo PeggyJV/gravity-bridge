@@ -154,6 +154,10 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 				return errors.Wrap(err, "error creating tx builder")
 			}
 
+			if createValCfg.NodeID != "" && createValCfg.IP != "" {
+				txFactory = txFactory.WithMemo(fmt.Sprintf("%s@%s:26656", createValCfg.NodeID, createValCfg.IP))
+			}
+
 			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(key.GetAddress())
 
 			// The following line comes from a discrepancy between the `gentx`
