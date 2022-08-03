@@ -44,7 +44,7 @@ func TestBatches(t *testing.T) {
 	firstBatch := input.GravityKeeper.BuildBatchTx(ctx, types.EthereumChainID, myTokenContractAddr, 2)
 
 	// then batch is persisted
-	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, firstBatch.GetStoreIndex())
+	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, firstBatch.GetStoreIndex())
 	require.NotNil(t, gotFirstBatch)
 
 	gfb := gotFirstBatch.(*types.BatchTx)
@@ -103,7 +103,7 @@ func TestBatches(t *testing.T) {
 	input.GravityKeeper.batchTxExecuted(ctx, types.EthereumChainID, common.HexToAddress(secondBatch.TokenContract), secondBatch.BatchNonce)
 
 	// check batch has been deleted
-	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, secondBatch.GetStoreIndex())
+	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, secondBatch.GetStoreIndex())
 	require.Nil(t, gotSecondBatch)
 
 	// check that txs from first batch have been freed
@@ -163,7 +163,7 @@ func TestBatchesFullCoins(t *testing.T) {
 	firstBatch := input.GravityKeeper.BuildBatchTx(ctx, types.EthereumChainID, myTokenContractAddr, 2)
 
 	// then batch is persisted
-	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, firstBatch.GetStoreIndex())
+	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, firstBatch.GetStoreIndex())
 	require.NotNil(t, gotFirstBatch)
 
 	expFirstBatch := &types.BatchTx{
@@ -240,6 +240,7 @@ func TestBatchesFullCoins(t *testing.T) {
 				Sender:       mySender.String(),
 				EVMRecipient: myReceiver.Hex(),
 				Erc20Token:   types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(20)), myTokenContractAddr),
+				ChainId:      types.EthereumChainID,
 			},
 			{
 				Id:           4,
@@ -247,10 +248,12 @@ func TestBatchesFullCoins(t *testing.T) {
 				Sender:       mySender.String(),
 				EVMRecipient: myReceiver.Hex(),
 				Erc20Token:   types.NewSDKIntERC20Token(oneEth.Mul(sdk.NewIntFromUint64(10)), myTokenContractAddr),
+				ChainId:      types.EthereumChainID,
 			},
 		},
 		TokenContract: myTokenContractAddr.Hex(),
 		Height:        1234567,
+		ChainId:       types.EthereumChainID,
 	}
 
 	assert.Equal(t, expSecondBatch, secondBatch)
@@ -262,7 +265,7 @@ func TestBatchesFullCoins(t *testing.T) {
 	input.GravityKeeper.batchTxExecuted(ctx, types.EthereumChainID, common.HexToAddress(secondBatch.TokenContract), secondBatch.BatchNonce)
 
 	// check batch has been deleted
-	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, secondBatch.GetStoreIndex())
+	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, secondBatch.GetStoreIndex())
 	require.Nil(t, gotSecondBatch)
 
 	// check that txs from first batch have been freed
