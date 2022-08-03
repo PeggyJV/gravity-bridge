@@ -271,10 +271,11 @@ func TestKeeper_GetLatestSignerSetTx(t *testing.T) {
 		gk := env.GravityKeeper
 
 		{ // setup
-			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.SignerSetTx{
+			gk.SetOutgoingTx(ctx, &types.SignerSetTx{
 				Nonce:   gk.incrementLatestSignerSetTxNonce(ctx, types.EthereumChainID),
 				Height:  1,
 				Signers: nil,
+				ChainId: types.EthereumChainID,
 			})
 		}
 
@@ -302,10 +303,11 @@ func TestKeeper_GetSignerSetTxs(t *testing.T) {
 		gk := env.GravityKeeper
 
 		{ // setup
-			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.SignerSetTx{
+			gk.SetOutgoingTx(ctx, &types.SignerSetTx{
 				Nonce:   gk.incrementLatestSignerSetTxNonce(ctx, types.EthereumChainID),
 				Height:  1,
 				Signers: nil,
+				ChainId: types.EthereumChainID,
 			})
 		}
 
@@ -385,7 +387,7 @@ func TestKeeper_GetEVMSignatures(t *testing.T) {
 			types.MakeContractCallTxStoreIndex(types.EthereumChainID, nil, 0),
 		}
 		for _, storeIndex := range storeIndexes {
-			got := gk.GetEVMSignatures(ctx, types.EthereumChainID, storeIndex)
+			got := gk.GetEVMSignatures(ctx, storeIndex)
 			require.Empty(t, got)
 		}
 	})
@@ -406,8 +408,9 @@ func TestKeeper_GetEVMSignatures(t *testing.T) {
 				SignerSetNonce: signerSetNonce,
 				EVMSigner:      ethAddr.Hex(),
 				Signature:      []byte("fake-signature"),
+				ChainId:        types.EthereumChainID,
 			}
-			key := gk.SetEVMSignature(ctx, types.EthereumChainID, signerSetTxConfirmation, valAddr)
+			key := gk.SetEVMSignature(ctx, signerSetTxConfirmation, valAddr)
 			require.NotEmpty(t, key)
 		}
 
@@ -415,11 +418,11 @@ func TestKeeper_GetEVMSignatures(t *testing.T) {
 			storeIndex := types.MakeSignerSetTxStoreIndex(types.EthereumChainID, signerSetNonce)
 
 			{ // getEVMSignature
-				got := gk.getEVMSignature(ctx, types.EthereumChainID, storeIndex, valAddr)
+				got := gk.getEVMSignature(ctx, storeIndex, valAddr)
 				require.Equal(t, []byte("fake-signature"), got)
 			}
 			{ // GetEVMSignatures
-				got := gk.GetEVMSignatures(ctx, types.EthereumChainID, storeIndex)
+				got := gk.GetEVMSignatures(ctx, storeIndex)
 				require.Len(t, got, 1)
 			}
 		}
@@ -445,8 +448,9 @@ func TestKeeper_GetEVMSignatures(t *testing.T) {
 				BatchNonce:    batchNonce,
 				EVMSigner:     ethAddr.Hex(),
 				Signature:     []byte("fake-signature"),
+				ChainId:       types.EthereumChainID,
 			}
-			key := gk.SetEVMSignature(ctx, types.EthereumChainID, batchTxConfirmation, valAddr)
+			key := gk.SetEVMSignature(ctx, batchTxConfirmation, valAddr)
 			require.NotEmpty(t, key)
 		}
 
@@ -454,11 +458,11 @@ func TestKeeper_GetEVMSignatures(t *testing.T) {
 			storeIndex := types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(tokenContract), batchNonce)
 
 			{ // getEVMSignature
-				got := gk.getEVMSignature(ctx, types.EthereumChainID, storeIndex, valAddr)
+				got := gk.getEVMSignature(ctx, storeIndex, valAddr)
 				require.Equal(t, []byte("fake-signature"), got)
 			}
 			{ // GetEVMSignatures
-				got := gk.GetEVMSignatures(ctx, types.EthereumChainID, storeIndex)
+				got := gk.GetEVMSignatures(ctx, storeIndex)
 				require.Len(t, got, 1)
 			}
 		}
@@ -485,8 +489,9 @@ func TestKeeper_GetEVMSignatures(t *testing.T) {
 				InvalidationNonce: invalidationNonce,
 				EVMSigner:         ethAddr.Hex(),
 				Signature:         []byte("fake-signature"),
+				ChainId:           types.EthereumChainID,
 			}
-			key := gk.SetEVMSignature(ctx, types.EthereumChainID, contractCallConfirmation, valAddr)
+			key := gk.SetEVMSignature(ctx, contractCallConfirmation, valAddr)
 			require.NotEmpty(t, key)
 		}
 
@@ -494,11 +499,11 @@ func TestKeeper_GetEVMSignatures(t *testing.T) {
 			storeIndex := types.MakeContractCallTxStoreIndex(types.EthereumChainID, []byte(invalidationScope), invalidationNonce)
 
 			{ // getEVMSignature
-				got := gk.getEVMSignature(ctx, types.EthereumChainID, storeIndex, valAddr)
+				got := gk.getEVMSignature(ctx, storeIndex, valAddr)
 				require.Equal(t, []byte("fake-signature"), got)
 			}
 			{ // GetEVMSignatures
-				got := gk.GetEVMSignatures(ctx, types.EthereumChainID, storeIndex)
+				got := gk.GetEVMSignatures(ctx, storeIndex)
 				require.Len(t, got, 1)
 			}
 		}
@@ -579,7 +584,7 @@ func TestKeeper_Migration(t *testing.T) {
 	firstBatch := input.GravityKeeper.BuildBatchTx(ctx, types.EthereumChainID, myTokenContractAddr, 2)
 
 	// then batch is persisted
-	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, firstBatch.GetStoreIndex())
+	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, firstBatch.GetStoreIndex())
 	require.NotNil(t, gotFirstBatch)
 
 	gk.setEVMEventVoteRecord(ctx, types.EthereumChainID, stce.GetEventNonce(), stce.Hash(), evr)
@@ -604,8 +609,9 @@ func TestKeeper_Migration(t *testing.T) {
 			BatchNonce:    firstBatch.BatchNonce,
 			EVMSigner:     ethAddr.Hex(),
 			Signature:     []byte("fake-signature"),
+			ChainId:       types.EthereumChainID,
 		}
-		key := gk.SetEVMSignature(ctx, types.EthereumChainID, batchTxConfirmation, valAddr)
+		key := gk.SetEVMSignature(ctx, batchTxConfirmation, valAddr)
 		require.NotEmpty(t, key)
 	}
 
@@ -613,11 +619,11 @@ func TestKeeper_Migration(t *testing.T) {
 		storeIndex := gotFirstBatch.GetStoreIndex()
 
 		{ // getEVMSignature
-			got := gk.getEVMSignature(ctx, types.EthereumChainID, storeIndex, valAddr)
+			got := gk.getEVMSignature(ctx, storeIndex, valAddr)
 			require.Equal(t, []byte("fake-signature"), got)
 		}
 		{ // GetEVMSignatures
-			got := gk.GetEVMSignatures(ctx, types.EthereumChainID, storeIndex)
+			got := gk.GetEVMSignatures(ctx, storeIndex)
 			require.Len(t, got, 1)
 		}
 	}
@@ -629,6 +635,7 @@ func TestKeeper_Migration(t *testing.T) {
 		Nonce:   1,
 		Height:  1,
 		Signers: nil,
+		ChainId: types.EthereumChainID,
 	})
 
 	for _, val := range ValAddrs {
@@ -655,7 +662,7 @@ func TestKeeper_Migration(t *testing.T) {
 
 	{ // GetEVMSignatures
 		storeIndex := gotFirstBatch.GetStoreIndex()
-		got := gk.GetEVMSignatures(ctx, types.EthereumChainID, storeIndex)
+		got := gk.GetEVMSignatures(ctx, storeIndex)
 		require.Len(t, got, 0)
 	}
 

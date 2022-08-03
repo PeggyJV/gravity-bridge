@@ -581,6 +581,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, chainID uint32, invalidati
 		Tokens:            tokens,
 		Fees:              fees,
 		Height:            uint64(ctx.BlockHeight()),
+		ChainId:           chainID,
 	}
 
 	var tokenString []string
@@ -746,6 +747,7 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, chainID uint32, newBridg
 		Nonce:   0,
 		Height:  0,
 		Signers: nil,
+		ChainId: chainID,
 	})
 
 	// Set the batch Nonce to zero
