@@ -130,11 +130,11 @@ func (k msgServer) SubmitEVMTxConfirmation(c context.Context, msg *types.MsgSubm
 		return nil, err
 	}
 
-	otx := k.GetOutgoingTx(ctx, confirmation.GetStoreIndex(msg.ChainId))
+	otx := k.GetOutgoingTx(ctx, confirmation.GetStoreIndex())
 	if otx == nil {
 		k.Logger(ctx).Error(
 			"no outgoing tx",
-			"store index", fmt.Sprintf("%x", confirmation.GetStoreIndex(msg.ChainId)),
+			"store index", fmt.Sprintf("%x", confirmation.GetStoreIndex()),
 			"chain id", msg.ChainId,
 		)
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "couldn't find outgoing tx")
@@ -167,11 +167,11 @@ func (k msgServer) SubmitEVMTxConfirmation(c context.Context, msg *types.MsgSubm
 		))
 	}
 	// TODO: should validators be able to overwrite their signatures?
-	if k.getEVMSignature(ctx, msg.ChainId, confirmation.GetStoreIndex(msg.ChainId), val) != nil {
+	if k.getEVMSignature(ctx, confirmation.GetStoreIndex(), val) != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "signature duplicate")
 	}
 
-	key := k.SetEVMSignature(ctx, msg.ChainId, confirmation, val)
+	key := k.SetEVMSignature(ctx, confirmation, val)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

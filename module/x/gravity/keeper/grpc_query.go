@@ -25,7 +25,7 @@ func (k Keeper) LatestSignerSetTx(c context.Context, req *types.LatestSignerSetT
 	ctx := sdk.UnwrapSDKContext(c)
 
 	ss := k.GetLatestSignerSetTx(ctx, req.ChainId)
-	
+
 	return &types.SignerSetTxResponse{SignerSet: ss}, nil
 }
 
@@ -139,11 +139,12 @@ func (k Keeper) SignerSetTxConfirmations(c context.Context, req *types.SignerSet
 	key := types.MakeSignerSetTxStoreIndex(req.ChainId, req.SignerSetNonce)
 
 	var out []*types.SignerSetTxConfirmation
-	k.iterateEVMSignaturesByStoreIndex(ctx, req.ChainId, key, func(val sdk.ValAddress, sig []byte) bool {
+	k.iterateEVMSignaturesByStoreIndex(ctx, key, func(val sdk.ValAddress, sig []byte) bool {
 		out = append(out, &types.SignerSetTxConfirmation{
 			SignerSetNonce: req.SignerSetNonce,
 			EVMSigner:      k.GetValidatorEVMAddress(ctx, val).Hex(),
 			Signature:      sig,
+			ChainId:        req.ChainId,
 		})
 		return false
 	})
@@ -156,12 +157,13 @@ func (k Keeper) BatchTxConfirmations(c context.Context, req *types.BatchTxConfir
 	key := types.MakeBatchTxStoreIndex(req.ChainId, common.HexToAddress(req.TokenContract), req.BatchNonce)
 
 	var out []*types.BatchTxConfirmation
-	k.iterateEVMSignaturesByStoreIndex(ctx, req.ChainId, key, func(val sdk.ValAddress, sig []byte) bool {
+	k.iterateEVMSignaturesByStoreIndex(ctx, key, func(val sdk.ValAddress, sig []byte) bool {
 		out = append(out, &types.BatchTxConfirmation{
 			TokenContract: req.TokenContract,
 			BatchNonce:    req.BatchNonce,
 			EVMSigner:     k.GetValidatorEVMAddress(ctx, val).Hex(),
 			Signature:     sig,
+			ChainId:       req.ChainId,
 		})
 		return false
 	})
@@ -173,12 +175,13 @@ func (k Keeper) ContractCallTxConfirmations(c context.Context, req *types.Contra
 	key := types.MakeContractCallTxStoreIndex(req.ChainId, req.InvalidationScope, req.InvalidationNonce)
 
 	var out []*types.ContractCallTxConfirmation
-	k.iterateEVMSignaturesByStoreIndex(ctx, req.ChainId, key, func(val sdk.ValAddress, sig []byte) bool {
+	k.iterateEVMSignaturesByStoreIndex(ctx, key, func(val sdk.ValAddress, sig []byte) bool {
 		out = append(out, &types.ContractCallTxConfirmation{
 			InvalidationScope: req.InvalidationScope,
 			InvalidationNonce: req.InvalidationNonce,
 			EVMSigner:         k.GetValidatorEVMAddress(ctx, val).Hex(),
 			Signature:         sig,
+			ChainId:           req.ChainId,
 		})
 		return false
 	})
@@ -193,7 +196,7 @@ func (k Keeper) UnsignedSignerSetTxs(c context.Context, req *types.UnsignedSigne
 	}
 	var signerSets []*types.SignerSetTx
 	k.IterateOutgoingTxsByType(ctx, req.ChainId, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.getEVMSignature(ctx, req.ChainId, otx.GetStoreIndex(), val)
+		sig := k.getEVMSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 { // it's pending
 			signerSet, ok := otx.(*types.SignerSetTx)
 			if !ok {
@@ -214,7 +217,7 @@ func (k Keeper) UnsignedBatchTxs(c context.Context, req *types.UnsignedBatchTxsR
 	}
 	var batches []*types.BatchTx
 	k.IterateOutgoingTxsByType(ctx, req.ChainId, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.getEVMSignature(ctx, req.ChainId, otx.GetStoreIndex(), val)
+		sig := k.getEVMSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 { // it's pending
 			batch, ok := otx.(*types.BatchTx)
 			if !ok {
@@ -235,7 +238,7 @@ func (k Keeper) UnsignedContractCallTxs(c context.Context, req *types.UnsignedCo
 	}
 	var calls []*types.ContractCallTx
 	k.IterateOutgoingTxsByType(ctx, req.ChainId, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.getEVMSignature(ctx, req.ChainId, otx.GetStoreIndex(), val)
+		sig := k.getEVMSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 { // it's pending
 			call, ok := otx.(*types.ContractCallTx)
 			if !ok {

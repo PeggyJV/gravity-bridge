@@ -99,7 +99,7 @@ func initGenesisForChain(ctx sdk.Context, k Keeper, data types.EVMSpecificGenesi
 		// TODO: not currently an easy way to get the validator address from the
 		// evm address here. once we implement the third index for keys
 		// this will be easy.
-		k.SetEVMSignature(ctx, data.ChainID, conf, sdk.ValAddress{})
+		k.SetEVMSignature(ctx, conf, sdk.ValAddress{})
 	}
 }
 
@@ -141,7 +141,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 			ota, _ := types.PackOutgoingTx(otx)
 			outgoingTxs = append(outgoingTxs, ota)
 			sstx, _ := otx.(*types.SignerSetTx)
-			k.iterateEVMSignaturesByStoreIndex(ctx, chainID, sstx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
+			k.iterateEVMSignaturesByStoreIndex(ctx, sstx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
 				siga, _ := types.PackConfirmation(&types.SignerSetTxConfirmation{
 					SignerSetNonce: sstx.Nonce,
 					EVMSigner:      k.GetValidatorEVMAddress(ctx, val).Hex(),
@@ -159,7 +159,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 			ota, _ := types.PackOutgoingTx(otx)
 			outgoingTxs = append(outgoingTxs, ota)
 			btx, _ := otx.(*types.BatchTx)
-			k.iterateEVMSignaturesByStoreIndex(ctx, chainID, btx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
+			k.iterateEVMSignaturesByStoreIndex(ctx, btx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
 				siga, _ := types.PackConfirmation(&types.BatchTxConfirmation{
 					TokenContract: btx.TokenContract,
 					BatchNonce:    btx.BatchNonce,
@@ -178,7 +178,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) types.GenesisState {
 			ota, _ := types.PackOutgoingTx(otx)
 			outgoingTxs = append(outgoingTxs, ota)
 			cctx, _ := otx.(*types.ContractCallTx)
-			k.iterateEVMSignaturesByStoreIndex(ctx, chainID, cctx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
+			k.iterateEVMSignaturesByStoreIndex(ctx, cctx.GetStoreIndex(), func(val sdk.ValAddress, sig []byte) bool {
 				siga, _ := types.PackConfirmation(&types.ContractCallTxConfirmation{
 					InvalidationScope: cctx.InvalidationScope,
 					InvalidationNonce: cctx.InvalidationNonce,

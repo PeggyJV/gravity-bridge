@@ -13,7 +13,7 @@ type EVMTxConfirmation interface {
 
 	GetSigner() common.Address
 	GetSignature() []byte
-	GetStoreIndex(chainID uint32) []byte
+	GetStoreIndex() []byte
 	Validate() error
 }
 

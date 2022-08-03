@@ -122,21 +122,21 @@ func (k Keeper) GetLastUnbondingBlockHeight(ctx sdk.Context) uint64 {
 ///////////////////////////////
 
 // getEVMSignature returns a valset confirmation by a nonce and validator address
-func (k Keeper) getEVMSignature(ctx sdk.Context, chainID uint32, storeIndex []byte, validator sdk.ValAddress) []byte {
-	return ctx.KVStore(k.StoreKey).Get(types.MakeEVMSignatureKeyForValidator(chainID, storeIndex, validator))
+func (k Keeper) getEVMSignature(ctx sdk.Context, storeIndex []byte, validator sdk.ValAddress) []byte {
+	return ctx.KVStore(k.StoreKey).Get(types.MakeEVMSignatureKeyForValidator(storeIndex, validator))
 }
 
 // SetEVMSignature sets a valset confirmation
-func (k Keeper) SetEVMSignature(ctx sdk.Context, chainID uint32, sig types.EVMTxConfirmation, val sdk.ValAddress) []byte {
-	key := types.MakeEVMSignatureKeyForValidator(chainID, sig.GetStoreIndex(chainID), val)
+func (k Keeper) SetEVMSignature(ctx sdk.Context, sig types.EVMTxConfirmation, val sdk.ValAddress) []byte {
+	key := types.MakeEVMSignatureKeyForValidator(sig.GetStoreIndex(), val)
 	ctx.KVStore(k.StoreKey).Set(key, sig.GetSignature())
 	return key
 }
 
 // GetEVMSignatures returns all evm signatures for a given outgoing tx by store index
-func (k Keeper) GetEVMSignatures(ctx sdk.Context, chainID uint32, storeIndex []byte) map[string][]byte {
+func (k Keeper) GetEVMSignatures(ctx sdk.Context, storeIndex []byte) map[string][]byte {
 	var signatures = make(map[string][]byte)
-	k.iterateEVMSignaturesByStoreIndex(ctx, chainID, storeIndex, func(val sdk.ValAddress, h []byte) bool {
+	k.iterateEVMSignaturesByStoreIndex(ctx, storeIndex, func(val sdk.ValAddress, h []byte) bool {
 		signatures[val.String()] = h
 		return false
 	})
@@ -144,8 +144,8 @@ func (k Keeper) GetEVMSignatures(ctx sdk.Context, chainID uint32, storeIndex []b
 }
 
 // iterateEVMSignaturesByStoreIndex iterates through all valset confirms by nonce in ASC order
-func (k Keeper) iterateEVMSignaturesByStoreIndex(ctx sdk.Context, chainID uint32, storeIndex []byte, cb func(sdk.ValAddress, []byte) bool) {
-	prefixKey := types.EVMSignatureKeyStoreIndexPrefix(chainID, storeIndex)
+func (k Keeper) iterateEVMSignaturesByStoreIndex(ctx sdk.Context, storeIndex []byte, cb func(sdk.ValAddress, []byte) bool) {
+	prefixKey := types.EVMSignatureKeyStoreIndexPrefix(storeIndex)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.StoreKey), prefixKey)
 	iter := prefixStore.Iterator(nil, nil)
 	defer iter.Close()
@@ -695,7 +695,7 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, chainID uint32, newBridg
 			panic(err)
 		}
 		// Delete any partial Eth Signatures handging around
-		prefixStoreSig := prefix.NewStore(ctx.KVStore(k.StoreKey), types.EVMSignatureKeyStoreIndexPrefix(chainID, otx.GetStoreIndex()))
+		prefixStoreSig := prefix.NewStore(ctx.KVStore(k.StoreKey), types.EVMSignatureKeyStoreIndexPrefix(otx.GetStoreIndex()))
 		iterSig := prefixStoreSig.Iterator(nil, nil)
 		defer iterSig.Close()
 

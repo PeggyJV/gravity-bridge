@@ -82,12 +82,13 @@ func TestKeeper_BatchTx(t *testing.T) {
 		)
 
 		{ // setup
-			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.BatchTx{
+			gk.SetOutgoingTx(ctx, &types.BatchTx{
 				BatchNonce:    batchNonce,
 				Timeout:       1000,
 				Transactions:  nil,
 				TokenContract: tokenContract,
 				Height:        100,
+				ChainId:       types.EthereumChainID,
 			})
 		}
 		{ // validate
@@ -116,9 +117,10 @@ func TestKeeper_ContractCallTx(t *testing.T) {
 		)
 
 		{ // setup
-			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.ContractCallTx{
+			gk.SetOutgoingTx(ctx, &types.ContractCallTx{
 				InvalidationNonce: invalidationNonce,
 				InvalidationScope: bytes.HexBytes(invalidationScope),
+				ChainId:           types.EthereumChainID,
 			})
 		}
 		{ // validate
@@ -162,19 +164,21 @@ func TestKeeper_BatchTxs(t *testing.T) {
 		gk := env.GravityKeeper
 
 		{ // setup
-			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.BatchTx{
+			gk.SetOutgoingTx(ctx, &types.BatchTx{
 				BatchNonce:    1000,
 				Timeout:       1000,
 				Transactions:  nil,
 				TokenContract: "0x835973768750b3ED2D5c3EF5AdcD5eDb44d12aD4",
 				Height:        1000,
+				ChainId:       types.EthereumChainID,
 			})
-			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.BatchTx{
+			gk.SetOutgoingTx(ctx, &types.BatchTx{
 				BatchNonce:    1001,
 				Timeout:       1000,
 				Transactions:  nil,
 				TokenContract: "0x835973768750b3ED2D5c3EF5AdcD5eDb44d12aD4",
 				Height:        1001,
+				ChainId:       types.EthereumChainID,
 			})
 		}
 		{ // validate
@@ -194,14 +198,15 @@ func TestKeeper_ContractCallTxs(t *testing.T) {
 		gk := env.GravityKeeper
 
 		{ // setup
-			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.ContractCallTx{
+			gk.SetOutgoingTx(ctx, &types.ContractCallTx{
 				InvalidationNonce: 5,
 				InvalidationScope: []byte("an-invalidation-scope"),
-				// TODO
+				ChainId:           types.EthereumChainID,
 			})
-			gk.SetOutgoingTx(ctx, types.EthereumChainID, &types.ContractCallTx{
+			gk.SetOutgoingTx(ctx, &types.ContractCallTx{
 				InvalidationNonce: 6,
 				InvalidationScope: []byte("an-invalidation-scope"),
+				ChainId:           types.EthereumChainID,
 			})
 		}
 		{ // validate

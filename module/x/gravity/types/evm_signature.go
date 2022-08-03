@@ -33,16 +33,16 @@ func (u *BatchTxConfirmation) GetSigner() common.Address {
 // GetStoreIndex //
 ///////////////////
 
-func (sstx *SignerSetTxConfirmation) GetStoreIndex(chainID uint32) []byte {
-	return MakeSignerSetTxStoreIndex(chainID, sstx.SignerSetNonce)
+func (sstx *SignerSetTxConfirmation) GetStoreIndex() []byte {
+	return MakeSignerSetTxStoreIndex(sstx.ChainId, sstx.SignerSetNonce)
 }
 
-func (btx *BatchTxConfirmation) GetStoreIndex(chainID uint32) []byte {
-	return MakeBatchTxStoreIndex(chainID, common.HexToAddress(btx.TokenContract), btx.BatchNonce)
+func (btx *BatchTxConfirmation) GetStoreIndex() []byte {
+	return MakeBatchTxStoreIndex(btx.ChainId, common.HexToAddress(btx.TokenContract), btx.BatchNonce)
 }
 
-func (cctx *ContractCallTxConfirmation) GetStoreIndex(chainID uint32) []byte {
-	return MakeContractCallTxStoreIndex(chainID, cctx.InvalidationScope, cctx.InvalidationNonce)
+func (cctx *ContractCallTxConfirmation) GetStoreIndex() []byte {
+	return MakeContractCallTxStoreIndex(cctx.ChainId, cctx.InvalidationScope, cctx.InvalidationNonce)
 }
 
 //////////////

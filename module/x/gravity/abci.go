@@ -336,7 +336,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 
 	for _, otx := range usotxs {
 		// SLASH BONDED VALIDATORS who didn't sign batch txs
-		signatures := k.GetEVMSignatures(ctx, chainID, otx.GetStoreIndex())
+		signatures := k.GetEVMSignatures(ctx, otx.GetStoreIndex())
 		for _, valInfo := range valInfos {
 			// Don't slash validators who joined after outgoingtx is created
 			if valInfo.exist && valInfo.sigs.StartHeight < int64(otx.GetCosmosHeight()) {

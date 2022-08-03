@@ -174,7 +174,7 @@ func migrateEVMSignatures(ctx sdk.Context, newK *NewKeeper) {
 
 	for i, key := range evmSignatureKeys {
 		store.Delete(key)
-		newKey := bytes.Join([][]byte{types.EVMSignatureKeyPrefix(types.EthereumChainID), key[:1]}, []byte{})
+		newKey := bytes.Join([][]byte{types.EVMSignatureKeyPrefix(), key[:1]}, []byte{})
 		store.Set(newKey, evmSignatureValues[i])
 	}
 }

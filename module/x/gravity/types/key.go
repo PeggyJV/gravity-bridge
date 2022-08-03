@@ -98,22 +98,22 @@ func MakeEVMOrchestratorAddressKey(eth common.Address) []byte {
 }
 
 /////////////////////////
-// Etheruem Signatures //
+// Ethereum Signatures //
 /////////////////////////
 
 // MakeEVMSignatureKeyForValidator returns the following key format
 // prefix   nonce                    validator-address
-// [0x0][0001][0 0 0 0 0 0 0 1][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
-func MakeEVMSignatureKeyForValidator(chainID uint32, storeIndex []byte, validator sdk.ValAddress) []byte {
-	return bytes.Join([][]byte{EVMSignatureKeyPrefix(chainID), storeIndex, validator.Bytes()}, []byte{})
+// [0x0][0 0 0 0 0 0 0 1][][cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn]
+func MakeEVMSignatureKeyForValidator(storeIndex []byte, validator sdk.ValAddress) []byte {
+	return bytes.Join([][]byte{EVMSignatureKeyStoreIndexPrefix(storeIndex), validator.Bytes()}, []byte{})
 }
 
-func EVMSignatureKeyStoreIndexPrefix(chainID uint32, storeIndex []byte) []byte {
-	return bytes.Join([][]byte{EVMSignatureKeyPrefix(chainID), storeIndex}, []byte{})
+func EVMSignatureKeyStoreIndexPrefix(storeIndex []byte) []byte {
+	return bytes.Join([][]byte{EVMSignatureKeyPrefix(), storeIndex}, []byte{})
 }
 
-func EVMSignatureKeyPrefix(chainID uint32) []byte {
-	return bytes.Join([][]byte{{EVMSignatureKey}, Uint32ToBigEndian(chainID)}, []byte{})
+func EVMSignatureKeyPrefix() []byte {
+	return []byte{EVMSignatureKey}
 }
 
 /////////////////////////////////
