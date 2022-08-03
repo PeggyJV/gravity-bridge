@@ -26,7 +26,9 @@ func TestKeeper_LatestSignerSetTx(t *testing.T) {
 		ctx := env.Context
 		gk := env.GravityKeeper
 
-		req := &types.LatestSignerSetTxRequest{}
+		req := &types.LatestSignerSetTxRequest{
+			ChainId: types.EthereumChainID,
+		}
 		res, err := gk.LatestSignerSetTx(sdk.WrapSDKContext(ctx), req)
 		require.Error(t, err)
 		require.Nil(t, res)
@@ -40,7 +42,9 @@ func TestKeeper_LatestSignerSetTx(t *testing.T) {
 			require.NotNil(t, sstx)
 		}
 		{ // validate
-			req := &types.LatestSignerSetTxRequest{}
+			req := &types.LatestSignerSetTxRequest{
+				ChainId: types.EthereumChainID,
+			}
 			res, err := gk.LatestSignerSetTx(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, res)
@@ -61,7 +65,10 @@ func TestKeeper_SignerSetTx(t *testing.T) {
 			signerSetNonce = sstx.Nonce
 		}
 		{ // validate
-			req := &types.SignerSetTxRequest{SignerSetNonce: signerSetNonce}
+			req := &types.SignerSetTxRequest{
+				SignerSetNonce: signerSetNonce,
+				ChainId:        types.EthereumChainID,
+			}
 			res, err := gk.SignerSetTx(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, res)
@@ -95,6 +102,7 @@ func TestKeeper_BatchTx(t *testing.T) {
 			req := &types.BatchTxRequest{
 				BatchNonce:    batchNonce,
 				TokenContract: tokenContract,
+				ChainId:       types.EthereumChainID,
 			}
 
 			res, err := gk.BatchTx(sdk.WrapSDKContext(ctx), req)
@@ -127,6 +135,7 @@ func TestKeeper_ContractCallTx(t *testing.T) {
 			req := &types.ContractCallTxRequest{
 				InvalidationNonce: invalidationNonce,
 				InvalidationScope: bytes.HexBytes(invalidationScope),
+				ChainId:           types.EthereumChainID,
 			}
 
 			res, err := gk.ContractCallTx(sdk.WrapSDKContext(ctx), req)
@@ -148,7 +157,9 @@ func TestKeeper_SignerSetTxs(t *testing.T) {
 			require.NotNil(t, gk.CreateSignerSetTx(env.Context, types.EthereumChainID))
 		}
 		{ // validate
-			req := &types.SignerSetTxsRequest{}
+			req := &types.SignerSetTxsRequest{
+				ChainId: types.EthereumChainID,
+			}
 			res, err := gk.SignerSetTxs(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, res)
@@ -182,7 +193,9 @@ func TestKeeper_BatchTxs(t *testing.T) {
 			})
 		}
 		{ // validate
-			req := &types.BatchTxsRequest{}
+			req := &types.BatchTxsRequest{
+				ChainId: types.EthereumChainID,
+			}
 			got, err := gk.BatchTxs(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, got)
@@ -210,7 +223,9 @@ func TestKeeper_ContractCallTxs(t *testing.T) {
 			})
 		}
 		{ // validate
-			req := &types.ContractCallTxsRequest{}
+			req := &types.ContractCallTxsRequest{
+				ChainId: types.EthereumChainID,
+			}
 			got, err := gk.ContractCallTxs(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, got)

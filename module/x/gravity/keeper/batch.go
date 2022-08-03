@@ -103,7 +103,7 @@ func (k Keeper) getBatchFeesByTokenType(ctx sdk.Context, chainID uint32, tokenCo
 func (k Keeper) CancelBatchTx(ctx sdk.Context, chainID uint32, batch *types.BatchTx) {
 	// free transactions from batch and reindex them
 	for _, tx := range batch.Transactions {
-		k.setUnbatchedSendToEVM(ctx, chainID, tx)
+		k.setUnbatchedSendToEVM(ctx, tx)
 	}
 
 	// Delete batch since it is finished

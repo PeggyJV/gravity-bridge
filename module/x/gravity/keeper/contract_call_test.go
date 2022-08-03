@@ -56,28 +56,28 @@ func TestContractCallTxExecuted(t *testing.T) {
 		erc20Tokens,
 	)
 
-	cctx1 := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeContractCallTxStoreIndex(types.EthereumChainID, scope, nonce1)).(*types.ContractCallTx)
+	cctx1 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeContractCallTxStoreIndex(types.EthereumChainID, scope, nonce1)).(*types.ContractCallTx)
 	assert.Equal(t, scope, cctx1.InvalidationScope)
 	assert.Equal(t, nonce1, cctx1.InvalidationNonce)
 	assert.Equal(t, contract.Hex(), cctx1.Address)
 	assert.Equal(t, payload, cctx1.Payload)
 	assert.Equal(t, erc20Tokens, cctx1.Tokens)
 	assert.Equal(t, erc20Tokens, cctx1.Fees)
-	assert.Equal(t, types.EthereumChainID, cctx1.ChainId)
+	assert.Equal(t, uint32(types.EthereumChainID), cctx1.ChainId)
 
-	cctx2 := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeContractCallTxStoreIndex(types.EthereumChainID, scope, nonce2)).(*types.ContractCallTx)
+	cctx2 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeContractCallTxStoreIndex(types.EthereumChainID, scope, nonce2)).(*types.ContractCallTx)
 	assert.Equal(t, scope, cctx2.InvalidationScope)
 	assert.Equal(t, nonce2, cctx2.InvalidationNonce)
 	assert.Equal(t, contract.Hex(), cctx2.Address)
 	assert.Equal(t, payload, cctx2.Payload)
 	assert.Equal(t, erc20Tokens, cctx2.Tokens)
 	assert.Equal(t, erc20Tokens, cctx2.Fees)
-	assert.Equal(t, types.EthereumChainID, cctx2.ChainId)
+	assert.Equal(t, uint32(types.EthereumChainID), cctx2.ChainId)
 
 	input.GravityKeeper.contractCallExecuted(ctx, types.EthereumChainID, scope, nonce2)
 
-	otx1 := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeContractCallTxStoreIndex(types.EthereumChainID, scope, nonce1))
-	otx2 := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeContractCallTxStoreIndex(types.EthereumChainID, scope, nonce2))
+	otx1 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeContractCallTxStoreIndex(types.EthereumChainID, scope, nonce1))
+	otx2 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeContractCallTxStoreIndex(types.EthereumChainID, scope, nonce2))
 
 	assert.Nil(t, otx1)
 	assert.Nil(t, otx2)

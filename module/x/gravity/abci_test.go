@@ -22,7 +22,7 @@ func TestSignerSetTxCreationIfNotAvailable(t *testing.T) {
 
 	// BeginBlocker should set a new validator set if not available
 	gravity.BeginBlocker(ctx, gravityKeeper)
-	otx := gravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeSignerSetTxStoreIndex(types.EthereumChainID, 1))
+	otx := gravityKeeper.GetOutgoingTx(ctx, types.MakeSignerSetTxStoreIndex(types.EthereumChainID, 1))
 	require.NotNil(t, otx)
 	_, ok := otx.(*types.SignerSetTx)
 	require.True(t, ok)
@@ -57,7 +57,7 @@ func TestSignerSetTxSlashing_SignerSetTxCreated_Before_ValidatorBonded(t *testin
 	signerSet := pk.CreateSignerSetTx(ctx, types.EthereumChainID)
 	height := uint64(ctx.BlockHeight()) - (chainParams.SignedSignerSetTxsWindow + 1)
 	signerSet.Height = height
-	pk.SetOutgoingTx(ctx, types.EthereumChainID, signerSet)
+	pk.SetOutgoingTx(ctx, signerSet)
 
 	gravity.EndBlocker(ctx, pk)
 
@@ -77,13 +77,13 @@ func TestSignerSetTxSlashing_SignerSetTxCreated_After_ValidatorBonded(t *testing
 	signerSet := pk.CreateSignerSetTx(ctx, types.EthereumChainID)
 	height := uint64(ctx.BlockHeight()) - (chainParams.SignedSignerSetTxsWindow + 1)
 	signerSet.Height = height
-	pk.SetOutgoingTx(ctx, types.EthereumChainID, signerSet)
+	pk.SetOutgoingTx(ctx, signerSet)
 
 	for i, val := range keeper.ValAddrs {
 		if i == 0 {
 			continue
 		}
-		pk.SetEVMSignature(ctx, types.EthereumChainID, &types.SignerSetTxConfirmation{ChainId: types.EthereumChainID, SignerSetNonce: signerSet.Nonce, EVMSigner: keeper.AccAddrs[i].String(), Signature: []byte("dummysig")}, val)
+		pk.SetEVMSignature(ctx, &types.SignerSetTxConfirmation{ChainId: types.EthereumChainID, SignerSetNonce: signerSet.Nonce, EVMSigner: keeper.AccAddrs[i].String(), Signature: []byte("dummysig")}, val)
 	}
 
 	gravity.EndBlocker(ctx, pk)
@@ -125,7 +125,7 @@ func TestSignerSetTxSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testi
 	vs := gravityKeeper.CreateSignerSetTx(ctx, types.EthereumChainID)
 	vs.Height = uint64(signerSetTxHeight)
 	vs.Nonce = uint64(signerSetTxHeight)
-	gravityKeeper.SetOutgoingTx(ctx, types.EthereumChainID, vs)
+	gravityKeeper.SetOutgoingTx(ctx, vs)
 
 	// Start Unbonding validators
 	// Validator-1  Unbond slash window is not expired. if not attested, slash
@@ -142,7 +142,7 @@ func TestSignerSetTxSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testi
 			// don't sign with first validator
 			continue
 		}
-		gravityKeeper.SetEVMSignature(ctx, types.EthereumChainID, &types.SignerSetTxConfirmation{SignerSetNonce: vs.Nonce, EVMSigner: keeper.EthAddrs[i].Hex(), Signature: []byte("dummySig"), ChainId: types.EthereumChainID}, val)
+		gravityKeeper.SetEVMSignature(ctx, &types.SignerSetTxConfirmation{SignerSetNonce: vs.Nonce, EVMSigner: keeper.EthAddrs[i].Hex(), Signature: []byte("dummySig"), ChainId: types.EthereumChainID}, val)
 	}
 	staking.EndBlocker(input.Context, input.StakingKeeper)
 
@@ -175,7 +175,7 @@ func TestBatchSlashing(t *testing.T) {
 		TokenContract: keeper.TokenContractAddrs[0],
 		Height:        uint64(ctx.BlockHeight() - int64(chainParams.SignedBatchesWindow+1)),
 	}
-	gravityKeeper.SetOutgoingTx(ctx, types.EthereumChainID, batch)
+	gravityKeeper.SetOutgoingTx(ctx, batch)
 
 	for i, val := range keeper.ValAddrs {
 		if i == 0 {
@@ -190,11 +190,12 @@ func TestBatchSlashing(t *testing.T) {
 			input.SlashingKeeper.SetValidatorSigningInfo(ctx, valConsAddr, valSigningInfo)
 			continue
 		}
-		gravityKeeper.SetEVMSignature(ctx, types.EthereumChainID, &types.BatchTxConfirmation{
+		gravityKeeper.SetEVMSignature(ctx, &types.BatchTxConfirmation{
 			BatchNonce:    batch.BatchNonce,
 			TokenContract: keeper.TokenContractAddrs[0],
 			EVMSigner:     keeper.EthAddrs[i].String(),
 			Signature:     []byte("dummysig"),
+			ChainId:       types.EthereumChainID,
 		}, val)
 	}
 
@@ -219,11 +220,11 @@ func TestSignerSetTxEmission(t *testing.T) {
 	delta := float64(types.EVMSigners(sstx.Signers).TotalPower()) * 0.05
 	sstx.Signers[0].Power = uint64(float64(sstx.Signers[0].Power) - delta/2)
 	sstx.Signers[1].Power = uint64(float64(sstx.Signers[1].Power) + delta/2)
-	gravityKeeper.SetOutgoingTx(ctx, types.EthereumChainID, sstx)
+	gravityKeeper.SetOutgoingTx(ctx, sstx)
 
 	// BeginBlocker should set a new validator set
 	gravity.BeginBlocker(ctx, gravityKeeper)
-	require.NotNil(t, gravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeSignerSetTxStoreIndex(types.EthereumChainID, 2)))
+	require.NotNil(t, gravityKeeper.GetOutgoingTx(ctx, types.MakeSignerSetTxStoreIndex(types.EthereumChainID, 2)))
 	require.EqualValues(t, 2, len(gravityKeeper.GetSignerSetTxs(ctx, types.EthereumChainID)))
 }
 
@@ -258,7 +259,7 @@ func TestBatchTxTimeout(t *testing.T) {
 	require.NoError(t, fundAccount(ctx, input.BankKeeper, mySender, allVouchers))
 
 	// add some TX to the pool
-	input.AddSendToEthTxsToPool(t, ctx, myTokenContractAddr, mySender, myReceiver, 2, 3, 2, 1, 5, 6)
+	input.AddSendToEVMTxsToPool(t, ctx, myTokenContractAddr, mySender, myReceiver, 2, 3, 2, 1, 5, 6)
 
 	// when
 	ctx = ctx.WithBlockTime(now).WithBlockHeight(250)
@@ -274,9 +275,9 @@ func TestBatchTxTimeout(t *testing.T) {
 	require.Equal(t, b2.Timeout, uint64(504))
 
 	// make sure the batches got stored in the first place
-	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b1.TokenContract), b1.BatchNonce))
+	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b1.TokenContract), b1.BatchNonce))
 	require.NotNil(t, gotFirstBatch)
-	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b2.TokenContract), b2.BatchNonce))
+	gotSecondBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b2.TokenContract), b2.BatchNonce))
 	require.NotNil(t, gotSecondBatch)
 
 	// when, way into the future
@@ -287,24 +288,24 @@ func TestBatchTxTimeout(t *testing.T) {
 	gravity.BeginBlocker(ctx, gravityKeeper)
 
 	// this had a timeout of zero should be deleted.
-	gotFirstBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b1.TokenContract), b1.BatchNonce))
+	gotFirstBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b1.TokenContract), b1.BatchNonce))
 	require.Nil(t, gotFirstBatch)
 	// make sure the end blocker does not delete these, as the block height has not officially
 	// been updated by a relay event
-	gotSecondBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b2.TokenContract), b2.BatchNonce))
+	gotSecondBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b2.TokenContract), b2.BatchNonce))
 	require.NotNil(t, gotSecondBatch)
-	gotThirdBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b3.TokenContract), b3.BatchNonce))
+	gotThirdBatch := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b3.TokenContract), b3.BatchNonce))
 	require.NotNil(t, gotThirdBatch)
 
 	gravityKeeper.SetLastObservedEVMBlockHeight(ctx, types.EthereumChainID, 5000)
 	gravity.BeginBlocker(ctx, gravityKeeper)
 
 	// make sure the end blocker does delete these, as we've got a new Ethereum block height
-	gotFirstBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b1.TokenContract), b1.BatchNonce))
+	gotFirstBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b1.TokenContract), b1.BatchNonce))
 	require.Nil(t, gotFirstBatch)
-	gotSecondBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b2.TokenContract), b2.BatchNonce))
+	gotSecondBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b2.TokenContract), b2.BatchNonce))
 	require.Nil(t, gotSecondBatch)
-	gotThirdBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.EthereumChainID, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b3.TokenContract), b3.BatchNonce))
+	gotThirdBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(b3.TokenContract), b3.BatchNonce))
 	require.NotNil(t, gotThirdBatch)
 }
 

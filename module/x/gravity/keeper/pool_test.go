@@ -28,7 +28,7 @@ func TestAddToOutgoingPool(t *testing.T) {
 	require.NoError(t, fundAccount(ctx, input.BankKeeper, mySender, allVouchers))
 
 	// when
-	input.AddSendToEthTxsToPool(t, ctx, myTokenContractAddr, mySender, myReceiver, 2, 3, 2, 1)
+	input.AddSendToEVMTxsToPool(t, ctx, myTokenContractAddr, mySender, myReceiver, 2, 3, 2, 1)
 
 	// then
 	var got []*types.SendToEVM

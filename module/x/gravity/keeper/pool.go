@@ -55,12 +55,13 @@ func (k Keeper) createSendToEVM(ctx sdk.Context, chainID uint32, sender sdk.AccA
 	// rather than the denom that is the input to this function.
 
 	// set the outgoing tx in the pool index
-	k.setUnbatchedSendToEVM(ctx, chainID, &types.SendToEVM{
+	k.setUnbatchedSendToEVM(ctx, &types.SendToEVM{
 		Id:           nextID,
 		Sender:       sender.String(),
 		EVMRecipient: counterpartReceiver,
 		Erc20Token:   types.NewSDKIntERC20Token(amount.Amount, tokenContract),
 		Erc20Fee:     types.NewSDKIntERC20Token(fee.Amount, tokenContract),
+		ChainId:      chainID,
 	})
 
 	return nextID, nil
@@ -107,8 +108,8 @@ func (k Keeper) cancelSendToEVM(ctx sdk.Context, chainID uint32, id uint64, s st
 	return nil
 }
 
-func (k Keeper) setUnbatchedSendToEVM(ctx sdk.Context, chainID uint32, ste *types.SendToEVM) {
-	ctx.KVStore(k.StoreKey).Set(types.MakeSendToEVMKeyForEvent(chainID, ste.Id, ste.Erc20Fee), k.Cdc.MustMarshal(ste))
+func (k Keeper) setUnbatchedSendToEVM(ctx sdk.Context, ste *types.SendToEVM) {
+	ctx.KVStore(k.StoreKey).Set(types.MakeSendToEVMKeyForEvent(ste.ChainId, ste.Id, ste.Erc20Fee), k.Cdc.MustMarshal(ste))
 }
 
 func (k Keeper) deleteUnbatchedSendToEVM(ctx sdk.Context, chainID uint32, id uint64, fee types.ERC20Token) {

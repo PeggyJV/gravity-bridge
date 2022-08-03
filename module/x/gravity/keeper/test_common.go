@@ -214,7 +214,7 @@ type TestInput struct {
 	GravityStoreKey *sdk.KVStoreKey
 }
 
-func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, tokenContract gethcommon.Address, sender sdk.AccAddress, receiver gethcommon.Address, ids ...uint64) {
+func (input TestInput) AddSendToEVMTxsToPool(t *testing.T, ctx sdk.Context, tokenContract gethcommon.Address, sender sdk.AccAddress, receiver gethcommon.Address, ids ...uint64) {
 	for i, id := range ids {
 		amount := types.NewERC20Token(uint64(i+100), tokenContract).GravityCoin()
 		fee := types.NewERC20Token(id, tokenContract).GravityCoin()

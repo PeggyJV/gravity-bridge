@@ -59,6 +59,7 @@ func TestMsgServer_SubmitEVMSignature(t *testing.T) {
 		SignerSetNonce: signerSetTx.Nonce,
 		EVMSigner:      ethAddr1.Hex(),
 		Signature:      signature,
+		ChainId:        types.EthereumChainID,
 	}
 
 	confirmation, err := types.PackConfirmation(signerSetTxConfirmation)
@@ -69,6 +70,7 @@ func TestMsgServer_SubmitEVMSignature(t *testing.T) {
 	msg := &types.MsgSubmitEVMTxConfirmation{
 		Confirmation: confirmation,
 		Signer:       orcAddr1.String(),
+		ChainId:      types.EthereumChainID,
 	}
 
 	_, err = msgServer.SubmitEVMTxConfirmation(sdk.WrapSDKContext(ctx), msg)
@@ -134,6 +136,7 @@ func TestMsgServer_SendToEVM(t *testing.T) {
 		EVMRecipient: ethAddr1.String(),
 		Amount:       amount,
 		BridgeFee:    fee,
+		ChainId:      types.EthereumChainID,
 	}
 
 	_, err = msgServer.SendToEVM(sdk.WrapSDKContext(ctx), msg)
@@ -199,14 +202,16 @@ func TestMsgServer_CancelSendToEVM(t *testing.T) {
 		EVMRecipient: ethAddr1.String(),
 		Amount:       amount,
 		BridgeFee:    fee,
+		ChainId:      types.EthereumChainID,
 	}
 
 	response, err := msgServer.SendToEVM(sdk.WrapSDKContext(ctx), msg)
 	require.NoError(t, err)
 
 	cancelMsg := &types.MsgCancelSendToEVM{
-		Id:     response.Id,
-		Sender: orcAddr1.String(),
+		Id:      response.Id,
+		Sender:  orcAddr1.String(),
+		ChainId: types.EthereumChainID,
 	}
 
 	_, err = msgServer.CancelSendToEVM(sdk.WrapSDKContext(ctx), cancelMsg)
@@ -272,14 +277,16 @@ func TestMsgServer_RequestBatchTx(t *testing.T) {
 		EVMRecipient: ethAddr1.String(),
 		Amount:       amount,
 		BridgeFee:    fee,
+		ChainId:      types.EthereumChainID,
 	}
 
 	_, err = msgServer.SendToEVM(sdk.WrapSDKContext(ctx), msg)
 	require.NoError(t, err)
 
 	requestMsg := &types.MsgRequestBatchTx{
-		Signer: orcAddr1.String(),
-		Denom:  testDenom,
+		Signer:  orcAddr1.String(),
+		Denom:   testDenom,
+		ChainId: types.EthereumChainID,
 	}
 
 	_, err = msgServer.RequestBatchTx(sdk.WrapSDKContext(ctx), requestMsg)
@@ -316,8 +323,9 @@ func TestMsgServer_RequestEmptyBatchTx(t *testing.T) {
 	msgServer := NewMsgServerImpl(gk)
 
 	msg := &types.MsgRequestBatchTx{
-		Signer: orcAddr1.String(),
-		Denom:  testDenom,
+		Signer:  orcAddr1.String(),
+		Denom:   testDenom,
+		ChainId: types.EthereumChainID,
 	}
 
 	_, err := msgServer.RequestBatchTx(sdk.WrapSDKContext(ctx), msg)
@@ -364,6 +372,7 @@ func TestMsgServer_SubmitEVMEvent(t *testing.T) {
 		EVMSender:      ethAddr1.String(),
 		CosmosReceiver: orcAddr1.String(),
 		EVMHeight:      200,
+		ChainId:        types.EthereumChainID,
 	}
 
 	event, err := types.PackEvent(sendToCosmosEvent)
@@ -372,8 +381,9 @@ func TestMsgServer_SubmitEVMEvent(t *testing.T) {
 	msgServer := NewMsgServerImpl(gk)
 
 	msg := &types.MsgSubmitEVMEvent{
-		Event:  event,
-		Signer: orcAddr1.String(),
+		Event:   event,
+		Signer:  orcAddr1.String(),
+		ChainId: types.EthereumChainID,
 	}
 
 	_, err = msgServer.SubmitEVMEvent(sdk.WrapSDKContext(ctx), msg)
@@ -453,6 +463,7 @@ func TestMsgServer_SubmitEVMHeightVote(t *testing.T) {
 	msg := &types.MsgEVMHeightVote{
 		EvmHeight: 5,
 		Signer:    orcAddr1.String(),
+		ChainId:   types.EthereumChainID,
 	}
 
 	_, err := msgServer.SubmitEVMHeightVote(sdk.WrapSDKContext(ctx), msg)

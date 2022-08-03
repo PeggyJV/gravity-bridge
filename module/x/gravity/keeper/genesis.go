@@ -43,7 +43,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 func initGenesisForChain(ctx sdk.Context, k Keeper, data types.EVMSpecificGenesisState) {
 	// reset pool transactions in state
 	for _, tx := range data.UnbatchedSendToEvmTxs {
-		k.setUnbatchedSendToEVM(ctx, data.ChainID, tx)
+		k.setUnbatchedSendToEVM(ctx, tx)
 	}
 
 	// reset evm event vote records in state

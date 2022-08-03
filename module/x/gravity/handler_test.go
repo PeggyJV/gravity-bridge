@@ -46,7 +46,9 @@ func TestHandleMsgSendToEVM(t *testing.T) {
 		Sender:       userCosmosAddr.String(),
 		EVMRecipient: ethDestination,
 		Amount:       sendingCoin,
-		BridgeFee:    feeCoin}
+		BridgeFee:    feeCoin,
+		ChainId:      types.EthereumChainID,
+	}
 	ctx = ctx.WithBlockTime(blockTime).WithBlockHeight(blockHeight)
 	_, err := h(ctx, msg) // send 55
 	require.NoError(t, err)
@@ -58,7 +60,9 @@ func TestHandleMsgSendToEVM(t *testing.T) {
 		Sender:       userCosmosAddr.String(),
 		EVMRecipient: ethDestination,
 		Amount:       sendingCoin,
-		BridgeFee:    feeCoin}
+		BridgeFee:    feeCoin,
+		ChainId:      types.EthereumChainID,
+	}
 	ctx = ctx.WithBlockTime(blockTime).WithBlockHeight(blockHeight)
 	_, err1 := h(ctx, msg1) // send 55
 	require.NoError(t, err1)
@@ -71,7 +75,9 @@ func TestHandleMsgSendToEVM(t *testing.T) {
 		Sender:       userCosmosAddr.String(),
 		EVMRecipient: ethDestination,
 		Amount:       sendingCoin,
-		BridgeFee:    feeCoin}
+		BridgeFee:    feeCoin,
+		ChainId:      types.EthereumChainID,
+	}
 	ctx = ctx.WithBlockTime(blockTime).WithBlockHeight(blockHeight)
 	_, err2 := h(ctx, msg2) // send 55
 	require.Error(t, err2)
@@ -111,6 +117,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		Amount:         myErc20.Amount,
 		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
+		ChainId:        types.EthereumChainID,
 	}
 
 	eva, err := types.PackEvent(sendToCosmosEvent)
@@ -153,6 +160,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		Amount:         myErc20.Amount,
 		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
+		ChainId:        types.EthereumChainID,
 	}
 
 	eva, err = types.PackEvent(sendToCosmosEvent)
@@ -181,12 +189,16 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		Amount:         myErc20.Amount,
 		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
+		ChainId:        types.EthereumChainID,
 	}
 
 	eva, err = types.PackEvent(sendToCosmosEvent)
 	require.NoError(t, err)
 
-	msgSubmitEvent = &types.MsgSubmitEVMEvent{Event: eva, Signer: myOrchestratorAddr.String()}
+	msgSubmitEvent = &types.MsgSubmitEVMEvent{
+		Event: eva, Signer: myOrchestratorAddr.String(),
+		ChainId: types.EthereumChainID,
+	}
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
 	_, err = h(ctx, msgSubmitEvent)
@@ -232,6 +244,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		Amount:         myErc20.Amount,
 		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
+		ChainId:        types.EthereumChainID,
 	}
 	ethClaim1a, err := types.PackEvent(ethClaim1)
 	require.NoError(t, err)
@@ -242,6 +255,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		Amount:         myErc20.Amount,
 		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
+		ChainId:        types.EthereumChainID,
 	}
 	ethClaim2a, err := types.PackEvent(ethClaim2)
 	require.NoError(t, err)
@@ -252,6 +266,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		Amount:         myErc20.Amount,
 		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
+		ChainId:        types.EthereumChainID,
 	}
 	ethClaim3a, err := types.PackEvent(ethClaim3)
 	require.NoError(t, err)

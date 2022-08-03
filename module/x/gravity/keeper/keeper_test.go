@@ -575,7 +575,7 @@ func TestKeeper_Migration(t *testing.T) {
 	require.NoError(t, fundAccount(ctx, input.BankKeeper, mySender, allVouchers))
 
 	// add some TX to the pool
-	input.AddSendToEthTxsToPool(t, ctx, myTokenContractAddr, mySender, myReceiver, 2, 3, 2, 1)
+	input.AddSendToEVMTxsToPool(t, ctx, myTokenContractAddr, mySender, myReceiver, 2, 3, 2, 1)
 
 	// when
 	ctx = ctx.WithBlockTime(now)
@@ -658,7 +658,7 @@ func TestKeeper_Migration(t *testing.T) {
 	}
 
 	got := gk.GetLastObservedSignerSetTx(ctx, types.EthereumChainID)
-	require.Equal(t, got, &types.SignerSetTx{Nonce: 0x0, Height: 0x0, Signers: types.EVMSigners(nil)})
+	require.Equal(t, &types.SignerSetTx{Nonce: 0x0, Height: 0x0, Signers: types.EVMSigners(nil), ChainId: types.EthereumChainID}, got)
 
 	{ // GetEVMSignatures
 		storeIndex := gotFirstBatch.GetStoreIndex()
