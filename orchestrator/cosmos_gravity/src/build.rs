@@ -78,7 +78,7 @@ pub async fn batch_tx_confirmation_messages(
             event: confirmation.to_any(),
             chain_id,
         };
-        let msg = Msg::new("/gravity.v2.MsgSubmitEvmTxConfirmation", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEVMTxConfirmation", msg);
         msgs.push(msg);
     }
     msgs
@@ -114,7 +114,7 @@ pub async fn contract_call_tx_confirmation_messages(
             confirmation: confirmation.to_any(),
             chain_id,
         };
-        let msg = Msg::new("/gravity.v2.MsgSubmitEvmTxConfirmation", msg);
+        let msg = Msg::new("/gravity.v2.MsgSubmitEVMTxConfirmation", msg);
         msgs.push(msg);
     }
     msgs
