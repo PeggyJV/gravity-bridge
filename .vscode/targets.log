@@ -6,8 +6,14 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # PARTICULAR PURPOSE.
 
 # This program built for i386-apple-darwin11.3.0
+ 
+Makefile:73: warning: overriding commands for target `e2e_validator_out'
+Makefile:41: warning: ignoring old commands for target `e2e_validator_out'
 
-# Make data base, printed on Thu Jul 28 15:35:52 2022
+make: *** No rule to make target `all'.  Stop.
+
+
+# Make data base, printed on Thu Aug  4 06:04:56 2022
 
 # Variables
 
@@ -24,6 +30,7 @@ VSCODE_LOG_NATIVE = false
 # automatic
 @F = $(notdir $@)
 # makefile
+ 
 CURDIR := /Users/ukpaiugochi/gravity-bridge
 # makefile
 SHELL = /bin/sh
@@ -42,7 +49,7 @@ __CFBundleIdentifier = com.microsoft.VSCode
 # environment
 INFOPATH = /opt/homebrew/share/info:
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /var/folders/ns/20wg_vm169s09pcp0m36vqhw0000gn/T/vscode-ipc-09f9095b-c74d-4be8-9eca-411614ed66fb.sock
+VSCODE_IPC_HOOK_EXTHOST = /var/folders/ns/20wg_vm169s09pcp0m36vqhw0000gn/T/vscode-ipc-3b6e09a6-9171-4703-a942-5169b5131660.sock
 # environment
 VSCODE_CWD = /
 # environment
@@ -58,7 +65,7 @@ ELECTRON_RUN_AS_NODE = 1
 # default
 .FEATURES := target-specific order-only second-expansion else-if archives jobserver check-symlink
 # environment
-SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.QgiZ8baEng/Listeners
+SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.hXsS3c2HCJ/Listeners
 # automatic
 %F = $(notdir $%)
 # environment
@@ -150,7 +157,7 @@ MAKELEVEL := 0
 # environment
 LANG = C
 # environment
-VSCODE_PID = 75340
+VSCODE_PID = 511
 # variable set hash-table stats:
 # Load=70/1024=7%, Rehash=0, Collisions=2/94=2%
 
@@ -160,7 +167,7 @@ VSCODE_PID = 75340
 
 # Directories
 
-# . (device 16777231, inode 5102146): 27 files, no impossibilities.
+# . (device 16777232, inode 5102146): 27 files, no impossibilities.
 
 # 27 files, no impossibilities in 1 directories.
 
@@ -204,7 +211,7 @@ all:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-25 17:22:16
+#  Last modified 2022-08-01 15:56:35
 #  File has been updated.
 #  Successfully updated.
 # variable set hash-table stats:
@@ -252,6 +259,7 @@ e2e_clean_slate:
 	$(shell docker ps -qa --filter="name=ethereum") \
 	$(shell docker ps -qa --filter="name=gravity") \
 	$(shell docker ps -qa --filter="name=orchestrator") \
+ 
 	1>/dev/null \
 	2>/dev/null \
 	|| true
@@ -285,11 +293,6 @@ e2e_build_images:
 
 fail:
 #  Implicit rule search has not been done.
- 
-Makefile:73: warning: overriding commands for target `e2e_validator_out'
-Makefile:41: warning: ignoring old commands for target `e2e_validator_out'
-make: *** No rule to make target `all'.  Stop.
-
 #  Modification time never checked.
 #  File has not been updated.
 #  commands to execute (from `Makefile', line 53):
@@ -341,6 +344,6 @@ e2e_arbitrary_logic: e2e_clean_slate
 # strcache size: total = 4096 / max = 4096 / min = 4096 / avg = 4096
 # strcache free: total = 4087 / max = 4087 / min = 4087 / avg = 4087
 
-# Finished Make data base on Thu Jul 28 15:35:52 2022
+# Finished Make data base on Thu Aug  4 06:04:56 2022
 
  
