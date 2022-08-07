@@ -131,7 +131,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			s.Require().NoError(err, "error querying delegator bonded validators")
 
 			return true
-		}, 5*time.Minute, 1*time.Second, "can't create TX batch successfully")
+		}, 30*time.Minute, 1*time.Second, "can't create TX batch successfully")
 
 		keyRing, err := s.chain.validators[3].keyring()
 		s.Require().NoError(err)
