@@ -66,7 +66,8 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 				gbQueryClient := types.NewQueryClient(clientCtx)
 				denomRes, err := gbQueryClient.ERC20ToDenom(context.Background(),
 					&types.ERC20ToDenomRequest{
-						Erc20: testERC20contract.String(),
+						Erc20:   testERC20contract.String(),
+						ChainId: types.EthereumChainID,
 					})
 				if err != nil {
 					s.T().Logf("error querying ERC20 denom %s, %e", testERC20contract.String(), err)
