@@ -34,7 +34,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/peggyjv/gravity-bridge/module/v2/app"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	cfg "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/p2p"

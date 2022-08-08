@@ -101,14 +101,18 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			return false
 		}, 105*time.Second, 10*time.Second, "balance never found on cosmos")
 
-		beforeBalance, err := s.getEthTokenBalanceOf(common.HexToAddress(s.chain.validators[1].ethereumKey.address), testERC20contract)
+		s.T().Logf("creating ethereum receiver wallet")
+		receiver, err := generateEthereumKey()
+		s.Require().NoError(err)
+
+		beforeBalance, err := s.getEthTokenBalanceOf(common.HexToAddress(receiver.address), testERC20contract)
 		s.Require().NoError(err, "error getting eth balance")
 
 		s.T().Logf("sending to ethereum")
 		sendToEthereumMsg := types.NewMsgSendToEVM(
 			types.EthereumChainID,
 			s.chain.validators[1].keyInfo.GetAddress(),
-			s.chain.validators[1].ethereumKey.address,
+			receiver.address,
 			sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(100)},
 			sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(1)},
 		)
@@ -136,7 +140,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 		s.T().Log("verifying send to ethereum")
 		s.Require().Eventuallyf(func() bool {
-			balance, err := s.getEthTokenBalanceOf(common.HexToAddress(s.chain.validators[1].ethereumKey.address), testERC20contract)
+			balance, err := s.getEthTokenBalanceOf(common.HexToAddress(receiver.address), testERC20contract)
 			s.Require().NoError(err, "error getting destination balance")
 
 			if balance.LTE(*beforeBalance) {
@@ -186,7 +190,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 				return false
 			}
 
-			s.Require().Equal(balance.BigInt(), sdk.NewInt(10100).BigInt(), "balance was %s, expected 10100", balance.String())
+			s.Require().Equal(sdk.NewInt(100).BigInt(), balance.BigInt(), "balance was %s, expected 100", balance.String())
 			return true
 		}, time.Second*240, time.Second, "send to ethereum did not reach destination")
 

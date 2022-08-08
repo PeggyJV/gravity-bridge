@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/dockertest"
 	"io"
 	"io/fs"
 	"os"
@@ -23,9 +24,8 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	"github.com/stretchr/testify/require"
 	tendermintjson "github.com/tendermint/tendermint/libs/json"
 )

@@ -206,15 +206,6 @@ func validateGravityID(i interface{}) error {
 	return nil
 }
 
-func validateContractHash(i interface{}) error {
-	// TODO: should we validate that the input here is a properly formatted
-	// SHA256 (or other) hash?
-	if _, ok := i.(string); !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	return nil
-}
-
 func validateTargetEvmTxTimeout(i interface{}) error {
 	val, ok := i.(uint64)
 	if !ok {
