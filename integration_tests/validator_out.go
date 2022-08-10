@@ -133,24 +133,67 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			return true
 		}, 30*time.Minute, 1*time.Second, "can't create TX batch successfully")
 
+		orchKey := s.chain.orchestrators[1]
+		keyring := orchKey.keyring
+
+		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", keyring, "orch", orchKey.keyInfo.GetAddress())
+		s.Require().NoError(err)
+
+		startingNonce, err := s.getLastValsetNonce(gravityContract)
+		s.Require().NoError(err, "error getting starting nonce")
+
+		bondTokens := sdk.TokensFromConsensusPower(50000, sdk.DefaultPowerReduction)
+		bondCoin := sdk.NewCoin("testgb", bondTokens)
+
+		delegator := s.chain.orchestrators[1].keyInfo.GetAddress()
+		val := sdk.ValAddress(s.chain.validators[3].keyInfo.GetAddress())
+
+		// Check jail status of validators
+		s.Require().Eventuallyf(func() bool {
+			orchKey := s.chain.validators[3]
+			keyring, err := orchKey.keyring()
+			s.Require().NoError(err)
+
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", s.chain.validators[3].keyInfo.GetAddress())
+			s.Require().NoError(err)
+			newQ := stakingtypes.NewQueryClient(clientCtx)
+			res, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[3].keyInfo.GetAddress()).String()})
+			if err != nil {
+				s.T().Logf("error: %s", err)
+				return false
+			}
+			s.T().Logf("validator response: %s", res.GetValidator())
+			return true
+		}, 20*time.Second, 1*time.Second, "can't find slashing info")
+
+		// Delegate about 5% of the total staking power.
+		s.Require().Eventuallyf(func() bool {
+			s.T().Logf("Sending in valset request (starting_eth_valset_nonce %d)", startingNonce)
+
+			s.T().Logf("Delegating %v to %v in order to generate a validator set update", bondCoin, delegator)
+
+			delegate := stakingtypes.NewMsgDelegate(delegator, val, bondCoin)
+			response, err := s.chain.sendMsgs(*clientCtx, delegate)
+			if err != nil {
+				s.T().Logf("error: %s", err)
+				return false
+			}
+
+			if response.Code != 0 {
+				if response.Code != 32 {
+					s.T().Log(response)
+				}
+				return false
+			}
+			return true
+		}, 5*time.Minute, 10*time.Second, "Delegate to validator failed will retry")
+
 		keyRing, err := s.chain.validators[3].keyring()
 		s.Require().NoError(err)
 
-		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyRing, "val", s.chain.validators[3].keyInfo.GetAddress())
+		clientCtx, err = s.chain.clientContext("tcp://localhost:26657", &keyRing, "val", s.chain.validators[3].keyInfo.GetAddress())
 		s.Require().NoError(err)
 		queryClient := types.NewQueryClient(clientCtx)
-
-		res, err := queryClient.UnbatchedSendToEthereums(context.Background(), &types.UnbatchedSendToEthereumsRequest{SenderAddress: s.chain.validators[3].keyInfo.GetAddress().String()})
-		s.T().Logf("Unbatch response: %s", res)
-
-		response, err := queryClient.BatchTxs(context.Background(), &types.BatchTxsRequest{})
-		s.T().Logf("Batch txs: %s", response)
-
-		resp, err := queryClient.BatchedSendToEthereums(context.Background(), &types.BatchedSendToEthereumsRequest{SenderAddress: s.chain.validators[3].keyInfo.GetAddress().String()})
-		s.T().Logf("Batched tx send_to_ethereum: %s", resp)
-
-		respo, err := queryClient.BatchTx(context.Background(), &types.BatchTxRequest{TokenContract: testERC20contract.String(), BatchNonce: 1})
-		s.T().Logf("Batched tx: %s", respo)
 
 		respon, err := queryClient.UnsignedBatchTxs(context.Background(), &types.UnsignedBatchTxsRequest{Address: s.chain.orchestrators[0].keyInfo.GetAddress().String()})
 		s.T().Logf("Unsigned batch tx for val 1: %s", respon)
@@ -181,5 +224,6 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			s.T().Logf("validator response: %s", res.GetValidator())
 			return true
 		}, 20*time.Second, 1*time.Second, "can't find slashing info")
+
 	})
 }
