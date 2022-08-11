@@ -102,7 +102,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 				return false
 			}
 			return true
-		}, 105*time.Second, 10*time.Second, "unable to send to ethereum")
+		}, 20*time.Minute, 10*time.Second, "unable to send to ethereum")
 
 		// Create Transaction batch
 		s.Require().Eventuallyf(func() bool {
@@ -142,29 +142,10 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 		startingNonce, err := s.getLastValsetNonce(gravityContract)
 		s.Require().NoError(err, "error getting starting nonce")
 
-		bondTokens := sdk.TokensFromConsensusPower(50000, sdk.DefaultPowerReduction)
-		bondCoin := sdk.NewCoin("testgb", bondTokens)
+		bondCoin := sdk.NewCoin("testgb", sdk.NewIntFromUint64(9))
 
 		delegator := s.chain.orchestrators[1].keyInfo.GetAddress()
 		val := sdk.ValAddress(s.chain.validators[3].keyInfo.GetAddress())
-
-		// Check jail status of validators
-		s.Require().Eventuallyf(func() bool {
-			orchKey := s.chain.validators[3]
-			keyring, err := orchKey.keyring()
-			s.Require().NoError(err)
-
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", s.chain.validators[3].keyInfo.GetAddress())
-			s.Require().NoError(err)
-			newQ := stakingtypes.NewQueryClient(clientCtx)
-			res, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[3].keyInfo.GetAddress()).String()})
-			if err != nil {
-				s.T().Logf("error: %s", err)
-				return false
-			}
-			s.T().Logf("validator response: %s", res.GetValidator())
-			return true
-		}, 20*time.Second, 1*time.Second, "can't find slashing info")
 
 		// Delegate about 5% of the total staking power.
 		s.Require().Eventuallyf(func() bool {
