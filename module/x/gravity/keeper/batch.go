@@ -88,6 +88,11 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 	if !isCosmosOriginated {
 		totalToBurn := sdk.NewInt(0)
 		for _, tx := range batchTx.Transactions {
+			//Sanity check
+			if tx.Erc20Token.Contract != batchTx.TokenContract || tx.Erc20Fee.Contract != batchTx.TokenContract {
+				// should panic here as something is probably wrong
+				panic("detected invalid batch, contains tx with different contract address")
+			}
 			totalToBurn = totalToBurn.Add(tx.Erc20Token.Amount.Add(tx.Erc20Fee.Amount))
 		}
 		burnVouchers := sdk.NewCoins(sdk.NewCoin(denom, totalToBurn))
