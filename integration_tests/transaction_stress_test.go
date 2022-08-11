@@ -77,9 +77,14 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 				gravityDenom = denomRes.Denom
 
 				for _, coin := range res.Balances {
-					if coin.Denom == gravityDenom && coin.Amount.Equal(sdk.NewInt(cosmosSentAmt*transactionsPerValidator)) {
-						s.T().Logf("Expected funds recieved for validator %d, balance: %v", i+1, coin)
-						return true
+					if coin.Denom == gravityDenom {
+						if coin.Amount.Equal(sdk.NewInt(cosmosSentAmt * transactionsPerValidator)) {
+							s.T().Logf("Expected funds recieved for validator %d, balance: %v", i+1, coin)
+							return true
+						} else {
+							s.T().Logf("received incorrect amount of funds %d, expected %d", coin.Amount.Int64(),
+								cosmosSentAmt*transactionsPerValidator)
+						}
 					}
 				}
 
@@ -107,7 +112,7 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 				s.T().Logf("balance for val 4: received %v", res4.Balances)
 
 				return false
-			}, 1200*time.Second, 10*time.Second, "balance never found on cosmos")
+			}, 2*time.Minute, 10*time.Second, "balance never found on cosmos")
 		}
 		fmt.Println("Ethereum -> Cosmos stress test completed.")
 
