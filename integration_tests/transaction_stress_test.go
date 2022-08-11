@@ -83,10 +83,31 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 					}
 				}
 
-				s.T().Logf("balance not found, received %v", res.Balances)
+				balance, _ := s.getEthTokenBalanceOf(common.HexToAddress(validator.ethereumKey.address), testERC20contract)
+				s.T().Logf("balance sitting in source acct: %v", balance)
+
+				s.T().Logf("balance for val 1 not found, received %v", res.Balances)
+
+				res2, _ := bankQueryClient.AllBalances(context.Background(),
+					&banktypes.QueryAllBalancesRequest{
+						Address: s.chain.validators[1].keyInfo.GetAddress().String(),
+					})
+				s.T().Logf("balance for val 2: found, received %v", res2.Balances)
+
+				res3, _ := bankQueryClient.AllBalances(context.Background(),
+				&banktypes.QueryAllBalancesRequest{
+					Address: s.chain.validators[2].keyInfo.GetAddress().String(),
+				})
+				s.T().Logf("balance for val 3: received %v", res3.Balances)
+
+				res4, _ := bankQueryClient.AllBalances(context.Background(),
+				&banktypes.QueryAllBalancesRequest{
+					Address: s.chain.validators[3].keyInfo.GetAddress().String(),
+				})
+				s.T().Logf("balance for val 4: received %v", res4.Balances)
 
 				return false
-			}, 105*time.Second, 10*time.Second, "balance never found on cosmos")
+			}, 1200*time.Second, 10*time.Second, "balance never found on cosmos")
 		}
 		fmt.Println("Ethereum -> Cosmos stress test completed.")
 
