@@ -71,4 +71,4 @@ e2e_valset_update: e2e_clean_slate
 	integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m TestValsetUpdate || make -s fail
 
 e2e_transaction_stress: e2e_clean_slate
-	integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m TestTransactionStress || make -s fail
+	E2E_SKIP_CLEANUP=true integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m TestTransactionStress || make -s fail
