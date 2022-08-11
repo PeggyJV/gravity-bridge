@@ -43,7 +43,7 @@ pub async fn check_for_events(
     let our_cosmos_address = cosmos_key.to_address(&prefix).unwrap();
     let latest_block = get_block_number_with_retry(eth_client.clone()).await;
     let latest_block = latest_block - block_delay;
-    let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
+    let chain_id = eth_client.signer().chain_id() as u32;
 
     let mut ending_block = starting_block + blocks_to_search;
     if ending_block > latest_block {

@@ -26,7 +26,7 @@ pub async fn signer_set_tx_confirmation_messages(
     let ethereum_address = eth_client.address();
 
     let mut msgs = Vec::new();
-    let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
+    let chain_id = eth_client.signer().chain_id() as u32;
     for valset in valsets {
         let data = keccak256(encode_valset_confirm(gravity_id.clone(), valset.clone()).as_slice());
         // Signer trait responds with a Result, but we use a LocalWallet and it
@@ -58,7 +58,7 @@ pub async fn batch_tx_confirmation_messages(
 ) -> Vec<Msg> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let ethereum_address = eth_client.address();
-    let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
+    let chain_id = eth_client.signer().chain_id() as u32;
 
     let mut msgs = Vec::new();
     for batch in batches {
@@ -93,7 +93,7 @@ pub async fn contract_call_tx_confirmation_messages(
 ) -> Vec<Msg> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let ethereum_address = eth_client.address();
-    let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
+    let chain_id = eth_client.signer().chain_id() as u32;
 
     let mut msgs = Vec::new();
     for logic_call in logic_calls {

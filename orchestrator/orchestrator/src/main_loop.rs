@@ -147,7 +147,7 @@ pub async fn eth_oracle_main_loop(
     info!("Oracle resync complete, Oracle now operational");
     let mut grpc_client = grpc_client;
     let mut loop_count: u32 = 0;
-    let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
+    let chain_id = eth_client.signer().chain_id() as u32;
 
     loop {
         let (async_resp, _) = tokio::join!(
@@ -255,7 +255,7 @@ pub async fn eth_signer_main_loop(
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let mut grpc_client = grpc_client;
-    let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
+    let chain_id = eth_client.signer().chain_id() as u32;
 
     let gravity_id = get_gravity_id(contract_address, eth_client.clone()).await;
     if gravity_id.is_err() {

@@ -37,7 +37,7 @@ pub async fn relay_valsets(
 
     // we should determine if we need to relay one
     // to Ethereum for that we will find the latest confirmed valset and compare it to the ethereum chain
-    let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
+    let chain_id = eth_client.signer().chain_id() as u32;
     let latest_valset = get_latest_valset(grpc_client, chain_id).await;
     if latest_valset.is_err() {
         error!("Failed to get latest valset! {:?}", latest_valset);

@@ -20,8 +20,7 @@ pub async fn find_latest_valset(
 ) -> Result<Valset, GravityError> {
     // calculate some constant U64 values only once
     const BLOCKS_TO_SEARCH: u64 = 5_000u64;
-    let chain_id_req = eth_client.get_chainid().await?;
-    let chain_id = chain_id_req.as_u32();
+    let chain_id = eth_client.signer().chain_id() as u32;
 
     let mut filter = Filter::new()
         .address(ValueOrArray::Value(gravity_contract_address))

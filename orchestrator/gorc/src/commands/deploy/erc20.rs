@@ -72,7 +72,7 @@ impl Erc20 {
 
         check_for_eth(eth_client.address(), eth_client.clone()).await;
 
-        let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
+        let chain_id = eth_client.signer().chain_id() as u32;
         let req = DenomToErc20ParamsRequest {
             denom: denom.clone(),
             chain_id,

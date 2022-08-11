@@ -28,7 +28,7 @@ pub async fn get_last_checked_block(
     // TODO(bolten): original version of this used a 120 second timeout when querying
     // the eth chain, should we replicate that in eth_client?
     let mut grpc_client = grpc_client;
-    let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
+    let chain_id = eth_client.signer().chain_id() as u32;
     let mut last_event_nonce: U256 =
         get_last_event_nonce_with_retry(&mut grpc_client, chain_id, our_cosmos_address)
             .await

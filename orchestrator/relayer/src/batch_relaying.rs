@@ -39,7 +39,7 @@ pub async fn relay_batches(
     eth_gas_price_multiplier: f32,
     eth_gas_multiplier: f32,
 ) {
-    let chain_id = eth_client.get_chainid().await.unwrap().as_u32();
+    let chain_id = eth_client.signer().chain_id() as u32;
     let possible_batches =
         get_batches_and_signatures(current_valset.clone(), grpc_client, gravity_id.clone(), chain_id).await;
 
