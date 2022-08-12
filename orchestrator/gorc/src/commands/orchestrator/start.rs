@@ -13,7 +13,7 @@ use orchestrator::main_loop::{
 };
 use relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
 use std::{cmp::min, sync::Arc};
-use ethers::prelude::*;
+use gravity_utils::ethereum::downcast_to_u64;
 
 /// Start the Orchestrator
 #[derive(Command, Debug, Parser)]
@@ -70,43 +70,42 @@ impl Runnable for StartCommand {
                 .get_chainid()
                 .await
                 .expect("Could not retrieve chain ID during orchestrator start");
+            let chain_id = downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
 
-            let chain_ids = [1 as u64, 31173]; // todo: how to get this from a config?
-            for chain_id in chain_ids {
-                let eth_client =
-                    SignerMiddleware::new(provider.clone(), ethereum_wallet.clone().with_chain_id(chain_id));
+            let eth_client =
+                SignerMiddleware::new(provider.clone(), ethereum_wallet.clone().with_chain_id( chain_id));
 
-                let eth_client = Arc::new(eth_client);
+            let eth_client = Arc::new(eth_client);
 
-                info!("Starting Relayer + Oracle + Ethereum Signer");
-                info!("EVM Address: {}", format_evm_address(evm_address));
-                info!("Cosmos Address {}", cosmos_address);
+            info!("Starting Relayer + Oracle + Ethereum Signer");
+            info!("EVM Address: {}", format_evm_address(evm_address));
+            info!("Cosmos Address {}", cosmos_address);
 
-                // check if the cosmos node is syncing, if so wait for it
-                // we can't move any steps above this because they may fail on an incorrect
-                // historic chain state while syncing occurs
-                wait_for_cosmos_node_ready(&contact).await;
+            // check if the cosmos node is syncing, if so wait for it
+            // we can't move any steps above this because they may fail on an incorrect
+            // historic chain state while syncing occurs
+            wait_for_cosmos_node_ready(&contact).await;
 
-                // check if the delegate addresses are correctly configured
-                check_delegate_addresses(
-                    &mut grpc,
-                    evm_address,
-                    cosmos_address,
-                    &contact.get_prefix(),
-                )
-                    .await;
+            // check if the delegate addresses are correctly configured
+            check_delegate_addresses(
+                &mut grpc,
+                evm_address,
+                cosmos_address,
+                &contact.get_prefix(),
+            )
+                .await;
 
-                // check if we actually have the promised balance of tokens to pay fees
-                check_for_fee_denom(&fees_denom, cosmos_address, &contact).await;
-                check_for_eth(evm_address, eth_client.clone()).await;
+            // check if we actually have the promised balance of tokens to pay fees
+            check_for_fee_denom(&fees_denom, cosmos_address, &contact).await;
+            check_for_eth(evm_address, eth_client.clone()).await;
 
-                let gas_price = config.cosmos.gas_price.as_tuple();
+            let gas_price = config.cosmos.gas_price.as_tuple();
 
             orchestrator_main_loop(
                 cosmos_key,
-                contact.clone(),
+                contact,
                 eth_client,
-                grpc.clone(),
+                grpc,
                 contract_address,
                 gas_price,
                 &config.metrics.listen_addr,
@@ -117,8 +116,7 @@ impl Runnable for StartCommand {
                 self.orchestrator_only,
                 config.cosmos.msg_batch_size,
             )
-            .await;
-                }
+                .await;
         })
             .unwrap_or_else(|e| {
                 status_err!("executor exited with error: {}", e);
