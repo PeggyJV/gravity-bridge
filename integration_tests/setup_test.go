@@ -344,6 +344,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
 	gravityGenState.Params.GravityId = "gravitytest"
 	gravityGenState.Params.BridgeEthereumAddress = gravityContract.String()
+	gravityGenState.Params.SignedBatchesWindow = 15
 
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)

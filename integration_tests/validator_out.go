@@ -202,9 +202,9 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 				s.T().Logf("error: %s", err)
 				return false
 			}
-			s.T().Logf("validator response: %s", res.GetValidator())
+			s.Require().True(res.GetValidator().IsJailed())
 			return true
-		}, 20*time.Second, 1*time.Second, "can't find slashing info")
+		}, 20*time.Minute, 1*time.Second, "can't find slashing info")
 
 	})
 }
