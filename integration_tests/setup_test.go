@@ -120,7 +120,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 	s.T().Log("tearing down e2e integration test suite...")
 
-
 	s.Require().NoError(s.dockerPool.Purge(s.ethResource))
 
 	for _, vc := range s.valResources {
@@ -345,7 +344,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
 	gravityGenState.Params.GravityId = "gravitytest"
 	gravityGenState.Params.BridgeEthereumAddress = gravityContract.String()
-	gravityGenState.Params.SignedBatchesWindow = 10
+	gravityGenState.Params.SignedBatchesWindow = 15
 
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)
