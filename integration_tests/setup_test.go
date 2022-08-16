@@ -123,11 +123,11 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.Require().NoError(s.dockerPool.Purge(s.ethResource))
 
 	for _, vc := range s.valResources {
-		s.Require().NoError(s.dockerPool.Purge(vc))
+		s.Require().NoError(s.dockerPool.RemoveContainerByName(vc.Container.Name))
 	}
 
 	for _, oc := range s.orchResources {
-		s.Require().NoError(s.dockerPool.Purge(oc))
+		s.Require().NoError(s.dockerPool.RemoveContainerByName(oc.Container.Name))
 	}
 
 	s.Require().NoError(s.dockerPool.RemoveNetwork(s.dockerNetwork))
@@ -344,6 +344,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
 	gravityGenState.Params.GravityId = "gravitytest"
 	gravityGenState.Params.BridgeEthereumAddress = gravityContract.String()
+	gravityGenState.Params.SignedBatchesWindow = 15
 
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)
