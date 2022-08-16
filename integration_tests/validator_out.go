@@ -103,7 +103,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 				return false
 			}
 			return true
-		}, 20*time.Minute, 10*time.Second, "unable to send to ethereum")
+		}, 5*time.Minute, 10*time.Second, "unable to send to ethereum")
 
 		// Create Transaction batch
 		s.Require().Eventuallyf(func() bool {
@@ -132,7 +132,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			s.Require().NoError(err, "error querying delegator bonded validators")
 
 			return true
-		}, 30*time.Minute, 1*time.Second, "can't create TX batch successfully")
+		}, 5*time.Minute, 1*time.Second, "can't create TX batch successfully")
 
 		// Confirm batchtx signatures
 		s.Require().Eventuallyf(func() bool {
