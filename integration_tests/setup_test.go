@@ -120,18 +120,18 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 	s.T().Log("tearing down e2e integration test suite...")
 
-	s.Require().NoError(os.RemoveAll(s.chain.dataDir))
 	s.Require().NoError(s.dockerPool.Purge(s.ethResource))
 
 	for _, vc := range s.valResources {
-		s.Require().NoError(s.dockerPool.Purge(vc))
+		s.Require().NoError(s.dockerPool.RemoveContainerByName(vc.Container.Name))
 	}
 
 	for _, oc := range s.orchResources {
-		s.Require().NoError(s.dockerPool.Purge(oc))
+		s.Require().NoError(s.dockerPool.RemoveContainerByName(oc.Container.Name))
 	}
 
 	s.Require().NoError(s.dockerPool.RemoveNetwork(s.dockerNetwork))
+	s.Require().NoError(os.RemoveAll(s.chain.dataDir))
 }
 
 func (s *IntegrationTestSuite) initNodes(nodeCount int) {
@@ -343,6 +343,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	var gravityGenState gravitytypes.GenesisState
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
 	gravityGenState.Params.ParamsByChain[strconv.Itoa(gravitytypes.EthereumChainID)].GravityId = "gravitytest"
+	gravityGenState.Params.ParamsByChain[strconv.Itoa(gravitytypes.EthereumChainID)].SignedBatchesWindow = 15
 
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)
