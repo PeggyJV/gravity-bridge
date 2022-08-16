@@ -20,7 +20,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 
 		s.T().Logf("approving Gravity to spend ERC 20")
 		err := s.approveERC20()
-		s.Require().NoError(err, "error approving spending balance for the gravity contract on behalf of the first validator")
+		s.Require().NoError(err, "error approving spending balance for the gravity contract")
 
 		allowance, err := s.getERC20AllowanceOf(common.HexToAddress(s.chain.validators[0].ethereumKey.address), gravityContract)
 		s.Require().NoError(err, "error getting allowance of gravity contract spending on behalf of first validator")
@@ -83,6 +83,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(1)},
 		)
 
+		// Send NewMsgSendToEthereum Message
 		s.Require().Eventuallyf(func() bool {
 			val := s.chain.validators[1]
 			keyring, err := val.keyring()
@@ -133,60 +134,18 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			return true
 		}, 30*time.Minute, 1*time.Second, "can't create TX batch successfully")
 
-		orchKey := s.chain.orchestrators[1]
-		keyring := orchKey.keyring
-
-		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", keyring, "orch", orchKey.keyInfo.GetAddress())
-		s.Require().NoError(err)
-
-		startingNonce, err := s.getLastValsetNonce(gravityContract)
-		s.Require().NoError(err, "error getting starting nonce")
-
-		bondCoin := sdk.NewCoin("testgb", sdk.NewIntFromUint64(9))
-
-		delegator := s.chain.orchestrators[1].keyInfo.GetAddress()
-		val := sdk.ValAddress(s.chain.validators[3].keyInfo.GetAddress())
-
-		// Delegate about 5% of the total staking power.
+		// Confirm batchtx signatures
 		s.Require().Eventuallyf(func() bool {
-			s.T().Logf("Sending in valset request (starting_eth_valset_nonce %d)", startingNonce)
+			keyRing, err := s.chain.validators[3].keyring()
+			s.Require().NoError(err)
 
-			s.T().Logf("Delegating %v to %v in order to generate a validator set update", bondCoin, delegator)
-
-			delegate := stakingtypes.NewMsgDelegate(delegator, val, bondCoin)
-			response, err := s.chain.sendMsgs(*clientCtx, delegate)
-			if err != nil {
-				s.T().Logf("error: %s", err)
-				return false
-			}
-
-			if response.Code != 0 {
-				if response.Code != 32 {
-					s.T().Log(response)
-				}
-				return false
-			}
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyRing, "val", s.chain.validators[3].keyInfo.GetAddress())
+			s.Require().NoError(err)
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.BatchTxConfirmations(context.Background(), &types.BatchTxConfirmationsRequest{BatchNonce: 1, TokenContract: testERC20contract.String()})
+			s.Require().NotEmpty(res.GetSignatures())
 			return true
-		}, 5*time.Minute, 10*time.Second, "Delegate to validator failed will retry")
-
-		keyRing, err := s.chain.validators[3].keyring()
-		s.Require().NoError(err)
-
-		clientCtx, err = s.chain.clientContext("tcp://localhost:26657", &keyRing, "val", s.chain.validators[3].keyInfo.GetAddress())
-		s.Require().NoError(err)
-		queryClient := types.NewQueryClient(clientCtx)
-
-		respon, err := queryClient.UnsignedBatchTxs(context.Background(), &types.UnsignedBatchTxsRequest{Address: s.chain.orchestrators[0].keyInfo.GetAddress().String()})
-		s.T().Logf("Unsigned batch tx for val 1: %s", respon)
-
-		errorred, err := queryClient.UnsignedBatchTxs(context.Background(), &types.UnsignedBatchTxsRequest{Address: s.chain.orchestrators[1].keyInfo.GetAddress().String()})
-		s.T().Logf("Unsigned batch tx for val 2: %s", errorred)
-
-		errorre, err := queryClient.UnsignedBatchTxs(context.Background(), &types.UnsignedBatchTxsRequest{Address: s.chain.orchestrators[2].keyInfo.GetAddress().String()})
-		s.T().Logf("Unsigned batch tx for val 3: %s", errorre)
-
-		errorr, err := queryClient.UnsignedBatchTxs(context.Background(), &types.UnsignedBatchTxsRequest{Address: s.chain.orchestrators[3].keyInfo.GetAddress().String()})
-		s.T().Logf("Unsigned batch tx for val 4: %s", errorr)
+		}, 5*time.Minute, 1*time.Minute, "Can't find Batchtx signing info")
 
 		// Check jail status of validators
 		s.Require().Eventuallyf(func() bool {
