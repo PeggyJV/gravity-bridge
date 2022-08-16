@@ -156,14 +156,34 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", s.chain.validators[3].keyInfo.GetAddress())
 			s.Require().NoError(err)
 			newQ := stakingtypes.NewQueryClient(clientCtx)
-			res, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[3].keyInfo.GetAddress()).String()})
+			valThree, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[3].keyInfo.GetAddress()).String()})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
-			s.Require().True(res.GetValidator().IsJailed())
+			s.Require().True(valThree.GetValidator().IsJailed())
+
+			valTwo, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[2].keyInfo.GetAddress()).String()})
+			if err != nil {
+				s.T().Logf("error: %s", err)
+				return false
+			}
+			s.Require().False(valTwo.GetValidator().IsJailed())
+
+			valOne, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[1].keyInfo.GetAddress()).String()})
+			if err != nil {
+				s.T().Logf("error: %s", err)
+				return false
+			}
+			s.Require().False(valOne.GetValidator().IsJailed())
+
+			valZero, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[0].keyInfo.GetAddress()).String()})
+			if err != nil {
+				s.T().Logf("error: %s", err)
+				return false
+			}
+			s.Require().False(valZero.GetValidator().IsJailed())
 			return true
 		}, 5*time.Minute, 1*time.Minute, "can't find slashing info")
-
 	})
 }
