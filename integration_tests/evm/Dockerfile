@@ -11,7 +11,7 @@ RUN npm config set user 0
 
 COPY . .
 
-ENV ARCHIVE_NODE_URL=""
+ENV EVM_CHAIN_ID=31337
 EXPOSE 8545
 
 RUN yarn run compile

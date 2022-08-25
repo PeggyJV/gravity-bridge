@@ -1,10 +1,15 @@
 set -ex
 
-# import orchestrator Cosmos key
-gorc --config=/root/gorc/config.toml keys cosmos recover orch-key "$ORCH_MNEMONIC"
+for i in $(echo $CHAIN_IDS | tr ";" "\n")
+do
+  echo "chain id $i"
+  # import orchestrator Cosmos key
+  gorc --config=/root/gorc/$i/config.toml keys cosmos recover orch-key "$ORCH_MNEMONIC"
 
-# import orchestrator Ethereum key
-gorc --config=/root/gorc/config.toml keys eth import orch-eth-key $ETH_PRIV_KEY
+  # import orchestrator Ethereum key
+  gorc --config=/root/gorc/$i/config.toml keys eth import orch-eth-key $ETH_PRIV_KEY
 
-# start gorc orchestrator
-gorc --config=/root/gorc/config.toml orchestrator start --cosmos-key=orch-key --ethereum-key=orch-eth-key
+  # start gorc orchestrator
+  gorc --config=/root/gorc/$i/config.toml orchestrator start --cosmos-key=orch-key --ethereum-key=orch-eth-key
+
+done

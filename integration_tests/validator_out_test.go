@@ -8,7 +8,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
 // Validator out tests a validator that is not running the mandatory Ethereum node. This validator will be slashed and the bridge will remain functioning.
@@ -16,23 +16,29 @@ import (
 // Start the chain with validators
 func (s *IntegrationTestSuite) TestValidatorOut() {
 	s.Run("Bring up chain, and test the valset update", func() {
+		// take down an orchestrator
 		s.dockerPool.RemoveContainerByName("orchestrator3")
 
+		chainIndex := 0
+		ethereum := *s.evmResources[chainIndex]
+		testERC20contract := testERC20contracts[chainIndex]
+		gravityContract := gravityContracts[chainIndex]
+
 		s.T().Logf("approving Gravity to spend ERC 20")
-		err := s.approveERC20()
+		err := s.approveERC20(chainIndex)
 		s.Require().NoError(err, "error approving spending balance for the gravity contract")
 
-		allowance, err := s.getERC20AllowanceOf(common.HexToAddress(s.chain.validators[0].ethereumKey.address), gravityContract)
+		allowance, err := s.getERC20AllowanceOf(chainIndex, common.HexToAddress(s.chain.validators[0].ethereumKey.address), gravityContract)
 		s.Require().NoError(err, "error getting allowance of gravity contract spending on behalf of first validator")
 		s.Require().Equal(UInt256Max(), allowance.BigInt(), "spending allowance not set correctly, got: %s", allowance.String())
 
-		balance, err := s.getEthTokenBalanceOf(common.HexToAddress(s.chain.validators[0].ethereumKey.address), testERC20contract)
+		balance, err := s.getEthTokenBalanceOf(ethereum, common.HexToAddress(s.chain.validators[0].ethereumKey.address), testERC20contract)
 		s.Require().NoError(err, "error getting first validator balance")
 		s.Require().Equal(sdk.NewUint(10000).BigInt(), balance.BigInt(), "balance was %s, expected 10000", balance.String())
 
 		// send from val 0 on eth to val 1 on cosmos
 		s.T().Logf("sending to cosmos")
-		err = s.sendToCosmos(s.chain.validators[1].keyInfo.GetAddress(), sdk.NewInt(200))
+		err = s.sendToCosmos(chainIndex, s.chain.validators[1].keyInfo.GetAddress(), sdk.NewInt(200))
 		s.Require().NoError(err, "error sending test denom to cosmos")
 
 		var gravityDenom string
@@ -76,7 +82,8 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 		}, 105*time.Second, 10*time.Second, "balance never found on cosmos")
 
 		s.T().Logf("sending to ethereum")
-		sendToEthereumMsg := types.NewMsgSendToEthereum(
+		sendToEthereumMsg := types.NewMsgSendToEVM(
+			types.EthereumChainID,
 			s.chain.validators[1].keyInfo.GetAddress(),
 			s.chain.validators[1].ethereumKey.address,
 			sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(100)},
@@ -107,7 +114,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 
 		// Create Transaction batch
 		s.Require().Eventuallyf(func() bool {
-			batchTx := types.NewMsgRequestBatchTx(gravityDenom, s.chain.validators[2].keyInfo.GetAddress())
+			batchTx := types.NewMsgRequestBatchTx(types.EthereumChainID, gravityDenom, s.chain.validators[2].keyInfo.GetAddress())
 
 			keyRing, err := s.chain.validators[2].keyring()
 			s.Require().NoError(err)

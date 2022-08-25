@@ -283,7 +283,7 @@ pub async fn get_block_delay(eth_client: EthClient) -> Result<U64, GravityError>
         1 | 3 | 61 | 63 => Ok(13u8.into()),
         // Dev, our own Gravity Ethereum testnet, Hardhat
         // all non-pow chains
-        2018 | 15 | 31337 => Ok(0u8.into()),
+        2018 | 15 | 31337 | 43114 => Ok(0u8.into()),
         // Rinkeby, Goerli, Kotti
         // Clique (POA) Consensus
         4 | 5 | 6 => Ok(10u8.into()),

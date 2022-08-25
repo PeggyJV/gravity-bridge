@@ -1,8 +1,8 @@
 .DEFAULT_GOAL := e2e_slow_loris
 
-e2e_build_images:
+e2e_build_images: e2e_clean_slate
 	@docker build -t gravity:prebuilt -f module/Dockerfile module/
-	@docker build -t ethereum:prebuilt -f integration_tests/ethereum/Dockerfile integration_tests/ethereum/
+	@docker build -t evm:prebuilt -f integration_tests/evm/Dockerfile integration_tests/evm/
 	@docker build -t orchestrator:prebuilt -f orchestrator/Dockerfile orchestrator/
 
 
@@ -10,7 +10,6 @@ e2e_slow_loris:
 	@make -s e2e_happy_path
 	@make -s e2e_orchestrator_keys
 	@make -s e2e_arbitrary_logic
-	@make -s e2e_validator_out
 	@make -s e2e_batch_stress
 	@make -s e2e_valset_stress
 	@make -s e2e_transaction_stress
@@ -18,7 +17,7 @@ e2e_slow_loris:
 e2e_clean_slate:
 	@docker rm --force \
 		$(shell docker ps -qa --filter="name=contract_deployer") \
-		$(shell docker ps -qa --filter="name=ethereum") \
+		$(shell docker ps -qa --filter="name=evm") \
 		$(shell docker ps -qa --filter="name=gravity") \
 		$(shell docker ps -qa --filter="name=orchestrator") \
 		1>/dev/null \
@@ -26,7 +25,7 @@ e2e_clean_slate:
 		|| true
 	@docker wait \
 		$(shell docker ps -qa --filter="name=contract_deployer") \
-		$(shell docker ps -qa --filter="name=ethereum") \
+		$(shell docker ps -qa --filter="name=evm") \
 		$(shell docker ps -qa --filter="name=gravity") \
 		$(shell docker ps -qa --filter="name=orchestrator") \
 		1>/dev/null \
@@ -37,9 +36,6 @@ e2e_clean_slate:
 
 e2e_batch_stress: e2e_clean_slate
 	@testnet/testnet.test -test.run TestBatchStress -test.failfast -test.v || make -s fail
-
-e2e_validator_out: e2e_clean_slate
-	@testnet/testnet.test -test.run TestValidatorOut -test.failfast -test.v || make -s fail
 
 e2e_valset_stress: e2e_clean_slate
 	@testnet/testnet.test -test.run TestValsetStress -test.failfast -test.v || make -s fail
@@ -65,7 +61,7 @@ fail:
 	@false
 
 e2e_happy_path: e2e_clean_slate
-	integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m TestHappyPath || make -s fail
+	E2E_SKIP_CLEANUP=true integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m TestHappyPath || make -s fail
 
 e2e_valset_update: e2e_clean_slate
 	integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m TestValsetUpdate || make -s fail

@@ -14,15 +14,17 @@ import (
 
 func (s *IntegrationTestSuite) TestHappyPath() {
 	s.Run("Bring up chain, and test the happy path", func() {
+		chainIndex := 0
+
 		s.T().Logf("approving Gravity to spend ERC 20")
-		err := s.approveERC20()
+		err := s.approveERC20(chainIndex)
 		s.Require().NoError(err, "error approving spending balance for the gravity contract on behalf of the first validator")
 
-		allowance, err := s.getERC20AllowanceOf(common.HexToAddress(s.chain.validators[0].ethereumKey.address), gravityContract)
+		allowance, err := s.getERC20AllowanceOf(chainIndex, common.HexToAddress(s.chain.validators[0].ethereumKey.address), gravityContracts[chainIndex])
 		s.Require().NoError(err, "error getting allowance of gravity contract spending on behalf of first validator")
 		s.Require().Equal(UInt256Max(), allowance.BigInt(), "spending allowance not set correctly, got: %s", allowance.String())
 
-		balance, err := s.getEthTokenBalanceOf(common.HexToAddress(s.chain.validators[0].ethereumKey.address), testERC20contract)
+		balance, err := s.getEthTokenBalanceOf(*s.evmResources[chainIndex],  common.HexToAddress(s.chain.validators[0].ethereumKey.address), testERC20contracts[chainIndex])
 		s.Require().NoError(err, "error getting first validator balance")
 		s.Require().Equal(sdk.NewUint(10000).BigInt(), balance.BigInt(), "balance was %s, expected 10000", balance.String())
 
@@ -43,7 +45,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 		// send from val 0 on eth to val 1 on cosmos
 		s.T().Logf("sending to cosmos")
-		err = s.sendToCosmos(s.chain.validators[1].keyInfo.GetAddress(), sdk.NewInt(200))
+		err = s.sendToCosmos(chainIndex, s.chain.validators[1].keyInfo.GetAddress(), sdk.NewInt(200))
 		s.Require().NoError(err, "error sending test denom to cosmos")
 
 		for _, val := range s.chain.validators {
@@ -81,10 +83,10 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			gbQueryClient := types.NewQueryClient(clientCtx)
 			denomRes, err := gbQueryClient.ERC20ToDenom(context.Background(),
 				&types.ERC20ToDenomRequest{
-					Erc20: testERC20contract.String(),
+					Erc20: testERC20contracts[chainIndex].String(),
 				})
 			if err != nil {
-				s.T().Logf("error querying ERC20 denom %s, %e", testERC20contract.String(), err)
+				s.T().Logf("error querying ERC20 denom %s, %e", testERC20contracts[chainIndex].String(), err)
 				return false
 			}
 			s.Require().False(denomRes.CosmosOriginated, "ERC20-originated denom marked as cosmos originated")
@@ -105,7 +107,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		receiver, err := generateEthereumKey()
 		s.Require().NoError(err)
 
-		beforeBalance, err := s.getEthTokenBalanceOf(common.HexToAddress(receiver.address), testERC20contract)
+		beforeBalance, err := s.getEthTokenBalanceOf(*s.evmResources[chainIndex], common.HexToAddress(receiver.address), testERC20contracts[chainIndex])
 		s.Require().NoError(err, "error getting eth balance")
 
 		s.T().Logf("sending to ethereum")
@@ -140,7 +142,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 		s.T().Log("verifying send to ethereum")
 		s.Require().Eventuallyf(func() bool {
-			balance, err := s.getEthTokenBalanceOf(common.HexToAddress(receiver.address), testERC20contract)
+			balance, err := s.getEthTokenBalanceOf(*s.evmResources[chainIndex], common.HexToAddress(receiver.address), testERC20contracts[chainIndex])
 			s.Require().NoError(err, "error getting destination balance")
 
 			if balance.LTE(*beforeBalance) {
@@ -234,7 +236,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			})
 		s.Require().NoError(err, "error retrieving ERC20 params for testgb denom")
 
-		err = s.deployERC20(paramsRes.BaseDenom, paramsRes.Erc20Name, paramsRes.Erc20Symbol, uint8(paramsRes.Erc20Decimals))
+		err = s.deployERC20(chainIndex, paramsRes.BaseDenom, paramsRes.Erc20Name, paramsRes.Erc20Symbol, uint8(paramsRes.Erc20Decimals))
 		s.Require().NoError(err, "error deploying testgb as an ERC20")
 
 		s.Require().Eventuallyf(func() bool {
@@ -323,7 +325,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 		s.T().Log("waiting for community funds to reach destination")
 		s.Require().Eventuallyf(func() bool {
-			balance, err := s.getEthTokenBalanceOf(common.HexToAddress(s.chain.validators[2].ethereumKey.address), erc20Contract)
+			balance, err := s.getEthTokenBalanceOf(*s.evmResources[chainIndex], common.HexToAddress(s.chain.validators[2].ethereumKey.address), erc20Contract)
 			s.Require().NoError(err, "error getting destination balance")
 
 			if balance.LT(sdk.NewInt(900000000)) {

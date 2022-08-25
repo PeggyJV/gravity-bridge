@@ -21,12 +21,16 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 	s.Run("Transaction stress test", func() {
 		fmt.Println("StressTestTransaction starting")
 
+		ethereum := *s.evmResources[0]
+		gravityContract := gravityContracts[0]
+		testERC20contract := testERC20contracts[0]
+
 		// Approve spend & verify funds
 		for _, validator := range s.chain.validators {
-			err := s.SendEthTransaction(&validator.ethereumKey, testERC20contract, PackApproveERC20(gravityContract))
+			err := sendEthTransaction(ethereum, &validator.ethereumKey, testERC20contract, PackApproveERC20(gravityContract))
 			s.Require().NoError(err, "error approving spend")
 
-			balance, err := s.getEthTokenBalanceOf(common.HexToAddress(validator.ethereumKey.address), testERC20contract)
+			balance, err := s.getEthTokenBalanceOf(ethereum, common.HexToAddress(validator.ethereumKey.address), testERC20contract)
 			s.Require().NoError(err, "error getting balance")
 			s.Require().Equal(sdk.NewUint(10000).BigInt(), balance.BigInt(), "balance was %s, expected 10000", balance.String())
 		}
@@ -37,7 +41,7 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 			s.T().Logf("sending %d tx's to cosmos for validator %d ..", transactionsPerValidator, i+1)
 
 			for j := 0; j < int(transactionsPerValidator); j++ {
-				s.Require().NoError(s.SendEthTransaction(&validator.ethereumKey, gravityContract, PackSendToCosmos(testERC20contract, s.chain.validators[len(s.chain.validators)-1-i].keyInfo.GetAddress(), sendAmt)))
+				s.Require().NoError(sendEthTransaction(ethereum, &validator.ethereumKey, gravityContract, PackSendToCosmos(testERC20contract, s.chain.validators[len(s.chain.validators)-1-i].keyInfo.GetAddress(), sendAmt)))
 			}
 
 			s.T().Logf("%d Tx sent.", transactionsPerValidator)
@@ -72,7 +76,7 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 				s.Require().NoError(err)
 				balanceMap[i] = res.Balances
 
-				balance, err := s.getEthTokenBalanceOf(common.HexToAddress(validator.ethereumKey.address), testERC20contract)
+				balance, err := s.getEthTokenBalanceOf(ethereum, common.HexToAddress(validator.ethereumKey.address), testERC20contract)
 				s.Require().NoError(err)
 				s.T().Logf("test erc20 balance for validator %d: %v", i, balance)
 			}
@@ -136,7 +140,7 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 			s.Require().Eventuallyf(func() bool {
 				s.T().Logf("Checking validator %d", i+1)
 
-				balance, err := s.getEthTokenBalanceOf(common.HexToAddress(validator.ethereumKey.address), testERC20contract)
+				balance, err := s.getEthTokenBalanceOf(ethereum, common.HexToAddress(validator.ethereumKey.address), testERC20contract)
 				s.Require().NoError(err, "error getting destination balance")
 
 				if balance.LT(sdk.NewInt(10000 - (cosmosSentAmt * transactionsPerValidator) + (ethSentAmt * transactionsPerValidator))) {

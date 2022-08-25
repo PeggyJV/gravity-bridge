@@ -11,16 +11,19 @@ task(
         console.log(`starting with network: ${hre.network.name}, chain id: ${hre.network.config.chainId}`);
 
         // Take over vitalik.eth
-        await hre.network.provider.request({
-            method: 'hardhat_impersonateAccount',
-            params: [constants.WHALE],
-        });
+        // await hre.network.provider.request({
+        //     method: 'hardhat_impersonateAccount',
+        //     params: [constants.WHALE],
+        // });
 
         // Send ETH to needed parties
-        const whaleSigner = await hre.ethers.getSigner(constants.WHALE);
+        // const whaleSigner = await hre.ethers.getSigner(constants.WHALE);
 
+        console.log(`funding validators`)
+        const [sender] = await hre.ethers.getSigners();
         for (let addr of constants.VALIDATORS) {
-            await whaleSigner.sendTransaction({
+            console.log(`sending 100 to ${addr}`)
+            await sender.sendTransaction({
                 to: addr,
                 value: hre.ethers.utils.parseEther('100'),
             });
@@ -29,6 +32,7 @@ task(
         let powers: number[] = [1073741823, 1073741823, 1073741823, 1073741823];
         let powerThreshold: number = 6666;
 
+        console.log(`deploying Gravity contract`)
         const Gravity = await hre.ethers.getContractFactory("Gravity");
         const gravity = (await Gravity.deploy(
             hre.ethers.utils.formatBytes32String("gravitytest"),
@@ -40,13 +44,14 @@ task(
         await gravity.deployed();
         console.log(`gravity contract deployed at - ${gravity.address}`)
 
+        console.log(`deploying TestERC20 contract`)
         const TestERC20 = await hre.ethers.getContractFactory("TestERC20GB");
         const testERC20 = (await TestERC20.deploy());
         await testERC20.deployed();
         console.log(`test ERC20 TestGB TGB deployed at - ${testERC20.address}`)
 
+        console.log(`running node`)
         await hre.network.provider.send("evm_setIntervalMining", [1000]);
-
         await hre.run('node');
     });
 
@@ -54,16 +59,13 @@ task(
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-const ARCHIVE_NODE_URL = process.env.ARCHIVE_NODE_URL;
+// const ARCHIVE_NODE_URL = process.env.ARCHIVE_NODE_URL;
+const EVM_CHAIN_ID = Number(process.env.EVM_CHAIN_ID);
 
 module.exports = {
     networks: {
         hardhat: {
-            chainId: 1,
-            forking: {
-                url: ARCHIVE_NODE_URL,
-                blockNumber: 13405367,
-            },
+            chainId: EVM_CHAIN_ID,
         },
     },
     solidity: {
