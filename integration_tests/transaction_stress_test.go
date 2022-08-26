@@ -101,39 +101,28 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 		fmt.Println("Ethereum -> Cosmos stress test completed.")
 
 		for i, validator := range s.chain.validators {
-			s.Require().Eventuallyf(func() bool {
-				s.T().Logf("sending %d tx's to ethereum for validator %d ..", transactionsPerValidator, i+1)
+			s.T().Logf("sending %d tx's to ethereum for validator %d ..", transactionsPerValidator, i+1)
 
-				sendToEthereumMsg := types.NewMsgSendToEVM(
-					types.EthereumChainID,
-					validator.keyInfo.GetAddress(),
-					s.chain.validators[len(s.chain.validators)-1-i].ethereumKey.address,
-					sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(ethSentAmt)},
-					sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(1)},
-				)
+			sendToEthereumMsg := types.NewMsgSendToEVM(
+				types.EthereumChainID,
+				validator.keyInfo.GetAddress(),
+				s.chain.validators[len(s.chain.validators)-1-i].ethereumKey.address,
+				sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(ethSentAmt)},
+				sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(1)},
+			)
 
-				keyring, err := validator.keyring()
+			keyring, err := validator.keyring()
+			s.Require().NoError(err)
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", validator.keyInfo.GetAddress())
+			s.Require().NoError(err)
+
+			for j := 0; j < int(transactionsPerValidator); j++ {
+				response, err := s.chain.sendMsgs(*clientCtx, sendToEthereumMsg)
 				s.Require().NoError(err)
-				clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", validator.keyInfo.GetAddress())
-				s.Require().NoError(err)
+				s.Require().Zero(response.Code)
+			}
 
-				for j := 0; j < int(transactionsPerValidator); j++ {
-					response, err := s.chain.sendMsgs(*clientCtx, sendToEthereumMsg)
-					if err != nil {
-						s.T().Logf("error: %s", err)
-						return false
-					}
-					if response.Code != 0 {
-						if response.Code != 32 {
-							s.T().Log(response)
-						}
-						return false
-					}
-				}
-
-				s.T().Logf("%d Tx sent.", transactionsPerValidator)
-				return true
-			}, 105*time.Second, 10*time.Second, "unable to send to ethereum")
+			s.T().Logf("%d Tx sent.", transactionsPerValidator)
 		}
 
 		for i, validator := range s.chain.validators {
