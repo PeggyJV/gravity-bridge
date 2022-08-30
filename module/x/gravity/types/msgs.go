@@ -92,7 +92,7 @@ func (msg *MsgSubmitEthereumEvent) ValidateBasic() (err error) {
 
 // GetSignBytes encodes the message for signing
 func (msg *MsgSubmitEthereumEvent) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
@@ -133,7 +133,7 @@ func (msg *MsgSubmitEthereumTxConfirmation) ValidateBasic() (err error) {
 
 // GetSignBytes encodes the message for signing
 func (msg *MsgSubmitEthereumTxConfirmation) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
@@ -196,7 +196,7 @@ func (msg MsgSendToEthereum) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgSendToEthereum) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
@@ -236,7 +236,7 @@ func (msg MsgRequestBatchTx) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgRequestBatchTx) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
@@ -276,7 +276,7 @@ func (msg MsgCancelSendToEthereum) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgCancelSendToEthereum) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
@@ -318,7 +318,7 @@ func (msg MsgEthereumHeightVote) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgEthereumHeightVote) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
