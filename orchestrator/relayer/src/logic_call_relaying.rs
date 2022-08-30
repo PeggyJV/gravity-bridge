@@ -6,6 +6,7 @@ use ethereum_gravity::utils::handle_contract_error;
 use ethereum_gravity::{
     logic_call::send_eth_logic_call, types::EthClient, utils::get_logic_call_nonce,
 };
+use ethers::signers::Signer;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
@@ -15,10 +16,10 @@ use std::time::Duration;
 use tonic::transport::Channel;
 
 #[allow(clippy::too_many_arguments)]
-pub async fn relay_logic_calls(
+pub async fn relay_logic_calls<S: Signer + 'static>(
     // the validator set currently in the contract on Ethereum
     current_valset: Valset,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     gravity_id: String,
@@ -121,7 +122,7 @@ pub async fn relay_logic_calls(
 
         if cost.is_err() {
             warn!("LogicCall cost estimate failed");
-            let should_permanently_skip = handle_contract_error(cost.unwrap_err());
+            let should_permanently_skip = handle_contract_error::<S>(cost.unwrap_err());
             if should_permanently_skip {
                 logic_call_skips.skip_permanently(&oldest_signed_call);
             } else {
@@ -170,7 +171,7 @@ pub async fn relay_logic_calls(
 
         if res.is_err() {
             warn!("LogicCall submission failed");
-            let should_permanently_skip = handle_contract_error(res.unwrap_err());
+            let should_permanently_skip = handle_contract_error::<S>(res.unwrap_err());
             if should_permanently_skip {
                 logic_call_skips.skip_permanently(&oldest_signed_call);
             } else {

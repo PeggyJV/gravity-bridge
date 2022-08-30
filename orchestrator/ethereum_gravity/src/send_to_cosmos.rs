@@ -13,13 +13,13 @@ use std::{result::Result, time::Duration};
 const SEND_TO_COSMOS_GAS_LIMIT: u128 = 100_000;
 
 #[allow(clippy::too_many_arguments)]
-pub async fn send_to_cosmos(
+pub async fn send_to_cosmos<S: Signer + 'static>(
     erc20: Address,
     gravity_contract: Address,
     amount: U256,
     cosmos_destination: CosmosAddress,
     wait_timeout: Option<Duration>,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
 ) -> Result<TxHash, GravityError> {
     // TODO(bolten): this value is ported from web30, does it match our expectations?
     // Check if the allowance remaining is greater than half of a U256 - it's as good

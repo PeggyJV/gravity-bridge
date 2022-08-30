@@ -6,6 +6,7 @@ use std::time::Duration;
 use cosmos_gravity::query::get_latest_valset;
 use cosmos_gravity::query::{get_all_valset_confirms, get_valset};
 use ethereum_gravity::{one_eth_f32, types::EthClient, valset_update::send_eth_valset_update};
+use ethers::signers::Signer;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::{
@@ -16,10 +17,10 @@ use tonic::transport::Channel;
 
 /// Check the last validator set on Ethereum, if it's lower than our latest validator
 /// set then we should package and submit the update as an Ethereum transaction
-pub async fn relay_valsets(
+pub async fn relay_valsets<S: Signer + 'static>(
     // the validator set currently in the contract on Ethereum
     current_eth_valset: Valset,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     gravity_id: String,

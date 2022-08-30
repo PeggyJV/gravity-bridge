@@ -25,8 +25,8 @@ actix-rt = "2.5"
 rpassword = "5"
 bip32 = "0.2"
 k256 = { version = "0.9", features = ["pem"] }
-pkcs8 = { version = "0.7", features = ["pem"] }
-signatory = "0.23.0-pre"
+pkcs8 = { version = "= 0.7.6", features = ["pem"] }
+signatory = "= 0.23.1"
 rand_core = { version = "0.6", features = ["std"] }
 openssl-probe = "0.1.4"
 

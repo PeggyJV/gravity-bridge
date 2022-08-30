@@ -14,9 +14,9 @@ use std::collections::BTreeMap;
 
 use crate::crypto::PrivateKey as CosmosPrivateKey;
 
-pub async fn signer_set_tx_confirmation_messages(
+pub async fn signer_set_tx_confirmation_messages<S: Signer>(
     contact: &Contact,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
     valsets: Vec<Valset>,
     cosmos_key: CosmosPrivateKey,
     gravity_id: String,
@@ -45,9 +45,9 @@ pub async fn signer_set_tx_confirmation_messages(
     msgs
 }
 
-pub async fn batch_tx_confirmation_messages(
+pub async fn batch_tx_confirmation_messages<S: Signer>(
     contact: &Contact,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
     batches: Vec<TransactionBatch>,
     cosmos_key: CosmosPrivateKey,
     gravity_id: String,
@@ -77,9 +77,9 @@ pub async fn batch_tx_confirmation_messages(
     msgs
 }
 
-pub async fn contract_call_tx_confirmation_messages(
+pub async fn contract_call_tx_confirmation_messages<S: Signer>(
     contact: &Contact,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
     logic_calls: Vec<LogicCall>,
     cosmos_key: CosmosPrivateKey,
     gravity_id: String,

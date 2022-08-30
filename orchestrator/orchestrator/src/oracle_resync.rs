@@ -18,11 +18,11 @@ use crate::get_with_retry::RETRY_TIME;
 
 /// This function retrieves the last event nonce that we have relayed to Cosmos
 /// it then uses the Ethereum indexes to find what block the last event we relayed is in
-pub async fn get_last_checked_block(
+pub async fn get_last_checked_block<S: Signer>(
     grpc_client: GravityQueryClient<Channel>,
     our_cosmos_address: CosmosAddress,
     gravity_contract_address: EthAddress,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
     blocks_to_search: u64,
 ) -> U64 {
     // TODO(bolten): original version of this used a 120 second timeout when querying

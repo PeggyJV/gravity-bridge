@@ -5,8 +5,8 @@ use crate::get_with_retry::get_block_number_with_retry;
 use crate::get_with_retry::get_chain_id_with_retry;
 use crate::metrics;
 use cosmos_gravity::build;
-use cosmos_gravity::query::get_last_event_nonce;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
+use cosmos_gravity::query::get_last_event_nonce;
 use deep_space::{Contact, Msg};
 use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
@@ -28,8 +28,8 @@ use std::{result::Result, time};
 use tonic::transport::Channel;
 
 #[allow(clippy::too_many_arguments)]
-pub async fn check_for_events(
-    eth_client: EthClient,
+pub async fn check_for_events<S: Signer + 'static>(
+    eth_client: EthClient<S>,
     contact: &Contact,
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
@@ -242,7 +242,6 @@ pub async fn check_for_events(
     Ok(ending_block)
 }
 
-
 /// The number of blocks behind the 'latest block' on Ethereum our event checking should be.
 /// Ethereum does not have finality and as such is subject to chain reorgs and temporary forks
 /// if we check for events up to the very latest block we may process an event which did not
@@ -263,7 +262,7 @@ pub async fn check_for_events(
 /// Given an uncle every 2.8 minutes, a 6 deep reorg would be 2.8 minutes * (100^4) or one
 /// 6 deep reorg every 53,272 years.
 ///
-pub async fn get_block_delay(eth_client: EthClient) -> Result<U64, GravityError> {
+pub async fn get_block_delay<S: Signer>(eth_client: EthClient<S>) -> Result<U64, GravityError> {
     // TODO(bolten): get_net_version() exists on the version of ethers we are currently
     // depending on, but it's broken, so we're relying on chain ID
     let chain_id_result = get_chain_id_with_retry(eth_client.clone()).await;

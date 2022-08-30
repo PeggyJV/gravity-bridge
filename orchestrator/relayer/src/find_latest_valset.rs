@@ -13,10 +13,10 @@ use tonic::transport::Channel;
 /// as the latest update will be in recent blockchain history and the search moves from the present
 /// backwards in time. In the case that the validator set has not been updated for a very long time
 /// this will take longer.
-pub async fn find_latest_valset(
+pub async fn find_latest_valset<S: Signer + 'static>(
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
 ) -> Result<Valset, GravityError> {
     // calculate some constant U64 values only once
     const BLOCKS_TO_SEARCH: u64 = 5_000u64;

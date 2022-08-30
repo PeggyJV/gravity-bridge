@@ -13,10 +13,10 @@ use ethers::prelude::signer::SignerMiddlewareError;
 use ethers::prelude::ContractError;
 use ethers::prelude::ProviderError as EthersProviderError;
 use ethers::prelude::*;
-use ethers::signers::WalletError as EthersWalletError;
 use ethers::types::SignatureError as EthersSignatureError;
 use num_bigint::ParseBigIntError;
 use rustc_hex::FromHexError as EthersParseAddressError;
+use std::error::Error;
 use std::fmt::{self, Debug};
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
@@ -30,16 +30,16 @@ pub enum GravityError {
     CosmosAddressError(CosmosAddressError),
     CosmosPrivateKeyError(CosmosPrivateKeyError),
     EthereumBadDataError(String),
-    EthereumRestError(SignerMiddlewareError<Provider<Http>, LocalWallet>),
+    EthereumRestError(Box<dyn Error>),
     EthersAbiError(EthersAbiError),
     EthersContractAbiError(EthersContractAbiError),
-    EthersContractError(ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>),
+    EthersContractError(Box<dyn Error>),
     EthersGasOracleError(EthersGasOracleError),
     EthersParseAddressError(EthersParseAddressError),
     EthersParseUintError(EthersParseUintError),
     EthersProviderError(EthersProviderError),
     EthersSignatureError(EthersSignatureError),
-    EthersWalletError(EthersWalletError),
+    EthersWalletError(Box<dyn Error>),
     EtherscanError(EtherscanError),
     GravityContractError(String),
     InvalidArgumentError(String),
@@ -149,9 +149,9 @@ impl From<ClarityError> for GravityError {
     }
 }
 
-impl From<SignerMiddlewareError<Provider<Http>, LocalWallet>> for GravityError {
-    fn from(error: SignerMiddlewareError<Provider<Http>, LocalWallet>) -> Self {
-        GravityError::EthereumRestError(error)
+impl<S: Signer + 'static> From<SignerMiddlewareError<Provider<Http>, S>> for GravityError {
+    fn from(error: SignerMiddlewareError<Provider<Http>, S>) -> Self {
+        GravityError::EthereumRestError(Box::new(error))
     }
 }
 
@@ -167,9 +167,11 @@ impl From<EthersContractAbiError> for GravityError {
     }
 }
 
-impl From<ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>> for GravityError {
-    fn from(error: ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>) -> Self {
-        GravityError::EthersContractError(error)
+impl<S: Signer + 'static> From<ContractError<SignerMiddleware<Provider<Http>, S>>>
+    for GravityError
+{
+    fn from(error: ContractError<SignerMiddleware<Provider<Http>, S>>) -> Self {
+        GravityError::EthersContractError(Box::new(error))
     }
 }
 
@@ -200,12 +202,6 @@ impl From<EthersProviderError> for GravityError {
 impl From<EthersSignatureError> for GravityError {
     fn from(error: EthersSignatureError) -> Self {
         GravityError::EthersSignatureError(error)
-    }
-}
-
-impl From<EthersWalletError> for GravityError {
-    fn from(error: EthersWalletError) -> Self {
-        GravityError::EthersWalletError(error)
     }
 }
 

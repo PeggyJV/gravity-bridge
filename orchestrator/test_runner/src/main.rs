@@ -74,7 +74,7 @@ lazy_static! {
     static ref MINER_PROVIDER: Provider<Http> = Provider::<Http>::try_from((*ETH_NODE).clone()).unwrap();
     static ref MINER_SIGNER: SignerMiddleware<Provider<Http>, LocalWallet> =
         SignerMiddleware::new((*MINER_PROVIDER).clone(), (*MINER_WALLET).clone());
-    static ref MINER_CLIENT: EthClient = Arc::new((*MINER_SIGNER).clone());
+    static ref MINER_CLIENT: EthClient<LocalWallet> = Arc::new((*MINER_SIGNER).clone());
 
 }
 

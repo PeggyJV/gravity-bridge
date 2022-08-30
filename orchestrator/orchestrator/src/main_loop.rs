@@ -9,6 +9,7 @@ use crate::{
     ethereum_event_watcher::check_for_events, metrics::metrics_main_loop,
     oracle_resync::get_last_checked_block,
 };
+use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::send::send_main_loop;
 use cosmos_gravity::{
     build,
@@ -19,7 +20,6 @@ use cosmos_gravity::{
 };
 use deep_space::client::ChainStatus;
 use deep_space::error::CosmosGrpcError;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use deep_space::{Contact, Msg};
 use ethereum_gravity::types::EthClient;
 use ethereum_gravity::utils::get_gravity_id;
@@ -46,10 +46,10 @@ pub const ETH_ORACLE_LOOP_SPEED: Duration = Duration::from_secs(13);
 /// of all execution time sleeping this shouldn't be an issue at all.
 #[allow(clippy::many_single_char_names)]
 #[allow(clippy::too_many_arguments)]
-pub async fn orchestrator_main_loop(
+pub async fn orchestrator_main_loop<S: Signer + 'static>(
     cosmos_key: CosmosPrivateKey,
     contact: Contact,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     gas_price: (f64, String),
@@ -116,10 +116,10 @@ const HEIGHT_UPDATE_INTERVAL: u32 = 50;
 /// This function is responsible for making sure that Ethereum events are retrieved from the Ethereum blockchain
 /// and ferried over to Cosmos where they will be used to issue tokens or process batches.
 #[allow(unused_variables)]
-pub async fn eth_oracle_main_loop(
+pub async fn eth_oracle_main_loop<S: Signer + 'static>(
     cosmos_key: CosmosPrivateKey,
     contact: Contact,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     blocks_to_search: u64,
@@ -171,7 +171,8 @@ pub async fn eth_oracle_main_loop(
                                 &contact,
                                 cosmos_key,
                                 latest_eth_block - block_delay,
-                            ).await;
+                            )
+                            .await;
 
                             msg_sender
                                 .send(messages)
@@ -243,10 +244,10 @@ pub async fn eth_oracle_main_loop(
 /// since these are provided directly by a trusted Cosmsos node they can simply be assumed to be
 /// valid and signed off on.
 #[allow(unused_variables)]
-pub async fn eth_signer_main_loop(
+pub async fn eth_signer_main_loop<S: Signer + 'static>(
     cosmos_key: CosmosPrivateKey,
     contact: Contact,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
     grpc_client: GravityQueryClient<Channel>,
     contract_address: EthAddress,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
@@ -408,7 +409,7 @@ pub async fn eth_signer_main_loop(
     }
 }
 
-pub async fn check_for_eth(orchestrator_address: EthAddress, eth_client: EthClient) {
+pub async fn check_for_eth<S: Signer>(orchestrator_address: EthAddress, eth_client: EthClient<S>) {
     let balance = eth_client
         .get_balance(orchestrator_address, None)
         .await
