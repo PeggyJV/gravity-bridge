@@ -1,5 +1,5 @@
 use ethers::prelude::*;
 use std::sync::Arc;
 
-pub type EthSignerMiddleware = SignerMiddleware<Provider<Http>, LocalWallet>;
-pub type EthClient = Arc<EthSignerMiddleware>;
+pub type EthSignerMiddleware<S> = SignerMiddleware<Provider<Http>, S>;
+pub type EthClient<S> = Arc<EthSignerMiddleware<S>>;

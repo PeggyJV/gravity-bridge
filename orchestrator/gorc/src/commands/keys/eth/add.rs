@@ -1,10 +1,11 @@
+use std::path;
+
 use super::show::ShowEthKeyCmd;
 use crate::application::APP;
 use abscissa_core::{clap::Parser, Application, Command, Runnable};
 use k256::pkcs8::ToPrivateKey;
 use rand_core::OsRng;
 use signatory::FsKeyStore;
-use std::path;
 
 /// Add a new Eth Key
 #[derive(Command, Debug, Default, Parser)]

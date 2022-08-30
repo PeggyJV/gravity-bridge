@@ -1,7 +1,7 @@
 use crate::one_eth;
+use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use deep_space::address::Address as CosmosAddress;
 use deep_space::coin::Coin;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
 use ethereum_gravity::{erc20_utils::get_erc20_balance, types::EthClient};
 use ethers::core::k256::ecdsa::SigningKey;
@@ -11,7 +11,7 @@ use futures::future::join_all;
 use gravity_abi::erc20::ERC20;
 use rand::Rng;
 
-pub async fn send_one_eth(dest: EthAddress, eth_client: EthClient) {
+pub async fn send_one_eth<S: Signer>(dest: EthAddress, eth_client: EthClient<S>) {
     let tx = TransactionRequest {
         from: Some(eth_client.address()),
         to: Some(NameOrAddress::Address(dest)),
@@ -46,11 +46,11 @@ pub async fn check_cosmos_balance(
 /// the real problem here is that you can't do more than one send operation at a time from a
 /// single address without your sequence getting out of whack. By manually setting the nonce
 /// here we can send thousands of transactions in only a few blocks
-pub async fn send_erc20_bulk(
+pub async fn send_erc20_bulk<S: Signer + 'static>(
     amount: U256,
     erc20: EthAddress,
     destinations: &[EthAddress],
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
 ) {
     let miner_balance = get_erc20_balance(erc20, eth_client.address(), eth_client.clone())
         .await
@@ -104,7 +104,11 @@ pub async fn send_erc20_bulk(
 /// the real problem here is that you can't do more than one send operation at a time from a
 /// single address without your sequence getting out of whack. By manually setting the nonce
 /// here we can quickly send thousands of transactions in only a few blocks
-pub async fn send_eth_bulk(amount: U256, destinations: &[EthAddress], eth_client: EthClient) {
+pub async fn send_eth_bulk<S: Signer>(
+    amount: U256,
+    destinations: &[EthAddress],
+    eth_client: EthClient<S>,
+) {
     let mut nonce = eth_client
         .get_transaction_count(eth_client.address(), None)
         .await

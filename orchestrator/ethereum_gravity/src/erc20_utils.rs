@@ -10,12 +10,12 @@ use std::{result::Result, time::Duration};
 /// on the ERC20 contract with your own address and A's address so that in the future when you call
 /// contract A it can manipulate your ERC20 balances. This function checks if that has already been done
 /// and that the allowed amount is greater than the provided allowance threshold.
-pub async fn check_erc20_approved(
+pub async fn check_erc20_approved<S: Signer + 'static>(
     erc20: Address,
     target_contract: Address,
     address: Address,
     allowance_threshold: U256,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
 ) -> Result<bool, GravityError> {
     let erc20_contract = ERC20::new(erc20, eth_client.clone());
     let contract_call = erc20_contract.allowance(address, target_contract);
@@ -29,11 +29,11 @@ pub async fn check_erc20_approved(
 /// your erc20 contract funds you need to call 'approve' on the ERC20 contract with your own address and A's
 /// address so that in the future when you call contract A it can manipulate your ERC20 balances.
 /// This function performs that action and waits for it to complete for up to Timeout duration
-pub async fn approve_erc20_transfers(
+pub async fn approve_erc20_transfers<S: Signer + 'static>(
     erc20: Address,
     target_contract: Address,
     timeout_option: Option<Duration>,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
 ) -> Result<TxHash, GravityError> {
     let erc20_contract = ERC20::new(erc20, eth_client.clone());
     let contract_call = erc20_contract.approve(target_contract, U256::MAX);
@@ -62,10 +62,10 @@ pub async fn approve_erc20_transfers(
     }
 }
 
-pub async fn get_erc20_balance(
+pub async fn get_erc20_balance<S: Signer + 'static>(
     erc20: Address,
     address: Address,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
 ) -> Result<U256, GravityError> {
     let erc20_contract = ERC20::new(erc20, eth_client.clone());
     let contract_call = erc20_contract.balance_of(address);

@@ -28,10 +28,10 @@ struct SubmittableBatch {
 /// and if that succeeds and we like the gas cost we complete the relaying process and
 /// actually submit the data to Ethereum
 #[allow(clippy::too_many_arguments)]
-pub async fn relay_batches(
+pub async fn relay_batches<S: Signer + 'static>(
     // the validator set currently in the contract on Ethereum
     current_valset: Valset,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     gravity_id: String,
@@ -127,9 +127,9 @@ async fn get_batches_and_signatures(
 /// different standards for their profit margin, therefore there may be a race not only to
 /// submit individual batches but also batches in different orders
 #[allow(clippy::too_many_arguments)]
-async fn submit_batches(
+async fn submit_batches<S: Signer + 'static>(
     current_valset: Valset,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
     gravity_contract_address: EthAddress,
     gravity_id: String,
     timeout: Duration,

@@ -14,7 +14,7 @@ use std::{result::Result, time::Duration};
 /// this function generates an appropriate Ethereum transaction
 /// to submit the provided transaction batch
 #[allow(clippy::too_many_arguments)]
-pub async fn send_eth_transaction_batch(
+pub async fn send_eth_transaction_batch<S: Signer + 'static>(
     current_valset: Valset,
     batch: TransactionBatch,
     confirms: &[BatchConfirmResponse],
@@ -22,7 +22,7 @@ pub async fn send_eth_transaction_batch(
     gravity_contract_address: EthAddress,
     gravity_id: String,
     gas_cost: GasCost,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
 ) -> Result<(), GravityError> {
     let new_batch_nonce = batch.nonce;
     info!(
@@ -102,13 +102,13 @@ pub async fn send_eth_transaction_batch(
 }
 
 /// Returns the cost in Eth of sending this batch
-pub async fn estimate_tx_batch_cost(
+pub async fn estimate_tx_batch_cost<S: Signer + 'static>(
     current_valset: Valset,
     batch: TransactionBatch,
     confirms: &[BatchConfirmResponse],
     gravity_contract_address: EthAddress,
     gravity_id: String,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
 ) -> Result<GasCost, GravityError> {
     let contract_call = build_submit_batch_contract_call(
         current_valset,
@@ -125,14 +125,14 @@ pub async fn estimate_tx_batch_cost(
     })
 }
 
-pub fn build_submit_batch_contract_call(
+pub fn build_submit_batch_contract_call<S: Signer + 'static>(
     current_valset: Valset,
     batch: &TransactionBatch,
     confirms: &[BatchConfirmResponse],
     gravity_contract_address: EthAddress,
     gravity_id: String,
-    eth_client: EthClient,
-) -> Result<ContractCall<EthSignerMiddleware, ()>, GravityError> {
+    eth_client: EthClient<S>,
+) -> Result<ContractCall<EthSignerMiddleware<S>, ()>, GravityError> {
     let (current_addresses, current_powers) = current_valset.filter_empty_addresses();
     let current_powers: Vec<U256> = current_powers.iter().map(|power| (*power).into()).collect();
     let current_valset_nonce = current_valset.nonce;

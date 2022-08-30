@@ -11,7 +11,7 @@ use tonic::transport::Channel;
 pub const RETRY_TIME: Duration = Duration::from_secs(5);
 
 /// gets the current block number, no matter how long it takes
-pub async fn get_block_number_with_retry(eth_client: EthClient) -> U64 {
+pub async fn get_block_number_with_retry<S: Signer>(eth_client: EthClient<S>) -> U64 {
     let mut res = eth_client.get_block_number().await;
     while res.is_err() {
         error!("Failed to get latest block! Is your Eth node working?");
@@ -39,7 +39,7 @@ pub async fn get_last_event_nonce_with_retry(
 }
 
 /// gets the chain ID, no matter how long it takes
-pub async fn get_chain_id_with_retry(eth_client: EthClient) -> U256 {
+pub async fn get_chain_id_with_retry<S: Signer>(eth_client: EthClient<S>) -> U256 {
     let mut res = eth_client.get_chainid().await;
     while res.is_err() {
         error!("Failed to get chain ID! Is your Eth node working?");

@@ -9,12 +9,12 @@ use gravity_abi::gravity::*;
 use gravity_utils::ethereum::{bytes_to_hex_str, vec_u8_to_fixed_32};
 use gravity_utils::types::*;
 use gravity_utils::{error::GravityError, message_signatures::encode_logic_call_confirm_hashed};
-use std::{result::Result, time::Duration, collections::HashMap};
+use std::{collections::HashMap, result::Result, time::Duration};
 
 /// this function generates an appropriate Ethereum transaction
 /// to submit the provided logic call
 #[allow(clippy::too_many_arguments)]
-pub async fn send_eth_logic_call(
+pub async fn send_eth_logic_call<S: Signer + 'static>(
     current_valset: Valset,
     call: LogicCall,
     confirms: &[LogicCallConfirmResponse],
@@ -22,7 +22,7 @@ pub async fn send_eth_logic_call(
     gravity_contract_address: EthAddress,
     gravity_id: String,
     gas_cost: GasCost,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
     logic_call_skips: &mut LogicCallSkips,
 ) -> Result<(), GravityError> {
     let new_call_nonce = call.invalidation_nonce;
@@ -112,13 +112,13 @@ pub async fn send_eth_logic_call(
 }
 
 /// Returns the cost in Eth of sending this batch
-pub async fn estimate_logic_call_cost(
+pub async fn estimate_logic_call_cost<S: Signer + 'static>(
     current_valset: Valset,
     call: LogicCall,
     confirms: &[LogicCallConfirmResponse],
     gravity_contract_address: EthAddress,
     gravity_id: String,
-    eth_client: EthClient,
+    eth_client: EthClient<S>,
 ) -> Result<GasCost, GravityError> {
     let contract_call = build_send_logic_call_contract_call(
         current_valset,
@@ -135,14 +135,14 @@ pub async fn estimate_logic_call_cost(
     })
 }
 
-pub fn build_send_logic_call_contract_call(
+pub fn build_send_logic_call_contract_call<S: Signer + 'static>(
     current_valset: Valset,
     call: &LogicCall,
     confirms: &[LogicCallConfirmResponse],
     gravity_contract_address: EthAddress,
     gravity_id: String,
-    eth_client: EthClient,
-) -> Result<ContractCall<EthSignerMiddleware, ()>, GravityError> {
+    eth_client: EthClient<S>,
+) -> Result<ContractCall<EthSignerMiddleware<S>, ()>, GravityError> {
     let (current_addresses, current_powers) = current_valset.filter_empty_addresses();
     let current_powers: Vec<U256> = current_powers.iter().map(|power| (*power).into()).collect();
     let current_valset_nonce = current_valset.nonce;
@@ -262,7 +262,8 @@ impl LogicCallSkips {
         if id_skips.is_none() {
             // first time we've seen this invalidation id, start at 2 skips
             let new_id_skips = HashMap::from([(call.invalidation_nonce, new_skip_state)]);
-            self.skip_map.insert(call.invalidation_id.clone(), new_id_skips);
+            self.skip_map
+                .insert(call.invalidation_id.clone(), new_id_skips);
         } else {
             let id_skips = id_skips.unwrap();
             let skip_state = id_skips.get_mut(&call.invalidation_nonce);
