@@ -119,7 +119,10 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 			for j := 0; j < int(transactionsPerValidator); j++ {
 				response, err := s.chain.sendMsgs(*clientCtx, sendToEthereumMsg)
 				s.Require().NoError(err)
-				s.Require().Zero(response.Code)
+				if response.Code != 0 {
+					s.T().Logf("response non-zero: %s", response.RawLog)
+					s.Require().Zero(response.Code)
+				}
 			}
 
 			s.T().Logf("%d Tx sent.", transactionsPerValidator)
