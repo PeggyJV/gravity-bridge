@@ -196,7 +196,7 @@ func (msg MsgSendToEthereum) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgSendToEthereum) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -236,7 +236,7 @@ func (msg MsgRequestBatchTx) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgRequestBatchTx) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -276,7 +276,7 @@ func (msg MsgCancelSendToEthereum) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgCancelSendToEthereum) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -318,7 +318,7 @@ func (msg MsgEthereumHeightVote) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgEthereumHeightVote) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
