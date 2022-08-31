@@ -100,6 +100,9 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 		earliestToPrune := currentBlock - params.SignedSignerSetTxsWindow
 		for _, set := range k.GetSignerSetTxs(ctx) {
 			if set.Nonce < lastObserved.Nonce && set.Height < earliestToPrune {
+				// delete the signatures
+				k.DeleteEthereumSignatures(ctx, set)
+				// delete the outgoing signer set tx
 				k.DeleteOutgoingTx(ctx, set.GetStoreIndex())
 			}
 		}

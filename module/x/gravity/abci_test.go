@@ -2,6 +2,7 @@ package gravity_test
 
 import (
 	"fmt"
+	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 	"testing"
 	"time"
 
@@ -27,6 +28,56 @@ func TestSignerSetTxCreationIfNotAvailable(t *testing.T) {
 	_, ok := otx.(*types.SignerSetTx)
 	require.True(t, ok)
 	require.True(t, len(gravityKeeper.GetSignerSetTxs(ctx)) == 1)
+}
+
+func TestPruneSignerSetTxs(t *testing.T) {
+	input, ctx := keeper.SetupFiveValChain(t)
+	gravityKeeper := input.GravityKeeper
+	params := input.GravityKeeper.GetParams(ctx)
+
+	// BeginBlocker should set a new validator set if not available
+	gravity.BeginBlocker(ctx, gravityKeeper)
+	otx := gravityKeeper.GetOutgoingTx(ctx, types.MakeSignerSetTxKey(1))
+	require.NotNil(t, otx)
+	signerSetTx, ok := otx.(*types.SignerSetTx)
+	require.True(t, ok)
+	require.True(t, len(gravityKeeper.GetSignerSetTxs(ctx)) == 1)
+
+	// Add a signature
+	ethPrivKey, _ := ethCrypto.GenerateKey()
+	ethAddr := ethCrypto.PubkeyToAddress(ethPrivKey.PublicKey)
+	orcAddr, _ := sdk.AccAddressFromBech32("cosmos1dg55rtevlfxh46w88yjpdd08sqhh5cc3xhkcej")
+	valAddr := sdk.ValAddress(orcAddr)
+
+	gravityId := params.GravityId
+	checkpoint := signerSetTx.GetCheckpoint([]byte(gravityId))
+	signature, _ := types.NewEthereumSignature(checkpoint, ethPrivKey)
+	signerSetTxConfirmation := &types.SignerSetTxConfirmation{
+		SignerSetNonce: signerSetTx.Nonce,
+		EthereumSigner: ethAddr.Hex(),
+		Signature:      signature,
+	}
+	gravityKeeper.SetEthereumSignature(ctx, signerSetTxConfirmation, valAddr)
+	// Check that signature exist
+	signatures := gravityKeeper.GetEthereumSignatures(ctx, types.MakeSignerSetTxKey(1))
+	require.Equal(t, 1, len(signatures))
+
+	// Handle outgoing tx event
+	gravityKeeper.Handle(ctx, &types.SignerSetTxExecutedEvent{
+		EventNonce:       1,
+		SignerSetTxNonce: signerSetTx.Nonce + 1,
+	})
+
+	// Define new height for the pruning to happen
+	prunedHeight := uint64(ctx.BlockHeight()) + (params.SignedSignerSetTxsWindow + 1)
+	newCtx := ctx.WithBlockHeight(int64(prunedHeight))
+	// Prune the valset
+	gravity.BeginBlocker(newCtx, gravityKeeper)
+	otx = gravityKeeper.GetOutgoingTx(newCtx, types.MakeSignerSetTxKey(1))
+	require.Nil(t, otx)
+	// Check that signatures are pruned as well
+	signatures = gravityKeeper.GetEthereumSignatures(newCtx, types.MakeSignerSetTxKey(1))
+	require.Equal(t, 0, len(signatures))
 }
 
 func TestSignerSetTxCreationUponUnbonding(t *testing.T) {
