@@ -66,15 +66,16 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 			gravityDenom = denomRes.Denom
 
 			bankQueryClient := banktypes.NewQueryClient(clientCtx)
-			balanceMap := make(map[int]sdk.Coins)
+			balanceMap := make(map[int]sdk.Coin)
 
 			for i, validator := range s.chain.validators {
-				res, err := bankQueryClient.AllBalances(context.Background(),
-					&banktypes.QueryAllBalancesRequest{
+				res, err := bankQueryClient.Balance(context.Background(),
+					&banktypes.QueryBalanceRequest{
+						Denom:   gravityDenom,
 						Address: validator.keyInfo.GetAddress().String(),
 					})
 				s.Require().NoError(err)
-				balanceMap[i] = res.Balances
+				balanceMap[i] = *res.Balance
 
 				balance, err := s.getEthTokenBalanceOf(ethereum, common.HexToAddress(validator.ethereumKey.address), testERC20contract)
 				s.Require().NoError(err)
@@ -83,16 +84,13 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 
 			met := true
 			for i, _ := range s.chain.validators {
-				for _, coin := range balanceMap[i] {
-					if coin.Denom == gravityDenom {
-						if coin.Amount.Equal(sdk.NewInt(cosmosSentAmt * transactionsPerValidator)) {
-							s.T().Logf("correct funds recieved for validator %d, balance: %v", i, coin)
-						} else {
-							s.T().Logf("incorrect funds received for validator %d, got %d, expected %d", i, coin.Amount.Int64(),
-								cosmosSentAmt*transactionsPerValidator)
-							met = false
-						}
-					}
+				coin := balanceMap[i]
+				if coin.Amount.Equal(sdk.NewInt(cosmosSentAmt * transactionsPerValidator)) {
+					s.T().Logf("correct funds recieved for validator %d, balance: %v", i, coin)
+				} else {
+					s.T().Logf("incorrect funds received for validator %d, got %d, expected %d", i, coin.Amount.Int64(),
+						cosmosSentAmt*transactionsPerValidator)
+					met = false
 				}
 			}
 
@@ -125,7 +123,7 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 			if balance.Balance.Amount.IsZero() {
 				balances, err := bankQueryClient.AllBalances(context.Background(), banktypes.NewQueryAllBalancesRequest(validator.keyInfo.GetAddress(), nil))
 				s.Require().NoError(err)
-				s.T().Logf("balances for %s: %v", validator, balances)
+				s.T().Logf("balances for %s: %v", validator.keyInfo.GetAddress(), balances)
 
 				s.Require().NotZero(balance.Balance.Amount.Int64())
 			}
