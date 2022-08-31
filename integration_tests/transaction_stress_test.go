@@ -116,6 +116,20 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", validator.keyInfo.GetAddress())
 			s.Require().NoError(err)
 
+			bankQueryClient := banktypes.NewQueryClient(clientCtx)
+			balance, err := bankQueryClient.Balance(context.Background(), &banktypes.QueryBalanceRequest{
+				Denom:   gravityDenom,
+				Address: validator.keyInfo.GetAddress().String(),
+			})
+			s.Require().NoError(err)
+			if balance.Balance.Amount.IsZero() {
+				balances, err := bankQueryClient.AllBalances(context.Background(), banktypes.NewQueryAllBalancesRequest(validator.keyInfo.GetAddress(), nil))
+				s.Require().NoError(err)
+				s.T().Logf("balances for %s: %v", validator, balances)
+
+				s.Require().NotZero(balance.Balance.Amount.Int64())
+			}
+
 			for j := 0; j < int(transactionsPerValidator); j++ {
 				response, err := s.chain.sendMsgs(*clientCtx, sendToEthereumMsg)
 				s.Require().NoError(err)
