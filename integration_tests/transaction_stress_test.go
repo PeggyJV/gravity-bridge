@@ -49,12 +49,11 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 
 		var gravityDenom string
 		queryingVal := s.chain.validators[2]
+		kb, err := queryingVal.keyring()
+		s.Require().NoError(err)
+		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", queryingVal.keyInfo.GetAddress())
+		s.Require().NoError(err)
 		s.Require().Eventuallyf(func() bool {
-			kb, err := queryingVal.keyring()
-			s.Require().NoError(err)
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", queryingVal.keyInfo.GetAddress())
-			s.Require().NoError(err)
-
 			gbQueryClient := types.NewQueryClient(clientCtx)
 			denomRes, err := gbQueryClient.ERC20ToDenom(context.Background(),
 				&types.ERC20ToDenomRequest{
@@ -79,7 +78,7 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 
 				balance, err := s.getEthTokenBalanceOf(ethereum, common.HexToAddress(validator.ethereumKey.address), testERC20contract)
 				s.Require().NoError(err)
-				s.T().Logf("test erc20 balance for validator %d: %v", i, balance)
+				s.T().Logf("test erc20 balance for validator %d (%s): %v", i, validator.keyInfo.GetAddress().String(), balance)
 			}
 
 			met := true
@@ -88,15 +87,43 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 				if coin.Amount.Equal(sdk.NewInt(cosmosSentAmt * transactionsPerValidator)) {
 					s.T().Logf("correct funds recieved for validator %d, balance: %v", i, coin)
 				} else {
-					s.T().Logf("incorrect funds received for validator %d, got %d, expected %d", i, coin.Amount.Int64(),
+					s.T().Logf("incorrect funds received for validator %d, got %v, expected %d", i, coin,
 						cosmosSentAmt*transactionsPerValidator)
-					met = false
+					//met = false
 				}
 			}
 
 			return met
 		}, 2*time.Minute, 10*time.Second, "balance never found on cosmos")
 		fmt.Println("Ethereum -> Cosmos stress test completed.")
+
+		time.Sleep(45 * time.Second)
+		bankQueryClient := banktypes.NewQueryClient(clientCtx)
+		balanceMap := make(map[int]sdk.Coin)
+
+		for i, validator := range s.chain.validators {
+			res, err := bankQueryClient.Balance(context.Background(),
+				&banktypes.QueryBalanceRequest{
+					Denom:   gravityDenom,
+					Address: validator.keyInfo.GetAddress().String(),
+				})
+			s.Require().NoError(err)
+			balanceMap[i] = *res.Balance
+
+			balance, err := s.getEthTokenBalanceOf(ethereum, common.HexToAddress(validator.ethereumKey.address), testERC20contract)
+			s.Require().NoError(err)
+			s.T().Logf("test erc20 balance for validator %d (%s): %v", i, validator.keyInfo.GetAddress().String(), balance)
+		}
+		for i, _ := range s.chain.validators {
+			coin := balanceMap[i]
+			if coin.Amount.Equal(sdk.NewInt(cosmosSentAmt * transactionsPerValidator)) {
+				s.T().Logf("correct funds recieved for validator %d, balance: %v", i, coin)
+			} else {
+				s.T().Logf("incorrect funds received for validator %d, got %v, expected %d", i, coin,
+					cosmosSentAmt*transactionsPerValidator)
+				//met = false
+			}
+		}
 
 		for i, validator := range s.chain.validators {
 			s.T().Logf("sending %d tx's to ethereum for validator %d ..", transactionsPerValidator, i+1)

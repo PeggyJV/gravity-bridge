@@ -17,7 +17,8 @@ import (
 func (s *IntegrationTestSuite) TestValidatorOut() {
 	s.Run("Bring up chain, and test the valset update", func() {
 		// take down an orchestrator
-		s.dockerPool.RemoveContainerByName("orchestrator3")
+		err := s.dockerPool.RemoveContainerByName("orchestrator3")
+		s.Require().NoError(err)
 
 		chainIndex := 0
 		ethereum := *s.evmResources[chainIndex]
@@ -25,7 +26,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 		gravityContract := gravityContracts[chainIndex]
 
 		s.T().Logf("approving Gravity to spend ERC 20")
-		err := s.approveERC20(chainIndex)
+		err = s.approveERC20(chainIndex)
 		s.Require().NoError(err, "error approving spending balance for the gravity contract")
 
 		allowance, err := s.getERC20AllowanceOf(chainIndex, common.HexToAddress(s.chain.validators[0].ethereumKey.address), gravityContract)
@@ -123,8 +124,8 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			s.Require().NoError(err)
 
 			response, err := s.chain.sendMsgs(*clientCtx, batchTx)
-			s.T().Logf("batch response: %s", response)
 			if err != nil {
+				s.T().Logf("batch response: %s", response)
 				s.T().Logf("error: %s", err)
 				return false
 			}
@@ -149,7 +150,8 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyRing, "val", s.chain.validators[3].keyInfo.GetAddress())
 			s.Require().NoError(err)
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.BatchTxConfirmations(context.Background(), &types.BatchTxConfirmationsRequest{BatchNonce: 1, TokenContract: testERC20contract.String()})
+			res, err := queryClient.BatchTxConfirmations(context.Background(), &types.BatchTxConfirmationsRequest{ChainId: types.EthereumChainID, BatchNonce: 1, TokenContract: testERC20contract.String()})
+			s.Require().NoError(err)
 			s.Require().NotEmpty(res.GetSignatures())
 			return true
 		}, 5*time.Minute, 1*time.Minute, "Can't find Batchtx signing info")
