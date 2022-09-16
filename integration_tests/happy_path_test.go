@@ -100,9 +100,8 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			}, 105*time.Second, 10*time.Second, "balance from %s never found on cosmos", evm.Name)
 
 		}
-		for chainIndex, _ := range s.evms {
-			chainID := uint32(ChainIds[chainIndex])
-			s.T().Logf("creating ethereum receiver wallet")
+		for chainIndex, evm := range s.evms {
+			s.T().Logf("creating evm receiver wallet")
 			receiver, err := generateEthereumKey()
 			s.Require().NoError(err)
 
@@ -111,7 +110,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 			s.T().Logf("sending to ethereum")
 			sendToEthereumMsg := types.NewMsgSendToEVM(
-				chainID,
+				evm.ID,
 				s.chain.validators[1].keyInfo.GetAddress(),
 				receiver.address,
 				sdk.Coin{Denom: gravityDenoms[chainIndex], Amount: sdk.NewInt(100)},
@@ -150,7 +149,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 						&types.UnbatchedSendToEVMsRequest{
 							SenderAddress: s.chain.validators[1].keyInfo.GetAddress().String(),
 							Pagination:    nil,
-							ChainId:       chainID,
+							ChainId:       evm.ID,
 						})
 					s.Require().NoError(err)
 					s.T().Logf("unbatched send to evms: %v", unbatchedSendToEVMS.SendToEvms)
@@ -158,27 +157,27 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 					batchedSendToEVMS, err := gbQueryClient.BatchedSendToEVMs(context.Background(),
 						&types.BatchedSendToEVMsRequest{
 							SenderAddress: s.chain.validators[1].keyInfo.GetAddress().String(),
-							ChainId:       chainID,
+							ChainId:       evm.ID,
 						})
 					s.Require().NoError(err)
 					s.T().Logf("batched send to evms: %v", batchedSendToEVMS.SendToEvms)
 
-					//for _, val := range s.chain.validators {
-					//	unsignedBatchTxs, err := gbQueryClient.UnsignedBatchTxs(context.Background(),
-					//		&types.UnsignedBatchTxsRequest{
-					//			Address: val.keyInfo.GetAddress().String(),
-					//			ChainId: chainID,
-					//		})
-					//	s.Require().NoError(err)
-					//	s.T().Logf("unsigned batches for val %s: %v", val.keyInfo.GetAddress().String(), unsignedBatchTxs.Batches)
-					//}
-					//
-					//batchTxs, err := gbQueryClient.BatchTxs(context.Background(),
-					//	&types.BatchTxsRequest{
-					//		ChainId: chainID,
-					//	})
-					//s.Require().NoError(err)
-					//s.T().Logf("batches: %v", batchTxs.Batches)
+					for _, val := range s.chain.validators {
+						unsignedBatchTxs, err := gbQueryClient.UnsignedBatchTxs(context.Background(),
+							&types.UnsignedBatchTxsRequest{
+								Address: val.keyInfo.GetAddress().String(),
+								ChainId: evm.ID,
+							})
+						s.Require().NoError(err)
+						s.T().Logf("unsigned batches for val %s: %v", val.keyInfo.GetAddress().String(), unsignedBatchTxs.Batches)
+					}
+
+					batchTxs, err := gbQueryClient.BatchTxs(context.Background(),
+						&types.BatchTxsRequest{
+							ChainId: evm.ID,
+						})
+					s.Require().NoError(err)
+					s.T().Logf("batches: %v", batchTxs.Batches)
 
 					return false
 				}
