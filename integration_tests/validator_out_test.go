@@ -21,25 +21,25 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 		s.Require().NoError(err)
 
 		chainIndex := 0
-		ethereum := *s.evmResources[chainIndex]
-		testERC20contract := testERC20contracts[chainIndex]
+		evm := s.evms[chainIndex]
+		testERC20Contract := testERC20Contracts[chainIndex]
 		gravityContract := gravityContracts[chainIndex]
 
 		s.T().Logf("approving Gravity to spend ERC 20")
-		err = s.approveERC20(chainIndex)
+		err = s.approveERC20(evm, testERC20Contract, gravityContract)
 		s.Require().NoError(err, "error approving spending balance for the gravity contract")
 
-		allowance, err := s.getERC20AllowanceOf(chainIndex, common.HexToAddress(s.chain.validators[0].ethereumKey.address), gravityContract)
+		allowance, err := s.getERC20AllowanceOf(evm, testERC20Contract, common.HexToAddress(s.chain.validators[0].ethereumKey.address), gravityContract)
 		s.Require().NoError(err, "error getting allowance of gravity contract spending on behalf of first validator")
 		s.Require().Equal(UInt256Max(), allowance.BigInt(), "spending allowance not set correctly, got: %s", allowance.String())
 
-		balance, err := s.getEthTokenBalanceOf(ethereum, common.HexToAddress(s.chain.validators[0].ethereumKey.address), testERC20contract)
+		balance, err := s.getEthTokenBalanceOf(evm, common.HexToAddress(s.chain.validators[0].ethereumKey.address), testERC20Contract)
 		s.Require().NoError(err, "error getting first validator balance")
 		s.Require().Equal(sdk.NewUint(10000).BigInt(), balance.BigInt(), "balance was %s, expected 10000", balance.String())
 
 		// send from val 0 on eth to val 1 on cosmos
 		s.T().Logf("sending to cosmos")
-		err = s.sendToCosmos(chainIndex, s.chain.validators[1].keyInfo.GetAddress(), sdk.NewInt(200))
+		err = s.sendToCosmos(evm, gravityContract, testERC20Contract, s.chain.validators[1].keyInfo.GetAddress(), sdk.NewInt(200))
 		s.Require().NoError(err, "error sending test denom to cosmos")
 
 		var gravityDenom string
@@ -62,10 +62,10 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			gbQueryClient := types.NewQueryClient(clientCtx)
 			denomRes, err := gbQueryClient.ERC20ToDenom(context.Background(),
 				&types.ERC20ToDenomRequest{
-					Erc20: testERC20contract.String(),
+					Erc20: testERC20Contract.String(),
 				})
 			if err != nil {
-				s.T().Logf("error querying ERC20 denom %s, %e", testERC20contract.String(), err)
+				s.T().Logf("error querying ERC20 denom %s, %e", testERC20Contract.String(), err)
 				return false
 			}
 			s.Require().False(denomRes.CosmosOriginated, "ERC20-originated denom marked as cosmos originated")
@@ -150,7 +150,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyRing, "val", s.chain.validators[3].keyInfo.GetAddress())
 			s.Require().NoError(err)
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.BatchTxConfirmations(context.Background(), &types.BatchTxConfirmationsRequest{ChainId: types.EthereumChainID, BatchNonce: 1, TokenContract: testERC20contract.String()})
+			res, err := queryClient.BatchTxConfirmations(context.Background(), &types.BatchTxConfirmationsRequest{ChainId: types.EthereumChainID, BatchNonce: 1, TokenContract: testERC20Contract.String()})
 			s.Require().NoError(err)
 			s.Require().NotEmpty(res.GetSignatures())
 			return true

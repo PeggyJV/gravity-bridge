@@ -16,7 +16,7 @@ import (
 func (s *IntegrationTestSuite) TestValsetStressUpdate() {
 	s.Run("Bring up chain, and test the valset update", func() {
 		chainIndex := 0
-		ethereum := *s.evmResources[chainIndex]
+		ethereum := s.evms[chainIndex]
 		gravityContract := gravityContracts[chainIndex]
 
 		orchKey := s.chain.orchestrators[1]

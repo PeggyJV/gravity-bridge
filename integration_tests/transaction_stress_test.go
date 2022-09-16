@@ -21,9 +21,9 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 	s.Run("Transaction stress test", func() {
 		fmt.Println("StressTestTransaction starting")
 
-		ethereum := *s.evmResources[0]
+		ethereum := s.evms[0]
 		gravityContract := gravityContracts[0]
-		testERC20contract := testERC20contracts[0]
+		testERC20contract := testERC20Contracts[0]
 
 		// Approve spend & verify funds
 		for _, validator := range s.chain.validators {
