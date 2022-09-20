@@ -15,6 +15,7 @@ e2e_slow_loris_deprecated:
 	@make -s e2e_transaction_stress
 
 e2e_clean_slate:
+	@echo 'removing containers'
 	@docker rm --force \
 		$(shell docker ps -qa --filter="name=contract_deployer") \
 		$(shell docker ps -qa --filter="name=evm") \
@@ -23,6 +24,7 @@ e2e_clean_slate:
 		1>/dev/null \
 		2>/dev/null \
 		|| true
+	@echo 'waiting for container removal to complete'
 	@docker wait \
 		$(shell docker ps -qa --filter="name=contract_deployer") \
 		$(shell docker ps -qa --filter="name=evm") \
@@ -31,7 +33,9 @@ e2e_clean_slate:
 		1>/dev/null \
 		2>/dev/null \
 		|| true
+	@echo 'removing network'
 	@docker network prune --force 1>/dev/null 2>/dev/null || true
+	@echo 'recompiling integration tests'
 	@cd integration_tests && go test -c
 
 e2e_batch_stress_deprecated: e2e_clean_slate

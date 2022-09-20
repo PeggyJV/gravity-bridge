@@ -56,7 +56,8 @@ func MNEMONICS() []string {
 	}
 }
 
-var ChainIds = []uint{gravitytypes.EthereumChainID, gravitytypes.AvalancheCChainID}
+// var ChainIds = []uint{gravitytypes.EthereumChainID, gravitytypes.AvalancheCChainID}
+var ChainIds = []uint{gravitytypes.EthereumChainID}
 var ChainNames = []string{"ethereum", "avalanche"}
 
 type EVM struct {
@@ -75,11 +76,13 @@ func chainIDStrings() []string {
 }
 
 var (
-	stakeAmount, _     = sdk.NewIntFromString("100000000000")
-	stakeAmountCoin    = sdk.NewCoin(testDenom, stakeAmount)
-	gravityContracts   = make([]common.Address, len(ChainIds))
-	testERC20Contracts = make([]common.Address, len(ChainIds))
-	gravityDenoms      = make([]string, len(ChainIds))
+	stakeAmount, _          = sdk.NewIntFromString("100000000000")
+	stakeAmountCoin         = sdk.NewCoin(testDenom, stakeAmount)
+	gravityContracts        = make([]common.Address, len(ChainIds))
+	testERC20Contracts      = make([]common.Address, len(ChainIds))
+	gravityDenoms           = make([]string, len(ChainIds))
+	testReceivers           = make([]common.Address, len(ChainIds))
+	communitySpendReceivers = make([]common.Address, len(ChainIds))
 )
 
 type IntegrationTestSuite struct {
