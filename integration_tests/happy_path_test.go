@@ -127,7 +127,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 				evm.ID,
 				s.chain.validators[1].keyInfo.GetAddress(),
 				testReceivers[chainIndex].String(),
-				sdk.Coin{Denom: gravityDenoms[chainIndex], Amount: sdk.NewInt(100)},
+				sdk.Coin{Denom: gravityDenoms[chainIndex], Amount: sdk.NewInt(20)},
 				sdk.Coin{Denom: gravityDenoms[chainIndex], Amount: sdk.NewInt(1)},
 			)
 
@@ -196,7 +196,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 					return false
 				}
 
-				s.Require().Equal(sdk.NewInt(100).BigInt(), balance.BigInt(), "balance was %s, expected 100", balance.String())
+				s.Require().Equal(sdk.NewInt(20).BigInt(), balance.BigInt(), "balance was %s, expected 100", balance.String())
 				return true
 			}, time.Second*240, time.Second, "send to %s did not reach destination", evm.Name)
 		}

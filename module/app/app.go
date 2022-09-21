@@ -354,14 +354,6 @@ func NewGravityApp(
 		app.BaseApp,
 	)
 
-	app.stakingKeeper = *stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(
-			app.distrKeeper.Hooks(),
-			app.slashingKeeper.Hooks(),
-			app.gravityKeeper.Hooks(),
-		),
-	)
-
 	app.ibcKeeper = ibckeeper.NewKeeper(
 		appCodec,
 		keys[ibchost.StoreKey],
@@ -402,6 +394,14 @@ func NewGravityApp(
 		sdk.DefaultPowerReduction,
 		app.ModuleAccountAddressesToNames([]string{}),
 		app.ModuleAccountAddressesToNames([]string{distrtypes.ModuleName}),
+	)
+
+	app.stakingKeeper = *stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(
+			app.distrKeeper.Hooks(),
+			app.slashingKeeper.Hooks(),
+			app.gravityKeeper.Hooks(),
+		),
 	)
 
 	govRouter := govtypes.NewRouter()

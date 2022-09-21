@@ -56,8 +56,9 @@ func MNEMONICS() []string {
 	}
 }
 
-// var ChainIds = []uint{gravitytypes.EthereumChainID, gravitytypes.AvalancheCChainID}
-var ChainIds = []uint{gravitytypes.EthereumChainID}
+var ChainIds = []uint{gravitytypes.EthereumChainID, gravitytypes.AvalancheCChainID}
+
+// var ChainIds = []uint{gravitytypes.EthereumChainID}
 var ChainNames = []string{"ethereum", "avalanche"}
 
 type EVM struct {
