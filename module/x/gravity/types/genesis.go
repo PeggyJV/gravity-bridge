@@ -75,7 +75,16 @@ func DefaultGenesisState() *GenesisState {
 
 // DefaultParams returns a copy of the default params
 func DefaultParams() *Params {
-	cp := ParamsForChain{GravityId: "defaultgravityid",
+	cp := DefaultParamsForChain()
+
+	return &Params{
+		AverageBlockTime: 5000,
+		ParamsByChain:    map[string]*ParamsForChain{strconv.Itoa(EthereumChainID): cp},
+	}
+}
+
+func DefaultParamsForChain() *ParamsForChain {
+	return &ParamsForChain{GravityId: "defaultgravityid",
 		SignedSignerSetTxsWindow:             10000,
 		SignedBatchesWindow:                  10000,
 		EvmSignaturesWindow:                  10000,
@@ -86,11 +95,6 @@ func DefaultParams() *Params {
 		SlashFractionEvmSignature:            sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		SlashFractionConflictingEvmSignature: sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		UnbondSlashingSignerSetTxsWindow:     10000}
-
-	return &Params{
-		AverageBlockTime: 5000,
-		ParamsByChain:    map[string]*ParamsForChain{strconv.Itoa(EthereumChainID): &cp},
-	}
 }
 
 // ValidateBasic checks that the parameters have valid values.
