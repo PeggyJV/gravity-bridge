@@ -58,7 +58,7 @@ func MNEMONICS() []string {
 
 // var ChainIds = []uint{gravitytypes.EthereumChainID, gravitytypes.AvalancheCChainID}
 var ChainIds = []uint{gravitytypes.EthereumChainID}
-var ChainNames = []string{"ethereum", "avalanche"}
+var ChainNames = []string{"ethereum", "avalanche c"}
 
 type EVM struct {
 	ID       uint32
@@ -371,9 +371,10 @@ func (s *IntegrationTestSuite) initGenesis() {
 	// set contract addr
 	var gravityGenState gravitytypes.GenesisState
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
-	gravityGenState.Params.ParamsByChain[strconv.Itoa(gravitytypes.EthereumChainID)].GravityId = "gravitytest"
-	gravityGenState.Params.ParamsByChain[strconv.Itoa(gravitytypes.EthereumChainID)].SignedBatchesWindow = 15
-
+	for _, evm := range s.evms {
+		gravityGenState.Params.ParamsByChain[strconv.Itoa(int(evm.ID))].GravityId = "gravitytest"
+		gravityGenState.Params.ParamsByChain[strconv.Itoa(int(evm.ID))].SignedBatchesWindow = 15
+	}
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)
 	appGenState[gravitytypes.ModuleName] = bz

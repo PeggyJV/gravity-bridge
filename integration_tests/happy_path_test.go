@@ -53,7 +53,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		for chainIndex, evm := range s.evms {
 			s.T().Logf("sending to cosmos from %s", evm.Name)
 			err = s.sendToCosmos(evm, gravityContracts[chainIndex], testERC20Contracts[chainIndex], s.chain.validators[1].keyInfo.GetAddress(), sdk.NewInt(200))
-			s.Require().NoError(err, "error sending test denom to cosmos from %s", ChainNames[chainIndex])
+			s.Require().NoError(err, "error sending test denom to cosmos from %s", evm.Name)
 		}
 
 		for i, evm := range s.evms {
@@ -123,7 +123,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			s.Require().NoError(err, "error getting eth balance")
 
 			s.T().Logf("sending to %s", evm.Name)
-			sendToEthereumMsg := types.NewMsgSendToEVM(
+			sendToEVMMsg := types.NewMsgSendToEVM(
 				evm.ID,
 				s.chain.validators[1].keyInfo.GetAddress(),
 				testReceivers[chainIndex].String(),
@@ -138,7 +138,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 				clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", val.keyInfo.GetAddress())
 				s.Require().NoError(err)
 
-				response, err := s.chain.sendMsgs(*clientCtx, sendToEthereumMsg)
+				response, err := s.chain.sendMsgs(*clientCtx, sendToEVMMsg)
 				if err != nil {
 					s.T().Logf("error: %s", err)
 					return false
@@ -150,7 +150,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 					return false
 				}
 				return true
-			}, 105*time.Second, 10*time.Second, "unable to send to ethereum")
+			}, 105*time.Second, 10*time.Second, "unable to send to %s", evm.Name)
 
 			s.T().Logf("verifying send to %s", evm.Name)
 			s.Require().Eventuallyf(func() bool {
@@ -198,7 +198,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 				s.Require().Equal(sdk.NewInt(100).BigInt(), balance.BigInt(), "balance was %s, expected 100", balance.String())
 				return true
-			}, time.Second*240, time.Second, "send to ethereum did not reach destination")
+			}, time.Second*240, time.Second, "send to %s did not reach destination", evm.Name)
 		}
 
 		s.T().Logf("funding community pool")
@@ -273,7 +273,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			s.Require().NoError(err)
 			communitySpendReceivers[chainIndex] = common.HexToAddress(communitySpendReceiver.address)
 
-			s.T().Logf("create governance proposal to fund an ethereum address")
+			s.T().Logf("create governance proposal to fund an %s address", evm.Name)
 			orch = s.chain.orchestrators[0]
 			clientCtx, err = s.chain.clientContext("tcp://localhost:26657", orch.keyring, "orch", orch.keyInfo.GetAddress())
 			s.Require().NoError(err)
