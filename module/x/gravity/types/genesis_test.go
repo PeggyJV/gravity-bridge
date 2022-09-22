@@ -20,6 +20,15 @@ func TestGenesisStateValidate(t *testing.T) {
 				ParamsByChain:    nil,
 			},
 		}, expErr: true},
+		"duplicate gravity ids": {src: &GenesisState{
+			Params: &Params{
+				AverageBlockTime: 0,
+				ParamsByChain: map[string]*ParamsForChain{
+					"1":    {GravityId: "gravitytest"},
+					"4134": {GravityId: "gravitytest"},
+				},
+			},
+		}, expErr: true},
 		"valid delegate": {src: &GenesisState{
 			Params: DefaultParams(),
 			DelegateKeys: []*MsgDelegateKeys{

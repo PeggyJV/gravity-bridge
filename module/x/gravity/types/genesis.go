@@ -110,7 +110,7 @@ func (p Params) ValidateBasic() error {
 			return err
 		}
 
-		if _, ok := gravityIDs[cp.GravityId]; ok {
+		if exists := gravityIDs[cp.GravityId]; exists {
 			return sdkerrors.Wrap(ErrDuplicateGravityID, "gravity id")
 		}
 		gravityIDs[cp.GravityId] = true

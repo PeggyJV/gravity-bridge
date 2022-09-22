@@ -12,6 +12,10 @@ import (
 )
 
 func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
+	if err := data.ValidateBasic(); err != nil {
+		panic(err)
+	}
+	
 	k.SetParams(ctx, *data.Params)
 
 	// reset delegate keys in state

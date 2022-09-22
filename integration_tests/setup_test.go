@@ -376,7 +376,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	gravityGenState.Params.ParamsByChain = make(map[string]*gravitytypes.ParamsForChain, len(ChainIds))
 	for _, chainID := range ChainIds {
 		pfc := gravitytypes.DefaultParamsForChain()
-		pfc.GravityId = "gravitytest"
+		pfc.GravityId = fmt.Sprintf("gravitytest-%d", chainID)
 		pfc.SignedBatchesWindow = 15
 		gravityGenState.Params.ParamsByChain[strconv.Itoa(int(chainID))] = pfc
 	}

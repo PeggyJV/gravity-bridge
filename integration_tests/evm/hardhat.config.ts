@@ -34,8 +34,10 @@ task(
 
         console.log(`deploying Gravity contract`)
         const Gravity = await hre.ethers.getContractFactory("Gravity");
+        const gravityID = "gravitytest-" + EVM_CHAIN_ID;
+        console.log(`gravity ID: ${gravityID}`);
         const gravity = (await Gravity.deploy(
-            hre.ethers.utils.formatBytes32String("gravitytest"),
+            hre.ethers.utils.formatBytes32String("gravitytest-" + EVM_CHAIN_ID),
             powerThreshold,
             constants.VALIDATORS,
             powers
