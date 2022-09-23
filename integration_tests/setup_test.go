@@ -59,6 +59,7 @@ func MNEMONICS() []string {
 var ChainIds = []uint{gravitytypes.EthereumChainID, gravitytypes.AvalancheCChainID}
 
 // var ChainIds = []uint{gravitytypes.EthereumChainID}
+// var ChainIds = []uint{gravitytypes.AvalancheCChainID}
 var ChainNames = []string{"ethereum", "avalanche"}
 
 type EVM struct {
@@ -550,7 +551,7 @@ func (s *IntegrationTestSuite) runEVMContainers() {
 		}, time.Minute*5, time.Second*10, "unable to retrieve test erc20 address from logs")
 		s.T().Logf("test erc20 contract deployed at %s", testERC20Contracts[i].String())
 
-		s.T().Logf("started Ethereum container: %s", resource.Container.ID)
+		s.T().Logf("started %s container: %s", chainName, resource.Container.ID)
 	}
 }
 

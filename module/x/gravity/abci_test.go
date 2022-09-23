@@ -208,7 +208,7 @@ func TestBatchSlashing(t *testing.T) {
 	require.False(t, input.StakingKeeper.Validator(ctx, keeper.ValAddrs[1]).IsJailed())
 
 	// Ensure that the last slashed signer set tx nonce is set properly
-	require.Equal(t, input.GravityKeeper.GetLastSlashedOutgoingTxBlockHeight(ctx), batch.Height)
+	require.Equal(t, input.GravityKeeper.GetLastSlashedOutgoingTxBlockHeight(ctx, types.EthereumChainID), batch.Height)
 }
 
 func TestSignerSetTxEmission(t *testing.T) {
@@ -235,7 +235,7 @@ func TestSignerSetTxSetting(t *testing.T) {
 	require.EqualValues(t, 1, len(gk.GetSignerSetTxs(ctx, types.EthereumChainID)))
 }
 
-/// Test batch timeout
+// / Test batch timeout
 func TestBatchTxTimeout(t *testing.T) {
 	input, ctx := keeper.SetupFiveValChain(t)
 	gravityKeeper := input.GravityKeeper

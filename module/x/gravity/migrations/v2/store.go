@@ -119,15 +119,15 @@ func migrateLastObservedEventNonce(ctx sdk.Context, newK *NewKeeper, oldK *oldKe
 	store.Set(types.MakeLastObservedEventNonceKey(types.EthereumChainID), sdk.Uint64ToBigEndian(nonce))
 }
 
-func (k NewKeeper) setLastSlashedOutgoingTxBlockHeight(ctx sdk.Context, chainID uint32, blockHeight uint64) {
-	ctx.KVStore(k.StoreKey).Set(types.MakeLastSlashedOutgoingTxBlockKey(chainID), sdk.Uint64ToBigEndian(blockHeight))
+func (k NewKeeper) setLastSlashedOutgoingTxBlockHeight(ctx sdk.Context, blockHeight uint64) {
+	ctx.KVStore(k.StoreKey).Set(types.MakeLastSlashedOutgoingTxBlockKey(), sdk.Uint64ToBigEndian(blockHeight))
 }
 
 func migrateLastSlashedOutgoingTxBlockHeight(ctx sdk.Context, newK *NewKeeper, oldK *oldKeeper.Keeper) {
 	height := oldK.GetLastSlashedOutgoingTxBlockHeight(ctx)
 	store := ctx.KVStore(newK.StoreKey)
 	store.Delete([]byte{oldTypes.LastSlashedOutgoingTxBlockKey})
-	newK.setLastSlashedOutgoingTxBlockHeight(ctx, types.EthereumChainID, height)
+	newK.setLastSlashedOutgoingTxBlockHeight(ctx, height)
 }
 
 func migrateLastOutgoingBatchNonce(ctx sdk.Context, newK *NewKeeper) {

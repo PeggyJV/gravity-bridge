@@ -159,11 +159,11 @@ func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 // order to keep this information current regardless of the level of bridge activity.
 //
 // We determine if we should update the latest heights based on the following criteria:
-// 1. A consensus of validators agrees that the proposed height is equal to or less than their
-//    last observed height, in order to reconcile the many different heights that will be submitted.
-//    The highest height that meets this criteria will be the proposed height.
-// 2. The proposed consensus heights from this process are greater than the values stored from the last time
-//    we observed an EVM event from the bridge
+//  1. A consensus of validators agrees that the proposed height is equal to or less than their
+//     last observed height, in order to reconcile the many different heights that will be submitted.
+//     The highest height that meets this criteria will be the proposed height.
+//  2. The proposed consensus heights from this process are greater than the values stored from the last time
+//     we observed an EVM event from the bridge
 func updateObservedEVMHeight(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	// wait some minutes before checking the height votes
 	if ctx.BlockHeight()%50 != 0 {
@@ -232,12 +232,15 @@ func updateObservedEVMHeight(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 // cleanupTimedOutBatchTxs deletes batches that have passed their expiration on Ethereum
 // keep in mind several things when modifying this function
 // A) unlike nonces timeouts are not monotonically increasing, meaning batch 5 can have a later timeout than batch 6
-//    this means that we MUST only cleanup a single batch at a time
+//
+//	this means that we MUST only cleanup a single batch at a time
+//
 // B) it is possible for EVMHeight to be zero if no events have ever occurred, make sure your code accounts for this
 // C) When we compute the timeout we do our best to estimate the EVM block height at that very second. But what we work with
-//    here is the EVM block height at the time of the last Deposit or Withdraw to be observed. It's very important we do not
-//    project, if we do a slowdown on EVM could cause a double spend. Instead timeouts will *only* occur after the timeout period
-//    AND any deposit or withdraw has occurred to update the EVM block height.
+//
+//	here is the EVM block height at the time of the last Deposit or Withdraw to be observed. It's very important we do not
+//	project, if we do a slowdown on EVM could cause a double spend. Instead timeouts will *only* occur after the timeout period
+//	AND any deposit or withdraw has occurred to update the EVM block height.
 func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	EVMHeight := k.GetLastObservedEVMBlockHeight(ctx, chainID).EVMHeight
 	k.IterateOutgoingTxsByType(ctx, chainID, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
@@ -254,12 +257,15 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 // cleanupTimedOutBatchTxs deletes logic calls that have passed their expiration on EVM
 // keep in mind several things when modifying this function
 // A) unlike nonces timeouts are not monotonically increasing, meaning call 5 can have a later timeout than batch 6
-//    this means that we MUST only cleanup a single call at a time
+//
+//	this means that we MUST only cleanup a single call at a time
+//
 // B) it is possible for EVMHeight to be zero if no events have ever occurred, make sure your code accounts for this
 // C) When we compute the timeout we do our best to estimate the EVM block height at that very second. But what we work with
-//    here is the EVM block height at the time of the last Deposit or Withdraw to be observed. It's very important we do not
-//    project, if we do a slowdown on EVM could cause a double spend. Instead timeouts will *only* occur after the timeout period
-//    AND any deposit or withdraw has occurred to update the EVM block height.
+//
+//	here is the EVM block height at the time of the last Deposit or Withdraw to be observed. It's very important we do not
+//	project, if we do a slowdown on EVM could cause a double spend. Instead timeouts will *only* occur after the timeout period
+//	AND any deposit or withdraw has occurred to update the EVM block height.
 func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	EVMHeight := k.GetLastObservedEVMBlockHeight(ctx, chainID).EVMHeight
 	k.IterateOutgoingTxsByType(ctx, chainID, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
@@ -368,7 +374,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 
 		if sstx, ok := otx.(*types.SignerSetTx); ok {
 			for _, valInfo := range unbondingValInfos {
-				// Only slash validators who joined after valset is created and they are
+				// Only slash validators who joined after valset is created, and they are
 				// unbonding and UNBOND_SLASHING_WINDOW didn't pass.
 				if valInfo.exist && valInfo.sigs.StartHeight < int64(sstx.Height) &&
 					valInfo.val.IsUnbonding() &&

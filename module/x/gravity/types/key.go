@@ -200,8 +200,8 @@ func MakeLatestSignerSetTxNonceKey(chainID uint32) []byte {
 	return bytes.Join([][]byte{{LatestSignerSetTxNonceKey}, Uint32ToBigEndian(chainID)}, []byte{})
 }
 
-func MakeLastSlashedOutgoingTxBlockKey(chainID uint32) []byte {
-	return bytes.Join([][]byte{{LastSlashedOutgoingTxBlockKey}, Uint32ToBigEndian(chainID)}, []byte{})
+func MakeLastSlashedOutgoingTxBlockKey() []byte {
+	return []byte{LastSlashedOutgoingTxBlockKey}
 }
 
 func MakeLastOutgoingBatchNonceKey(chainID uint32) []byte {
