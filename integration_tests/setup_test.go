@@ -641,7 +641,7 @@ func (s *IntegrationTestSuite) runOrchestrators() {
 		s.Require().NoError(os.MkdirAll(gorcCfgPath, 0755))
 
 		for j, chainID := range ChainIds {
-			gorcCfg := fmt.Sprintf(`keystore = "/root/gorc/keystore/"
+			gorcCfg := fmt.Sprintf(`keystore = "/root/gorc/%d/keystore/"
 
 [gravity]
 contract = "%s"
@@ -658,7 +658,11 @@ gas_price = { amount = %s, denom = "%s" }
 prefix = "cosmos"
 gas_adjustment = 2.0
 msg_batch_size = 5
+
+[metrics]
+listen_addr = "127.0.0.1:300%d"
 `,
+				chainID,
 				gravityContracts[j].String(),
 				testDenom,
 				// NOTE: container names are prefixed with '/'
@@ -666,6 +670,7 @@ msg_batch_size = 5
 				s.valResources[i].Container.Name[1:],
 				minGasPrice,
 				testDenom,
+				j,
 			)
 
 			gorcChainCfgPath := path.Join(gorcCfgPath, strconv.Itoa(int(chainID)))
