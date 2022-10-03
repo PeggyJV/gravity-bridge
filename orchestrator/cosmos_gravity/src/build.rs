@@ -73,9 +73,9 @@ pub async fn batch_tx_confirmation_messages(
             signature: signature.into(),
             chain_id,
         };
-        let msg = proto::MsgSubmitEvmEvent {
+        let msg = proto::MsgSubmitEvmTxConfirmation {
             signer: cosmos_address.to_string(),
-            event: confirmation.to_any(),
+            confirmation: confirmation.to_any(),
             chain_id,
         };
         let msg = Msg::new("/gravity.v2.MsgSubmitEVMTxConfirmation", msg);

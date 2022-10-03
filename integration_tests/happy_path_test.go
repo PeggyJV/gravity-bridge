@@ -27,6 +27,24 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		distrQueryClient := distrtypes.NewQueryClient(clientCtx)
 		govQueryClient := govtypes.NewQueryClient(clientCtx)
 
+		for _, evm := range s.evms {
+			s.Require().Eventuallyf(func() bool {
+				s.T().Logf("verifying first SignerSetTx on %s", evm.Name)
+				res, err := gbQueryClient.LatestSignerSetTx(context.Background(),
+					&types.LatestSignerSetTxRequest{
+						ChainId: evm.ID,
+					})
+
+				if err != nil {
+					return false
+				}
+
+				s.Require().Equal(res.SignerSet.Nonce, uint64(1))
+
+				return true
+			}, 105*time.Second, 10*time.Second, "never observed SignerSetTx nonce 1 from %s", evm.Name)
+		}
+
 		for chainIndex, evm := range s.evms {
 			s.T().Logf("approving Gravity to spend ERC 20 on %s", evm.Name)
 			err := s.approveERC20(evm, testERC20Contracts[chainIndex], gravityContracts[chainIndex])
@@ -40,6 +58,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			s.Require().NoError(err, "error getting first validator balance")
 			s.Require().Equal(sdk.NewUint(10000).BigInt(), balance.BigInt(), "balance was %s, expected 10000", balance.String())
 		}
+
 		for _, val := range s.chain.validators {
 			res, err := bankQueryClient.AllBalances(context.Background(),
 				&banktypes.QueryAllBalancesRequest{
