@@ -56,10 +56,9 @@ func MNEMONICS() []string {
 	}
 }
 
-//var ChainIds = []uint32{gravitytypes.EthereumChainID, gravitytypes.AvalancheCChainID}
+var ChainIds = []uint32{gravitytypes.EthereumChainID, gravitytypes.AvalancheCChainID}
 
-var ChainIds = []uint32{gravitytypes.EthereumChainID}
-
+// var ChainIds = []uint32{gravitytypes.EthereumChainID}
 // var ChainIds = []uint32{gravitytypes.AvalancheCChainID}
 var ChainNames = []string{"ethereum", "avalanche"}
 
