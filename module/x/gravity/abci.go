@@ -287,7 +287,10 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	}
 
 	usotxs := k.GetUnSlashedOutgoingTxs(ctx, chainID, maxHeight)
-	k.Logger(ctx).Info("unslashed txs: chain-id: %d, max height: %d, txs:\n%v", chainID, maxHeight, usotxs)
+	k.Logger(ctx).Info("processing unslashed txs",
+		"chain-id", chainID,
+		"max height", maxHeight,
+		"unsigned otxs", usotxs)
 	if len(usotxs) == 0 {
 		return
 	}
@@ -312,7 +315,8 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 		sigs, exist := k.SlashingKeeper.GetValidatorSigningInfo(ctx, consAddr)
 		valInfos[i] = valInfo{val, exist, sigs, consAddr}
 	}
-	k.Logger(ctx).Info("validator infos: %v", valInfos)
+	k.Logger(ctx).Info("validator infos",
+		"val infos", valInfos)
 
 	var unbondingValInfos []valInfo
 
@@ -345,7 +349,9 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	for _, otx := range usotxs {
 		// SLASH BONDED VALIDATORS who didn't sign batch txs
 		signatures := k.GetEVMSignatures(ctx, otx.GetStoreIndex())
-		k.Logger(ctx).Info("signatures for otx: %v, signatures: %v", otx, signatures)
+		k.Logger(ctx).Info("signatures for otx",
+			"outgoing tx", otx,
+			"signatures", signatures)
 		for _, valInfo := range valInfos {
 			// Don't slash validators who joined after outgoingtx is created
 			if valInfo.exist && valInfo.sigs.StartHeight < int64(otx.GetCosmosHeight()) {
@@ -412,7 +418,9 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 		}
 
 		// then we set the latest slashed outgoing tx block
-		k.Logger(ctx).Info("setting last slashed outoing tx block height: chain id: %d, height: %d", chainID, otx.GetCosmosHeight())
+		k.Logger(ctx).Info("setting last slashed outoing tx block height",
+			"chain id", chainID,
+			"height", otx.GetCosmosHeight())
 		k.SetLastSlashedOutgoingTxBlockHeight(ctx, chainID, otx.GetCosmosHeight())
 	}
 }
