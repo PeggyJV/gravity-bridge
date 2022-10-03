@@ -346,35 +346,35 @@ func (k Keeper) SetParams(ctx sdk.Context, ps types.Params) {
 
 func (k Keeper) chainIDsContains(ctx sdk.Context, chainID uint32) bool {
 	params := k.GetParams(ctx)
-	chainIDStr := strconv.Itoa(int(chainID))
-	_, ok := params.ParamsByChain[chainIDStr]
-	return ok
+
+	for _, cp := range params.ParamsForChains {
+		if cp.ChainId == chainID {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (k Keeper) GetParamsForChain(ctx sdk.Context, chainID uint32) *types.ParamsForChain {
 	params := k.GetParams(ctx)
-	chainIDStr := strconv.Itoa(int(chainID))
-	cp, ok := params.ParamsByChain[chainIDStr]
-	if !ok {
-		panic(fmt.Errorf("no chain with id %d found", chainID))
+
+	for _, cp := range params.ParamsForChains {
+		if cp.ChainId == chainID {
+			return cp
+		}
 	}
-	return cp
+
+	// panic because chain params were never found by ID
+	panic(fmt.Errorf("no chain with id %d found", chainID))
 }
 
 func (k Keeper) GetChainIDs(ctx sdk.Context) (ids []uint32) {
 	params := k.GetParams(ctx)
-	for chainIDStr := range params.ParamsByChain {
-		chainIDInt, err := strconv.Atoi(chainIDStr)
-		if err != nil {
-			panic(err)
-		}
-		ids = append(ids, uint32(chainIDInt))
-	}
 
-	// because golang maps have non-deterministic order, we need to force chain order
-	sort.Slice(ids, func(i, j int) bool {
-		return ids[i] < ids[j]
-	})
+	for _, cp := range params.ParamsForChains {
+		ids = append(ids, cp.ChainId)
+	}
 	return ids
 }
 
