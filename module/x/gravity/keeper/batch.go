@@ -136,14 +136,14 @@ func (k Keeper) getLastOutgoingBatchByTokenType(ctx sdk.Context, chainID uint32,
 }
 
 // SetLastSlashedOutgoingTxBlockHeight sets the latest slashed Batch block height
-func (k Keeper) SetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context, blockHeight uint64) {
-	key := types.MakeLastSlashedOutgoingTxBlockKey()
+func (k Keeper) SetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context, chainID uint32, blockHeight uint64) {
+	key := types.MakeLastSlashedOutgoingTxBlockKey(chainID)
 	ctx.KVStore(k.StoreKey).Set(key, sdk.Uint64ToBigEndian(blockHeight))
 }
 
 // GetLastSlashedOutgoingTxBlockHeight returns the latest slashed Batch block
-func (k Keeper) GetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context) uint64 {
-	key := types.MakeLastSlashedOutgoingTxBlockKey()
+func (k Keeper) GetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context, chainID uint32) uint64 {
+	key := types.MakeLastSlashedOutgoingTxBlockKey(chainID)
 	if bz := ctx.KVStore(k.StoreKey).Get(key); bz == nil {
 		return 0
 	} else {
@@ -152,7 +152,7 @@ func (k Keeper) GetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context) uint64 {
 }
 
 func (k Keeper) GetUnSlashedOutgoingTxs(ctx sdk.Context, chainID uint32, maxHeight uint64) (out []types.OutgoingTx) {
-	lastSlashed := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
+	lastSlashed := k.GetLastSlashedOutgoingTxBlockHeight(ctx, chainID)
 	k.iterateOutgoingTxs(ctx, chainID, func(key []byte, otx types.OutgoingTx) bool {
 		if (otx.GetCosmosHeight() < maxHeight) && (otx.GetCosmosHeight() > lastSlashed) {
 			out = append(out, otx)

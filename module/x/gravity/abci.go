@@ -160,7 +160,7 @@ func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 //
 // We determine if we should update the latest heights based on the following criteria:
 //  1. A consensus of validators agrees that the proposed height is equal to or less than their
-//     last observed height, in order to reconcile the many different heights that will be submitted.
+//     last observed height, in order to reconcile the many heights that will be submitted.
 //     The highest height that meets this criteria will be the proposed height.
 //  2. The proposed consensus heights from this process are greater than the values stored from the last time
 //     we observed an EVM event from the bridge
@@ -239,7 +239,7 @@ func updateObservedEVMHeight(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 // C) When we compute the timeout we do our best to estimate the EVM block height at that very second. But what we work with
 //
 //	here is the EVM block height at the time of the last Deposit or Withdraw to be observed. It's very important we do not
-//	project, if we do a slowdown on EVM could cause a double spend. Instead timeouts will *only* occur after the timeout period
+//	project, if we do a slowdown on EVM could cause a double spend. Instead, timeouts will *only* occur after the timeout period
 //	AND any deposit or withdraw has occurred to update the EVM block height.
 func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	EVMHeight := k.GetLastObservedEVMBlockHeight(ctx, chainID).EVMHeight
@@ -287,6 +287,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	}
 
 	usotxs := k.GetUnSlashedOutgoingTxs(ctx, chainID, maxHeight)
+	k.Logger(ctx).Info("unslashed txs: chain-id: %d, max height: %d, txs:\n%v", chainID, maxHeight, usotxs)
 	if len(usotxs) == 0 {
 		return
 	}
@@ -311,6 +312,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 		sigs, exist := k.SlashingKeeper.GetValidatorSigningInfo(ctx, consAddr)
 		valInfos[i] = valInfo{val, exist, sigs, consAddr}
 	}
+	k.Logger(ctx).Info("validator infos: %v", valInfos)
 
 	var unbondingValInfos []valInfo
 
@@ -343,6 +345,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 	for _, otx := range usotxs {
 		// SLASH BONDED VALIDATORS who didn't sign batch txs
 		signatures := k.GetEVMSignatures(ctx, otx.GetStoreIndex())
+		k.Logger(ctx).Info("signatures for otx: %v, signatures: %v", otx, signatures)
 		for _, valInfo := range valInfos {
 			// Don't slash validators who joined after outgoingtx is created
 			if valInfo.exist && valInfo.sigs.StartHeight < int64(otx.GetCosmosHeight()) {
@@ -409,6 +412,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper, chainID uint32) {
 		}
 
 		// then we set the latest slashed outgoing tx block
-		k.SetLastSlashedOutgoingTxBlockHeight(ctx, otx.GetCosmosHeight())
+		k.Logger(ctx).Info("setting last slashed outoing tx block height: chain id: %d, height: %d", chainID, otx.GetCosmosHeight())
+		k.SetLastSlashedOutgoingTxBlockHeight(ctx, chainID, otx.GetCosmosHeight())
 	}
 }
