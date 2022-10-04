@@ -217,7 +217,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 				s.Require().Equal(sdk.NewInt(20).BigInt(), balance.BigInt(), "balance was %s, expected 100", balance.String())
 				return true
-			}, time.Second*240, time.Second, "send to %s did not reach destination", evm.Name)
+			}, time.Second*240, 10*time.Second, "send to %s did not reach destination", evm.Name)
 		}
 
 		s.T().Logf("funding community pool")

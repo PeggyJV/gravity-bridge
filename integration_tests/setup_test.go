@@ -56,10 +56,10 @@ func MNEMONICS() []string {
 	}
 }
 
-var ChainIds = []uint{gravitytypes.EthereumChainID, gravitytypes.AvalancheCChainID}
+var ChainIds = []uint32{gravitytypes.EthereumChainID, gravitytypes.AvalancheCChainID}
 
-// var ChainIds = []uint{gravitytypes.EthereumChainID}
-// var ChainIds = []uint{gravitytypes.AvalancheCChainID}
+// var ChainIds = []uint32{gravitytypes.EthereumChainID}
+// var ChainIds = []uint32{gravitytypes.AvalancheCChainID}
 var ChainNames = []string{"ethereum", "avalanche"}
 
 type EVM struct {
@@ -374,12 +374,13 @@ func (s *IntegrationTestSuite) initGenesis() {
 	var gravityGenState gravitytypes.GenesisState
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
 
-	gravityGenState.Params.ParamsByChain = make(map[string]*gravitytypes.ParamsForChain, len(ChainIds))
-	for _, chainID := range ChainIds {
+	gravityGenState.Params.ParamsForChains = make([]*gravitytypes.ParamsForChain, len(ChainIds))
+	for i, chainID := range ChainIds {
 		pfc := gravitytypes.DefaultParamsForChain()
+		pfc.ChainId = chainID
 		pfc.GravityId = fmt.Sprintf("gravitytest-%d", chainID)
 		pfc.SignedBatchesWindow = 50
-		gravityGenState.Params.ParamsByChain[strconv.Itoa(int(chainID))] = pfc
+		gravityGenState.Params.ParamsByChain[i] = pfc
 	}
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)

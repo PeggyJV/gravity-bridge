@@ -2,8 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"strconv"
-
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -15,7 +13,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 	if err := data.ValidateBasic(); err != nil {
 		panic(err)
 	}
-	
+
 	k.SetParams(ctx, *data.Params)
 
 	// reset delegate keys in state
@@ -35,8 +33,13 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 		k.setEVMOrchestratorAddress(ctx, evm, orch)
 	}
 
+	chainIDExists := make(map[uint32]bool, len(data.Params.ParamsForChains))
+	for _, cp := range data.Params.ParamsForChains {
+		chainIDExists[cp.ChainId] = true
+	}
+
 	for _, chainGS := range data.EvmGenesisStates {
-		if _, ok := data.Params.ParamsByChain[strconv.Itoa(int(chainGS.ChainID))]; !ok {
+		if _, ok := chainIDExists[chainGS.ChainID]; !ok {
 			panic(fmt.Sprintf("chain ID %d presented in state, but not in params", chainGS.ChainID))
 		}
 

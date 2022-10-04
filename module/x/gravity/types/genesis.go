@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"strconv"
 )
 
 // DefaultParamspace defines the default auth module parameter subspace
@@ -79,12 +78,14 @@ func DefaultParams() *Params {
 
 	return &Params{
 		AverageBlockTime: 5000,
-		ParamsByChain:    map[string]*ParamsForChain{strconv.Itoa(EthereumChainID): cp},
+		ParamsForChains:  []*ParamsForChain{cp},
 	}
 }
 
 func DefaultParamsForChain() *ParamsForChain {
-	return &ParamsForChain{GravityId: "defaultgravityid",
+	return &ParamsForChain{
+		ChainId:                              EthereumChainID,
+		GravityId:                            "defaultgravityid",
 		SignedSignerSetTxsWindow:             10000,
 		SignedBatchesWindow:                  10000,
 		EvmSignaturesWindow:                  10000,
@@ -100,12 +101,13 @@ func DefaultParamsForChain() *ParamsForChain {
 // ValidateBasic checks that the parameters have valid values.
 func (p Params) ValidateBasic() error {
 	gravityIDs := make(map[string]bool)
+	chainIDs := make(map[uint32]bool)
 
 	if err := validateAverageBlockTime(p.AverageBlockTime); err != nil {
 		return sdkerrors.Wrap(err, "Block time")
 	}
 
-	for _, cp := range p.ParamsByChain {
+	for _, cp := range p.ParamsForChains {
 		if err := cp.ValidateBasic(); err != nil {
 			return err
 		}
@@ -114,12 +116,20 @@ func (p Params) ValidateBasic() error {
 			return sdkerrors.Wrap(ErrDuplicateGravityID, "gravity id")
 		}
 		gravityIDs[cp.GravityId] = true
+
+		if exists := chainIDs[cp.ChainId]; exists {
+			return sdkerrors.Wrap(ErrDuplicateChainID, "chain id")
+		}
+		chainIDs[cp.ChainId] = true
 	}
 
 	return nil
 }
 
 func (cp ParamsForChain) ValidateBasic() error {
+	if err := validateChainID(cp.ChainId); err != nil {
+		return sdkerrors.Wrap(err, "chain id")
+	}
 	if err := validateGravityID(cp.GravityId); err != nil {
 		return sdkerrors.Wrap(err, "gravity id")
 	}
@@ -167,7 +177,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamsStoreKeyAverageBlockTime, &p.AverageBlockTime, validateAverageBlockTime),
-		paramtypes.NewParamSetPair(ParamsStoreKeyParamsForChain, &p.ParamsByChain, validateParamsForChain),
+		paramtypes.NewParamSetPair(ParamsStoreKeyParamsForChain, &p.ParamsForChains, validateParamsForChain),
 	}
 }
 
@@ -185,7 +195,7 @@ func (p Params) Equal(p2 Params) bool {
 }
 
 func validateParamsForChain(i interface{}) error {
-	v, ok := i.(map[string]*ParamsForChain)
+	v, ok := i.([]*ParamsForChain)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -196,6 +206,14 @@ func validateParamsForChain(i interface{}) error {
 		}
 	}
 
+	return nil
+}
+
+func validateChainID(i interface{}) error {
+	_, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
 	return nil
 }
 

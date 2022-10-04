@@ -181,6 +181,7 @@ var (
 
 	// TestingGravityParams is a set of gravity params for testing
 	ethereumParamsForChain = types.ParamsForChain{
+		ChainId:                              types.EthereumChainID,
 		GravityId:                            "testgravityid",
 		SignedBatchesWindow:                  10,
 		SignedSignerSetTxsWindow:             10,
@@ -196,7 +197,7 @@ var (
 	// TestingGravityParams is a set of gravity params for testing
 	TestingGravityParams = types.Params{
 		AverageBlockTime: 5000,
-		ParamsByChain:    map[string]*types.ParamsForChain{"1": &ethereumParamsForChain}}
+		ParamsForChains:  []*types.ParamsForChain{&ethereumParamsForChain}}
 )
 
 // TestInput stores the various keepers required to test gravity
