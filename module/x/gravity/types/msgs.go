@@ -34,13 +34,13 @@ func NewMsgDelegateKeys(val sdk.ValAddress, orchAddr sdk.AccAddress, ethAddr str
 }
 
 // Route should return the name of the module
-func (msg *MsgDelegateKeys) Route() string { return RouterKey }
+func (msg MsgDelegateKeys) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg *MsgDelegateKeys) Type() string { return "delegate_keys" }
+func (msg MsgDelegateKeys) Type() string { return "delegate_keys" }
 
 // ValidateBasic performs stateless checks
-func (msg *MsgDelegateKeys) ValidateBasic() (err error) {
+func (msg MsgDelegateKeys) ValidateBasic() (err error) {
 	if _, err = sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.ValidatorAddress)
 	}
@@ -58,12 +58,12 @@ func (msg *MsgDelegateKeys) ValidateBasic() (err error) {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg *MsgDelegateKeys) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+func (msg MsgDelegateKeys) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg *MsgDelegateKeys) GetSigners() []sdk.AccAddress {
+func (msg MsgDelegateKeys) GetSigners() []sdk.AccAddress {
 	acc, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		panic(err)
@@ -72,13 +72,13 @@ func (msg *MsgDelegateKeys) GetSigners() []sdk.AccAddress {
 }
 
 // Route should return the name of the module
-func (msg *MsgSubmitEthereumEvent) Route() string { return RouterKey }
+func (msg MsgSubmitEthereumEvent) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg *MsgSubmitEthereumEvent) Type() string { return "submit_ethereum_event" }
+func (msg MsgSubmitEthereumEvent) Type() string { return "submit_ethereum_event" }
 
 // ValidateBasic performs stateless checks
-func (msg *MsgSubmitEthereumEvent) ValidateBasic() (err error) {
+func (msg MsgSubmitEthereumEvent) ValidateBasic() (err error) {
 	if _, err = sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Signer)
 	}
@@ -91,12 +91,12 @@ func (msg *MsgSubmitEthereumEvent) ValidateBasic() (err error) {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg *MsgSubmitEthereumEvent) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+func (msg MsgSubmitEthereumEvent) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg *MsgSubmitEthereumEvent) GetSigners() []sdk.AccAddress {
+func (msg MsgSubmitEthereumEvent) GetSigners() []sdk.AccAddress {
 	// TODO: figure out how to convert between AccAddress and ValAddress properly
 	acc, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
@@ -105,19 +105,19 @@ func (msg *MsgSubmitEthereumEvent) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{acc}
 }
 
-func (msg *MsgSubmitEthereumEvent) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+func (msg MsgSubmitEthereumEvent) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 	var event EthereumEvent
 	return unpacker.UnpackAny(msg.Event, &event)
 }
 
 // Route should return the name of the module
-func (msg *MsgSubmitEthereumTxConfirmation) Route() string { return RouterKey }
+func (msg MsgSubmitEthereumTxConfirmation) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg *MsgSubmitEthereumTxConfirmation) Type() string { return "submit_ethereum_signature" }
+func (msg MsgSubmitEthereumTxConfirmation) Type() string { return "submit_ethereum_signature" }
 
 // ValidateBasic performs stateless checks
-func (msg *MsgSubmitEthereumTxConfirmation) ValidateBasic() (err error) {
+func (msg MsgSubmitEthereumTxConfirmation) ValidateBasic() (err error) {
 	if _, err = sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Signer)
 	}
@@ -132,12 +132,12 @@ func (msg *MsgSubmitEthereumTxConfirmation) ValidateBasic() (err error) {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg *MsgSubmitEthereumTxConfirmation) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+func (msg MsgSubmitEthereumTxConfirmation) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg *MsgSubmitEthereumTxConfirmation) GetSigners() []sdk.AccAddress {
+func (msg MsgSubmitEthereumTxConfirmation) GetSigners() []sdk.AccAddress {
 	// TODO: figure out how to convert between AccAddress and ValAddress properly
 	acc, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
@@ -146,7 +146,7 @@ func (msg *MsgSubmitEthereumTxConfirmation) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{acc}
 }
 
-func (msg *MsgSubmitEthereumTxConfirmation) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+func (msg MsgSubmitEthereumTxConfirmation) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 	var sig EthereumTxConfirmation
 	return unpacker.UnpackAny(msg.Confirmation, &sig)
 }
@@ -196,7 +196,7 @@ func (msg MsgSendToEthereum) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgSendToEthereum) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -236,7 +236,7 @@ func (msg MsgRequestBatchTx) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgRequestBatchTx) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -276,7 +276,7 @@ func (msg MsgCancelSendToEthereum) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgCancelSendToEthereum) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -318,7 +318,7 @@ func (msg MsgEthereumHeightVote) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgEthereumHeightVote) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
