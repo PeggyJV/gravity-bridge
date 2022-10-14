@@ -3,6 +3,7 @@ module github.com/peggyjv/gravity-bridge
 go 1.15
 
 require (
+	github.com/confio/ics23/go v0.8.0 // indirect
 	github.com/cosmos/cosmos-sdk v0.44.5-patch
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go v1.0.1 // indirect
