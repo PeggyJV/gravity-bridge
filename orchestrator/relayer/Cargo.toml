@@ -31,8 +31,8 @@ env_logger = "0.8"
 tokio = "1.21"
 tonic = "0.4"
 openssl-probe = "0.1"
-ocular = { path = "../../../ocular" }
-ocular-somm-gravity = { path = "../../../ocular-somm-gravity" }
+ocular = { git = "https://github.com/peggyjv/ocular", branch = "collin/orchestrator-parallel" }
+ocular-somm-gravity = { git = "https://github.com/peggyjv/ocular-somm-gravity" }
 
 [dev-dependencies]
 actix = "0.12"

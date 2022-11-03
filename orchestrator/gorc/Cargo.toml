@@ -40,8 +40,8 @@ log = "0.4"
 prost = "0.7"
 bytes = "1"
 proc-macro2 = "1.0.47"
-ocular = { path = "../../../ocular" }
-ocular-somm-gravity = { path = "../../../ocular-somm-gravity" }
+ocular = { git = "https://github.com/peggyjv/ocular", branch = "collin/orchestrator-parallel" }
+ocular-somm-gravity = { git = "https://github.com/peggyjv/ocular-somm-gravity" }
 
 [dependencies.abscissa_core]
 version = "0.6.0"

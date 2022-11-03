@@ -36,7 +36,7 @@ openssl-probe = "0.1"
 axum = "0.1.3"
 hyper = "0.14.22"
 prometheus = "0.12.0"
-ocular = { path = "../../../ocular" }
+ocular = { git = "https://github.com/peggyjv/ocular", branch = "collin/orchestrator-parallel" }
 
 # this is a dirty trick, we depent transitively on OpenSSL it's never
 # called directly in this crate, but if we specify this dep we can enable

@@ -1472,10 +1472,10 @@ dependencies = [
  "ethereum_gravity",
  "ethers",
  "eyre",
- "gravity_proto",
+ "gravity_proto 0.2.0",
  "gravity_utils",
  "log",
- "ocular",
+ "ocular 1.0.0-rc1 (git+https://github.com/peggyjv/ocular?branch=collin/orchestrator-parallel)",
  "ocular-somm-gravity",
  "prost 0.11.0",
  "prost-types 0.11.1",
@@ -1976,7 +1976,7 @@ dependencies = [
  "gravity_abi",
  "gravity_utils",
  "log",
- "ocular",
+ "ocular 1.0.0-rc1 (git+https://github.com/peggyjv/ocular?branch=collin/orchestrator-parallel)",
  "sha3 0.9.1",
  "tokio 1.21.2",
  "web30",
@@ -2513,11 +2513,11 @@ dependencies = [
  "env_logger",
  "ethereum_gravity",
  "ethers",
- "gravity_proto",
+ "gravity_proto 0.2.0",
  "gravity_utils",
  "k256",
  "log",
- "ocular",
+ "ocular 1.0.0-rc1 (git+https://github.com/peggyjv/ocular?branch=collin/orchestrator-parallel)",
  "ocular-somm-gravity",
  "once_cell",
  "openssl-probe",
@@ -2567,7 +2567,7 @@ dependencies = [
  "gorc",
  "gravity_abi",
  "gravity_abi_build",
- "gravity_proto",
+ "gravity_proto 0.2.0",
  "gravity_proto_build",
  "gravity_utils",
  "orchestrator",
@@ -2578,6 +2578,18 @@ dependencies = [
 [[package]]
 name = "gravity_proto"
 version = "0.2.0"
+dependencies = [
+ "bytes 1.2.1",
+ "cosmos-sdk-proto 0.14.0",
+ "prost 0.11.0",
+ "prost-types 0.11.1",
+ "tonic 0.8.2",
+]
+
+[[package]]
+name = "gravity_proto"
+version = "0.2.0"
+source = "git+http://github.com/peggyjv/gravity-bridge?branch=collin/proto-build-dep-upgrades#959291604016590d07f042ea65fa2efe4859a0b3"
 dependencies = [
  "bytes 1.2.1",
  "cosmos-sdk-proto 0.14.0",
@@ -2610,13 +2622,13 @@ dependencies = [
  "ethers",
  "eyre",
  "gravity_abi",
- "gravity_proto",
+ "gravity_proto 0.2.0",
  "hdpath",
  "lazy_static",
  "log",
  "num-bigint 0.4.3",
  "num256",
- "ocular",
+ "ocular 1.0.0-rc1 (git+https://github.com/peggyjv/ocular?branch=collin/orchestrator-parallel)",
  "ocular-somm-gravity",
  "rand 0.8.5",
  "rustc-hex",
@@ -3573,13 +3585,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "ocular"
+version = "1.0.0-rc1"
+source = "git+https://github.com/peggyjv/ocular?branch=collin/orchestrator-parallel#63df9252c8b785ec5c0bb8be1b296839f2c1e3f9"
+dependencies = [
+ "assay",
+ "async-trait",
+ "cosmrs",
+ "eyre",
+ "hex",
+ "pkcs8 0.9.0",
+ "prost 0.11.0",
+ "serde",
+ "tonic 0.8.2",
+]
+
+[[package]]
 name = "ocular-somm-gravity"
 version = "0.1.0"
+source = "git+https://github.com/peggyjv/ocular-somm-gravity#edc4a8aeeb122ddbbbb67ae785256e21ff1924ba"
 dependencies = [
  "async-trait",
  "eyre",
- "gravity_proto",
- "ocular",
+ "gravity_proto 0.2.0 (git+http://github.com/peggyjv/gravity-bridge?branch=collin/proto-build-dep-upgrades)",
+ "ocular 1.0.0-rc1 (git+https://github.com/peggyjv/ocular?branch=collin/orchestrator-parallel)",
  "prost 0.11.0",
  "prost-types 0.11.1",
  "tonic 0.8.2",
@@ -3697,12 +3726,12 @@ dependencies = [
  "ethers",
  "futures",
  "gravity_abi",
- "gravity_proto",
+ "gravity_proto 0.2.0",
  "gravity_utils",
  "hyper",
  "lazy_static",
  "log",
- "ocular",
+ "ocular 1.0.0-rc1 (git+https://github.com/peggyjv/ocular?branch=collin/orchestrator-parallel)",
  "openssl",
  "openssl-probe",
  "prometheus",
@@ -4426,11 +4455,11 @@ dependencies = [
  "env_logger",
  "ethereum_gravity",
  "ethers",
- "gravity_proto",
+ "gravity_proto 0.2.0",
  "gravity_utils",
  "lazy_static",
  "log",
- "ocular",
+ "ocular 1.0.0-rc1",
  "openssl-probe",
  "rand 0.8.5",
  "relayer",
@@ -4452,11 +4481,11 @@ dependencies = [
  "ethereum_gravity",
  "ethers",
  "gravity_abi",
- "gravity_proto",
+ "gravity_proto 0.2.0",
  "gravity_utils",
  "lazy_static",
  "log",
- "ocular",
+ "ocular 1.0.0-rc1 (git+https://github.com/peggyjv/ocular?branch=collin/orchestrator-parallel)",
  "ocular-somm-gravity",
  "openssl-probe",
  "serde",
