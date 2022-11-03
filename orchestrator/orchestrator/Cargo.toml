@@ -34,7 +34,7 @@ futures = "0.3.25"
 openssl-probe = "0.1"
 
 axum = "0.1.3"
-hyper = "0.14.20"
+hyper = "0.14.22"
 prometheus = "0.12.0"
 ocular = { path = "../../../ocular" }
 
