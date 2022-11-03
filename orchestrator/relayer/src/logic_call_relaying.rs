@@ -7,19 +7,18 @@ use ethereum_gravity::{
     logic_call::send_eth_logic_call, types::EthClient, utils::get_logic_call_nonce,
 };
 use ethers::types::Address as EthAddress;
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
 use gravity_utils::types::{LogicCallConfirmResponse, Valset};
 use gravity_utils::{message_signatures::encode_logic_call_confirm_hashed, types::LogicCall};
+use ocular::GrpcClient;
 use std::time::Duration;
-use tonic::transport::Channel;
 
 #[allow(clippy::too_many_arguments)]
 pub async fn relay_logic_calls(
     // the validator set currently in the contract on Ethereum
     current_valset: Valset,
     eth_client: EthClient,
-    grpc_client: &mut GravityQueryClient<Channel>,
+    grpc_client: &mut GrpcClient,
     gravity_contract_address: EthAddress,
     gravity_id: String,
     timeout: Duration,

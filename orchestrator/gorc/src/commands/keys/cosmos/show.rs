@@ -12,10 +12,10 @@ impl Runnable for ShowCosmosKeyCmd {
     fn run(&self) {
         let config = APP.config();
         let name = self.args.get(0).expect("name is required");
-        let key = config.load_deep_space_key(name.clone());
+        let key = config.load_account(name.clone());
 
         let address = key
-            .to_address(config.cosmos.prefix.trim())
+            .address(config.cosmos.prefix.trim())
             .expect("Could not generate public key");
 
         println!("{}\t{}", name, address)

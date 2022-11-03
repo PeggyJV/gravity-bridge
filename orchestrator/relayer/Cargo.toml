@@ -18,21 +18,21 @@ cosmos_gravity = { path = "../cosmos_gravity" }
 gravity_abi = { path = "../gravity_abi" }
 gravity_utils = { path = "../gravity_utils" }
 gravity_proto = { path = "../gravity_proto" }
-
-deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
-ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
+ethers = { version = "1.0.0",  default-features = false, features = ["abigen"] }
 serde_derive = "1.0"
-clarity = "0.4.11"
+clarity = "0.4.16"
 docopt = "1"
 serde = "1.0"
-actix-rt = "2.5"
+actix-rt = "2.7"
 lazy_static = "1"
 web30 = "0.15"
 log = "0.4"
 env_logger = "0.8"
-tokio = "1.4"
+tokio = "1.21"
 tonic = "0.4"
 openssl-probe = "0.1"
+ocular = { path = "../../../ocular" }
+ocular-somm-gravity = { path = "../../../ocular-somm-gravity" }
 
 [dev-dependencies]
 actix = "0.12"

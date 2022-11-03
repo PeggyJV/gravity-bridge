@@ -4,10 +4,10 @@ use crate::{
     erc20_utils::{approve_erc20_transfers, check_erc20_approved},
     types::EthClient,
 };
-use deep_space::address::Address as CosmosAddress;
 use ethers::prelude::*;
 use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
+use ocular::cosmrs::AccountId;
 use std::{result::Result, time::Duration};
 
 const SEND_TO_COSMOS_GAS_LIMIT: u128 = 100_000;
@@ -17,7 +17,7 @@ pub async fn send_to_cosmos(
     erc20: Address,
     gravity_contract: Address,
     amount: U256,
-    cosmos_destination: CosmosAddress,
+    cosmos_destination: AccountId,
     wait_timeout: Option<Duration>,
     eth_client: EthClient,
 ) -> Result<TxHash, GravityError> {
@@ -44,7 +44,7 @@ pub async fn send_to_cosmos(
     // so small values like addresses that don't take up the full length of the byte vector
     // are pushed up to the top. This duplicates the way Ethereum encodes it's own addresses
     // as closely as possible.
-    let mut cosmos_dest_address_bytes = cosmos_destination.as_bytes().to_vec();
+    let mut cosmos_dest_address_bytes = cosmos_destination.to_bytes().to_vec();
     while cosmos_dest_address_bytes.len() < 32 {
         cosmos_dest_address_bytes.insert(0, 0u8);
     }

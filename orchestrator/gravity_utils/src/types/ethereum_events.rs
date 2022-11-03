@@ -7,12 +7,12 @@
 use super::ValsetMember;
 use crate::error::GravityError;
 use crate::ethereum::downcast_to_u64;
-use deep_space::Address as CosmosAddress;
 use ethers::abi::RawLog;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use eyre::Result;
 use gravity_abi::gravity::*;
-use std::result::Result;
+use ocular::cosmrs::AccountId;
 
 // given a Log retrieved by querying the Ethereum chain, decode it into one of
 // the generated event types for the Gravity contract
@@ -202,14 +202,14 @@ impl EventNonceFilter for TransactionBatchExecutedEvent {}
 
 /// A parsed struct representing the Ethereum event fired when someone makes a deposit
 /// on the Gravity contract
-#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct SendToCosmosEvent {
     /// The token contract address for the deposit
     pub erc20: EthAddress,
     /// The Ethereum Sender
     pub sender: EthAddress,
     /// The Cosmos destination
-    pub destination: CosmosAddress,
+    pub destination: AccountId,
     /// The amount of the erc20 token that is being sent
     pub amount: U256,
     /// The transaction's nonce, used to make sure there can be no accidental duplication
@@ -225,7 +225,12 @@ impl FromLogWithPrefix for SendToCosmosEvent {
         Ok(SendToCosmosEvent {
             erc20: event.token_contract,
             sender: event.sender,
-            destination: CosmosAddress::from_slice(&event.destination[12..32], prefix)?,
+            destination: AccountId::new(prefix, &event.destination[12..32]).map_err(|e| {
+                GravityError::CosmosAddressError(format!(
+                    "Error decoding destination address from log: {:?}",
+                    e
+                ))
+            })?,
             amount: event.amount,
             event_nonce: event.event_nonce,
             block_height: block_height_from_log(input)?,

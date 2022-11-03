@@ -1,8 +1,8 @@
 use super::show::ShowEthKeyCmd;
 use crate::application::APP;
 use abscissa_core::{clap::Parser, Application, Command, Runnable};
-use k256::pkcs8::ToPrivateKey;
-use signatory::FsKeyStore;
+use pkcs8::EncodePrivateKey;
+use signatory::{pkcs8::PrivateKeyDocument, FsKeyStore};
 use std::path;
 
 /// Recover an Eth Key
@@ -56,8 +56,10 @@ impl Runnable for RecoverEthKeyCmd {
         let key = key
             .to_pkcs8_der()
             .expect("Could not PKCS8 encod private key");
+        let key = &PrivateKeyDocument::from_der(key.as_bytes())
+            .expect("failed to derive PrivateKeyDocument from DER bytes");
 
-        keystore.store(&name, &key).expect("Could not store key");
+        keystore.store(&name, key).expect("Could not store key");
 
         let show_cmd = ShowEthKeyCmd {
             args: vec![name.to_string()],

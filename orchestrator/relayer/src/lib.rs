@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 pub mod batch_relaying;
 pub mod find_latest_valset;
 pub mod logic_call_relaying;

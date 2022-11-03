@@ -2,11 +2,12 @@ use crate::{application::APP, prelude::*};
 use abscissa_core::{clap::Parser, Command, Runnable};
 use ethereum_gravity::deploy_erc20::deploy_erc20;
 use ethers::prelude::*;
-use gravity_proto::gravity::{DenomToErc20ParamsRequest, DenomToErc20Request};
 use gravity_utils::{
-    connection_prep::{check_for_eth, create_rpc_connections},
+    connection_prep::{check_for_eth, create_eth_provider},
     ethereum::{downcast_to_u64, format_eth_hash},
 };
+use ocular::GrpcClient;
+use ocular_somm_gravity::SommGravityExt;
 use std::convert::TryFrom;
 use std::process::exit;
 use std::{sync::Arc, time::Duration};
@@ -20,7 +21,7 @@ pub struct Erc20 {
     #[clap(short, long)]
     ethereum_key: String,
 
-    #[clap(short, long, default_value_t = 1.0)]
+    #[clap(short, long, default_value = "1.0")]
     gas_multiplier: f64,
 }
 
@@ -50,15 +51,12 @@ impl Erc20 {
             .expect("Could not parse gravity contract address");
 
         let timeout = Duration::from_secs(500);
-        let connections = create_rpc_connections(
-            config.cosmos.prefix.clone(),
-            Some(config.cosmos.grpc.clone()),
-            Some(config.ethereum.rpc.clone()),
-            timeout,
-        )
-        .await;
-
-        let provider = connections.eth_provider.clone().unwrap();
+        let cosmos_client = GrpcClient::new(&config.cosmos.grpc)
+            .await
+            .expect("failed to construct GrpcClient");
+        let provider = create_eth_provider(config.ethereum.rpc.clone())
+            .await
+            .expect("error creating eth provider");
         let chain_id = provider
             .get_chainid()
             .await
@@ -68,19 +66,13 @@ impl Erc20 {
         let eth_client =
             SignerMiddleware::new(provider, ethereum_wallet.clone().with_chain_id(chain_id));
         let eth_client = Arc::new(eth_client);
-        let mut grpc = connections.grpc.clone().unwrap();
 
         check_for_eth(eth_client.address(), eth_client.clone()).await;
 
-        let req = DenomToErc20ParamsRequest {
-            denom: denom.clone(),
-        };
-
-        let res = grpc
-            .denom_to_erc20_params(req)
+        let res = cosmos_client
+            .query_denom_to_erc20_params(denom)
             .await
-            .expect("Couldn't get erc-20 params")
-            .into_inner();
+            .expect("Couldn't get erc-20 params");
 
         println!("Starting deploy of ERC20");
 
@@ -102,25 +94,20 @@ impl Erc20 {
 
         match tokio::time::timeout(Duration::from_secs(300), async {
             loop {
-                let req = DenomToErc20Request {
-                    denom: denom.clone(),
-                };
+                let res = cosmos_client.query_denom_to_erc20(denom).await;
 
-                let res = grpc.denom_to_erc20(req).await;
-
-                if let Ok(val) = res {
-                    break val;
+                if let Ok(erc20) = res {
+                    break erc20;
                 }
                 delay_for(Duration::from_secs(1)).await;
             }
         })
         .await
         {
-            Ok(val) => {
+            Ok(erc20) => {
                 println!(
                     "Asset {} has accepted new ERC20 representation {}",
-                    denom,
-                    val.into_inner().erc20
+                    denom, erc20
                 );
                 exit(0);
             }

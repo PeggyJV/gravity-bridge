@@ -3,11 +3,11 @@
 //! parse Gravity module specific endpoints and generally interact with the multitude of Gravity specific functionality
 //! that's part of the Cosmos module.
 
+#![allow(clippy::too_many_arguments)]
+
 #[macro_use]
 extern crate log;
 
 pub mod build;
-pub mod crypto;
 pub mod query;
 pub mod send;
-pub mod utils;

@@ -3,16 +3,14 @@ use abscissa_core::{clap::Parser, Command, Runnable};
 use ethers::{prelude::*, types::Address as EthAddress};
 use gravity_utils::{
     connection_prep::{
-        check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
+        check_delegate_addresses, check_for_eth, check_for_fee_denom, create_eth_provider,
         wait_for_cosmos_node_ready,
     },
     ethereum::{downcast_to_u64, format_eth_address},
 };
-use orchestrator::main_loop::{
-    orchestrator_main_loop, ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED,
-};
-use relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
-use std::{cmp::min, sync::Arc};
+use ocular::{chain::ChainContext, GrpcClient};
+use orchestrator::main_loop::orchestrator_main_loop;
+use std::sync::Arc;
 
 /// Start the Orchestrator
 #[derive(Command, Debug, Parser)]
@@ -34,8 +32,13 @@ impl Runnable for StartCommand {
         let config = APP.config();
         let cosmos_prefix = config.cosmos.prefix.clone();
 
-        let cosmos_key = config.load_deep_space_key(self.cosmos_key.clone());
-        let cosmos_address = cosmos_key.to_address(&cosmos_prefix).unwrap();
+        let cosmos_account = config.load_account(self.cosmos_key.clone());
+        let cosmos_address = cosmos_account.id(&cosmos_prefix).unwrap();
+
+        let context = ChainContext {
+            prefix: cosmos_prefix,
+            ..Default::default()
+        };
 
         let ethereum_wallet = config.load_ethers_wallet(self.ethereum_key.clone());
         let ethereum_address = ethereum_wallet.address();
@@ -48,23 +51,13 @@ impl Runnable for StartCommand {
 
         let fees_denom = config.gravity.fees_denom.clone();
 
-        let timeout = min(
-            min(ETH_SIGNER_LOOP_SPEED, ETH_ORACLE_LOOP_SPEED),
-            RELAYER_LOOP_SPEED,
-        );
-
         abscissa_tokio::run_with_actix(&APP, async {
-            let connections = create_rpc_connections(
-                cosmos_prefix,
-                Some(config.cosmos.grpc.clone()),
-                Some(config.ethereum.rpc.clone()),
-                timeout,
-            )
-            .await;
-
-            let mut grpc = connections.grpc.clone().unwrap();
-            let contact = connections.contact.clone().unwrap();
-            let provider = connections.eth_provider.clone().unwrap();
+            let mut grpc_client = GrpcClient::new(&config.cosmos.grpc)
+                .await
+                .expect("failed to construct GrpcClient");
+            let provider = create_eth_provider(config.ethereum.rpc.clone())
+                .await
+                .expect("error creating eth provider");
             let chain_id = provider
                 .get_chainid()
                 .await
@@ -82,28 +75,24 @@ impl Runnable for StartCommand {
             // check if the cosmos node is syncing, if so wait for it
             // we can't move any steps above this because they may fail on an incorrect
             // historic chain state while syncing occurs
-            wait_for_cosmos_node_ready(&contact).await;
+            wait_for_cosmos_node_ready(&mut grpc_client).await;
 
             // check if the delegate addresses are correctly configured
-            check_delegate_addresses(
-                &mut grpc,
-                ethereum_address,
-                cosmos_address,
-                &contact.get_prefix(),
-            )
-            .await;
+            check_delegate_addresses(&mut grpc_client, ethereum_address, &cosmos_address).await;
 
             // check if we actually have the promised balance of tokens to pay fees
-            check_for_fee_denom(&fees_denom, cosmos_address, &contact).await;
+            check_for_fee_denom(&fees_denom, &cosmos_address, &mut grpc_client)
+                .await
+                .expect("failed to check for fee denom");
             check_for_eth(ethereum_address, eth_client.clone()).await;
 
             let gas_price = config.cosmos.gas_price.as_tuple();
 
             orchestrator_main_loop(
-                cosmos_key,
-                contact,
+                &config.cosmos.grpc,
+                &cosmos_account,
+                context,
                 eth_client,
-                grpc,
                 contract_address,
                 gas_price,
                 &config.metrics.listen_addr,

@@ -3,8 +3,8 @@ use crate::{
     error::GravityError,
     ethereum::{format_eth_address, u8_slice_to_fixed_32},
 };
-use deep_space::error::CosmosGrpcError;
 use ethers::types::{Address as EthAddress, Signature as EthSignature};
+use eyre::{bail, Result};
 use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::{
@@ -110,15 +110,14 @@ impl Valset {
         (addresses, powers)
     }
 
-    pub fn get_power(&self, address: EthAddress) -> Result<u64, CosmosGrpcError> {
+    pub fn get_power(&self, address: EthAddress) -> Result<u64> {
         for val in self.members.iter() {
             if val.eth_address == Some(address) {
                 return Ok(val.power);
             }
         }
-        Err(CosmosGrpcError::BadInput(
-            "All Eth Addresses must be set".to_string(),
-        ))
+
+        bail!("All Eth Addresses must be set".to_string())
     }
 
     /// combines the provided signatures with the valset ensuring that ordering and signature data is correct

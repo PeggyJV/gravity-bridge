@@ -15,20 +15,20 @@ cosmos_gravity = {path = "../cosmos_gravity"}
 gravity_utils = {path = "../gravity_utils"}
 gravity_proto = {path = "../gravity_proto/"}
 
-deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
-ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
+ethers = { version = "1.0.0",  default-features = false, features = ["abigen"] }
 contact = "0.4"
 serde_derive = "1.0"
-clarity = "0.4.11"
+clarity = "0.4.16"
 docopt = "1"
 serde = "1.0"
-actix-rt = "2.5"
+actix-rt = "2.7"
 lazy_static = "1"
 web30 = "0.15"
 env_logger = "0.8"
-log = "0.4.14"
+log = "0.4.17"
 openssl-probe = "0.1"
 rand = "0.8"
+ocular = { path = "../../../ocular", features = ["crypto"] }
 
 [features]
 ethermint = ["cosmos_gravity/ethermint", "relayer/ethermint"]

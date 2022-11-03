@@ -1,12 +1,11 @@
 use crate::{
     batch_relaying::relay_batches, find_latest_valset::find_latest_valset,
-    logic_call_relaying::{relay_logic_calls}, valset_relaying::relay_valsets,
+    logic_call_relaying::relay_logic_calls, valset_relaying::relay_valsets,
 };
-use ethereum_gravity::{types::EthClient, utils::get_gravity_id, logic_call::LogicCallSkips};
+use ethereum_gravity::{logic_call::LogicCallSkips, types::EthClient, utils::get_gravity_id};
 use ethers::types::Address as EthAddress;
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use std::{time::Duration};
-use tonic::transport::Channel;
+use ocular::GrpcClient;
+use std::time::Duration;
 
 pub const LOOP_SPEED: Duration = Duration::from_secs(17);
 pub const PENDING_TX_TIMEOUT: Duration = Duration::from_secs(120);
@@ -16,12 +15,12 @@ pub const PENDING_TX_TIMEOUT: Duration = Duration::from_secs(120);
 #[allow(unused_variables)]
 pub async fn relayer_main_loop(
     eth_client: EthClient,
-    grpc_client: GravityQueryClient<Channel>,
+    cosmos_client: GrpcClient,
     gravity_contract_address: EthAddress,
     eth_gas_price_multiplier: f32,
     eth_gas_multiplier: f32,
 ) {
-    let mut grpc_client = grpc_client;
+    let mut cosmos_client = cosmos_client;
     let gravity_id = get_gravity_id(gravity_contract_address, eth_client.clone()).await;
     if gravity_id.is_err() {
         error!("Failed to get GravityID, check your Eth node");
@@ -34,7 +33,7 @@ pub async fn relayer_main_loop(
         let (async_resp, _) = tokio::join!(
             async {
                 let current_eth_valset = find_latest_valset(
-                    &mut grpc_client,
+                    &mut cosmos_client,
                     gravity_contract_address,
                     eth_client.clone(),
                 )
@@ -48,7 +47,7 @@ pub async fn relayer_main_loop(
                 relay_valsets(
                     current_eth_valset.clone(),
                     eth_client.clone(),
-                    &mut grpc_client,
+                    &mut cosmos_client,
                     gravity_contract_address,
                     gravity_id.clone(),
                     PENDING_TX_TIMEOUT,
@@ -60,7 +59,7 @@ pub async fn relayer_main_loop(
                 relay_batches(
                     current_eth_valset.clone(),
                     eth_client.clone(),
-                    &mut grpc_client,
+                    &mut cosmos_client,
                     gravity_contract_address,
                     gravity_id.clone(),
                     PENDING_TX_TIMEOUT,
@@ -72,7 +71,7 @@ pub async fn relayer_main_loop(
                 relay_logic_calls(
                     current_eth_valset,
                     eth_client.clone(),
-                    &mut grpc_client,
+                    &mut cosmos_client,
                     gravity_contract_address,
                     gravity_id.clone(),
                     PENDING_TX_TIMEOUT,

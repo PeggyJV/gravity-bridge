@@ -9,26 +9,28 @@ edition = "2018"
 [dependencies]
 gravity_abi = { path = "../gravity_abi" }
 gravity_proto = { path = "../gravity_proto/" }
-cosmos-sdk-proto = "0.6.3"
-deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
-ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
+cosmos-sdk-proto = "0.14.0"
+ethers = { version = "1.0.0", default-features = false, features = ["abigen"] }
 web30 = "0.15"
-clarity = "0.4.11"
+clarity = "0.4.16"
 lazy_static = "1.4.0"
 num256 = "0.3"
 serde_derive = "1.0"
-serde_json = "1.0.69"
+serde_json = "1.0.87"
 serde = "1.0"
-tokio = "1.4"
+tokio = "1.21"
 tonic = "0.4"
 num-bigint = "0.4"
 log = "0.4"
 url = "2"
 sha3 = "0.9"
-tiny-bip39 = "0.8.0"
+tiny-bip39 = "0.8.2"
 bitcoin = { version = "=0.27", features = ["use-serde"] }
-hdpath = { version = "0.6.0", features = ["with-bitcoin"] }
+hdpath = { version = "0.6.1", features = ["with-bitcoin"] }
 rustc-hex = "2.1.0"
+ocular = { path = "../../../ocular" }
+ocular-somm-gravity = { path = "../../../ocular-somm-gravity" }
+eyre = "0.6.8"
 
 [dev_dependencies]
 rand = "0.8"

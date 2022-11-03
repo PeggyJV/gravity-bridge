@@ -6,13 +6,11 @@ use crate::get_with_retry::get_chain_id_with_retry;
 use crate::metrics;
 use cosmos_gravity::build;
 use cosmos_gravity::query::get_last_event_nonce;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
-use deep_space::{Contact, Msg};
 use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use gravity_utils::connection_prep::wait_for_next_block;
 use gravity_utils::ethereum::downcast_to_u64;
 use gravity_utils::types::EventNonceFilter;
 use gravity_utils::types::{FromLogs, FromLogsWithPrefix};
@@ -24,23 +22,21 @@ use gravity_utils::{
         TransactionBatchExecutedEvent, ValsetUpdatedEvent,
     },
 };
+use ocular::cosmrs::{AccountId, Any};
+use ocular::GrpcClient;
 use std::{result::Result, time};
-use tonic::transport::Channel;
 
 #[allow(clippy::too_many_arguments)]
 pub async fn check_for_events(
+    cosmos_client: &mut GrpcClient,
+    cosmos_address: &AccountId,
     eth_client: EthClient,
-    contact: &Contact,
-    grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
-    cosmos_key: CosmosPrivateKey,
     starting_block: U64,
     blocks_to_search: U64,
     block_delay: U64,
-    msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
+    msg_sender: tokio::sync::mpsc::Sender<Vec<Any>>,
 ) -> Result<U64, GravityError> {
-    let prefix = contact.get_prefix();
-    let our_cosmos_address = cosmos_key.to_address(&prefix).unwrap();
     let latest_block = get_block_number_with_retry(eth_client.clone()).await;
     let latest_block = latest_block - block_delay;
 
@@ -91,7 +87,8 @@ pub async fn check_for_events(
 
     let send_to_cosmos_events = eth_client.get_logs(&send_to_cosmos_filter).await?;
     debug!("Send to Cosmos events detected {:?}", send_to_cosmos_events);
-    let send_to_cosmos_events = SendToCosmosEvent::from_logs(&send_to_cosmos_events, &prefix)?;
+    let send_to_cosmos_events =
+        SendToCosmosEvent::from_logs(&send_to_cosmos_events, cosmos_address.prefix())?;
     debug!("parsed send to cosmos events {:?}", send_to_cosmos_events);
 
     let transaction_batch_events = eth_client.get_logs(&transaction_batch_filter).await?;
@@ -110,7 +107,7 @@ pub async fn check_for_events(
     // block, so we also need this routine so make sure we don't send in the first event in this hypothetical
     // multi event block again. In theory we only send all events for every block and that will pass of fail
     // atomicly but lets not take that risk.
-    let last_event_nonce = get_last_event_nonce(grpc_client, our_cosmos_address).await?;
+    let last_event_nonce = get_last_event_nonce(cosmos_client, cosmos_address).await?;
     metrics::set_cosmos_last_event_nonce(last_event_nonce);
 
     let erc20_deployed_events: Vec<Erc20DeployedEvent> =
@@ -182,8 +179,7 @@ pub async fn check_for_events(
         || !valset_updated_events.is_empty()
     {
         let messages = build::ethereum_event_messages(
-            contact,
-            cosmos_key,
+            cosmos_address,
             send_to_cosmos_events.to_owned(),
             transaction_batch_events.to_owned(),
             erc20_deployed_events.to_owned(),
@@ -224,12 +220,12 @@ pub async fn check_for_events(
             .expect("Could not send messages");
 
         let timeout = time::Duration::from_secs(30);
-        contact.wait_for_next_block(timeout).await?;
+        wait_for_next_block(cosmos_client, timeout).await?;
 
         // TODO(bolten): we are only waiting one block, is it possible if we are sending multiple
         // events via the sender, they could be received over the block boundary and thus our new
         // event nonce does not reflect full processing of the above events?
-        let new_event_nonce = get_last_event_nonce(grpc_client, our_cosmos_address).await?;
+        let new_event_nonce = get_last_event_nonce(cosmos_client, cosmos_address).await?;
         if new_event_nonce == last_event_nonce {
             return Err(GravityError::InvalidBridgeStateError(
                 format!("Claims did not process, trying to update but still on {}, trying again in a moment", last_event_nonce),
@@ -241,7 +237,6 @@ pub async fn check_for_events(
 
     Ok(ending_block)
 }
-
 
 /// The number of blocks behind the 'latest block' on Ethereum our event checking should be.
 /// Ethereum does not have finality and as such is subject to chain reorgs and temporary forks

@@ -9,7 +9,7 @@ use gravity_abi::gravity::*;
 use gravity_utils::ethereum::{bytes_to_hex_str, vec_u8_to_fixed_32};
 use gravity_utils::types::*;
 use gravity_utils::{error::GravityError, message_signatures::encode_logic_call_confirm_hashed};
-use std::{result::Result, time::Duration, collections::HashMap};
+use std::{collections::HashMap, result::Result, time::Duration};
 
 /// this function generates an appropriate Ethereum transaction
 /// to submit the provided logic call
@@ -198,7 +198,7 @@ pub fn build_send_logic_call_contract_call(
     Ok(contract_call)
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct LogicCallSkips {
     skip_map: HashMap<Vec<u8>, HashMap<u64, LogicCallSkipState>>,
 }
@@ -213,17 +213,15 @@ pub struct LogicCallSkipState {
 
 impl LogicCallSkips {
     pub fn new() -> Self {
-        LogicCallSkips {
-            skip_map: HashMap::new(),
-        }
+        LogicCallSkips::default()
     }
 
     pub fn skips_left(&self, call: &LogicCall) -> u32 {
         let id_skips = self.skip_map.get(&call.invalidation_id);
-        if id_skips.is_some() {
-            let skip_state = id_skips.unwrap().get(&call.invalidation_nonce);
-            if skip_state.is_some() {
-                return skip_state.unwrap().skips_left;
+        if let Some(id_skips) = id_skips {
+            let skip_state = id_skips.get(&call.invalidation_nonce);
+            if let Some(skip_state) = skip_state {
+                return skip_state.skips_left;
             }
         }
 
@@ -232,10 +230,10 @@ impl LogicCallSkips {
 
     pub fn permanently_skipped(&self, call: &LogicCall) -> bool {
         let id_skips = self.skip_map.get(&call.invalidation_id);
-        if id_skips.is_some() {
-            let skip_state = id_skips.unwrap().get(&call.invalidation_nonce);
-            if skip_state.is_some() {
-                return skip_state.unwrap().permanently_skipped;
+        if let Some(id_skips) = id_skips {
+            let skip_state = id_skips.get(&call.invalidation_nonce);
+            if let Some(skip_state) = skip_state {
+                return skip_state.permanently_skipped;
             }
         }
 
@@ -259,18 +257,9 @@ impl LogicCallSkips {
         };
 
         let id_skips = self.skip_map.get_mut(&call.invalidation_id);
-        if id_skips.is_none() {
-            // first time we've seen this invalidation id, start at 2 skips
-            let new_id_skips = HashMap::from([(call.invalidation_nonce, new_skip_state)]);
-            self.skip_map.insert(call.invalidation_id.clone(), new_id_skips);
-        } else {
-            let id_skips = id_skips.unwrap();
+        if let Some(id_skips) = id_skips {
             let skip_state = id_skips.get_mut(&call.invalidation_nonce);
-            if skip_state.is_none() {
-                // first time we've seen this invalidation id and nonce combo, start at 2 skips
-                id_skips.insert(call.invalidation_nonce.clone(), new_skip_state);
-            } else {
-                let mut skip_state = skip_state.unwrap();
+            if let Some(skip_state) = skip_state {
                 if !skip_state.permanently_skipped {
                     if skip_state.skips_left == 0 {
                         // exponential backoff: double the number of skips and reset the skip counter
@@ -281,7 +270,15 @@ impl LogicCallSkips {
                         skip_state.skips_left -= 1;
                     }
                 }
+            } else {
+                // first time we've seen this invalidation id and nonce combo, start at 2 skips
+                id_skips.insert(call.invalidation_nonce, new_skip_state);
             }
+        } else {
+            // first time we've seen this invalidation id, start at 2 skips
+            let new_id_skips = HashMap::from([(call.invalidation_nonce, new_skip_state)]);
+            self.skip_map
+                .insert(call.invalidation_id.clone(), new_id_skips);
         }
     }
 

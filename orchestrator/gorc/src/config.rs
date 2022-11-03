@@ -1,5 +1,7 @@
-use cosmos_gravity::crypto::DEFAULT_HD_PATH;
 use ethers::signers::LocalWallet as EthWallet;
+use ocular::account::COSMOS_BASE_DERIVATION_PATH;
+use ocular::cosmrs::crypto::secp256k1::SigningKey;
+use ocular::prelude::AccountInfo;
 use serde::{Deserialize, Serialize};
 use signatory::FsKeyStore;
 use std::net::SocketAddr;
@@ -25,7 +27,7 @@ impl GorcConfig {
     }
 
     pub fn load_clarity_key(&self, name: String) -> clarity::PrivateKey {
-        let key = self.load_secret_key(name).to_bytes();
+        let key = self.load_secret_key(name).to_be_bytes();
         clarity::PrivateKey::from_slice(&key).expect("Could not convert key")
     }
 
@@ -33,10 +35,12 @@ impl GorcConfig {
         EthWallet::from(self.load_secret_key(name))
     }
 
-    pub fn load_deep_space_key(&self, name: String) -> cosmos_gravity::crypto::PrivateKey {
-        let key = self.load_secret_key(name).to_bytes();
-        let key = deep_space::utils::bytes_to_hex_str(&key);
-        key.parse().expect("Could not parse private key")
+    pub fn load_account(&self, name: String) -> AccountInfo {
+        let key = self.load_secret_key(name);
+        let key =
+            SigningKey::from_bytes(key.to_be_bytes().as_slice()).expect("failed to convert key");
+
+        AccountInfo::from(key)
     }
 }
 
@@ -104,7 +108,7 @@ pub struct CosmosSection {
 impl Default for CosmosSection {
     fn default() -> Self {
         Self {
-            key_derivation_path: DEFAULT_HD_PATH.to_owned(),
+            key_derivation_path: COSMOS_BASE_DERIVATION_PATH.to_owned(),
             grpc: "http://localhost:9090".to_owned(),
             prefix: "cosmos".to_owned(),
             gas_price: GasPrice::default(),

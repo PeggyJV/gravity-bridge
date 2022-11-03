@@ -1,16 +1,15 @@
-use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::types::{
     Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent, TransactionBatchExecutedEvent,
     ValsetUpdatedEvent,
 };
 use gravity_utils::types::{FromLog, FromLogWithPrefix};
+use ocular::cosmrs::AccountId;
+use ocular::GrpcClient;
 use tokio::time::sleep as delay_for;
-use tonic::transport::Channel;
 
 use crate::get_with_retry::get_block_number_with_retry;
 use crate::get_with_retry::get_last_event_nonce_with_retry;
@@ -19,17 +18,16 @@ use crate::get_with_retry::RETRY_TIME;
 /// This function retrieves the last event nonce that we have relayed to Cosmos
 /// it then uses the Ethereum indexes to find what block the last event we relayed is in
 pub async fn get_last_checked_block(
-    grpc_client: GravityQueryClient<Channel>,
-    our_cosmos_address: CosmosAddress,
+    cosmos_client: &mut GrpcClient,
+    our_cosmos_address: &AccountId,
     gravity_contract_address: EthAddress,
     eth_client: EthClient,
     blocks_to_search: u64,
 ) -> U64 {
     // TODO(bolten): original version of this used a 120 second timeout when querying
     // the eth chain, should we replicate that in eth_client?
-    let mut grpc_client = grpc_client;
     let mut last_event_nonce: U256 =
-        get_last_event_nonce_with_retry(&mut grpc_client, our_cosmos_address)
+        get_last_event_nonce_with_retry(cosmos_client, our_cosmos_address)
             .await
             .into();
 
@@ -141,8 +139,8 @@ pub async fn get_last_checked_block(
         }
 
         for event in send_to_cosmos_events {
-            let prefix = our_cosmos_address.get_prefix();
-            match SendToCosmosEvent::from_log(&event, prefix.as_str()) {
+            let prefix = our_cosmos_address.prefix();
+            match SendToCosmosEvent::from_log(&event, prefix) {
                 Ok(send) => {
                     trace!(
                         "{} send to Cosmos event nonce, {} last event nonce",

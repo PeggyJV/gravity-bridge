@@ -1,8 +1,8 @@
 use super::*;
 use crate::error::GravityError;
-use deep_space::Address as CosmosAddress;
 use ethers::core::abi::Token;
 use ethers::types::{Address as EthAddress, Signature as EthSignature};
+use ocular::cosmrs::AccountId;
 use std::{convert::TryFrom, result::Result};
 
 /// This represents an individual transaction being bridged over to Ethereum
@@ -10,7 +10,7 @@ use std::{convert::TryFrom, result::Result};
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BatchTransaction {
     pub id: u64,
-    pub sender: CosmosAddress,
+    pub sender: AccountId,
     pub ethereum_recipient: EthAddress,
     pub erc20_token: Erc20Token,
     pub erc20_fee: Erc20Token,
@@ -26,7 +26,9 @@ impl BatchTransaction {
 
         Ok(BatchTransaction {
             id: input.id,
-            sender: input.sender.parse()?,
+            sender: input.sender.parse().map_err(|e| {
+                GravityError::CosmosAddressError(format!("Error parsing sender address: {:?}", e))
+            })?,
             ethereum_recipient: input.ethereum_recipient.parse()?,
             erc20_token: Erc20Token::from_proto(input.erc20_token.unwrap())?,
             erc20_fee: Erc20Token::from_proto(input.erc20_fee.unwrap())?,

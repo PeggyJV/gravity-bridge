@@ -1,9 +1,9 @@
 use super::show::ShowEthKeyCmd;
 use crate::application::APP;
 use abscissa_core::{clap::Parser, Application, Command, Runnable};
-use k256::pkcs8::ToPrivateKey;
+use pkcs8::EncodePrivateKey;
 use rand_core::OsRng;
-use signatory::FsKeyStore;
+use signatory::{pkcs8::PrivateKeyDocument, FsKeyStore};
 use std::path;
 
 /// Add a new Eth Key
@@ -51,8 +51,10 @@ impl Runnable for AddEthKeyCmd {
         let key = key
             .to_pkcs8_der()
             .expect("Could not PKCS8 encod private key");
+        let key = &PrivateKeyDocument::from_der(key.as_bytes())
+            .expect("failed to derive PrivateKeyDocument from DER bytes");
 
-        keystore.store(&name, &key).expect("Could not store key");
+        keystore.store(&name, key).expect("Could not store key");
 
         let show_cmd = ShowEthKeyCmd {
             args: vec![name.to_string()],

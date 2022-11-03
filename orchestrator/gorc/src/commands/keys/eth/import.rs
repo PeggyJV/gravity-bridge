@@ -1,9 +1,10 @@
 use super::show::ShowEthKeyCmd;
 use crate::application::APP;
 use abscissa_core::{clap::Parser, Application, Command, Runnable};
-use k256::{pkcs8::ToPrivateKey, SecretKey};
+use k256::SecretKey;
 
-use signatory::FsKeyStore;
+use pkcs8::EncodePrivateKey;
+use signatory::{pkcs8::PrivateKeyDocument, FsKeyStore};
 use std::path;
 
 ///Import an Eth Key
@@ -46,13 +47,14 @@ impl Runnable for ImportEthKeyCmd {
             .parse::<clarity::PrivateKey>()
             .expect("Could not parse private-key");
 
-        let key = SecretKey::from_bytes(key.to_bytes()).expect("Could not convert private-key");
-
+        let key = SecretKey::from_be_bytes(&key.to_bytes()).expect("Could not convert private-key");
         let key = key
             .to_pkcs8_der()
             .expect("Could not PKCS8 encod private key");
+        let key = &PrivateKeyDocument::from_der(key.as_bytes())
+            .expect("failed to derive PrivateKeyDocument from DER bytes");
 
-        keystore.store(&name, &key).expect("Could not store key");
+        keystore.store(&name, key).expect("Could not store key");
 
         let show_cmd = ShowEthKeyCmd {
             args: vec![name.to_string()],

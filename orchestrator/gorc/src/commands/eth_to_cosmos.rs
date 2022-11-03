@@ -1,15 +1,15 @@
 use crate::application::APP;
 use abscissa_core::{clap::Parser, status_err, Application, Command, Runnable};
-use deep_space::address::Address as CosmosAddress;
 use ethereum_gravity::erc20_utils::get_erc20_balance;
 use ethereum_gravity::send_to_cosmos::send_to_cosmos;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_utils::{
-    connection_prep::{check_for_eth, create_rpc_connections},
+    connection_prep::{check_for_eth, create_eth_provider},
     ethereum::downcast_to_u64,
 };
-use std::{sync::Arc, time::Duration};
+use ocular::cosmrs::AccountId;
+use std::{str::FromStr, sync::Arc, time::Duration};
 
 const TIMEOUT: Duration = Duration::from_secs(60);
 
@@ -34,19 +34,10 @@ impl Runnable for EthToCosmosCmd {
         let contract_address: EthAddress =
             contract_address.parse().expect("Invalid contract address!");
 
-        let cosmos_prefix = config.cosmos.prefix.trim();
-        let eth_rpc = config.ethereum.rpc.trim();
-
         abscissa_tokio::run_with_actix(&APP, async {
-            let connections = create_rpc_connections(
-                cosmos_prefix.to_string(),
-                None,
-                Some(eth_rpc.to_string()),
-                TIMEOUT,
-            )
-            .await;
-
-            let provider = connections.eth_provider.clone().unwrap();
+            let provider = create_eth_provider(config.ethereum.rpc.clone())
+                .await
+                .expect("error creating eth provider");
             let chain_id = provider
                 .get_chainid()
                 .await
@@ -57,7 +48,8 @@ impl Runnable for EthToCosmosCmd {
                 SignerMiddleware::new(provider, ethereum_wallet.clone().with_chain_id(chain_id));
             let eth_client = Arc::new(eth_client);
             let cosmos_dest = self.args.get(3).expect("cosmos destination is required");
-            let cosmos_dest: CosmosAddress = cosmos_dest.parse().unwrap();
+            let cosmos_dest = AccountId::from_str(cosmos_dest)
+                .expect("failed to parse cosmos destination address");
             let ethereum_address = eth_client.address();
             check_for_eth(ethereum_address, eth_client.clone()).await;
 
@@ -85,21 +77,21 @@ impl Runnable for EthToCosmosCmd {
                     erc20_balance
                 );
             }
-
+            let dest_string = cosmos_dest.to_string();
             for _ in 0..times_usize {
                 println!(
                     "Sending {} / {} to Cosmos from {} to {}",
                     init_amount.parse::<f64>().unwrap(),
                     erc20_address,
                     ethereum_address,
-                    cosmos_dest
+                    dest_string,
                 );
                 // we send some erc20 tokens to the gravity contract to register a deposit
                 let res = send_to_cosmos(
                     erc20_address,
                     contract_address,
                     amount,
-                    cosmos_dest,
+                    cosmos_dest.clone(),
                     Some(TIMEOUT),
                     eth_client.clone(),
                 )

@@ -1,16 +1,17 @@
 use std::sync::Arc;
 
 use crate::main_loop::relayer_main_loop;
-use crate::main_loop::LOOP_SPEED;
 use docopt::Docopt;
 use env_logger::Env;
 use ethers::prelude::*;
 use ethers::signers::LocalWallet as EthWallet;
 use ethers::types::Address as EthAddress;
+use gravity_utils::connection_prep::create_eth_provider;
 use gravity_utils::{
-    connection_prep::{check_for_eth, create_rpc_connections, wait_for_cosmos_node_ready},
+    connection_prep::{check_for_eth, wait_for_cosmos_node_ready},
     ethereum::{downcast_to_u64, format_eth_address},
 };
+use ocular::GrpcClient;
 
 pub mod batch_relaying;
 pub mod find_latest_valset;
@@ -29,19 +30,17 @@ extern crate log;
 struct Args {
     flag_ethereum_key: String,
     flag_cosmos_grpc: String,
-    flag_address_prefix: String,
     flag_ethereum_rpc: String,
     flag_contract_address: String,
 }
 
 lazy_static! {
     pub static ref USAGE: String = format!(
-    "Usage: {} --ethereum-key=<key> --cosmos-grpc=<url> --address-prefix=<prefix> --ethereum-rpc=<url> --contract-address=<addr>
+    "Usage: {} --ethereum-key=<key> --cosmos-grpc=<url> --ethereum-rpc=<url> --contract-address=<addr>
         Options:
             -h --help                    Show this screen.
             --ethereum-key=<ekey>        An Ethereum private key containing non-trivial funds
             --cosmos-grpc=<gurl>         The Cosmos gRPC url
-            --address-prefix=<prefix>    The prefix for addresses on this Cosmos chain
             --ethereum-rpc=<eurl>        The Ethereum RPC url, Geth light clients work and sync fast
             --contract-address=<addr>    The Ethereum contract address for Gravity
         About:
@@ -75,15 +74,10 @@ async fn main() {
         .flag_contract_address
         .parse()
         .expect("Invalid contract address!");
-
-    let connections = create_rpc_connections(
-        args.flag_address_prefix,
-        Some(args.flag_cosmos_grpc),
-        Some(args.flag_ethereum_rpc),
-        LOOP_SPEED,
-    )
-    .await;
-    let provider = connections.eth_provider.clone().unwrap();
+    let mut cosmos_client = GrpcClient::new(&args.flag_cosmos_grpc).await.unwrap();
+    let provider = create_eth_provider(args.flag_ethereum_rpc)
+        .await
+        .expect("error creating eth provider");
     let chain_id = provider
         .get_chainid()
         .await
@@ -97,17 +91,15 @@ async fn main() {
     info!("Starting Gravity Relayer");
     info!("Ethereum Address: {}", format_eth_address(public_eth_key));
 
-    let contact = connections.contact.clone().unwrap();
-
     // check if the cosmos node is syncing, if so wait for it
     // we can't move any steps above this because they may fail on an incorrect
     // historic chain state while syncing occurs
-    wait_for_cosmos_node_ready(&contact).await;
+    wait_for_cosmos_node_ready(&mut cosmos_client).await;
     check_for_eth(public_eth_key, eth_client.clone()).await;
 
     relayer_main_loop(
         eth_client,
-        connections.grpc.unwrap(),
+        cosmos_client,
         gravity_contract_address,
         1.1f32,
         1.1f32,

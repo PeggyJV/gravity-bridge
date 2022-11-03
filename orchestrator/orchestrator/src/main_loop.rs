@@ -17,21 +17,21 @@ use cosmos_gravity::{
         get_oldest_unsigned_valsets,
     },
 };
-use deep_space::client::ChainStatus;
-use deep_space::error::CosmosGrpcError;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
-use deep_space::{Contact, Msg};
 use ethereum_gravity::types::EthClient;
 use ethereum_gravity::utils::get_gravity_id;
 use ethers::{prelude::*, types::Address as EthAddress};
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use gravity_proto::cosmos_sdk_proto::Any;
+use gravity_utils::connection_prep::{get_chain_status, ChainStatus};
+use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::bytes_to_hex_str;
+use ocular::chain::ChainContext;
+use ocular::cosmrs::AccountId;
+use ocular::prelude::*;
 use relayer::main_loop::relayer_main_loop;
 use std::convert::TryInto;
 use std::process::exit;
 use std::{net, time::Duration};
 use tokio::time::sleep as delay_for;
-use tonic::transport::Channel;
 
 /// The execution speed governing all loops in this file
 /// which is to say all loops started by Orchestrator main
@@ -47,10 +47,10 @@ pub const ETH_ORACLE_LOOP_SPEED: Duration = Duration::from_secs(13);
 #[allow(clippy::many_single_char_names)]
 #[allow(clippy::too_many_arguments)]
 pub async fn orchestrator_main_loop(
-    cosmos_key: CosmosPrivateKey,
-    contact: Contact,
+    grpc_endpoint: &str,
+    cosmos_signer: &AccountInfo,
+    context: ChainContext,
     eth_client: EthClient,
-    grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     gas_price: (f64, String),
     metrics_listen: &net::SocketAddr,
@@ -62,31 +62,33 @@ pub async fn orchestrator_main_loop(
     cosmos_msg_batch_size: u32,
 ) {
     let (tx, rx) = tokio::sync::mpsc::channel(1);
-
+    let cosmos_account = cosmos_signer.id(&context.prefix).unwrap();
+    let send_cosmos_client = GrpcClient::new(grpc_endpoint).await.unwrap();
     let a = send_main_loop(
-        &contact,
-        cosmos_key,
+        send_cosmos_client,
+        cosmos_signer,
+        &context,
         gas_price,
-        rx,
         gas_adjustment,
+        rx,
         cosmos_msg_batch_size.try_into().unwrap(),
     );
 
+    let eth_oracle_cosmos_client = GrpcClient::new(grpc_endpoint).await.unwrap();
     let b = eth_oracle_main_loop(
-        cosmos_key,
-        contact.clone(),
+        eth_oracle_cosmos_client,
+        &cosmos_account,
         eth_client.clone(),
-        grpc_client.clone(),
         gravity_contract_address,
         blocks_to_search,
         tx.clone(),
     );
 
+    let eth_signer_cosmos_client = GrpcClient::new(grpc_endpoint).await.unwrap();
     let c = eth_signer_main_loop(
-        cosmos_key,
-        contact.clone(),
+        eth_signer_cosmos_client,
+        &cosmos_account,
         eth_client.clone(),
-        grpc_client.clone(),
         gravity_contract_address,
         tx.clone(),
     );
@@ -94,9 +96,10 @@ pub async fn orchestrator_main_loop(
     let d = metrics_main_loop(metrics_listen);
 
     if !relayer_opt_out {
+        let relayer_cosmos_client = GrpcClient::new(grpc_endpoint).await.unwrap();
         let e = relayer_main_loop(
             eth_client.clone(),
-            grpc_client.clone(),
+            relayer_cosmos_client,
             gravity_contract_address,
             eth_gas_price_multiplier,
             eth_gas_multiplier,
@@ -115,17 +118,15 @@ const HEIGHT_UPDATE_INTERVAL: u32 = 50;
 
 /// This function is responsible for making sure that Ethereum events are retrieved from the Ethereum blockchain
 /// and ferried over to Cosmos where they will be used to issue tokens or process batches.
-#[allow(unused_variables)]
 pub async fn eth_oracle_main_loop(
-    cosmos_key: CosmosPrivateKey,
-    contact: Contact,
+    cosmos_client: GrpcClient,
+    cosmos_account: &AccountId,
     eth_client: EthClient,
-    grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     blocks_to_search: u64,
-    msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
+    msg_sender: tokio::sync::mpsc::Sender<Vec<Any>>,
 ) {
-    let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
+    let mut cosmos_client = cosmos_client;
     let block_delay = match get_block_delay(eth_client.clone()).await {
         Ok(block_delay) => block_delay,
         Err(e) => {
@@ -137,81 +138,76 @@ pub async fn eth_oracle_main_loop(
         }
     };
     let mut last_checked_block = get_last_checked_block(
-        grpc_client.clone(),
-        our_cosmos_address,
+        &mut cosmos_client,
+        cosmos_account,
         gravity_contract_address,
         eth_client.clone(),
         blocks_to_search,
     )
     .await;
     info!("Oracle resync complete, Oracle now operational");
-    let mut grpc_client = grpc_client;
     let mut loop_count: u32 = 0;
 
     loop {
-        let (async_resp, _) = tokio::join!(
+        let (_async_resp, _) = tokio::join!(
             async {
                 let latest_eth_block = eth_client.get_block_number().await;
-                let latest_cosmos_block = contact.get_chain_status().await;
-                match (latest_eth_block, latest_cosmos_block) {
-                    (Ok(latest_eth_block), Ok(ChainStatus::Moving { block_height })) => {
-                        metrics::set_cosmos_block_height(block_height);
-                        metrics::set_ethereum_block_height(latest_eth_block.as_u64());
-                        trace!(
-                            "Latest Eth block {} Latest Cosmos block {}",
-                            latest_eth_block,
-                            block_height,
-                        );
+                let latest_cosmos_block = get_chain_status(&mut cosmos_client).await;
+                if let (Ok(latest_eth_block), ChainStatus::Moving(block)) =
+                    (&latest_eth_block, latest_cosmos_block.clone())
+                {
+                    let block_height = block.header.unwrap().height as u64;
+                    metrics::set_cosmos_block_height(block_height);
+                    metrics::set_ethereum_block_height(latest_eth_block.as_u64());
+                    trace!(
+                        "Latest Eth block {} Latest Cosmos block {}",
+                        latest_eth_block,
+                        block_height,
+                    );
 
-                        // send latest Ethereum height to the Cosmos chain periodically
-                        // subtract the block delay based on the environment, in order to have
-                        // more confidence we are attesting to a height that has not been re-orged
-                        if loop_count % HEIGHT_UPDATE_INTERVAL == 0 {
-                            let messages = build::ethereum_vote_height_messages(
-                                &contact,
-                                cosmos_key,
-                                latest_eth_block - block_delay,
-                            ).await;
+                    // send latest Ethereum height to the Cosmos chain periodically
+                    // subtract the block delay based on the environment, in order to have
+                    // more confidence we are attesting to a height that has not been re-orged
+                    if loop_count % HEIGHT_UPDATE_INTERVAL == 0 {
+                        let messages = build::ethereum_vote_height_messages(
+                            cosmos_account,
+                            (latest_eth_block - block_delay).as_u64(),
+                        )
+                        .await;
 
-                            msg_sender
-                                .send(messages)
-                                .await
-                                .expect("Could not send Ethereum height votes");
+                        msg_sender
+                            .send(messages)
+                            .await
+                            .expect("Could not send Ethereum height votes");
+                    }
+                } else {
+                    match latest_cosmos_block {
+                        ChainStatus::Syncing => warn!("Cosmos node is syncing."),
+                        ChainStatus::WaitingToStart(error) => {
+                            if error.is_some() {
+                                warn!("Cosmos node is waiting to start: {}", error.unwrap());
+                                metrics::COSMOS_UNAVAILABLE.inc();
+                            } else {
+                                warn!("Cosmos node is waiting to start.")
+                            }
                         }
+                        _ => (),
                     }
-                    (Ok(_latest_eth_block), Ok(ChainStatus::Syncing)) => {
-                        warn!("Cosmos node syncing, Eth oracle paused");
-                        delay_for(DELAY).await;
-                    }
-                    (Ok(_latest_eth_block), Ok(ChainStatus::WaitingToStart)) => {
-                        warn!("Cosmos node syncing waiting for chain start, Eth oracle paused");
-                        delay_for(DELAY).await;
-                    }
-                    (Ok(_), Err(_)) => {
-                        metrics::COSMOS_UNAVAILABLE.inc();
-                        warn!("Could not contact Cosmos grpc, trying again");
-                        delay_for(DELAY).await;
-                    }
-                    (Err(_), Ok(_)) => {
+
+                    if let Err(e) = latest_eth_block {
+                        warn!("Could not contact Eth node, trying again: {}", e);
                         metrics::ETHEREUM_UNAVAILABLE.inc();
-                        warn!("Could not contact Eth node, trying again");
-                        delay_for(DELAY).await;
                     }
-                    (Err(_), Err(_)) => {
-                        metrics::COSMOS_UNAVAILABLE.inc();
-                        metrics::ETHEREUM_UNAVAILABLE.inc();
-                        error!("Could not reach Ethereum or Cosmos rpc!");
-                        delay_for(DELAY).await;
-                    }
+
+                    delay_for(DELAY).await;
                 }
 
                 // Relays events from Ethereum -> Cosmos
                 match check_for_events(
+                    &mut cosmos_client,
+                    cosmos_account,
                     eth_client.clone(),
-                    &contact,
-                    &mut grpc_client,
                     gravity_contract_address,
-                    cosmos_key,
                     last_checked_block,
                     blocks_to_search.into(),
                     block_delay,
@@ -223,10 +219,7 @@ pub async fn eth_oracle_main_loop(
                     Err(e) => {
                         metrics::ETHEREUM_EVENT_CHECK_FAILURES.inc();
                         error!("Failed to get events for block range, Check your Eth node and Cosmos gRPC {:?}", e);
-                        if let gravity_utils::error::GravityError::CosmosGrpcError(
-                            CosmosGrpcError::TransactionFailed { tx: _, time: _ },
-                        ) = e
-                        {
+                        if let GravityError::CosmosGrpcError(_) = e {
                             delay_for(Duration::from_secs(10)).await;
                         }
                     }
@@ -244,16 +237,13 @@ pub async fn eth_oracle_main_loop(
 /// valid and signed off on.
 #[allow(unused_variables)]
 pub async fn eth_signer_main_loop(
-    cosmos_key: CosmosPrivateKey,
-    contact: Contact,
+    cosmos_client: GrpcClient,
+    cosmos_account: &AccountId,
     eth_client: EthClient,
-    grpc_client: GravityQueryClient<Channel>,
     contract_address: EthAddress,
-    msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
+    msg_sender: tokio::sync::mpsc::Sender<Vec<Any>>,
 ) {
-    let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let mut grpc_client = grpc_client;
-
+    let mut cosmos_client = cosmos_client;
     let gravity_id = get_gravity_id(contract_address, eth_client.clone()).await;
     if gravity_id.is_err() {
         error!("Failed to get GravityID, check your Eth node");
@@ -265,45 +255,42 @@ pub async fn eth_signer_main_loop(
         let (async_resp, _) = tokio::join!(
             async {
                 let latest_eth_block = eth_client.get_block_number().await;
-                let latest_cosmos_block = contact.get_chain_status().await;
-                match (latest_eth_block, latest_cosmos_block) {
-                    (Ok(latest_eth_block), Ok(ChainStatus::Moving { block_height })) => {
-                        metrics::set_cosmos_block_height(block_height);
-                        metrics::set_ethereum_block_height(latest_eth_block.as_u64());
-                        trace!(
-                            "Latest Eth block {} Latest Cosmos block {}",
-                            latest_eth_block,
-                            block_height,
-                        );
+                let latest_cosmos_block = get_chain_status(&mut cosmos_client).await;
+                if let (Ok(latest_eth_block), ChainStatus::Moving(block)) =
+                    (&latest_eth_block, latest_cosmos_block.clone())
+                {
+                    let block_height = block.header.unwrap().height as u64;
+                    metrics::set_cosmos_block_height(block_height);
+                    metrics::set_ethereum_block_height(latest_eth_block.as_u64());
+                    trace!(
+                        "Latest Eth block {} Latest Cosmos block {}",
+                        latest_eth_block,
+                        block_height,
+                    );
+                } else {
+                    match latest_cosmos_block {
+                        ChainStatus::Syncing => warn!("Cosmos node is syncing."),
+                        ChainStatus::WaitingToStart(error) => {
+                            if error.is_some() {
+                                warn!("Cosmos node is waiting to start: {}", error.unwrap());
+                                metrics::COSMOS_UNAVAILABLE.inc();
+                            } else {
+                                warn!("Cosmos node is waiting to start.")
+                            }
+                        }
+                        _ => (),
                     }
-                    (Ok(_latest_eth_block), Ok(ChainStatus::Syncing)) => {
-                        warn!("Cosmos node syncing, Eth signer paused");
-                        delay_for(DELAY).await;
-                    }
-                    (Ok(_latest_eth_block), Ok(ChainStatus::WaitingToStart)) => {
-                        warn!("Cosmos node syncing waiting for chain start, Eth signer paused");
-                        delay_for(DELAY).await;
-                    }
-                    (Ok(_), Err(_)) => {
-                        metrics::COSMOS_UNAVAILABLE.inc();
-                        warn!("Could not contact Cosmos grpc, trying again");
-                        delay_for(DELAY).await;
-                    }
-                    (Err(_), Ok(_)) => {
+
+                    if let Err(e) = latest_eth_block {
+                        warn!("Could not contact Eth node, trying again: {}", e);
                         metrics::ETHEREUM_UNAVAILABLE.inc();
-                        warn!("Could not contact Eth node, trying again");
-                        delay_for(DELAY).await;
                     }
-                    (Err(_), Err(_)) => {
-                        metrics::COSMOS_UNAVAILABLE.inc();
-                        metrics::ETHEREUM_UNAVAILABLE.inc();
-                        error!("Could not reach Ethereum or Cosmos rpc!");
-                        delay_for(DELAY).await;
-                    }
+
+                    delay_for(DELAY).await;
                 }
 
                 // sign the last unsigned valsets
-                match get_oldest_unsigned_valsets(&mut grpc_client, our_cosmos_address).await {
+                match get_oldest_unsigned_valsets(&mut cosmos_client, cosmos_account).await {
                     Ok(valsets) => {
                         if valsets.is_empty() {
                             trace!("No validator sets to sign, node is caught up!")
@@ -314,10 +301,9 @@ pub async fn eth_signer_main_loop(
                                 valsets[0].nonce
                             );
                             let messages = build::signer_set_tx_confirmation_messages(
-                                &contact,
+                                cosmos_account,
                                 eth_client.clone(),
                                 valsets,
-                                cosmos_key,
                                 gravity_id.clone(),
                             )
                             .await;
@@ -337,7 +323,7 @@ pub async fn eth_signer_main_loop(
                 }
 
                 // sign the last unsigned batch, TODO check if we already have signed this
-                match get_oldest_unsigned_transaction_batch(&mut grpc_client, our_cosmos_address)
+                match get_oldest_unsigned_transaction_batch(&mut cosmos_client, cosmos_account)
                     .await
                 {
                     Ok(Some(last_unsigned_batch)) => {
@@ -350,10 +336,9 @@ pub async fn eth_signer_main_loop(
                         );
                         let transaction_batches = vec![last_unsigned_batch];
                         let messages = build::batch_tx_confirmation_messages(
-                            &contact,
+                            cosmos_account,
                             eth_client.clone(),
                             transaction_batches,
-                            cosmos_key,
                             gravity_id.clone(),
                         )
                         .await;
@@ -373,7 +358,7 @@ pub async fn eth_signer_main_loop(
                 }
 
                 let logic_calls =
-                    get_oldest_unsigned_logic_call(&mut grpc_client, our_cosmos_address).await;
+                    get_oldest_unsigned_logic_call(&mut cosmos_client, cosmos_account).await;
                 if let Ok(logic_calls) = logic_calls {
                     for logic_call in logic_calls {
                         info!(
@@ -383,10 +368,9 @@ pub async fn eth_signer_main_loop(
                         );
                         let logic_calls = vec![logic_call];
                         let messages = build::contract_call_tx_confirmation_messages(
-                            &contact,
+                            cosmos_account,
                             eth_client.clone(),
                             logic_calls,
-                            cosmos_key,
                             gravity_id.clone(),
                         )
                         .await;

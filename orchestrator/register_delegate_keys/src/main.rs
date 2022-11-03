@@ -6,24 +6,22 @@ extern crate serde_derive;
 extern crate lazy_static;
 
 use clarity::PrivateKey as EthPrivateKey;
-use cosmos_gravity::send::update_gravity_delegate_addresses;
-use deep_space::{mnemonic::Mnemonic};
+use cosmos_gravity::send::{update_gravity_delegate_addresses, wait_for_tx};
 use docopt::Docopt;
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::prelude::*;
 use gravity_utils::connection_prep::check_for_fee_denom;
-use gravity_utils::connection_prep::{create_rpc_connections, wait_for_cosmos_node_ready};
+use gravity_utils::connection_prep::wait_for_cosmos_node_ready;
 use log::error;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
+use ocular::chain::ChainContext;
+use ocular::prelude::AccountInfo;
+use ocular::GrpcClient;
 use rand::{thread_rng, Rng};
-use std::time::Duration;
-
 #[derive(Debug, Deserialize)]
 struct Args {
     flag_validator_phrase: String,
     flag_cosmos_phrase: Option<String>,
     flag_ethereum_key: Option<String>,
-    flag_address_prefix: String,
     flag_cosmos_grpc: String,
     flag_fees: String,
 }
@@ -52,8 +50,6 @@ lazy_static! {
     );
 }
 
-const TIMEOUT: Duration = Duration::from_secs(60);
-
 #[actix_rt::main]
 async fn main() {
     env_logger::init();
@@ -67,32 +63,35 @@ async fn main() {
 
     let fee_denom = args.flag_fees;
 
-    let connections = create_rpc_connections(
-        args.flag_address_prefix,
-        Some(args.flag_cosmos_grpc),
-        None,
-        TIMEOUT,
-    )
-    .await;
-    let contact = connections.contact.unwrap();
-    wait_for_cosmos_node_ready(&contact).await;
+    let context = ChainContext {
+        id: "sommelier-3".to_string(),
+        prefix: "somm".to_string(),
+    };
+    let mut cosmos_client = GrpcClient::new(&args.flag_cosmos_grpc)
+        .await
+        .expect("failed to create gRPC client");
+    wait_for_cosmos_node_ready(&mut cosmos_client).await;
 
-    let validator_key = CosmosPrivateKey::from_phrase(&args.flag_validator_phrase, "")
-        .expect("Failed to parse validator key");
-    let validator_addr = validator_key.to_address(&contact.get_prefix()).unwrap();
-    check_for_fee_denom(&fee_denom, validator_addr, &contact).await;
+    let validator_account = AccountInfo::from_mnemonic(&args.flag_validator_phrase, "")
+        .expect("failed to create validator AccountInfo from provided mnemonic phrase");
+    let validator_addr = validator_account.id(&context.prefix).unwrap();
+    check_for_fee_denom(&fee_denom, &validator_addr, &mut cosmos_client)
+        .await
+        .expect("failed to check for fee denom");
 
-    let cosmos_key = if let Some(cosmos_phrase) = args.flag_cosmos_phrase {
-        CosmosPrivateKey::from_phrase(&cosmos_phrase, "").expect("Failed to parse cosmos key")
+    let cosmos_account = if let Some(cosmos_phrase) = args.flag_cosmos_phrase {
+        AccountInfo::from_mnemonic(&cosmos_phrase, "")
+            .expect("failed to create AccountInfo from provided mnemonic phrase")
     } else {
-        let new_phrase = Mnemonic::generate(24).unwrap();
-        let key = CosmosPrivateKey::from_phrase(new_phrase.as_str(), "").unwrap();
+        let new_phrase = ocular::crypto::generate_mnemonic();
+        let acct = AccountInfo::from_mnemonic(new_phrase.as_str(), "")
+            .expect("failed to create AccountInfo from generated mnemonic phrase");
         println!(
             "No Cosmos key provided, your generated key is\n {} -> {}",
-            new_phrase.as_str(),
-            key.to_address(&contact.get_prefix()).unwrap()
+            new_phrase,
+            acct.address(&context.prefix).unwrap()
         );
-        key
+        acct
     };
     let ethereum_key = if let Some(key) = args.flag_ethereum_key {
         key.parse().expect("Invalid Ethereum Private key!")
@@ -107,6 +106,7 @@ async fn main() {
         );
         key
     };
+    let cosmos_address = cosmos_account.id(&context.prefix).unwrap();
 
     // TODO(bolten): left clarity in place for the above bit because it seems like
     // SigningKey/VerifyingKey don't implement the Display trait
@@ -114,13 +114,13 @@ async fn main() {
     let ethereum_wallet = LocalWallet::from(signing_key);
 
     let ethereum_address = ethereum_wallet.address();
-    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
     let res = update_gravity_delegate_addresses(
-        &contact,
+        &mut cosmos_client,
+        &validator_account,
+        &context,
         ethereum_address,
-        cosmos_address,
-        validator_key,
+        cosmos_address.clone(),
         ethereum_wallet,
         (0f64, "".to_string()),
         1.0f64,
@@ -128,7 +128,7 @@ async fn main() {
     .await
     .expect("Failed to update Eth address");
 
-    let res = contact.wait_for_tx(res, TIMEOUT).await;
+    let res = wait_for_tx(&mut cosmos_client, &res.txhash).await;
 
     if let Err(e) = res {
         error!("Failed trying to register delegate addresses error {:?}, correct the error and try again", e);
@@ -138,6 +138,7 @@ async fn main() {
     let eth_address = ethereum_key.to_public_key().unwrap();
     println!(
         "Registered Delegate Ethereum address {} and Cosmos address {}",
-        eth_address, cosmos_address
+        eth_address,
+        cosmos_address.as_ref()
     )
 }

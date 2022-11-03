@@ -1,9 +1,6 @@
 //! for things that don't belong in the cosmos or ethereum libraries but also don't belong
 //! in a function specific library
 use clarity::Error as ClarityError;
-use deep_space::error::AddressError as CosmosAddressError;
-use deep_space::error::CosmosGrpcError;
-use deep_space::error::PrivateKeyError as CosmosPrivateKeyError;
 use ethers::abi::ethereum_types::FromDecStrErr as EthersParseUintError;
 use ethers::abi::Error as EthersAbiError;
 use ethers::contract::AbiError as EthersContractAbiError;
@@ -26,9 +23,10 @@ use tonic::Status;
 #[derive(Debug)]
 #[allow(clippy::large_enum_variant)]
 pub enum GravityError {
-    CosmosGrpcError(CosmosGrpcError),
-    CosmosAddressError(CosmosAddressError),
-    CosmosPrivateKeyError(CosmosPrivateKeyError),
+    ErrorCast(String),
+    CosmosGrpcError(String),
+    CosmosAddressError(String),
+    CosmosPrivateKeyError(String),
     EthereumBadDataError(String),
     EthereumRestError(SignerMiddlewareError<Provider<Http>, LocalWallet>),
     EthersAbiError(EthersAbiError),
@@ -56,11 +54,13 @@ pub enum GravityError {
     ParseIntError(ParseIntError),
     FromUtf8Error(FromUtf8Error),
     OverflowError(String),
+    GasEstimationError(String),
 }
 
 impl fmt::Display for GravityError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            GravityError::ErrorCast(val) => write!(f, "Failed to cast error: {}", val),
             GravityError::GravityGrpcError(val) => write!(f, "Gravity gRPC error {}", val),
             GravityError::CosmosGrpcError(val) => write!(f, "Cosmos gRPC error {}", val),
             GravityError::CosmosAddressError(val) => write!(f, "Cosmos Address error {}", val),
@@ -113,29 +113,12 @@ impl fmt::Display for GravityError {
                 write!(f, "Failed to parse bytes to UTF-8: {}", val)
             }
             GravityError::OverflowError(val) => write!(f, "Overflow error: {}", val),
+            GravityError::GasEstimationError(val) => write!(f, "Gas estimation error: {}", val),
         }
     }
 }
 
 impl std::error::Error for GravityError {}
-
-impl From<CosmosGrpcError> for GravityError {
-    fn from(error: CosmosGrpcError) -> Self {
-        GravityError::CosmosGrpcError(error)
-    }
-}
-
-impl From<CosmosAddressError> for GravityError {
-    fn from(error: CosmosAddressError) -> Self {
-        GravityError::CosmosAddressError(error)
-    }
-}
-
-impl From<CosmosPrivateKeyError> for GravityError {
-    fn from(error: CosmosPrivateKeyError) -> Self {
-        GravityError::CosmosPrivateKeyError(error)
-    }
-}
 
 impl From<Elapsed> for GravityError {
     fn from(_error: Elapsed) -> Self {

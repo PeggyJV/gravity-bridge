@@ -6,13 +6,12 @@ use ethereum_gravity::{
 };
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::ethereum::downcast_to_f32;
 use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
 use gravity_utils::types::{BatchConfirmResponse, TransactionBatch, Valset};
+use ocular::GrpcClient;
 use std::collections::HashMap;
 use std::time::Duration;
-use tonic::transport::Channel;
 
 #[derive(Debug, Clone)]
 struct SubmittableBatch {
@@ -32,7 +31,7 @@ pub async fn relay_batches(
     // the validator set currently in the contract on Ethereum
     current_valset: Valset,
     eth_client: EthClient,
-    grpc_client: &mut GravityQueryClient<Channel>,
+    cosmos_client: &mut GrpcClient,
     gravity_contract_address: EthAddress,
     gravity_id: String,
     timeout: Duration,
@@ -40,7 +39,7 @@ pub async fn relay_batches(
     eth_gas_multiplier: f32,
 ) {
     let possible_batches =
-        get_batches_and_signatures(current_valset.clone(), grpc_client, gravity_id.clone()).await;
+        get_batches_and_signatures(current_valset.clone(), cosmos_client, gravity_id.clone()).await;
 
     debug!("possible batches {:?}", possible_batches);
 
@@ -67,10 +66,10 @@ pub async fn relay_batches(
 /// always be resolved.
 async fn get_batches_and_signatures(
     current_valset: Valset,
-    grpc_client: &mut GravityQueryClient<Channel>,
+    cosmos_client: &mut GrpcClient,
     gravity_id: String,
 ) -> HashMap<EthAddress, Vec<SubmittableBatch>> {
-    let latest_batches = if let Ok(lb) = get_latest_transaction_batches(grpc_client).await {
+    let latest_batches = if let Ok(lb) = get_latest_transaction_batches(cosmos_client).await {
         lb
     } else {
         return HashMap::new();
@@ -80,7 +79,8 @@ async fn get_batches_and_signatures(
     let mut possible_batches = HashMap::new();
     for batch in latest_batches {
         let sigs =
-            get_transaction_batch_signatures(grpc_client, batch.nonce, batch.token_contract).await;
+            get_transaction_batch_signatures(cosmos_client, batch.nonce, batch.token_contract)
+                .await;
         debug!("Got sigs {:?}", sigs);
         if let Ok(sigs) = sigs {
             // this checks that the signatures for the batch are actually possible to submit to the chain

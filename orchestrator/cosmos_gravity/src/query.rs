@@ -1,38 +1,37 @@
-use deep_space::address::Address;
 use ethers::types::Address as EthAddress;
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_proto::gravity::*;
 use gravity_utils::error::GravityError;
-use gravity_utils::ethereum::format_eth_address;
 use gravity_utils::types::*;
-use tonic::transport::Channel;
+use ocular::cosmrs::AccountId;
+use ocular::GrpcClient;
+use ocular_somm_gravity::SommGravityExt;
 
 /// get the valset for a given nonce (block) height
 pub async fn get_valset(
-    client: &mut GravityQueryClient<Channel>,
+    client: &mut GrpcClient,
     nonce: u64,
 ) -> Result<Option<Valset>, GravityError> {
-    let response = client
-        .signer_set_tx(SignerSetTxRequest {
-            signer_set_nonce: nonce,
-        })
-        .await?;
-    let valset = response.into_inner().signer_set.map(Into::into);
-    Ok(valset)
+    Ok(client
+        .query_signer_set_tx(nonce)
+        .await
+        .map_err(|e| GravityError::CosmosGrpcError(format!("failed to query signer set: {:?}", e)))?
+        .signer_set
+        .map(Into::into))
 }
 
 /// This hits the /pending_valset_requests endpoint and will provide
 /// an array of validator sets we have not already signed
 pub async fn get_oldest_unsigned_valsets(
-    client: &mut GravityQueryClient<Channel>,
-    address: Address,
+    client: &mut GrpcClient,
+    address: &AccountId,
 ) -> Result<Vec<Valset>, GravityError> {
-    let response = client
-        .unsigned_signer_set_txs(UnsignedSignerSetTxsRequest {
-            address: address.to_string(),
-        })
-        .await?;
-    let valsets = response.into_inner().signer_sets;
+    let valsets = client
+        .query_unsigned_signer_set_txs(address.as_ref())
+        .await
+        .map_err(|e| {
+            GravityError::CosmosGrpcError(format!("failed to query unsigned signer sets: {:?}", e))
+        })?
+        .signer_sets;
     // convert from proto valset type to rust valset type
     let valsets = valsets.iter().map(|v| v.clone().into()).collect();
     Ok(valsets)
@@ -40,27 +39,33 @@ pub async fn get_oldest_unsigned_valsets(
 
 /// this input views the last five signer set txs that have been made, useful if you're
 /// a relayer looking to ferry confirmations
-pub async fn get_latest_valset(
-    client: &mut GravityQueryClient<Channel>,
-) -> Result<Option<Valset>, GravityError> {
-    let response = client
-        .latest_signer_set_tx(LatestSignerSetTxRequest {})
-        .await?;
-    let valset = response.into_inner().signer_set.map(Into::into);
+pub async fn get_latest_valset(client: &mut GrpcClient) -> Result<Option<Valset>, GravityError> {
+    let valset = client
+        .query_latest_signer_set_tx()
+        .await
+        .map_err(|e| {
+            GravityError::CosmosGrpcError(format!("failed to query latest signer set: {:?}", e))
+        })?
+        .signer_set
+        .map(Into::into);
     Ok(valset)
 }
 
 /// get all valset confirmations for a given nonce
 pub async fn get_all_valset_confirms(
-    client: &mut GravityQueryClient<Channel>,
+    client: &mut GrpcClient,
     nonce: u64,
 ) -> Result<Vec<ValsetConfirmResponse>, GravityError> {
-    let request = client
-        .signer_set_tx_confirmations(SignerSetTxConfirmationsRequest {
-            signer_set_nonce: nonce,
-        })
-        .await?;
-    let confirms = request.into_inner().signatures;
+    let confirms = client
+        .query_signer_set_tx_confirmations(nonce)
+        .await
+        .map_err(|e| {
+            GravityError::CosmosGrpcError(format!(
+                "failed to query signer set tx confirmations: {:?}",
+                e
+            ))
+        })?
+        .signatures;
     let mut parsed_confirms = Vec::new();
     for item in confirms {
         parsed_confirms.push(ValsetConfirmResponse::from_proto(item)?)
@@ -69,15 +74,17 @@ pub async fn get_all_valset_confirms(
 }
 
 pub async fn get_oldest_unsigned_transaction_batch(
-    client: &mut GravityQueryClient<Channel>,
-    address: Address,
+    client: &mut GrpcClient,
+    address: &AccountId,
 ) -> Result<Option<TransactionBatch>, GravityError> {
-    let request = client
-        .unsigned_batch_txs(UnsignedBatchTxsRequest {
-            address: address.to_string(),
-        })
-        .await?;
-    let batches = extract_valid_batches(request.into_inner().batches);
+    let batches = client
+        .query_unsigned_batch_txs(address.as_ref())
+        .await
+        .map_err(|e| {
+            GravityError::CosmosGrpcError(format!("failed to query unsigned batch txs: {:?}", e))
+        })?
+        .batches;
+    let batches = extract_valid_batches(batches);
     let batch = batches.get(0);
     match batch {
         Some(batch) => Ok(Some(batch.clone())),
@@ -88,12 +95,14 @@ pub async fn get_oldest_unsigned_transaction_batch(
 /// gets the latest 100 transaction batches, regardless of token type
 /// for relayers to consider relaying
 pub async fn get_latest_transaction_batches(
-    client: &mut GravityQueryClient<Channel>,
+    client: &mut GrpcClient,
 ) -> Result<Vec<TransactionBatch>, GravityError> {
-    let request = client
-        .batch_txs(BatchTxsRequest { pagination: None })
-        .await?;
-    Ok(extract_valid_batches(request.into_inner().batches))
+    let batches = client
+        .query_batch_txs(None)
+        .await
+        .map_err(|e| GravityError::CosmosGrpcError(format!("failed to query batch txs: {:?}", e)))?
+        .batches;
+    Ok(extract_valid_batches(batches))
 }
 
 // If we can't serialize a batch from a proto, but it was committed to the chain,
@@ -111,17 +120,20 @@ fn extract_valid_batches(batches: Vec<BatchTx>) -> Vec<TransactionBatch> {
 
 /// get all batch confirmations for a given nonce and denom
 pub async fn get_transaction_batch_signatures(
-    client: &mut GravityQueryClient<Channel>,
+    client: &mut GrpcClient,
     nonce: u64,
     contract_address: EthAddress,
 ) -> Result<Vec<BatchConfirmResponse>, GravityError> {
-    let request = client
-        .batch_tx_confirmations(BatchTxConfirmationsRequest {
-            batch_nonce: nonce,
-            token_contract: format_eth_address(contract_address),
-        })
-        .await?;
-    let batch_confirms = request.into_inner().signatures;
+    let batch_confirms = client
+        .query_batch_tx_confirmations(nonce, &contract_address.to_string())
+        .await
+        .map_err(|e| {
+            GravityError::CosmosGrpcError(format!(
+                "failed to query transaction batch signatures: {:?}",
+                e
+            ))
+        })?
+        .signatures;
     let mut out = Vec::new();
     for confirm in batch_confirms {
         out.push(BatchConfirmResponse::from_proto(confirm)?)
@@ -132,25 +144,29 @@ pub async fn get_transaction_batch_signatures(
 /// Gets the last event nonce that a given validator has attested to, this lets us
 /// catch up with what the current event nonce should be if a oracle is restarted
 pub async fn get_last_event_nonce(
-    client: &mut GravityQueryClient<Channel>,
-    address: Address,
+    client: &mut GrpcClient,
+    address: &AccountId,
 ) -> Result<u64, GravityError> {
-    let request = client
-        .last_submitted_ethereum_event(LastSubmittedEthereumEventRequest {
-            address: address.to_string(),
-        })
-        .await?;
-    Ok(request.into_inner().event_nonce)
+    Ok(client
+        .query_last_submitted_ethereum_event(address.as_ref())
+        .await
+        .map_err(|e| {
+            GravityError::CosmosGrpcError(format!("failed to query last submitted event: {:?}", e))
+        })?
+        .event_nonce)
 }
 
 /// Gets the 100 latest logic calls for a relayer to consider relaying
 pub async fn get_latest_logic_calls(
-    client: &mut GravityQueryClient<Channel>,
+    client: &mut GrpcClient,
 ) -> Result<Vec<LogicCall>, GravityError> {
-    let request = client
-        .contract_call_txs(ContractCallTxsRequest { pagination: None })
-        .await?;
-    let calls = request.into_inner().calls;
+    let calls = client
+        .query_contract_call_txs(None)
+        .await
+        .map_err(|e| {
+            GravityError::CosmosGrpcError(format!("failed to query contract call txs: {:?}", e))
+        })?
+        .calls;
     let mut out = Vec::new();
     for call in calls {
         out.push(LogicCall::from_proto(call)?);
@@ -166,17 +182,20 @@ pub async fn get_latest_logic_calls(
 }
 
 pub async fn get_logic_call_signatures(
-    client: &mut GravityQueryClient<Channel>,
+    client: &mut GrpcClient,
     invalidation_scope: Vec<u8>,
     invalidation_nonce: u64,
 ) -> Result<Vec<LogicCallConfirmResponse>, GravityError> {
-    let request = client
-        .contract_call_tx_confirmations(ContractCallTxConfirmationsRequest {
-            invalidation_scope,
-            invalidation_nonce,
-        })
-        .await?;
-    let call_confirms = request.into_inner().signatures;
+    let call_confirms = client
+        .query_contract_call_tx_confirmations(invalidation_scope, invalidation_nonce)
+        .await
+        .map_err(|e| {
+            GravityError::CosmosGrpcError(format!(
+                "failed to query contract call tx confirmations: {:?}",
+                e
+            ))
+        })?
+        .signatures;
     let mut out = Vec::new();
     for confirm in call_confirms {
         out.push(LogicCallConfirmResponse::from_proto(confirm)?)
@@ -185,15 +204,19 @@ pub async fn get_logic_call_signatures(
 }
 
 pub async fn get_oldest_unsigned_logic_call(
-    client: &mut GravityQueryClient<Channel>,
-    address: Address,
+    client: &mut GrpcClient,
+    address: &AccountId,
 ) -> Result<Vec<LogicCall>, GravityError> {
-    let request = client
-        .unsigned_contract_call_txs(UnsignedContractCallTxsRequest {
-            address: address.to_string(),
-        })
-        .await?;
-    let calls = request.into_inner().calls;
+    let calls = client
+        .query_unsigned_contract_call_txs(address.as_ref())
+        .await
+        .map_err(|e| {
+            GravityError::CosmosGrpcError(format!(
+                "failed to query unsigned contract call txs: {:?}",
+                e
+            ))
+        })?
+        .calls;
     let mut out = Vec::new();
     for call in calls {
         out.push(LogicCall::from_proto(call)?)

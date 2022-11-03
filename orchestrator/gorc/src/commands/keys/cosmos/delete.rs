@@ -20,6 +20,6 @@ impl Runnable for DeleteCosmosKeyCmd {
         let name = self.args.get(0).expect("name is required");
         let name = name.parse().expect("Could not parse name");
         // Delete keyname after locating file from path and key name.
-        let _delete_key = FsKeyStore::delete(&keystore, &name).unwrap();
+        FsKeyStore::delete(&keystore, &name).unwrap();
     }
 }

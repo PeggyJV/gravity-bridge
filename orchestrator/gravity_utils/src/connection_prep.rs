@@ -2,224 +2,122 @@
 //! It's a common problem to have conflicts between ipv4 and ipv6 localhost and this module is first and foremost supposed to resolve that problem
 //! by trying more than one thing to handle potentially misconfigured inputs.
 
+use crate::error::GravityError;
 use crate::ethereum::format_eth_address;
-use deep_space::client::ChainStatus;
-use deep_space::Address as CosmosAddress;
-use deep_space::Contact;
+use cosmos_sdk_proto::cosmos::base::tendermint::v1beta1::GetLatestBlockResponse;
 use ethers::prelude::*;
 use ethers::providers::Provider;
 use ethers::types::Address as EthAddress;
-use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_proto::gravity::DelegateKeysByEthereumSignerRequest;
-use gravity_proto::gravity::DelegateKeysByOrchestratorRequest;
+use ocular::cosmrs::AccountId;
+use ocular::GrpcClient;
+use ocular_somm_gravity::SommGravityExt;
 use std::convert::TryFrom;
 use std::process::exit;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::time::sleep as delay_for;
-use tonic::transport::Channel;
 use url::Url;
 
-pub struct Connections {
-    pub eth_provider: Option<Provider<Http>>,
-    pub grpc: Option<GravityQueryClient<Channel>>,
-    pub contact: Option<Contact>,
-}
+pub type CosmosBlock = cosmos_sdk_proto::tendermint::types::Block;
 
-/// Returns the three major RPC connections required for Gravity
-/// operation in a error resilient manner. TODO find some way to generalize
-/// this so that it's less ugly
-pub async fn create_rpc_connections(
-    address_prefix: String,
-    grpc_url: Option<String>,
-    eth_rpc_url: Option<String>,
-    timeout: Duration,
-) -> Connections {
-    let mut eth_provider = None;
-    let mut grpc = None;
-    let mut contact = None;
-    if let Some(grpc_url) = grpc_url {
-        let url = Url::parse(&grpc_url)
-            .unwrap_or_else(|_| panic!("Invalid Cosmos gRPC url {}", grpc_url));
-        check_scheme(&url, &grpc_url);
-        let cosmos_grpc_url = grpc_url.trim_end_matches('/').to_string();
-        // try the base url first.
-        let try_base = GravityQueryClient::connect(cosmos_grpc_url.clone()).await;
-        match try_base {
-            // it worked, lets go!
-            Ok(val) => {
-                grpc = Some(val);
-                contact = Some(Contact::new(&cosmos_grpc_url, timeout, &address_prefix).unwrap());
-            }
-            // did not work, now we check if it's localhost
-            Err(e) => {
-                warn!(
-                    "Failed to access Cosmos gRPC with {:?} trying fallback options",
-                    e
-                );
-                if grpc_url.to_lowercase().contains("localhost") {
-                    let port = url.port().unwrap_or(80);
-                    // this should be http or https
-                    let prefix = url.scheme();
-                    let ipv6_url = format!("{}://::1:{}", prefix, port);
-                    let ipv4_url = format!("{}://127.0.0.1:{}", prefix, port);
-                    let ipv6 = GravityQueryClient::connect(ipv6_url.clone()).await;
-                    let ipv4 = GravityQueryClient::connect(ipv4_url.clone()).await;
-                    warn!("Trying fallback urls {} {}", ipv6_url, ipv4_url);
-                    match (ipv4, ipv6) {
-                        (Ok(v), Err(_)) => {
-                            info!("Url fallback succeeded, your cosmos gRPC url {} has been corrected to {}", grpc_url, ipv4_url);
-                            contact = Some(Contact::new(&ipv4_url, timeout, &address_prefix).unwrap());
-                            grpc = Some(v)
-                        },
-                        (Err(_), Ok(v)) => {
-                            info!("Url fallback succeeded, your cosmos gRPC url {} has been corrected to {}", grpc_url, ipv6_url);
-                            contact = Some(Contact::new(&ipv6_url, timeout, &address_prefix).unwrap());
-                            grpc = Some(v)
-                        },
-                        (Ok(_), Ok(_)) => panic!("This should never happen? Why didn't things work the first time?"),
-                        (Err(_), Err(_)) => panic!("Could not connect to Cosmos gRPC, are you sure it's running and on the specified port? {}", grpc_url)
-                    }
-                } else if url.port().is_none() || url.scheme() == "http" {
-                    let body = url.host_str().unwrap_or_else(|| {
-                        panic!("Cosmos gRPC url contains no host? {}", grpc_url)
+/// Creates an eth provider
+pub async fn create_eth_provider(eth_rpc_url: String) -> Result<Provider<Http>, GravityError> {
+    let url = Url::parse(&eth_rpc_url)
+        .unwrap_or_else(|_| panic!("Invalid Ethereum RPC url {}", eth_rpc_url));
+    check_scheme(&url, &eth_rpc_url);
+    let eth_url = eth_rpc_url.trim_end_matches('/');
+    // TODO(bolten): should probably set a non-default interval, but what is the appropriate
+    // value?
+    let base_eth_provider = Provider::<Http>::try_from(eth_url)
+        .unwrap_or_else(|_| panic!("Could not instantiate Ethereum HTTP provider: {}", eth_url));
+    let try_base = base_eth_provider.get_block_number().await;
+    match try_base {
+        // it worked, lets go!
+        Ok(_) => Ok(base_eth_provider),
+        // did not work, now we check if it's localhost
+        Err(e) => {
+            warn!(
+                "Failed to access Ethereum RPC with {:?} trying fallback options",
+                e
+            );
+            if eth_url.to_lowercase().contains("localhost") {
+                let port = url.port().unwrap_or(80);
+                // this should be http or https
+                let prefix = url.scheme();
+                let ipv6_url = format!("{}://::1:{}", prefix, port);
+                let ipv4_url = format!("{}://127.0.0.1:{}", prefix, port);
+                let ipv6_eth_provider = Provider::<Http>::try_from(ipv6_url.as_str())
+                    .unwrap_or_else(|_| {
+                        panic!(
+                            "Could not instantiate Ethereum HTTP provider: {}",
+                            &ipv6_url
+                        )
                     });
-                    // transparently upgrade to https if available, we can't transparently downgrade for obvious security reasons
-                    let https_on_80_url = format!("https://{}:80", body);
-                    let https_on_443_url = format!("https://{}:443", body);
-                    let https_on_80 = GravityQueryClient::connect(https_on_80_url.clone()).await;
-                    let https_on_443 = GravityQueryClient::connect(https_on_443_url.clone()).await;
-                    warn!(
-                        "Trying fallback urls {} {}",
-                        https_on_443_url, https_on_80_url
-                    );
-                    match (https_on_80, https_on_443) {
-                        (Ok(v), Err(_)) => {
-                            info!("Https upgrade succeeded, your cosmos gRPC url {} has been corrected to {}", grpc_url, https_on_80_url);
-                            contact = Some(Contact::new(&https_on_80_url, timeout, &address_prefix).unwrap());
-                            grpc = Some(v)
-                        },
-                        (Err(_), Ok(v)) => {
-                            info!("Https upgrade succeeded, your cosmos gRPC url {} has been corrected to {}", grpc_url, https_on_443_url);
-                            contact = Some(Contact::new(&https_on_443_url, timeout, &address_prefix).unwrap());
-                            grpc = Some(v)
-                        },
-                        (Ok(_), Ok(_)) => panic!("This should never happen? Why didn't things work the first time?"),
-                        (Err(_), Err(_)) => panic!("Could not connect to Cosmos gRPC, are you sure it's running and on the specified port? {}", grpc_url)
-                    }
-                } else {
-                    panic!("Could not connect to Cosmos gRPC! please check your grpc url {} for errors {:?}", grpc_url, e)
-                }
-            }
-        }
-    }
-    if let Some(eth_rpc_url) = eth_rpc_url {
-        let url = Url::parse(&eth_rpc_url)
-            .unwrap_or_else(|_| panic!("Invalid Ethereum RPC url {}", eth_rpc_url));
-        check_scheme(&url, &eth_rpc_url);
-        let eth_url = eth_rpc_url.trim_end_matches('/');
-        // TODO(bolten): should probably set a non-default interval, but what is the appropriate
-        // value?
-        let base_eth_provider = Provider::<Http>::try_from(eth_url).unwrap_or_else(|_| {
-            panic!("Could not instantiate Ethereum HTTP provider: {}", eth_url)
-        });
-        let try_base = base_eth_provider.get_block_number().await;
-        match try_base {
-            // it worked, lets go!
-            Ok(_) => eth_provider = Some(base_eth_provider),
-            // did not work, now we check if it's localhost
-            Err(e) => {
-                warn!(
-                    "Failed to access Ethereum RPC with {:?} trying fallback options",
-                    e
-                );
-                if eth_url.to_lowercase().contains("localhost") {
-                    let port = url.port().unwrap_or(80);
-                    // this should be http or https
-                    let prefix = url.scheme();
-                    let ipv6_url = format!("{}://::1:{}", prefix, port);
-                    let ipv4_url = format!("{}://127.0.0.1:{}", prefix, port);
-                    let ipv6_eth_provider = Provider::<Http>::try_from(ipv6_url.as_str())
-                        .unwrap_or_else(|_| {
-                            panic!(
-                                "Could not instantiate Ethereum HTTP provider: {}",
-                                &ipv6_url
-                            )
-                        });
-                    let ipv4_eth_provider = Provider::<Http>::try_from(ipv4_url.as_str())
-                        .unwrap_or_else(|_| {
-                            panic!(
-                                "Could not instantiate Ethereum HTTP provider: {}",
-                                &ipv4_url
-                            )
-                        });
-                    let ipv6_test = ipv6_eth_provider.get_block_number().await;
-                    let ipv4_test = ipv4_eth_provider.get_block_number().await;
-                    warn!("Trying fallback urls {} {}", ipv6_url, ipv4_url);
-                    match (ipv4_test, ipv6_test) {
+                let ipv4_eth_provider = Provider::<Http>::try_from(ipv4_url.as_str())
+                    .unwrap_or_else(|_| {
+                        panic!(
+                            "Could not instantiate Ethereum HTTP provider: {}",
+                            &ipv4_url
+                        )
+                    });
+                let ipv6_test = ipv6_eth_provider.get_block_number().await;
+                let ipv4_test = ipv4_eth_provider.get_block_number().await;
+                warn!("Trying fallback urls {} {}", ipv6_url, ipv4_url);
+                match (ipv4_test, ipv6_test) {
                         (Ok(_), Err(_)) => {
                             info!("Url fallback succeeded, your Ethereum rpc url {} has been corrected to {}", eth_rpc_url, ipv4_url);
-                            eth_provider = Some(ipv4_eth_provider)
+                            Ok(ipv4_eth_provider)
                         }
                         (Err(_), Ok(_)) => {
                             info!("Url fallback succeeded, your Ethereum  rpc url {} has been corrected to {}", eth_rpc_url, ipv6_url);
-                            eth_provider = Some(ipv6_eth_provider)
+                            Ok(ipv6_eth_provider)
                         },
                         (Ok(_), Ok(_)) => panic!("This should never happen? Why didn't things work the first time?"),
                         (Err(_), Err(_)) => panic!("Could not connect to Ethereum rpc, are you sure it's running and on the specified port? {}", eth_rpc_url)
                     }
-                } else if url.port().is_none() || url.scheme() == "http" {
-                    let body = url.host_str().unwrap_or_else(|| {
-                        panic!("Ethereum rpc url contains no host? {}", eth_rpc_url)
-                    });
-                    // transparently upgrade to https if available, we can't transparently downgrade for obvious security reasons
-                    let https_on_80_url = format!("https://{}:80", body);
-                    let https_on_443_url = format!("https://{}:443", body);
-                    let https_on_80_eth_provider =
-                        Provider::<Http>::try_from(https_on_80_url.as_str()).unwrap_or_else(|_| {
-                            panic!(
-                                "Could not instantiate Ethereum HTTP provider: {}",
-                                &https_on_80_url
-                            )
-                        });
-                    let https_on_443_eth_provider = Provider::<Http>::try_from(
-                        https_on_443_url.as_str(),
-                    )
+            } else if url.port().is_none() || url.scheme() == "http" {
+                let body = url.host_str().unwrap_or_else(|| {
+                    panic!("Ethereum rpc url contains no host? {}", eth_rpc_url)
+                });
+                // transparently upgrade to https if available, we can't transparently downgrade for obvious security reasons
+                let https_on_80_url = format!("https://{}:80", body);
+                let https_on_443_url = format!("https://{}:443", body);
+                let https_on_80_eth_provider = Provider::<Http>::try_from(https_on_80_url.as_str())
                     .unwrap_or_else(|_| {
+                        panic!(
+                            "Could not instantiate Ethereum HTTP provider: {}",
+                            &https_on_80_url
+                        )
+                    });
+                let https_on_443_eth_provider =
+                    Provider::<Http>::try_from(https_on_443_url.as_str()).unwrap_or_else(|_| {
                         panic!(
                             "Could not instantiate Ethereum HTTP provider: {}",
                             &https_on_443_url
                         )
                     });
-                    let https_on_80_test = https_on_80_eth_provider.get_block_number().await;
-                    let https_on_443_test = https_on_443_eth_provider.get_block_number().await;
-                    warn!(
-                        "Trying fallback urls {} {}",
-                        https_on_443_url, https_on_80_url
-                    );
-                    match (https_on_80_test, https_on_443_test) {
+                let https_on_80_test = https_on_80_eth_provider.get_block_number().await;
+                let https_on_443_test = https_on_443_eth_provider.get_block_number().await;
+                warn!(
+                    "Trying fallback urls {} {}",
+                    https_on_443_url, https_on_80_url
+                );
+                match (https_on_80_test, https_on_443_test) {
                         (Ok(_), Err(_)) => {
                             info!("Https upgrade succeeded, your Ethereum rpc url {} has been corrected to {}", eth_rpc_url, https_on_80_url);
-                            eth_provider = Some(https_on_80_eth_provider)
+                            Ok(https_on_80_eth_provider)
                         },
                         (Err(_), Ok(_)) => {
                             info!("Https upgrade succeeded, your Ethereum rpc url {} has been corrected to {}", eth_rpc_url, https_on_443_url);
-                            eth_provider = Some(https_on_443_eth_provider)
+                            Ok(https_on_443_eth_provider)
                         },
                         (Ok(_), Ok(_)) => panic!("This should never happen? Why didn't things work the first time?"),
                         (Err(_), Err(_)) => panic!("Could not connect to Ethereum rpc, are you sure it's running and on the specified port? {}", eth_rpc_url)
                     }
-                } else {
-                    panic!("Could not connect to Ethereum rpc! please check your grpc url {} for errors {:?}", eth_rpc_url, e)
-                }
+            } else {
+                panic!("Could not connect to Ethereum rpc! please check your grpc url {} for errors {:?}", eth_rpc_url, e)
             }
         }
-    }
-
-    Connections {
-        eth_provider,
-        grpc,
-        contact,
     }
 }
 
@@ -233,28 +131,111 @@ fn check_scheme(input: &Url, original_string: &str) {
     }
 }
 
+#[derive(Clone, Debug)]
+pub enum ChainStatus {
+    Moving(Box<CosmosBlock>),
+    Syncing,
+    WaitingToStart(Option<String>),
+}
+
+/// Gets the chain status
+pub async fn get_chain_status(cosmos_client: &mut GrpcClient) -> ChainStatus {
+    match cosmos_client.query_syncing().await {
+        Ok(syncing) => {
+            if syncing {
+                return ChainStatus::Syncing;
+            }
+        }
+        Err(e) => return ChainStatus::WaitingToStart(Some(e.to_string())),
+    };
+
+    match cosmos_client.query_latest_block().await {
+        Ok(res) => {
+            if res.block.is_some() {
+                ChainStatus::Moving(Box::new(res.block.unwrap()))
+            } else {
+                ChainStatus::WaitingToStart(None)
+            }
+        }
+        Err(e) => ChainStatus::WaitingToStart(Some(e.to_string())),
+    }
+}
+
 /// This function will wait until the Cosmos node is ready, this is intended
 /// for situations such as when a node is syncing or when a node is waiting on
 /// a halted chain.
-pub async fn wait_for_cosmos_node_ready(contact: &Contact) {
-    const WAIT_TIME: Duration = Duration::from_secs(10);
+pub async fn wait_for_cosmos_node_ready(cosmos_client: &mut GrpcClient) {
     loop {
-        let res = contact.get_chain_status().await;
-        match res {
-            Ok(ChainStatus::Syncing) => info!("Cosmos node is syncing Standing by"),
-            Ok(ChainStatus::WaitingToStart) => {
-                info!("Cosmos node is waiting for the chain to start, Standing by")
-            }
-            Ok(ChainStatus::Moving { .. }) => {
+        match get_chain_status(cosmos_client).await {
+            ChainStatus::Moving(_) => {
+                println!("Cosmos node is ready!");
                 break;
             }
-            Err(e) => warn!(
-                "Could not get syncing status, is your Cosmos node up? {:?}",
-                e
-            ),
+            ChainStatus::Syncing => {
+                println!("Cosmos node is syncing, waiting for it to be ready");
+                delay_for(Duration::from_secs(5)).await;
+                continue;
+            }
+            ChainStatus::WaitingToStart(error) => {
+                if error.is_some() {
+                    println!(
+                        "Error querying latest block from Cosmos node, waiting for it to be ready: {:?}",
+                        error
+                    );
+                    delay_for(Duration::from_secs(5)).await;
+                } else {
+                    println!("Cosmos node is not ready, waiting for it to be ready");
+                    delay_for(Duration::from_secs(5)).await;
+                }
+            }
         }
-        delay_for(WAIT_TIME).await;
     }
+}
+
+/// Waits for the next block
+pub async fn wait_for_next_block(
+    cosmos_client: &mut GrpcClient,
+    timeout: Duration,
+) -> Result<(), GravityError> {
+    let res = cosmos_client.query_latest_block().await.map_err(|e| {
+        GravityError::CosmosGrpcError(format!(
+            "Error querying latest block from Cosmos node: {:?}",
+            e
+        ))
+    })?;
+    let current_block = extract_height(res)?;
+    let start = Instant::now();
+    loop {
+        let res = cosmos_client.query_latest_block().await.map_err(|e| {
+            GravityError::CosmosGrpcError(format!(
+                "Error querying latest block from Cosmos node: {:?}",
+                e
+            ))
+        })?;
+
+        let next_block = extract_height(res)?;
+        if next_block > current_block {
+            break;
+        }
+        let now = Instant::now();
+        if now.checked_duration_since(start).unwrap().as_secs() >= timeout.as_secs() {
+            return Err(GravityError::CosmosGrpcError(
+                "timed out waiting for transaction to be included in a block".to_string(),
+            ));
+        }
+        delay_for(Duration::from_secs(1)).await;
+    }
+
+    Ok(())
+}
+
+fn extract_height(res: GetLatestBlockResponse) -> Result<i64, GravityError> {
+    Ok(res
+        .block
+        .ok_or_else(|| GravityError::CosmosGrpcError("Cosmos node returned no block".to_string()))?
+        .header
+        .unwrap()
+        .height)
 }
 
 /// This function checks the orchestrator delegate addresses
@@ -262,31 +243,23 @@ pub async fn wait_for_cosmos_node_ready(contact: &Contact) {
 /// address and Orchestrator address from the Orchestrator and checks
 /// that both are registered and internally consistent.
 pub async fn check_delegate_addresses(
-    client: &mut GravityQueryClient<Channel>,
+    cosmos_client: &mut GrpcClient,
     delegate_eth_address: EthAddress,
-    delegate_orchestrator_address: CosmosAddress,
-    prefix: &str,
+    delegate_orchestrator_address: &AccountId,
 ) {
-    let eth_response = client
-        .delegate_keys_by_ethereum_signer(DelegateKeysByEthereumSignerRequest {
-            ethereum_signer: format_eth_address(delegate_eth_address),
-        })
+    let eth_response = cosmos_client
+        .query_delegate_keys_by_ethereum_signer(&format_eth_address(delegate_eth_address))
         .await;
-    let orchestrator_response = client
-        .delegate_keys_by_orchestrator(DelegateKeysByOrchestratorRequest {
-            orchestrator_address: delegate_orchestrator_address.to_bech32(prefix).unwrap(),
-        })
+    let orchestrator_response = cosmos_client
+        .query_delegate_keys_by_orchestrator(delegate_orchestrator_address.as_ref())
         .await;
     trace!("{:?} {:?}", eth_response, orchestrator_response);
     match (eth_response, orchestrator_response) {
         (Ok(e), Ok(o)) => {
-            let e = e.into_inner();
-            let o = o.into_inner();
-            let req_delegate_orchestrator_address: CosmosAddress =
-                e.orchestrator_address.parse().unwrap();
+            let req_delegate_orchestrator_address = e.orchestrator_address;
             let req_delegate_eth_address: EthAddress = o.ethereum_signer.parse().unwrap();
             if req_delegate_eth_address != delegate_eth_address
-                && req_delegate_orchestrator_address != delegate_orchestrator_address
+                && req_delegate_orchestrator_address != delegate_orchestrator_address.to_string()
             {
                 error!("Your Delegate Ethereum and Orchestrator addresses are both incorrect!");
                 error!(
@@ -307,7 +280,8 @@ pub async fn check_delegate_addresses(
                 );
                 error!("In order to resolve this issue you should double check how you input your eth private key");
                 exit(1);
-            } else if req_delegate_orchestrator_address != delegate_orchestrator_address {
+            } else if req_delegate_orchestrator_address != delegate_orchestrator_address.to_string()
+            {
                 error!("Your Delegate Orchestrator address is incorrect!");
                 error!(
                     "You provided {}  Correct Value {}",
@@ -339,10 +313,19 @@ pub async fn check_delegate_addresses(
 }
 
 /// Checks if a given denom, used for fees is in the provided address
-pub async fn check_for_fee_denom(fee_denom: &str, address: CosmosAddress, contact: &Contact) {
+pub async fn check_for_fee_denom(
+    fee_denom: &str,
+    address: &AccountId,
+    cosmos_client: &mut GrpcClient,
+) -> Result<(), GravityError> {
     let mut found = false;
-    for balance in contact.get_balances(address).await.unwrap() {
-        if balance.denom.contains(&fee_denom) {
+    let balances = cosmos_client
+        .query_all_balances(address.as_ref())
+        .await
+        .map_err(|e| GravityError::CosmosGrpcError(e.to_string()))?
+        .balances;
+    for balance in balances {
+        if balance.denom.to_string() == *fee_denom {
             found = true;
             break;
         }
@@ -350,6 +333,8 @@ pub async fn check_for_fee_denom(fee_denom: &str, address: CosmosAddress, contac
     if !found {
         warn!("You have specified that fees should be paid in {} but account {} has no balance of that token!", fee_denom, address);
     }
+
+    Ok(())
 }
 
 // TODO(bolten): is using LocalWallet too specific?
