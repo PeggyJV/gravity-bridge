@@ -59,8 +59,8 @@ func (k Keeper) createSendToEVM(ctx sdk.Context, chainID uint32, sender sdk.AccA
 		Id:           nextID,
 		Sender:       sender.String(),
 		EVMRecipient: counterpartReceiver,
-		Erc20Token:   types.NewSDKIntERC20Token(amount.Amount, tokenContract),
-		Erc20Fee:     types.NewSDKIntERC20Token(fee.Amount, tokenContract),
+		Erc20Token:   types.NewSDKIntERC20Token(chainID, amount.Amount, tokenContract),
+		Erc20Fee:     types.NewSDKIntERC20Token(chainID, fee.Amount, tokenContract),
 		ChainId:      chainID,
 	})
 

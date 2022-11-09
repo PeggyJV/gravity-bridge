@@ -19,7 +19,7 @@ func TestAddToOutgoingPool(t *testing.T) {
 		myTokenContractAddr = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
 	)
 	// mint some voucher first
-	allVouchers := sdk.Coins{types.NewERC20Token(99999, myTokenContractAddr).GravityCoin()}
+	allVouchers := sdk.Coins{types.NewERC20Token(types.EthereumChainID, 99999, myTokenContractAddr).GravityCoin()}
 	err := input.BankKeeper.MintCoins(ctx, types.ModuleName, allVouchers)
 	require.NoError(t, err)
 

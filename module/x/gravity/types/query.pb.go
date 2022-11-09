@@ -32,7 +32,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-//  rpc Params
+// rpc Params
 type ParamsRequest struct {
 }
 
@@ -113,7 +113,7 @@ func (m *ParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-//  rpc SignerSetTx
+// rpc SignerSetTx
 type SignerSetTxRequest struct {
 	SignerSetNonce uint64 `protobuf:"varint,1,opt,name=signer_set_nonce,json=signerSetNonce,proto3" json:"signer_set_nonce,omitempty"`
 	ChainId        uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
@@ -254,7 +254,7 @@ func (m *SignerSetTxResponse) GetSignerSet() *SignerSetTx {
 	return nil
 }
 
-//  rpc BatchTx
+// rpc BatchTx
 type BatchTxRequest struct {
 	TokenContract string `protobuf:"bytes,1,opt,name=token_contract,json=tokenContract,proto3" json:"token_contract,omitempty"`
 	BatchNonce    uint64 `protobuf:"varint,2,opt,name=batch_nonce,json=batchNonce,proto3" json:"batch_nonce,omitempty"`
@@ -359,7 +359,7 @@ func (m *BatchTxResponse) GetBatch() *BatchTx {
 	return nil
 }
 
-//  rpc ContractCallTx
+// rpc ContractCallTx
 type ContractCallTxRequest struct {
 	InvalidationScope []byte `protobuf:"bytes,1,opt,name=invalidation_scope,json=invalidationScope,proto3" json:"invalidation_scope,omitempty"`
 	InvalidationNonce uint64 `protobuf:"varint,2,opt,name=invalidation_nonce,json=invalidationNonce,proto3" json:"invalidation_nonce,omitempty"`
@@ -561,7 +561,7 @@ func (m *SignerSetTxConfirmationsResponse) GetSignatures() []*SignerSetTxConfirm
 	return nil
 }
 
-//  rpc SignerSetTxs
+// rpc SignerSetTxs
 type SignerSetTxsRequest struct {
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 	ChainId    uint32             `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
@@ -666,7 +666,7 @@ func (m *SignerSetTxsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-//  rpc BatchTxs
+// rpc BatchTxs
 type BatchTxsRequest struct {
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 	ChainId    uint32             `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
@@ -771,7 +771,7 @@ func (m *BatchTxsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-//  rpc ContractCallTxs
+// rpc ContractCallTxs
 type ContractCallTxsRequest struct {
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 	ChainId    uint32             `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
@@ -1074,7 +1074,7 @@ func (m *UnsignedBatchTxsResponse) GetBatches() []*BatchTx {
 	return nil
 }
 
-//  rpc UnsignedContractCallTxs
+// rpc UnsignedContractCallTxs
 type UnsignedContractCallTxsRequest struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	ChainId uint32 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`

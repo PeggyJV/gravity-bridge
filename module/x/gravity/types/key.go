@@ -177,7 +177,7 @@ func MakeDenomToERC20Key(chainID uint32, denom string) []byte {
 }
 
 func MakeERC20ToDenomKey(chainID uint32, erc20 string) []byte {
-	return bytes.Join([][]byte{{ERC20ToDenomKey}, Uint32ToBigEndian(chainID), []byte(erc20)}, []byte{})
+	return bytes.Join([][]byte{MakeERC20ToDenomKeyPrefix(chainID), []byte(erc20)}, []byte{})
 }
 
 func MakeERC20ToDenomKeyPrefix(chainID uint32) []byte {

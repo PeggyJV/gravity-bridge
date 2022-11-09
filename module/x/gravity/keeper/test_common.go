@@ -217,8 +217,8 @@ type TestInput struct {
 
 func (input TestInput) AddSendToEVMTxsToPool(t *testing.T, ctx sdk.Context, tokenContract gethcommon.Address, sender sdk.AccAddress, receiver gethcommon.Address, ids ...uint64) {
 	for i, id := range ids {
-		amount := types.NewERC20Token(uint64(i+100), tokenContract).GravityCoin()
-		fee := types.NewERC20Token(id, tokenContract).GravityCoin()
+		amount := types.NewERC20Token(types.EthereumChainID, uint64(i+100), tokenContract).GravityCoin()
+		fee := types.NewERC20Token(types.EthereumChainID, id, tokenContract).GravityCoin()
 		_, err := input.GravityKeeper.createSendToEVM(ctx, types.EthereumChainID, sender, receiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}

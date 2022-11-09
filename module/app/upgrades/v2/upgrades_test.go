@@ -20,7 +20,7 @@ func TestV2UpgradeDenomNormalization(t *testing.T) {
 	amount := sdk.NewInt(1000)
 
 	// mint some tokens
-	incorrectDenom := strings.ToLower(types.GravityDenom(erc20contract))
+	incorrectDenom := strings.ToLower(types.GravityDenom(types.EthereumChainID, erc20contract))
 	gravityCoins := sdk.NewCoins(sdk.NewCoin(incorrectDenom, amount))
 	err := input.BankKeeper.MintCoins(ctx, types.ModuleName, gravityCoins)
 	require.NoError(t, err)
