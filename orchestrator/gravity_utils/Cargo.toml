@@ -1,6 +1,6 @@
 [package]
 name = "gravity_utils"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
 
@@ -28,7 +28,7 @@ tiny-bip39 = "0.8.2"
 bitcoin = { version = "=0.27", features = ["use-serde"] }
 hdpath = { version = "0.6.1", features = ["with-bitcoin"] }
 rustc-hex = "2.1.0"
-ocular = { git = "https://github.com/peggyjv/ocular", branch = "collin/orchestrator-parallel" }
+ocular = { git = "https://github.com/peggyjv/ocular", branch = "collin/orchestrator-parallel", ref = "a5166de828cabf6472daf2c58fec84ead14f7651" }
 ocular-somm-gravity = { git = "https://github.com/peggyjv/ocular-somm-gravity" }
 eyre = "0.6.8"
 

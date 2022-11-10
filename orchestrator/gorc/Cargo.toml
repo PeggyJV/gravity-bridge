@@ -1,7 +1,7 @@
 [package]
 name = "gorc"
 authors = []
-version = "2.0.1"
+version = "2.1.0"
 edition = "2021"
 rust-version = "1.58"
 
@@ -40,7 +40,7 @@ log = "0.4"
 prost = "0.7"
 bytes = "1"
 proc-macro2 = "1.0.47"
-ocular = { git = "https://github.com/peggyjv/ocular", branch = "collin/orchestrator-parallel" }
+ocular = { git = "https://github.com/peggyjv/ocular", branch = "collin/orchestrator-parallel", ref = "a5166de828cabf6472daf2c58fec84ead14f7651" }
 ocular-somm-gravity = { git = "https://github.com/peggyjv/ocular-somm-gravity" }
 
 [dependencies.abscissa_core]

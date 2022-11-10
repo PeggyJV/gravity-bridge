@@ -62,6 +62,7 @@ var (
 	stakeAmountCoin   = sdk.NewCoin(testDenom, stakeAmount)
 	gravityContract   = common.HexToAddress("0x04C89607413713Ec9775E14b954286519d836FEf")
 	testERC20contract = common.HexToAddress("0x4C4a2f8c81640e47606d3fd77B353E87Ba015584")
+	cosmosChainId     = ""
 )
 
 type IntegrationTestSuite struct {
@@ -254,6 +255,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	genFilePath := config.GenesisFile()
 	appGenState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFilePath)
 	s.Require().NoError(err)
+	cosmosChainId = genDoc.ChainID
 
 	var bankGenState banktypes.GenesisState
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState))
@@ -609,6 +611,7 @@ gas_price = { amount = %s, denom = "%s" }
 prefix = "cosmos"
 gas_adjustment = 2.0
 msg_batch_size = 5
+chain_id = "%s"
 `,
 			gravityContract.String(),
 			testDenom,
@@ -617,6 +620,7 @@ msg_batch_size = 5
 			s.valResources[i].Container.Name[1:],
 			minGasPrice,
 			testDenom,
+			cosmosChainId,
 		)
 
 		val := s.chain.validators[i]
@@ -654,7 +658,7 @@ msg_batch_size = 5
 					fmt.Sprintf("ORCH_MNEMONIC=%s", orch.mnemonic),
 					fmt.Sprintf("ETH_PRIV_KEY=%s", val.ethereumKey.privateKey),
 					"RUST_BACKTRACE=full",
-					"RUST_LOG=debug",
+					"RUST_LOG=debug,h2=info,hyper=info,tower=info,abscissa_core=info",
 				},
 				Entrypoint: []string{
 					"sh",

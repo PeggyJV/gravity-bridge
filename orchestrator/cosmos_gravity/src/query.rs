@@ -1,6 +1,7 @@
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::*;
 use gravity_utils::error::GravityError;
+use gravity_utils::ethereum::format_eth_address;
 use gravity_utils::types::*;
 use ocular::cosmrs::AccountId;
 use ocular::GrpcClient;
@@ -125,7 +126,7 @@ pub async fn get_transaction_batch_signatures(
     contract_address: EthAddress,
 ) -> Result<Vec<BatchConfirmResponse>, GravityError> {
     let batch_confirms = client
-        .query_batch_tx_confirmations(nonce, &contract_address.to_string())
+        .query_batch_tx_confirmations(nonce, &format_eth_address(contract_address))
         .await
         .map_err(|e| {
             GravityError::CosmosGrpcError(format!(

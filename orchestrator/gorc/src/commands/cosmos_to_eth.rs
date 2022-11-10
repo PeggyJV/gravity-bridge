@@ -128,7 +128,7 @@ impl Runnable for CosmosToEthCmd {
 
             let context = ChainContext {
                 prefix: config.cosmos.prefix.clone(),
-                ..Default::default()
+                id: config.cosmos.chain_id.clone(),
             };
             let mut successful_sends = 0;
             for _ in 0..times {

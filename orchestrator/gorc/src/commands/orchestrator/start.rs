@@ -37,7 +37,7 @@ impl Runnable for StartCommand {
 
         let context = ChainContext {
             prefix: cosmos_prefix,
-            ..Default::default()
+            id: config.cosmos.chain_id.clone(),
         };
 
         let ethereum_wallet = config.load_ethers_wallet(self.ethereum_key.clone());

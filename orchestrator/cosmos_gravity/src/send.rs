@@ -3,6 +3,7 @@ use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use ethers::utils::keccak256;
 use gravity_proto::cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
+use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::GetTxResponse;
 use gravity_proto::gravity as proto;
 use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::format_eth_address;
@@ -158,25 +159,24 @@ pub async fn send_request_batch_tx(
 pub async fn wait_for_tx(
     cosmos_client: &mut GrpcClient,
     hash: &str,
-) -> Result<TxResponse, GravityError> {
+) -> Result<GetTxResponse, GravityError> {
     let start = Instant::now();
     loop {
-        let response = cosmos_client.query_tx_by_hash(hash).await.map_err(|e| {
-            GravityError::CosmosGrpcError(format!("failed to query transaction: {}", e))
-        })?;
-
-        if response.tx.is_some() {
-            return Ok(response.tx_response.unwrap());
+        // we log at the debug level because it's expected that the transaction may not be found right away
+        if let Ok(res) = cosmos_client.query_tx_by_hash(hash).await {
+            debug!("error message from query for tx {}: {:?}", hash, res);
+            return Ok(res);
         }
 
         let now = Instant::now();
         if now.checked_duration_since(start).unwrap().as_secs() >= TIMEOUT {
-            return Err(GravityError::CosmosGrpcError(
-                "timed out waiting for transaction to be included in a block".to_string(),
-            ));
+            return Err(GravityError::CosmosGrpcError(format!(
+                "timed out waiting for tx {} to be included in a block",
+                hash
+            )));
         }
 
-        sleep(Duration::from_secs(1));
+        sleep(Duration::from_secs(3));
     }
 }
 
@@ -210,7 +210,8 @@ pub async fn send_messages(
 
     // multiply the estimated gas by the configured gas adjustment
     let gas_limit: f64 = (gas.gas_used as f64) * gas_adjustment;
-    fee_info.gas_limit(cmp::max(gas_limit as u64, 500000 * messages.len() as u64));
+    let gas_limit = cmp::max(gas_limit as u64, 500000 * messages.len() as u64);
+    fee_info.gas_limit(gas_limit);
 
     // compute the fee as fee=ceil(gas_limit * gas_price)
     let fee_amount = (gas_limit as f64 * gas_price.0).abs().ceil() as u128;
@@ -222,24 +223,15 @@ pub async fn send_messages(
         .map_err(|e| GravityError::CosmosGrpcError(format!("failed to sign transaction: {}", e)))?;
 
     // we block on the broadcast while we wait for DeliverTx to complete
-    let response = cosmos_client
-        .broadcast_commit(tx)
-        .await
-        .map_err(|e| {
-            GravityError::CosmosGrpcError(format!("failed to broadcast transaction: {}", e))
-        })?
-        .tx_response
-        .unwrap();
-
-    if response.code != 0 {
-        return Err(GravityError::CosmosGrpcError(format!(
-            "non-zero response code from tx broadcast. code: {}, logs: {:?}",
-            response.code, response.logs
-        )));
+    match cosmos_client.broadcast_commit(tx).await {
+        Ok(r) => return Ok(r.tx_response.unwrap()),
+        Err(e) => {
+            return Err(GravityError::CosmosGrpcError(format!(
+                "failed to broadcast transaction: {}",
+                e
+            )))
+        }
     }
-
-    // we wait in case the tx was somehow not included in a block
-    wait_for_tx(cosmos_client, &response.txhash).await
 }
 
 pub async fn send_main_loop(
@@ -264,21 +256,29 @@ pub async fn send_main_loop(
             )
             .await
             {
-                Ok(res) => trace!("okay: {:?}", res),
-                Err(err) => {
-                    let msg_types = msg_chunk
-                        .iter()
-                        .map(|msg| msg.clone().type_url)
-                        .collect::<HashSet<String>>();
-
-                    error!(
-                        "Error during gRPC call to Cosmos containing {} messages of types {:?}: {:?}",
-                        msg_chunk.len(),
-                        msg_types,
-                        err
-                    );
+                Ok(res) => {
+                    debug!("broadcast tx response: {:?}", res);
+                    match wait_for_tx(&mut cosmos_client, &res.txhash).await {
+                        Ok(_) => trace!("confirmed tx: {:?}", res),
+                        Err(err) => log_send_error(err, msg_chunk),
+                    }
                 }
+                Err(err) => log_send_error(err, msg_chunk),
             }
         }
     }
+}
+
+fn log_send_error(err: GravityError, msg_chunk: &[Any]) {
+    let msg_types = msg_chunk
+        .iter()
+        .map(|msg| msg.clone().type_url)
+        .collect::<HashSet<String>>();
+
+    error!(
+        "Error during gRPC call to Cosmos containing {} messages of types {:?}: {:?}",
+        msg_chunk.len(),
+        msg_types,
+        err
+    );
 }

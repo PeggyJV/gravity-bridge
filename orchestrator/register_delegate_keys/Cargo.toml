@@ -1,6 +1,6 @@
 [package]
 name = "register_delegate_keys"
-version = "2.0.0"
+version = "2.1.0"
 authors = ["Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
 
@@ -28,7 +28,7 @@ env_logger = "0.8"
 log = "0.4.17"
 openssl-probe = "0.1"
 rand = "0.8"
-ocular = { path = "../../../ocular", features = ["crypto"] }
+ocular = { git = "https://github.com/peggyjv/ocular", branch = "collin/orchestrator-parallel", ref = "a5166de828cabf6472daf2c58fec84ead14f7651" }
 
 [features]
 ethermint = ["cosmos_gravity/ethermint", "relayer/ethermint"]

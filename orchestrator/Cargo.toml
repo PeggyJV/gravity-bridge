@@ -2,7 +2,7 @@
 # Also, the name was changed from orchestrator to gravity_bridge.
 [package]
 name = "gravity_bridge"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["PeggyJV"]
 license = "Apache-2.0"
 edition = "2018"
@@ -12,7 +12,7 @@ description = """
 """
 
 [workspace]
-default-members = ["gorc", "orchestrator"]
+default-members = ["gorc", "orchestrator", "gravity_proto"]
 members = [
 	"orchestrator",
 	"cosmos_gravity",
@@ -26,6 +26,9 @@ members = [
 	"gravity_abi_build",
 	"gravity_abi",
 ]
+
+[patch."https://github.com/peggyjv/gravity-bridge"]
+gravity_proto = { path = "./gravity_proto" }
 
 [dependencies]
 orchestrator = { path = "./orchestrator" }
