@@ -7,7 +7,8 @@ use crate::metrics;
 use cosmos_gravity::build;
 use cosmos_gravity::query::get_last_event_nonce;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
-use deep_space::{Contact, Msg};
+use cosmos_gravity::send::CosmosSender;
+use deep_space::Contact;
 use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -37,7 +38,7 @@ pub async fn check_for_events(
     starting_block: U64,
     blocks_to_search: U64,
     block_delay: U64,
-    msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
+    msg_sender: CosmosSender,
 ) -> Result<U64, GravityError> {
     let prefix = contact.get_prefix();
     let our_cosmos_address = cosmos_key.to_address(&prefix).unwrap();
@@ -219,9 +220,8 @@ pub async fn check_for_events(
         }
 
         msg_sender
-            .send(messages)
-            .await
-            .expect("Could not send messages");
+            .send_in_batches(messages)
+            .await;
 
         let timeout = time::Duration::from_secs(30);
         contact.wait_for_next_block(timeout).await?;

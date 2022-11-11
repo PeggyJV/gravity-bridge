@@ -5,7 +5,7 @@ use crate::MINER_CLIENT;
 use crate::TOTAL_TIMEOUT;
 use crate::{get_fee, utils::ValidatorKeys};
 use clarity::Uint256;
-use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
+use cosmos_gravity::send::CosmosSender;
 use deep_space::coin::Coin;
 use deep_space::Contact;
 use ethereum_gravity::erc20_utils::get_erc20_balance;
@@ -149,14 +149,18 @@ pub async fn happy_path_test_v2(
     send_one_eth(user.eth_address, (*MINER_CLIENT).clone()).await;
     info!("Sent 1 eth to user address {}", user.eth_address);
 
-    let res = send_to_eth(
+    let user_cosmos_sender = CosmosSender::new(
+        contact.clone(),
         user.cosmos_key,
+        (10f64, "footoken".to_string()),
+        1.0,
+        1,
+    );
+
+    let res = user_cosmos_sender.send_to_eth(
         user.eth_address,
         send_to_eth_coin,
         get_fee(),
-        (10f64, "footoken".to_string()),
-        contact,
-        1.0,
     )
     .await
     .unwrap();
@@ -166,12 +170,16 @@ pub async fn happy_path_test_v2(
         amount_to_bridge, token_to_send_to_eth
     );
 
-    let res = send_request_batch_tx(
+    let validator_cosmos_sender = CosmosSender::new(
+        contact.clone(),
         keys[0].validator_key,
-        token_to_send_to_eth.clone(),
         (10f64, "footoken".to_string()),
-        contact,
         1.0,
+        1,
+    );
+
+    let res = validator_cosmos_sender.send_request_batch_tx(
+        token_to_send_to_eth.clone(),
     )
     .await
     .unwrap();

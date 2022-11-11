@@ -1,7 +1,7 @@
 use crate::application::APP;
 use abscissa_core::{clap::Parser, status_err, Application, Command, Runnable};
 use clarity::Uint256;
-use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
+use cosmos_gravity::send::CosmosSender;
 use deep_space::coin::Coin;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::DenomToErc20Request;
@@ -89,6 +89,14 @@ impl Runnable for CosmosToEthCmd {
             }
         }
 
+        let cosmos_sender = CosmosSender::new(
+            contact.clone(),
+            cosmos_key,
+            config.cosmos.gas_price.as_tuple(),
+            1.0,
+            1
+        );
+
         let amount = Coin {
             amount: amount.clone(),
             denom: gravity_denom.clone(),
@@ -144,14 +152,10 @@ impl Runnable for CosmosToEthCmd {
                 amount.clone(),
                 gravity_denom
             );
-            let res = send_to_eth(
-                cosmos_key,
+            let res = cosmos_sender.send_to_eth(
                 eth_dest,
                 amount.clone(),
                 bridge_fee.clone(),
-                config.cosmos.gas_price.as_tuple(),
-                &contact,
-                1.0
             )
             .await;
             match res {
@@ -166,7 +170,7 @@ impl Runnable for CosmosToEthCmd {
         if successful_sends > 0 {
             if !self.flag_no_batch {
                 println!("Requesting a batch to push transaction along immediately");
-                send_request_batch_tx(cosmos_key, gravity_denom,config.cosmos.gas_price.as_tuple(), &contact,config.cosmos.gas_adjustment)
+                cosmos_sender.send_request_batch_tx(gravity_denom)
                     .await
                     .expect("Failed to request batch");
             } else {

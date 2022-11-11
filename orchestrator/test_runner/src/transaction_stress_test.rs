@@ -2,7 +2,7 @@ use crate::{
     one_eth, one_hundred_eth, one_hundred_eth_uint256, utils::*, MINER_CLIENT, TOTAL_TIMEOUT,
 };
 use clarity::Uint256;
-use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
+use cosmos_gravity::send::CosmosSender;
 use deep_space::coin::Coin;
 use deep_space::Contact;
 use ethereum_gravity::{
@@ -12,7 +12,7 @@ use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use futures::future::join_all;
 use gravity_utils::ethereum::downcast_to_u64;
-use std::{collections::HashSet, str::FromStr, sync::Arc, time::Duration};
+use std::{collections::{HashSet, HashMap}, str::FromStr, sync::Arc, time::Duration};
 
 const TIMEOUT: Duration = Duration::from_secs(120);
 
@@ -145,11 +145,25 @@ pub async fn transaction_stress_test(
     let send_amount = one_hundred_eth_uint256() - 500u16.into();
 
     let mut denoms = HashSet::new();
+    let mut senders: HashMap<String, CosmosSender> = HashMap::new();
+    for keys in user_keys.iter() {
+        let c_addr = keys.cosmos_address;
+        let c_key = keys.cosmos_key;
+        let cosmos_sender = CosmosSender::new(
+            contact.clone(),
+            c_key,
+            (0f64, "".to_string()),
+            1.0,
+            1,
+        );
+        senders.insert(c_addr.to_string(), cosmos_sender);
+
+    }
+
     for token in erc20_addresses.iter() {
         let mut futs = Vec::new();
         for keys in user_keys.iter() {
             let c_addr = keys.cosmos_address;
-            let c_key = keys.cosmos_key;
             let e_dest_addr = keys.eth_dest_address;
             let balances = contact.get_balances(c_addr).await.unwrap();
             // this way I don't have to hardcode a denom and we can change the way denoms are formed
@@ -167,14 +181,10 @@ pub async fn transaction_stress_test(
                 denom: send_coin.denom.clone(),
                 amount: 1u8.into(),
             };
-            let res = send_to_eth(
-                c_key,
+            let res = senders.get(&c_addr.to_string()).unwrap().send_to_eth(
                 e_dest_addr,
                 send_coin,
                 send_fee,
-                (0f64, "".to_string()),
-                contact,
-                1.0,
             );
             futs.push(res);
         }
@@ -189,14 +199,18 @@ pub async fn transaction_stress_test(
         );
     }
 
+    let validator_cosmos_sender = CosmosSender::new(
+        contact.clone(),
+        keys[0].validator_key,
+        (0f64, "".to_string()),
+        1.0,
+        1,
+    );
+
     for denom in denoms {
         info!("Requesting batch for {}", denom);
-        let res = send_request_batch_tx(
-            keys[0].validator_key,
+        let res = validator_cosmos_sender.send_request_batch_tx(
             denom,
-            (0f64, "".to_string()),
-            contact,
-            1.0,
         )
         .await
         .unwrap();

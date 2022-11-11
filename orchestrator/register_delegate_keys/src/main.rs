@@ -6,7 +6,7 @@ extern crate serde_derive;
 extern crate lazy_static;
 
 use clarity::PrivateKey as EthPrivateKey;
-use cosmos_gravity::send::update_gravity_delegate_addresses;
+use cosmos_gravity::send::CosmosSender;
 use deep_space::{mnemonic::Mnemonic};
 use docopt::Docopt;
 use ethers::core::k256::ecdsa::SigningKey;
@@ -116,19 +116,23 @@ async fn main() {
     let ethereum_address = ethereum_wallet.address();
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
-    let res = update_gravity_delegate_addresses(
-        &contact,
-        ethereum_address,
-        cosmos_address,
+    let cosmos_sender = CosmosSender::new(
+        contact,
         validator_key,
-        ethereum_wallet,
         (0f64, "".to_string()),
         1.0f64,
+        1,
+    );
+
+    let res = cosmos_sender.update_gravity_delegate_addresses(
+        ethereum_address,
+        cosmos_address,
+        ethereum_wallet,
     )
     .await
     .expect("Failed to update Eth address");
 
-    let res = contact.wait_for_tx(res, TIMEOUT).await;
+    let res = cosmos_sender.wait_for_tx(res, TIMEOUT).await;
 
     if let Err(e) = res {
         error!("Failed trying to register delegate addresses error {:?}, correct the error and try again", e);

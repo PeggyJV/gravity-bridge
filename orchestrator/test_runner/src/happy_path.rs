@@ -8,8 +8,8 @@ use crate::OPERATION_TIMEOUT;
 use crate::TOTAL_TIMEOUT;
 use clarity::Uint256;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
-use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
-use cosmos_gravity::{build, query::get_oldest_unsigned_transaction_batch, send};
+use cosmos_gravity::send::CosmosSender;
+use cosmos_gravity::{build, query::get_oldest_unsigned_transaction_batch};
 use deep_space::address::Address as CosmosAddress;
 use deep_space::coin::Coin;
 use deep_space::Contact;
@@ -330,29 +330,38 @@ async fn test_batch(
         "Sending {}{} from {} on Cosmos back to Ethereum",
         amount, token_name, dest_cosmos_address
     );
-    let res = send_to_eth(
+
+    let dest_cosmos_sender = CosmosSender::new(
+        contact.clone(),
         dest_cosmos_private_key,
+        (10f64, "footoken".to_string()),
+        1.0,
+        1,
+    );
+
+    let res = dest_cosmos_sender.send_to_eth(
         dest_eth_address,
         Coin {
             denom: token_name.clone(),
             amount: amount.clone(),
         },
         bridge_denom_fee.clone(),
-        (10f64, "footoken".to_string()),
-        contact,
-        1.0,
     )
     .await
     .unwrap();
     info!("Sent tokens to Ethereum with {:?}", res);
 
-    info!("Requesting transaction batch");
-    send_request_batch_tx(
+    let requester_cosmos_sender = CosmosSender::new(
+        contact.clone(),
         requester_cosmos_private_key,
-        token_name.clone(),
         (10f64, "footoken".to_string()),
-        contact,
         1.0,
+        1,
+    );
+
+    info!("Requesting transaction batch");
+    requester_cosmos_sender.send_request_batch_tx(
+        token_name.clone(),
     )
     .await
     .unwrap();
@@ -466,7 +475,14 @@ async fn submit_duplicate_erc20_send(
         );
 
         let gas_price = get_gas_price();
-        let res = send::send_messages(contact, cosmos_key, gas_price, messages, 1.0).await;
+        let cosmos_sender = CosmosSender::new(
+            contact.clone(),
+            cosmos_key,
+            gas_price,
+            1.0,
+            1,
+        );
+        let res = cosmos_sender.send_messages(messages).await;
         let res = res.unwrap();
         trace!("Submitted duplicate sendToCosmos event: {:?}", res);
     }

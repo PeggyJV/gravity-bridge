@@ -1,7 +1,7 @@
 //! This test verifies that live updating of orchestrator keys works correctly
 
 use crate::utils::ValidatorKeys;
-use cosmos_gravity::send::update_gravity_delegate_addresses;
+use cosmos_gravity::send::CosmosSender;
 use deep_space::address::Address as CosmosAddress;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use deep_space::Contact;
@@ -75,15 +75,20 @@ pub async fn orch_keys_update(
             format_eth_address(ethereum_wallet.address()),
             cosmos_address,
         );
-        // send in the new delegate keys signed by the validator address
-        update_gravity_delegate_addresses(
-            contact,
-            ethereum_wallet.address(),
-            cosmos_address,
+
+        let cosmos_sender = CosmosSender::new(
+            contact.clone(),
             k.validator_key,
-            ethereum_wallet,
             (0f64, "".to_string()),
             2.0,
+            1,
+        );
+
+        // send in the new delegate keys signed by the validator address
+        cosmos_sender.update_gravity_delegate_addresses(
+            ethereum_wallet.address(),
+            cosmos_address,
+            ethereum_wallet,
         )
         .await
         .expect("Failed to set delegate addresses!");

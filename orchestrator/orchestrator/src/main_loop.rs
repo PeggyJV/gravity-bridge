@@ -9,7 +9,7 @@ use crate::{
     ethereum_event_watcher::check_for_events, metrics::metrics_main_loop,
     oracle_resync::get_last_checked_block,
 };
-use cosmos_gravity::send::send_main_loop;
+use cosmos_gravity::send::CosmosSender;
 use cosmos_gravity::{
     build,
     query::{
@@ -20,7 +20,7 @@ use cosmos_gravity::{
 use deep_space::client::ChainStatus;
 use deep_space::error::CosmosGrpcError;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
-use deep_space::{Contact, Msg};
+use deep_space::Contact;
 use ethereum_gravity::types::EthClient;
 use ethereum_gravity::utils::get_gravity_id;
 use ethers::{prelude::*, types::Address as EthAddress};
@@ -61,49 +61,46 @@ pub async fn orchestrator_main_loop(
     relayer_opt_out: bool,
     cosmos_msg_batch_size: u32,
 ) {
-    let (tx, rx) = tokio::sync::mpsc::channel(1);
-
-    let a = send_main_loop(
-        &contact,
+    let cosmos_sender = CosmosSender::new(
+        contact.clone(),
         cosmos_key,
         gas_price,
-        rx,
         gas_adjustment,
         cosmos_msg_batch_size.try_into().unwrap(),
     );
 
-    let b = eth_oracle_main_loop(
+    let a = eth_oracle_main_loop(
         cosmos_key,
         contact.clone(),
         eth_client.clone(),
         grpc_client.clone(),
         gravity_contract_address,
         blocks_to_search,
-        tx.clone(),
+        cosmos_sender.clone(),
     );
 
-    let c = eth_signer_main_loop(
+    let b = eth_signer_main_loop(
         cosmos_key,
         contact.clone(),
         eth_client.clone(),
         grpc_client.clone(),
         gravity_contract_address,
-        tx.clone(),
+        cosmos_sender.clone(),
     );
 
-    let d = metrics_main_loop(metrics_listen);
+    let c = metrics_main_loop(metrics_listen);
 
     if !relayer_opt_out {
-        let e = relayer_main_loop(
+        let d = relayer_main_loop(
             eth_client.clone(),
             grpc_client.clone(),
             gravity_contract_address,
             eth_gas_price_multiplier,
             eth_gas_multiplier,
         );
-        futures::future::join5(a, b, c, d, e).await;
-    } else {
         futures::future::join4(a, b, c, d).await;
+    } else {
+        futures::future::join3(a, b, c).await;
     }
 }
 
@@ -123,7 +120,7 @@ pub async fn eth_oracle_main_loop(
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     blocks_to_search: u64,
-    msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
+    msg_sender: CosmosSender,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let block_delay = match get_block_delay(eth_client.clone()).await {
@@ -174,9 +171,8 @@ pub async fn eth_oracle_main_loop(
                             ).await;
 
                             msg_sender
-                                .send(messages)
+                                .send_in_batches(messages)
                                 .await
-                                .expect("Could not send Ethereum height votes");
                         }
                     }
                     (Ok(_latest_eth_block), Ok(ChainStatus::Syncing)) => {
@@ -249,7 +245,7 @@ pub async fn eth_signer_main_loop(
     eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
     contract_address: EthAddress,
-    msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
+    msg_sender: CosmosSender,
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let mut grpc_client = grpc_client;
@@ -322,9 +318,8 @@ pub async fn eth_signer_main_loop(
                             )
                             .await;
                             msg_sender
-                                .send(messages)
+                                .send_in_batches(messages)
                                 .await
-                                .expect("Could not send messages");
                         }
                     }
                     Err(e) => {
@@ -358,9 +353,8 @@ pub async fn eth_signer_main_loop(
                         )
                         .await;
                         msg_sender
-                            .send(messages)
+                            .send_in_batches(messages)
                             .await
-                            .expect("Could not send messages");
                     }
                     Ok(None) => info!("No unsigned batches! Everything good!"),
                     Err(e) => {
@@ -391,9 +385,8 @@ pub async fn eth_signer_main_loop(
                         )
                         .await;
                         msg_sender
-                            .send(messages)
+                            .send_in_batches(messages)
                             .await
-                            .expect("Could not send messages");
                     }
                 } else if let Err(e) = logic_calls {
                     metrics::UNSIGNED_LOGIC_CALL_FAILURES.inc();
