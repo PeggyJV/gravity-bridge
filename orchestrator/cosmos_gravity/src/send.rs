@@ -179,6 +179,7 @@ pub async fn send_main_loop(
 ) {
     while let Some(messages) = rx.recv().await {
         for msg_chunk in messages.chunks(msg_batch_size) {
+            let batch = msg_chunk.to_vec();
             match send_messages(
                 contact,
                 cosmos_key,
@@ -188,21 +189,45 @@ pub async fn send_main_loop(
             )
             .await
             {
-                Ok(res) => trace!("okay: {:?}", res),
+                Ok(res) => debug!("message batch sent: {:?}", res),
                 Err(err) => {
-                    let msg_types = msg_chunk
-                        .iter()
-                        .map(|msg| prost_types::Any::from(msg.clone()).type_url)
-                        .collect::<HashSet<String>>();
+                    log_send_error(&batch, err);
 
-                    error!(
-                        "Error during gRPC call to Cosmos containing {} messages of types {:?}: {:?}",
-                        msg_chunk.len(),
-                        msg_types,
-                        err
-                    );
+                    // multiple messages in a single Cosmos transaction will be rejected
+                    // atomically if that transaction cannot be delivered, so retry each
+                    // element separately
+                    info!("Trying each message in batch individually");
+                    for msg in batch {
+                        let msg_vec = vec![msg];
+                        match send_messages(
+                            contact,
+                            cosmos_key,
+                            gas_price.to_owned(),
+                            msg_vec.clone(),
+                            gas_adjustment,
+                        )
+                        .await
+                        {
+                            Ok(res) => debug!("message sent: {:?}", res),
+                            Err(err) => log_send_error(&msg_vec, err),
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+fn log_send_error(messages: &Vec<Msg>, err: GravityError) {
+    let msg_types = messages
+        .iter()
+        .map(|msg| prost_types::Any::from(msg.clone()).type_url)
+        .collect::<HashSet<String>>();
+
+    error!(
+        "Error during gRPC call to Cosmos containing {} messages of types {:?}: {:?}",
+        messages.len(),
+        msg_types,
+        err
+    );
 }

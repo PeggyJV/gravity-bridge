@@ -380,7 +380,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 		pfc.ChainId = chainID
 		pfc.GravityId = fmt.Sprintf("gravitytest-%d", chainID)
 		pfc.SignedBatchesWindow = 50
-		gravityGenState.Params.ParamsByChain[i] = pfc
+		gravityGenState.Params.ParamsForChains[i] = pfc
 	}
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)

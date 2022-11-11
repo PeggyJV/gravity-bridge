@@ -33,13 +33,13 @@ func NewMsgDelegateKeys(val sdk.ValAddress, orchAddr sdk.AccAddress, ethAddr str
 }
 
 // Route should return the name of the module
-func (msg *MsgDelegateKeys) Route() string { return RouterKey }
+func (msg MsgDelegateKeys) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg *MsgDelegateKeys) Type() string { return "delegate_keys" }
+func (msg MsgDelegateKeys) Type() string { return "delegate_keys" }
 
 // ValidateBasic performs stateless checks
-func (msg *MsgDelegateKeys) ValidateBasic() (err error) {
+func (msg MsgDelegateKeys) ValidateBasic() (err error) {
 	if _, err = sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.ValidatorAddress)
 	}
@@ -57,12 +57,12 @@ func (msg *MsgDelegateKeys) ValidateBasic() (err error) {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg *MsgDelegateKeys) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+func (msg MsgDelegateKeys) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg *MsgDelegateKeys) GetSigners() []sdk.AccAddress {
+func (msg MsgDelegateKeys) GetSigners() []sdk.AccAddress {
 	acc, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		panic(err)
@@ -95,7 +95,7 @@ func (msg *MsgSubmitEVMEvent) ValidateBasic() (err error) {
 
 // GetSignBytes encodes the message for signing
 func (msg *MsgSubmitEVMEvent) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -140,7 +140,7 @@ func (msg *MsgSubmitEVMTxConfirmation) ValidateBasic() (err error) {
 
 // GetSignBytes encodes the message for signing
 func (msg *MsgSubmitEVMTxConfirmation) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -206,7 +206,7 @@ func (msg MsgSendToEVM) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgSendToEVM) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -250,7 +250,7 @@ func (msg MsgRequestBatchTx) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgRequestBatchTx) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -294,7 +294,7 @@ func (msg MsgCancelSendToEVM) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgCancelSendToEVM) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
@@ -340,7 +340,7 @@ func (msg MsgEVMHeightVote) ValidateBasic() error {
 
 // GetSignBytes encodes the message for signing
 func (msg MsgEVMHeightVote) GetSignBytes() []byte {
-	panic(fmt.Errorf("deprecated"))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required

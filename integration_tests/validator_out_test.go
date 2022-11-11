@@ -91,6 +91,9 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(1)},
 		)
 
+		s.dockerPool.RemoveContainerByName("orchestrator3")
+		s.dockerPool.RemoveContainerByName("orchestrator2")
+
 		// Send NewMsgSendToEthereum Message
 		s.Require().Eventuallyf(func() bool {
 			val := s.chain.validators[1]
@@ -158,6 +161,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 
 		// Check jail status of validators
 		s.Require().Eventuallyf(func() bool {
+			observed_jailing := true
 			orchKey := s.chain.validators[3]
 			keyring, err := orchKey.keyring()
 			s.Require().NoError(err)
@@ -170,14 +174,20 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 				s.T().Logf("error: %s", err)
 				return false
 			}
-			s.Require().True(valThree.GetValidator().IsJailed())
+			if !valThree.GetValidator().IsJailed() {
+				observed_jailing = false
+				s.T().Logf("validator 3 not jailed yet")
+			}
 
 			valTwo, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[2].keyInfo.GetAddress()).String()})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
-			s.Require().False(valTwo.GetValidator().IsJailed())
+			if !valTwo.GetValidator().IsJailed() {
+				observed_jailing = false
+				s.T().Logf("validator 2 not jailed yet")
+			}
 
 			valOne, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[1].keyInfo.GetAddress()).String()})
 			if err != nil {
@@ -192,7 +202,8 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 				return false
 			}
 			s.Require().False(valZero.GetValidator().IsJailed())
-			return true
-		}, 5*time.Minute, 1*time.Minute, "can't find slashing info")
+
+			return observed_jailing
+		}, 10*time.Minute, 1*time.Minute, "can't confirm jailing status")
 	})
 }

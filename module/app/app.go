@@ -354,6 +354,14 @@ func NewGravityApp(
 		app.BaseApp,
 	)
 
+	app.stakingKeeper = *stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(
+			app.distrKeeper.Hooks(),
+			app.slashingKeeper.Hooks(),
+			//app.gravityKeeper.Hooks(), TODO(bolten): this hook is broken, do not set it, to be fixed
+		),
+	)
+
 	app.ibcKeeper = ibckeeper.NewKeeper(
 		appCodec,
 		keys[ibchost.StoreKey],
