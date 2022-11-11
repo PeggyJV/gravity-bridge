@@ -358,7 +358,7 @@ func NewGravityApp(
 		stakingtypes.NewMultiStakingHooks(
 			app.distrKeeper.Hooks(),
 			app.slashingKeeper.Hooks(),
-			app.gravityKeeper.Hooks(),
+			//app.gravityKeeper.Hooks(), TODO(bolten): this hook is broken, do not set it, to be fixed
 		),
 	)
 
