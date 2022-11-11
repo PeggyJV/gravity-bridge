@@ -67,9 +67,9 @@ pub async fn batch_tx_confirmation_messages(
             ethereum_signer: format_eth_address(ethereum_address),
             signature: signature.into(),
         };
-        let msg = proto::MsgSubmitEthereumEvent {
+        let msg = proto::MsgSubmitEthereumTxConfirmation {
             signer: cosmos_address.to_string(),
-            event: confirmation.to_any(),
+            confirmation: confirmation.to_any(),
         };
         let msg = Msg::new("/gravity.v1.MsgSubmitEthereumTxConfirmation", msg);
         msgs.push(msg);
