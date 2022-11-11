@@ -205,7 +205,7 @@ pub async fn send_main_loop(
                         .await
                         {
                             Ok(res) => debug!("message sent: {:?}", res),
-                            Err(err) => {log_send_error(&msg_vec, err)}
+                            Err(err) => log_send_error(&msg_vec, err),
                         }
                     }
                 }
