@@ -38,7 +38,7 @@ pub async fn check_for_events(
     starting_block: U64,
     blocks_to_search: U64,
     block_delay: U64,
-    msg_sender: CosmosSender,
+    msg_sender: &CosmosSender,
 ) -> Result<U64, GravityError> {
     let prefix = contact.get_prefix();
     let our_cosmos_address = cosmos_key.to_address(&prefix).unwrap();
