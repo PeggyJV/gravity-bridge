@@ -95,7 +95,7 @@ func (msg *MsgSubmitEVMEvent) ValidateBasic() (err error) {
 
 // GetSignBytes encodes the message for signing
 func (msg *MsgSubmitEVMEvent) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
@@ -140,7 +140,7 @@ func (msg *MsgSubmitEVMTxConfirmation) ValidateBasic() (err error) {
 
 // GetSignBytes encodes the message for signing
 func (msg *MsgSubmitEVMTxConfirmation) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
