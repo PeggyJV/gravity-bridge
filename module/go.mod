@@ -3,7 +3,7 @@ module github.com/peggyjv/gravity-bridge/module/v3
 go 1.15
 
 require (
-	github.com/confio/ics23/go v0.8.0 // indirect
+	github.com/containerd/continuity v0.1.0 // indirect
 	github.com/cosmos/cosmos-sdk v0.44.5-patch
 	github.com/cosmos/ibc-go/v2 v2.0.4
 	github.com/ethereum/go-ethereum v1.10.11
@@ -19,9 +19,8 @@ require (
 	github.com/stretchr/testify v1.8.0
 	github.com/tendermint/tendermint v0.34.14
 	github.com/tendermint/tm-db v0.6.4
-	golang.org/x/net v0.1.0 // indirect
-	google.golang.org/genproto v0.0.0-20221027153422-115e99e71e1c
-	google.golang.org/grpc v1.50.1
+	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa
+	google.golang.org/grpc v1.43.0
 )
 
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
