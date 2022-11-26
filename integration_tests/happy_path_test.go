@@ -225,8 +225,9 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		clientCtx, err = s.chain.clientContext("tcp://localhost:26657", orch.keyring, "orch", orch.keyInfo.GetAddress())
 		s.Require().NoError(err)
 
+		fundCommunityPoolAmount := sdk.NewCoin(testDenom, sdk.NewInt(1000000000))
 		fundCommunityPoolMsg := distrtypes.NewMsgFundCommunityPool(
-			sdk.NewCoins(sdk.NewCoin(testDenom, sdk.NewInt(1000000000))),
+			sdk.NewCoins(fundCommunityPoolAmount),
 			orch.keyInfo.GetAddress(),
 		)
 
@@ -244,12 +245,15 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			}
 			return true
 		}, 105*time.Second, 10*time.Second, "unable to fund community pool")
+		s.T().Logf("funded community pool with %s", fundCommunityPoolAmount.String())
 
 		poolRes, err := distrQueryClient.CommunityPool(context.Background(),
 			&distrtypes.QueryCommunityPoolRequest{},
 		)
 		s.Require().NoError(err, "error retrieving community pool")
 		s.Require().True(poolRes.Pool.AmountOf(testDenom).GT(sdk.NewDec(1000000000)))
+
+		splitSpendAmount := 900000000 / len(s.evms)
 
 		for chainIndex, evm := range s.evms {
 			s.T().Logf("deploying testgb as an ERC20")
@@ -297,11 +301,12 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			clientCtx, err = s.chain.clientContext("tcp://localhost:26657", orch.keyring, "orch", orch.keyInfo.GetAddress())
 			s.Require().NoError(err)
 
+			splitSpendAmountPlusChain := int64(splitSpendAmount + int(evm.ID))
 			proposal := types.CommunityPoolEVMSpendProposal{
 				Title:       fmt.Sprintf("community pool spend %s", evm.Name),
 				Description: fmt.Sprintf("community pool spend %s", evm.Name),
 				Recipient:   communitySpendReceivers[chainIndex].String(),
-				Amount:      sdk.NewCoin(testDenom, sdk.NewInt(900000000)),
+				Amount:      sdk.NewCoin(testDenom, sdk.NewInt(splitSpendAmountPlusChain)),
 				BridgeFee:   sdk.NewCoin(testDenom, sdk.NewInt(1000000)),
 				ChainId:     evm.ID,
 			}
@@ -327,8 +332,8 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			proposalsQueryResponse, err := govQueryClient.Proposals(context.Background(), &govtypes.QueryProposalsRequest{})
 			s.Require().NoError(err)
 			s.Require().NotEmpty(proposalsQueryResponse.Proposals)
-			s.Require().Equal(uint64(1), proposalsQueryResponse.Proposals[0].ProposalId, "not proposal id 1")
-			s.Require().Equal(govtypes.StatusVotingPeriod, proposalsQueryResponse.Proposals[0].Status, "proposal not in voting period")
+			s.Require().Equal(uint64(chainIndex+1), proposalsQueryResponse.Proposals[chainIndex].ProposalId)
+			s.Require().Equal(govtypes.StatusVotingPeriod, proposalsQueryResponse.Proposals[chainIndex].Status, "proposal not in voting period")
 
 			s.T().Log("vote for community spend proposal")
 			for _, val := range s.chain.validators {
@@ -337,7 +342,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 				clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kr, "val", val.keyInfo.GetAddress())
 				s.Require().NoError(err)
 
-				voteMsg := govtypes.NewMsgVote(val.keyInfo.GetAddress(), 1, govtypes.OptionYes)
+				voteMsg := govtypes.NewMsgVote(val.keyInfo.GetAddress(), uint64(chainIndex+1), govtypes.OptionYes)
 				voteResponse, err := s.chain.sendMsgs(*clientCtx, voteMsg)
 				s.Require().NoError(err)
 				s.Require().Zero(voteResponse.Code, "vote error: %s", voteResponse.RawLog)
@@ -355,17 +360,18 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 		s.T().Log("waiting for community funds to reach destination")
 		for chainIndex, evm := range s.evms {
+			splitSpendAmountPlusChain := int64(splitSpendAmount + int(evm.ID))
 
 			s.Require().Eventuallyf(func() bool {
 				balance, err := s.getEthTokenBalanceOf(evm, communitySpendReceivers[chainIndex], testERC20Contracts[chainIndex])
 				s.Require().NoError(err, "error getting destination balance")
 
-				if balance.LT(sdk.NewInt(900000000)) {
+				if balance.LT(sdk.NewInt(splitSpendAmountPlusChain)) {
 					s.T().Logf("funds not received yet, dest balance: %s", balance.String())
 					return false
 				}
 
-				s.Require().Equal(balance.BigInt(), sdk.NewInt(900000000).BigInt(), "balance was %s, expected 900000000", balance.String())
+				s.Require().Equal(balance.BigInt(), sdk.NewInt(splitSpendAmountPlusChain).BigInt(), "balance was %s, expected %d", balance.String(), splitSpendAmountPlusChain)
 				return true
 			}, time.Second*180, time.Second*10, "community funds did not reach destination")
 		}
