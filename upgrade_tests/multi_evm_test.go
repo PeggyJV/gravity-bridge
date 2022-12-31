@@ -10,6 +10,7 @@ import (
 	"github.com/icza/dyno"
 	"github.com/strangelove-ventures/ibctest/v6"
 	"github.com/strangelove-ventures/ibctest/v6/chain/cosmos"
+	"github.com/strangelove-ventures/ibctest/v6/chain/gravity"
 	"github.com/strangelove-ventures/ibctest/v6/ibc"
 	"github.com/strangelove-ventures/ibctest/v6/testutil"
 	"github.com/stretchr/testify/require"
@@ -48,7 +49,7 @@ func CosmosChainUpgradeTest(t *testing.T, chainName, initialVersion, upgradeVers
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
 
-	chain := chains[0].(*cosmos.CosmosChain)
+	chain := chains[0].(*gravity.GravityChain)
 
 	ic := ibctest.NewInterchain().
 		AddChain(chain)
@@ -90,7 +91,7 @@ func CosmosChainUpgradeTest(t *testing.T, chainName, initialVersion, upgradeVers
 	err = chain.VoteOnProposalAllValidators(ctx, upgradeTx.ProposalID, cosmos.ProposalVoteYes)
 	require.NoError(t, err, "failed to submit votes")
 
-	_, err = cosmos.PollForProposalStatus(ctx, chain, height, height+haltHeightDelta, upgradeTx.ProposalID, cosmos.ProposalStatusPassed)
+	_, err = gravity.PollForProposalStatus(ctx, chain, height, height+haltHeightDelta, upgradeTx.ProposalID, cosmos.ProposalStatusPassed)
 	require.NoError(t, err, "proposal status did not change to passed in expected number of blocks")
 
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(ctx, time.Second*45)
@@ -99,7 +100,7 @@ func CosmosChainUpgradeTest(t *testing.T, chainName, initialVersion, upgradeVers
 	height, err = chain.Height(ctx)
 	require.NoError(t, err, "error fetching height before upgrade")
 
-	// this should timeout due to chain halt at upgrade height.
+	// this should time out due to chain halt at upgrade height.
 	_ = testutil.WaitForBlocks(timeoutCtx, int(haltHeight-height)+1, chain)
 
 	height, err = chain.Height(ctx)
