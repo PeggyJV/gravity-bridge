@@ -217,10 +217,11 @@ jobs:
       fail-fast: false
       matrix:
         test_type: [
-            "HappyPath",
-            "ValsetUpdate",
-            "ValidatorOut",
-            "TransactionStress",
+          "HappyPath",
+          "ValsetUpdate",
+          "ValidatorOut",
+          "TransactionStress",
+          "MultiEVMUpgrade",
         ]
 
     steps:
