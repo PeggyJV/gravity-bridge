@@ -16,24 +16,7 @@ e2e_slow_loris:
 	@make -s e2e_transaction_stress
 
 e2e_clean_slate:
-	@docker rm --force \
-		$(shell docker ps -qa --filter="name=contract_deployer") \
-		$(shell docker ps -qa --filter="name=ethereum") \
-		$(shell docker ps -qa --filter="name=gravity") \
-		$(shell docker ps -qa --filter="name=orchestrator") \
-		1>/dev/null \
-		2>/dev/null \
-		|| true
-	@docker wait \
-		$(shell docker ps -qa --filter="name=contract_deployer") \
-		$(shell docker ps -qa --filter="name=ethereum") \
-		$(shell docker ps -qa --filter="name=gravity") \
-		$(shell docker ps -qa --filter="name=orchestrator") \
-		1>/dev/null \
-		2>/dev/null \
-		|| true
-	@docker network prune --force 1>/dev/null 2>/dev/null || true
-	@cd integration_tests && go test -c
+	@./clean_slate.sh
 
 e2e_batch_stress: e2e_clean_slate
 	@testnet/testnet.test -test.run TestBatchStress -test.failfast -test.v || make -s fail

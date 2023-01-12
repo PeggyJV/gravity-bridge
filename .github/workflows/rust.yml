@@ -11,7 +11,7 @@ env:
 
 jobs:
   rust-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         rust:
@@ -38,7 +38,7 @@ jobs:
         run: cd orchestrator && cargo test --all --verbose
   fmt:
     name: Rustfmt
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout branch
         uses: actions/checkout@v2
@@ -50,7 +50,7 @@ jobs:
         run: cd orchestrator && cargo fmt
   clippy:
     name: Clippy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout branch
         uses: actions/checkout@v2
