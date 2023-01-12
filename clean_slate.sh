@@ -6,7 +6,7 @@ echo Cleaning up test environment
 docker rm --force \
     $(docker ps -qa --filter="name=contract_deployer") \
     $(docker ps -qa --filter="name=ethereum") \
-    $(docker ps -qa --filter="name=sommelier") \
+    $(docker ps -qa --filter="name=gravity") \
     $(docker ps -qa --filter="name=orchestrator") \
     1>/dev/null \
     2>/dev/null \
@@ -14,7 +14,7 @@ docker rm --force \
 docker wait \
     $(docker ps -qa --filter="name=contract_deployer") \
     $(docker ps -qa --filter="name=ethereum") \
-    $(docker ps -qa --filter="name=sommelier") \
+    $(docker ps -qa --filter="name=gravity") \
     $(docker ps -qa --filter="name=orchestrator") \
     1>/dev/null \
     2>/dev/null \
