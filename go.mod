@@ -3,7 +3,7 @@ module github.com/peggyjv/gravity-bridge
 go 1.15
 
 require (
-	github.com/cosmos/cosmos-sdk v0.44.5-patch
+	github.com/cosmos/cosmos-sdk v0.44.8
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/ethereum/go-ethereum v1.10.17
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.1
