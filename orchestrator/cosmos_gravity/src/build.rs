@@ -10,10 +10,16 @@ use gravity_utils::message_signatures::{
     encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
 };
 use gravity_utils::types::*;
+use lazy_static::lazy_static;
+use regex::Regex;
 use std::collections::BTreeMap;
 use gravity_proto::gravity::EvmSigner;
 
 use crate::crypto::PrivateKey as CosmosPrivateKey;
+
+lazy_static!{
+    static ref DENOM_REGEX: Regex = Regex::new("^[a-zA-Z][a-zA-Z0-9/-]{2,127}$").unwrap();
+}
 
 pub async fn signer_set_tx_confirmation_messages(
     contact: &Contact,
@@ -200,7 +206,7 @@ pub fn ethereum_event_messages(
         let event = proto::Erc20DeployedEvent {
             event_nonce: downcast_to_u64(deploy.event_nonce).unwrap(),
             evm_height: downcast_to_u64(deploy.block_height).unwrap(),
-            cosmos_denom: deploy.cosmos_denom,
+            cosmos_denom: denom_string(deploy.cosmos_denom),
             token_contract: format_evm_address(deploy.erc20_address),
             erc20_name: deploy.name,
             erc20_symbol: deploy.symbol,
@@ -259,4 +265,37 @@ pub fn ethereum_event_messages(
     }
 
     msgs
+}
+
+// If the input string from the event doesn't conform to the SDK's expected
+// denom format, we replace it with the placeholder string "invalid" and it will
+// be rejected by the chain when processed.
+pub fn denom_string(input_denom: String) -> String {
+    if !DENOM_REGEX.is_match(input_denom.as_str()) {
+        return "invalid".to_string()
+    }
+
+    input_denom
+}
+
+#[test]
+fn valid_denoms_test() {
+    let valid1 = "uatom".to_string();
+    let valid2 = "test/DENOM/1-2-3".to_string();
+    let valid3 = "AA1".to_string();
+    let valid4 = "A".repeat(128);
+    let invalid1 = "".to_string();
+    let invalid2 = "A1".to_string();
+    let invalid3 = "A".repeat(129);
+    let invalid4 = "9uatom".to_string();
+    let invalid_result = "invalid".to_string();
+
+    assert_eq!(denom_string(valid1.clone()), valid1);
+    assert_eq!(denom_string(valid2.clone()), valid2);
+    assert_eq!(denom_string(valid3.clone()), valid3);
+    assert_eq!(denom_string(valid4.clone()), valid4);
+    assert_eq!(denom_string(invalid1), invalid_result);
+    assert_eq!(denom_string(invalid2), invalid_result);
+    assert_eq!(denom_string(invalid3), invalid_result);
+    assert_eq!(denom_string(invalid4), invalid_result);
 }

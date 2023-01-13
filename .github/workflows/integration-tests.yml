@@ -16,7 +16,7 @@ env:
 
 jobs:
   rust-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout branch
         uses: actions/checkout@v2
@@ -63,8 +63,12 @@ jobs:
     permissions:
       contents: read
       packages: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
+      - name: Set up Go 1.15
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
       - name: checkout
         uses: actions/checkout@v2
       - name: Set up Docker Buildx
@@ -113,7 +117,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -163,7 +167,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -211,7 +215,7 @@ jobs:
 
   integration-tests:
     environment: CI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: [ rust-build, go-build, hardhat-build ]
     strategy:
       fail-fast: false
@@ -225,7 +229,6 @@ jobs:
         ]
 
     steps:
-      # not needed on self-hosted
       - name: Set up Go 1.16
         uses: actions/setup-go@v2
         with:
@@ -282,5 +285,9 @@ jobs:
       - name: Run all up ci test
         run: ./integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m Test${{ matrix.test_type }}
         env:
-          ARCHIVE_NODE_URL: https://eth-mainnet.alchemyapi.io/v2/${{ secrets.ALCHEMY_ID }}
           E2E_SKIP_CLEANUP: true
+          ARCHIVE_NODE_URL: https://eth-mainnet.alchemyapi.io/v2/${{ secrets.ALCHEMY_ID }}
+      - name: Clean up docker images
+        run: ./clean_slate.sh
+      - name: Remove testnet tempdir
+        run: sudo rm -rf gravity-bridge-e2e-testnet*

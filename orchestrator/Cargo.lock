@@ -1290,7 +1290,7 @@ dependencies = [
 
 [[package]]
 name = "cosmos_gravity"
-version = "0.1.0"
+version = "2.0.4"
 dependencies = [
  "actix",
  "bytes 1.1.0",
@@ -1302,10 +1302,12 @@ dependencies = [
  "ethers",
  "gravity_proto",
  "gravity_utils",
+ "lazy_static",
  "log",
  "prost",
  "prost-types",
  "rand 0.8.4",
+ "regex",
  "serde",
  "sha3",
  "tokio 1.13.0",
@@ -2227,7 +2229,7 @@ checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 
 [[package]]
 name = "gorc"
-version = "2.0.1"
+version = "2.0.4"
 dependencies = [
  "abscissa_core",
  "abscissa_tokio",
@@ -2286,7 +2288,7 @@ dependencies = [
 
 [[package]]
 name = "gravity_bridge"
-version = "0.1.0"
+version = "2.0.4"
 dependencies = [
  "cosmos_gravity",
  "ethereum_gravity",
@@ -3252,7 +3254,7 @@ dependencies = [
 
 [[package]]
 name = "orchestrator"
-version = "2.0.1"
+version = "2.0.4"
 dependencies = [
  "actix-rt 2.5.0",
  "axum",
@@ -3833,9 +3835,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.5.4"
+version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d07a8629359eb56f1e2fb1652bb04212c072a87ba68546a04065d525673ac461"
+checksum = "48aaa5748ba571fb95cd2c85c09f629215d3a6ece942baa100950af03a34f733"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -3853,9 +3855,9 @@ dependencies = [
 
 [[package]]
 name = "regex-syntax"
-version = "0.6.25"
+version = "0.6.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f497285884f3fcff424ffc933e56d7cbca511def0c9831a7f9b5f6153e3cc89b"
+checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
 
 [[package]]
 name = "register_delegate_keys"

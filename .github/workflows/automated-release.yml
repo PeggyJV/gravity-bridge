@@ -12,13 +12,13 @@ env:
 jobs:
   release:
     name: build-release-assets
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       # Setup Golang Environemnt
       - name: setup-go
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.16
+          go-version: 1.15
       # Setup Rust Environment
       - name: setup-rust
         uses: actions-rs/toolchain@v1
