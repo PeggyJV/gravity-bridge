@@ -1282,15 +1282,15 @@ version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7115eae4b8518967b8e737a3ef76025f2d007de7906d88c18f00b8bbfc70f51e"
 dependencies = [
- "prost",
- "prost-types",
+ "prost 0.7.0",
+ "prost-types 0.7.0",
  "tendermint-proto",
  "tonic",
 ]
 
 [[package]]
 name = "cosmos_gravity"
-version = "0.1.0"
+version = "2.0.4"
 dependencies = [
  "actix",
  "bytes 1.1.0",
@@ -1304,8 +1304,8 @@ dependencies = [
  "gravity_utils",
  "lazy_static",
  "log",
- "prost",
- "prost-types",
+ "prost 0.7.0",
+ "prost-types 0.8.0",
  "rand 0.8.4",
  "regex",
  "serde",
@@ -1476,8 +1476,8 @@ dependencies = [
  "num-traits",
  "num256",
  "pbkdf2 0.9.0",
- "prost",
- "prost-types",
+ "prost 0.7.0",
+ "prost-types 0.7.0",
  "rand 0.8.4",
  "ripemd160",
  "rust_decimal",
@@ -2229,7 +2229,7 @@ checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 
 [[package]]
 name = "gorc"
-version = "2.0.1"
+version = "2.0.4"
 dependencies = [
  "abscissa_core",
  "abscissa_tokio",
@@ -2252,7 +2252,7 @@ dependencies = [
  "orchestrator",
  "pkcs8",
  "proc-macro2",
- "prost",
+ "prost 0.7.0",
  "rand_core 0.6.2",
  "regex",
  "relayer",
@@ -2288,7 +2288,7 @@ dependencies = [
 
 [[package]]
 name = "gravity_bridge"
-version = "0.1.0"
+version = "2.0.4"
 dependencies = [
  "cosmos_gravity",
  "ethereum_gravity",
@@ -2310,8 +2310,8 @@ version = "0.1.0"
 dependencies = [
  "bytes 1.1.0",
  "cosmos-sdk-proto",
- "prost",
- "prost-types",
+ "prost 0.7.0",
+ "prost-types 0.8.0",
  "tonic",
 ]
 
@@ -2319,7 +2319,7 @@ dependencies = [
 name = "gravity_proto_build"
 version = "0.1.0"
 dependencies = [
- "prost",
+ "prost 0.7.0",
  "prost-build",
  "regex",
  "tempdir",
@@ -2723,6 +2723,15 @@ name = "itertools"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "284f18f85651fe11e8a991b2adb42cb078325c996ed026d994719efcfca1d54b"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
 dependencies = [
  "either",
 ]
@@ -3254,7 +3263,7 @@ dependencies = [
 
 [[package]]
 name = "orchestrator"
-version = "2.0.1"
+version = "2.0.4"
 dependencies = [
  "actix-rt 2.5.0",
  "axum",
@@ -3629,7 +3638,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e6984d2f1a23009bd270b8bb56d0926810a3d483f59c987d77969e9d8e840b2"
 dependencies = [
  "bytes 1.1.0",
- "prost-derive",
+ "prost-derive 0.7.0",
+]
+
+[[package]]
+name = "prost"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de5e2533f59d08fcf364fd374ebda0692a70bd6d7e66ef97f306f45c6c5d8020"
+dependencies = [
+ "bytes 1.1.0",
+ "prost-derive 0.8.0",
 ]
 
 [[package]]
@@ -3640,12 +3659,12 @@ checksum = "32d3ebd75ac2679c2af3a92246639f9fcc8a442ee420719cc4fe195b98dd5fa3"
 dependencies = [
  "bytes 1.1.0",
  "heck 0.3.2",
- "itertools",
+ "itertools 0.9.0",
  "log",
  "multimap",
  "petgraph",
- "prost",
- "prost-types",
+ "prost 0.7.0",
+ "prost-types 0.7.0",
  "tempfile",
  "which",
 ]
@@ -3657,7 +3676,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "169a15f3008ecb5160cba7d37bcd690a7601b6d30cfb87a117d45e59d52af5d4"
 dependencies = [
  "anyhow",
- "itertools",
+ "itertools 0.9.0",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "prost-derive"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "600d2f334aa05acb02a755e217ef1ab6dea4d51b58b7846588b747edec04efba"
+dependencies = [
+ "anyhow",
+ "itertools 0.10.5",
  "proc-macro2",
  "quote",
  "syn",
@@ -3670,7 +3702,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b518d7cdd93dab1d1122cf07fa9a60771836c668dde9d9e2a139f957f0d9f1bb"
 dependencies = [
  "bytes 1.1.0",
- "prost",
+ "prost 0.7.0",
+]
+
+[[package]]
+name = "prost-types"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "603bbd6394701d13f3f25aada59c7de9d35a6a5887cfc156181234a44002771b"
+dependencies = [
+ "bytes 1.1.0",
+ "prost 0.8.0",
 ]
 
 [[package]]
@@ -4635,8 +4677,8 @@ dependencies = [
  "chrono",
  "num-derive",
  "num-traits",
- "prost",
- "prost-types",
+ "prost 0.7.0",
+ "prost-types 0.7.0",
  "serde",
  "serde_bytes",
  "subtle-encoding",
@@ -4978,8 +5020,8 @@ dependencies = [
  "hyper",
  "percent-encoding",
  "pin-project 1.0.8",
- "prost",
- "prost-derive",
+ "prost 0.7.0",
+ "prost-derive 0.7.0",
  "tokio 1.13.0",
  "tokio-stream",
  "tokio-util 0.6.6",
