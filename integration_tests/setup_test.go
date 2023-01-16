@@ -423,6 +423,9 @@ func (s *IntegrationTestSuite) initValidatorConfigs() {
 		valConfig.Consensus.TimeoutCommit = 1 * time.Second
 		valConfig.Consensus.TimeoutPropose = 1 * time.Second
 
+		// just to get stuff to compile
+		//valConfig.Storage = &tmconfig.StorageConfig{DiscardABCIResponses: true}
+
 		var peers []string
 
 		for j := 0; j < len(s.chain.validators); j++ {
