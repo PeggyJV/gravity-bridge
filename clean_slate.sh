@@ -5,7 +5,7 @@ set -e
 echo Cleaning up test environment
 docker rm --force \
     $(docker ps -qa --filter="name=contract_deployer") \
-    $(docker ps -qa --filter="name=ethereum") \
+    $(docker ps -qa --filter="name=evm") \
     $(docker ps -qa --filter="name=gravity") \
     $(docker ps -qa --filter="name=orchestrator") \
     1>/dev/null \
@@ -14,7 +14,7 @@ docker rm --force \
 echo Waiting for container removal to complete
 docker wait \
     $(docker ps -qa --filter="name=contract_deployer") \
-    $(docker ps -qa --filter="name=ethereum") \
+    $(docker ps -qa --filter="name=evm") \
     $(docker ps -qa --filter="name=gravity") \
     $(docker ps -qa --filter="name=orchestrator") \
     1>/dev/null \
