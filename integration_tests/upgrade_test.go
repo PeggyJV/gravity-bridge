@@ -6,6 +6,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	"time"
 )
 
 func (s *IntegrationTestSuite) TestMultiEVMUpgrade() {
@@ -29,6 +30,9 @@ func (s *IntegrationTestSuite) TestMultiEVMUpgrade() {
 		rpcClient, err := rpchttp.New("tcp://localhost:26657", "/websocket")
 		s.Require().NoError(err)
 		status, err := rpcClient.Status(context.Background())
+		s.Require().NoError(err)
+
+		upgradeBlockHeight := status.SyncInfo.LatestBlockHeight + 30
 
 		proposalMsg, err := govtypes.NewMsgSubmitProposal(
 			&upgradetypes.SoftwareUpgradeProposal{
@@ -36,7 +40,7 @@ func (s *IntegrationTestSuite) TestMultiEVMUpgrade() {
 				Description: "test multi-evm upgrade description",
 				Plan: upgradetypes.Plan{
 					Name:   "multi-evm-upgrade",
-					Height: status.SyncInfo.LatestBlockHeight + 10,
+					Height: upgradeBlockHeight,
 				},
 			},
 			sdk.Coins{
@@ -58,6 +62,7 @@ func (s *IntegrationTestSuite) TestMultiEVMUpgrade() {
 		s.Require().NoError(err)
 		s.Require().NotEmpty(proposalsQueryResponse.Proposals)
 		s.Require().Equal(govtypes.StatusVotingPeriod, proposalsQueryResponse.Proposals[0].Status, "proposal not in voting period")
+		s.Require().Equal(uint64(1), proposalsQueryResponse.Proposals[0].ProposalId, "proposal id is not 1")
 
 		s.T().Log("vote for upgrade proposal")
 		for _, val := range s.chain.validators {
@@ -66,10 +71,25 @@ func (s *IntegrationTestSuite) TestMultiEVMUpgrade() {
 			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kr, "val", val.keyInfo.GetAddress())
 			s.Require().NoError(err)
 
-			voteMsg := govtypes.NewMsgVote(val.keyInfo.GetAddress(), 0, govtypes.OptionYes)
+			voteMsg := govtypes.NewMsgVote(val.keyInfo.GetAddress(), 1, govtypes.OptionYes)
 			voteResponse, err := s.chain.sendMsgs(*clientCtx, voteMsg)
 			s.Require().NoError(err)
 			s.Require().Zero(voteResponse.Code, "vote error: %s", voteResponse.RawLog)
 		}
+
+		s.T().Log("waiting for proposal to complete")
+		s.Require().Eventuallyf(func() bool {
+			proposalQueryResponse, err := govQueryClient.Proposal(context.Background(), &govtypes.QueryProposalRequest{ProposalId: 1})
+			s.Require().NoError(err)
+
+			return proposalQueryResponse.Proposal.Status == govtypes.StatusPassed
+		}, time.Minute, time.Second*10, "proposal failed to be accepted")
+
+		s.T().Logf("waiting for upgrade block height %d", upgradeBlockHeight)
+		s.Require().Eventuallyf(func() bool {
+			status, err = rpcClient.Status(context.Background())
+			s.Require().NoError(err)
+			return status.SyncInfo.LatestBlockHeight >= upgradeBlockHeight
+		}, time.Minute, time.Second*10, "upgrade height failed to reach")
 	})
 }
