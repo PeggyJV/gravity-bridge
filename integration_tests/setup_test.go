@@ -113,6 +113,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// initialization
 	mnemonics := MNEMONICS()
+	s.Require().NoError(s.chain.createAndInitValidators(len(mnemonics)))
 	s.initNodesWithMnemonics(mnemonics...)
 
 	// we only need to generate eth keys, there is no genesis for hardhat
@@ -165,37 +166,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.Require().NoError(os.RemoveAll(s.chain.dataDir))
 }
 
-func (s *IntegrationTestSuite) initNodes(nodeCount int) {
-	s.Require().NoError(s.chain.createAndInitValidators(nodeCount))
-	s.Require().NoError(s.chain.createAndInitOrchestrators(nodeCount))
-
-	// initialize a genesis file for the first validator
-	val0ConfigDir := s.chain.validators[0].configDir()
-	for _, val := range s.chain.validators {
-		s.Require().NoError(
-			addGenesisAccount(val0ConfigDir, "", initBalanceStr, val.keyInfo.GetAddress()),
-		)
-	}
-
-	// add orchestrator accounts to genesis file
-	for _, orch := range s.chain.orchestrators {
-		s.Require().NoError(
-			addGenesisAccount(val0ConfigDir, "", initBalanceStr, orch.keyInfo.GetAddress()),
-		)
-	}
-
-	// copy the genesis file to the remaining validators
-	for _, val := range s.chain.validators[1:] {
-		err := copyFile(
-			filepath.Join(val0ConfigDir, "config", "genesis.json"),
-			filepath.Join(val.configDir(), "config", "genesis.json"),
-		)
-		s.Require().NoError(err)
-	}
-}
-
 func (s *IntegrationTestSuite) initNodesWithMnemonics(mnemonics ...string) {
-	s.Require().NoError(s.chain.createAndInitValidatorsWithMnemonics(mnemonics))
+	s.Require().NoError(s.chain.setValidatorKeysWithMnemonics(mnemonics))
 	s.Require().NoError(s.chain.createAndInitOrchestratorsWithMnemonics(mnemonics))
 
 	//initialize a genesis file for the first validator
@@ -222,33 +194,6 @@ func (s *IntegrationTestSuite) initNodesWithMnemonics(mnemonics ...string) {
 		s.Require().NoError(err)
 	}
 }
-
-//
-//func (s *IntegrationTestSuite) initEthereum() {
-//	// generate ethereum keys for validators add them to the ethereum genesis
-//	ethGenesis := EthereumGenesis{
-//		Difficulty: "0x400",
-//		GasLimit:   "0xB71B00",
-//		Config:     EthereumConfig{ChainID: ethChainID},
-//		Alloc:      make(map[string]Allocation, len(s.chain.validators)+1),
-//	}
-//
-//	alloc := Allocation{
-//		Balance: "0x1337000000000000000000",
-//	}
-//
-//	ethGenesis.Alloc["0xBf660843528035a5A4921534E156a27e64B231fE"] = alloc
-//	for _, val := range s.chain.validators {
-//		s.Require().NoError(val.generateEthereumKey())
-//		ethGenesis.Alloc[val.ethereumKey.address] = alloc
-//	}
-//
-//	ethGenBz, err := json.MarshalIndent(ethGenesis, "", "  ")
-//	s.Require().NoError(err)
-//
-//	// write out the genesis file
-//	s.Require().NoError(writeFile(filepath.Join(s.chain.configDir(), "eth_genesis.json"), ethGenBz))
-//}
 
 func (s *IntegrationTestSuite) initEVMFromMnemonics(chainID uint, mnemonics []string) {
 	// generate ethereum keys for validators add them to the ethereum genesis
