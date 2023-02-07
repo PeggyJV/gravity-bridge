@@ -5,9 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
-
 	"os"
 	"path"
 	"path/filepath"
@@ -25,6 +22,8 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	premultievmapp "github.com/peggyjv/gravity-bridge/module/v2/app"
@@ -53,11 +52,13 @@ func (s *UpgradeTestSuite) SetupSuite() {
 	mnemonics := MNEMONICS()
 	s.Require().NoError(s.createAndInitValidatorsPreEvmMulti(len(mnemonics)))
 	s.initNodesWithMnemonics(mnemonics...)
+	s.T().Log("initialized validator configs")
 
 	// we only need to generate eth keys, there is no genesis for hardhat
 	for i, val := range s.chain.validators {
 		s.Require().NoError(val.generateEthereumKeyFromMnemonic(mnemonics[i]))
 	}
+	s.T().Log("generated ethereum keys for validators")
 	s.initPreMultiGenesis()
 	s.initValidatorConfigs()
 
@@ -78,7 +79,7 @@ func (s *UpgradeTestSuite) SetupSuite() {
 	s.runPreMultiOrchestrators()
 }
 
-func (s *IntegrationTestSuite) createAndInitValidatorsPreEvmMulti(count int) error {
+func (s *UpgradeTestSuite) createAndInitValidatorsPreEvmMulti(count int) error {
 	for i := 0; i < count; i++ {
 		// create node
 		node := s.chain.createValidator(i)
@@ -115,12 +116,13 @@ func (s *IntegrationTestSuite) createAndInitValidatorsPreEvmMulti(count int) err
 		tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
 		s.chain.validators = append(s.chain.validators, node)
+		s.T().Logf("created validator %d", i)
 	}
 
 	return nil
 }
 
-func (s *IntegrationTestSuite) initPreMultiGenesis() {
+func (s *UpgradeTestSuite) initPreMultiGenesis() {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
@@ -261,7 +263,7 @@ func (v *validator) buildPreEvmMultiDelegateKeysMsg() sdk.Msg {
 
 	signMsgBz := cdc.MustMarshal(&signMsg)
 	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
-	ethSig, err := gravitytypes.NewEVMSignature(hash, privKey)
+	ethSig, err := premultigravitytypes.NewEthereumSignature(hash, privKey)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create Ethereum signature: %s", err))
 	}
@@ -274,7 +276,7 @@ func (v *validator) buildPreEvmMultiDelegateKeysMsg() sdk.Msg {
 	)
 }
 
-func (s *IntegrationTestSuite) runPreMultiValidators() {
+func (s *UpgradeTestSuite) runPreMultiValidators() {
 	s.T().Log("starting validator containers...")
 
 	s.valResources = make([]*dockertest.Resource, len(s.chain.validators))
@@ -350,7 +352,7 @@ func (s *IntegrationTestSuite) runPreMultiValidators() {
 }
 
 // the only different in this function is the image tag and the chain IDs tagged to only Ethereum
-func (s *IntegrationTestSuite) runPreMultiOrchestrators() {
+func (s *UpgradeTestSuite) runPreMultiOrchestrators() {
 	s.T().Log("starting orchestrator containers...")
 
 	s.orchResources = make([]*dockertest.Resource, len(s.chain.orchestrators))
@@ -472,65 +474,6 @@ listen_addr = "127.0.0.1:300%d"
 			resource.Container.ID,
 		)
 	}
-}
-
-func (s *IntegrationTestSuite) TestUpgrade() {
-	// chain is halted due to pending upgrade, take down existing validator and orchestrator nodes
-	for _, oc := range s.orchResources {
-		s.Require().NoError(s.dockerPool.RemoveContainerByName(oc.Container.Name))
-	}
-	for _, vc := range s.valResources {
-		s.Require().NoError(s.dockerPool.RemoveContainerByName(vc.Container.Name))
-	}
-
-	// this will bring up the "normal" current validators and orchestrators
-	s.runValidators()
-	s.runOrchestrators()
-
-	rpcClient, err := rpchttp.New("tcp://localhost:26657", "/websocket")
-	s.Require().NoError(err)
-
-	// check for creation of blocks
-	s.Require().Eventually(
-		func() bool {
-			status, err := rpcClient.Status(context.Background())
-			if err != nil {
-				s.T().Logf("can't get container status: %s", err.Error())
-			}
-			if status == nil {
-				container, ok := s.dockerPool.ContainerByName("gravity0")
-				if !ok {
-					s.T().Logf("no container by 'gravity0'")
-				} else {
-					if container.Container.State.Status == "exited" {
-						s.Fail("validators exited", "state: %s logs: \n%s", container.Container.State.String(), s.logsByContainerID(container.Container.ID))
-						s.T().FailNow()
-					}
-					s.T().Logf("state: %v, health: %v", container.Container.State.Status, container.Container.State.Health)
-				}
-				return false
-			}
-
-			// let the node produce a few blocks
-			if status.SyncInfo.CatchingUp {
-				s.T().Logf("catching up: %t", status.SyncInfo.CatchingUp)
-				return false
-			}
-			if status.SyncInfo.LatestBlockHeight < 2 {
-				s.T().Logf("block height %d", status.SyncInfo.LatestBlockHeight)
-				return false
-			}
-
-			return true
-		},
-		10*time.Minute,
-		15*time.Second,
-		"validator node failed to produce blocks",
-	)
-}
-
-func (s *UpgradeTestSuite) TearDownSuite() {
-	s.IntegrationTestSuite.TearDownSuite()
 }
 
 func TestUpgradeTestSuite(t *testing.T) {

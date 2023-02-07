@@ -9,10 +9,8 @@ import (
 	"time"
 )
 
-func (s *IntegrationTestSuite) TestMultiEVMUpgrade() {
+func (s *UpgradeTestSuite) TestMultiEVMUpgrade() {
 	s.Run("bring up chain, test upgrade path", func() {
-		var err error
-
 		val := s.chain.validators[0]
 		kb, err := val.keyring()
 		s.Require().NoError(err)
@@ -91,5 +89,55 @@ func (s *IntegrationTestSuite) TestMultiEVMUpgrade() {
 			s.Require().NoError(err)
 			return status.SyncInfo.LatestBlockHeight >= upgradeBlockHeight
 		}, time.Minute, time.Second*10, "upgrade height failed to reach")
+
+		// chain is halted due to pending upgrade, take down existing validator and orchestrator nodes
+		for _, oc := range s.orchResources {
+			s.Require().NoError(s.dockerPool.RemoveContainerByName(oc.Container.Name))
+		}
+		for _, vc := range s.valResources {
+			s.Require().NoError(s.dockerPool.RemoveContainerByName(vc.Container.Name))
+		}
+
+		// this will bring up the "normal" current validators and orchestrators
+		s.runValidators()
+		s.runOrchestrators()
+
+		// check for creation of blocks
+		s.Require().Eventually(
+			func() bool {
+				status, err := rpcClient.Status(context.Background())
+				if err != nil {
+					s.T().Logf("can't get container status: %s", err.Error())
+				}
+				if status == nil {
+					container, ok := s.dockerPool.ContainerByName("gravity0")
+					if !ok {
+						s.T().Logf("no container by 'gravity0'")
+					} else {
+						if container.Container.State.Status == "exited" {
+							s.Fail("validators exited", "state: %s logs: \n%s", container.Container.State.String(), s.logsByContainerID(container.Container.ID))
+							s.T().FailNow()
+						}
+						s.T().Logf("state: %v, health: %v", container.Container.State.Status, container.Container.State.Health)
+					}
+					return false
+				}
+
+				// let the node produce a few blocks
+				if status.SyncInfo.CatchingUp {
+					s.T().Logf("catching up: %t", status.SyncInfo.CatchingUp)
+					return false
+				}
+				if status.SyncInfo.LatestBlockHeight < 2 {
+					s.T().Logf("block height %d", status.SyncInfo.LatestBlockHeight)
+					return false
+				}
+
+				return true
+			},
+			10*time.Minute,
+			15*time.Second,
+			"validator node failed to produce blocks",
+		)
 	})
 }
