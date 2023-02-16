@@ -28,12 +28,13 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 	premultievmapp "github.com/peggyjv/gravity-bridge/module/v2/app"
 	premultigravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	"github.com/stretchr/testify/suite"
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
+
+const EthereumChainID = 1
 
 type UpgradeTestSuite struct {
 	IntegrationTestSuite
@@ -219,16 +220,16 @@ func (s *UpgradeTestSuite) initPreMultiGenesis() {
 
 	// create gravity genesis using only the v2 version, only for ethereum
 	var gravityGenState premultigravitytypes.GenesisState
-	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
+	s.Require().NoError(cdc.UnmarshalJSON(appGenState[premultigravitytypes.ModuleName], &gravityGenState))
 
 	gravityGenState.Params = premultigravitytypes.DefaultParams()
-	gravityGenState.Params.BridgeChainId = gravitytypes.EthereumChainID
-	gravityGenState.Params.GravityId = "gravitytest"
+	gravityGenState.Params.BridgeChainId = EthereumChainID
+	gravityGenState.Params.GravityId = "gravitytest-1"
 	gravityGenState.Params.SignedBatchesWindow = 50
 
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)
-	appGenState[gravitytypes.ModuleName] = bz
+	appGenState[premultigravitytypes.ModuleName] = bz
 
 	// serialize genesis state
 	bz, err = json.MarshalIndent(appGenState, "", "  ")
@@ -426,7 +427,7 @@ listen_addr = "127.0.0.1:300%d"
 					fmt.Sprintf("%s/:/root/gorc", gorcCfgPath),
 				},
 				Env: []string{
-					fmt.Sprintf("CHAIN_IDS=%d", gravitytypes.EthereumChainID),
+					fmt.Sprintf("CHAIN_IDS=%d", EthereumChainID),
 					fmt.Sprintf("ORCH_MNEMONIC=%s", orch.mnemonic),
 					fmt.Sprintf("ETH_PRIV_KEY=%s", val.ethereumKey.privateKey),
 					"RUST_BACKTRACE=full",

@@ -2,11 +2,12 @@ package integration_tests
 
 import (
 	"context"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	"time"
 )
 
 func (s *UpgradeTestSuite) TestMultiEVMUpgrade() {
