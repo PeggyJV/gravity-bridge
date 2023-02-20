@@ -38,7 +38,7 @@ func (s *UpgradeTestSuite) TestMultiEVMUpgrade() {
 				Title:       "test multi-evm upgrade",
 				Description: "test multi-evm upgrade description",
 				Plan: upgradetypes.Plan{
-					Name:   "multi-evm-upgrade",
+					Name:   "v3",
 					Height: upgradeBlockHeight,
 				},
 			},
@@ -84,12 +84,23 @@ func (s *UpgradeTestSuite) TestMultiEVMUpgrade() {
 			return proposalQueryResponse.Proposal.Status == govtypes.StatusPassed
 		}, time.Minute, time.Second*10, "proposal failed to be accepted")
 
-		s.T().Logf("waiting for upgrade block height %d", upgradeBlockHeight)
+		s.T().Logf("waiting for before upgrade block height %d", upgradeBlockHeight)
 		s.Require().Eventuallyf(func() bool {
 			status, err = rpcClient.Status(context.Background())
 			s.Require().NoError(err)
-			return status.SyncInfo.LatestBlockHeight >= upgradeBlockHeight
-		}, time.Minute, time.Second*10, "upgrade height failed to reach")
+			return status.SyncInfo.LatestBlockHeight >= (upgradeBlockHeight - 1)
+		}, time.Minute, time.Second, "before upgrade height failed to reach")
+
+		s.T().Logf("expect error querying chain because of upgrade halt")
+		s.Require().Eventuallyf(func() bool {
+			status, err = rpcClient.Status(context.Background())
+			if err == nil {
+				if status.SyncInfo.LatestBlockHeight == upgradeBlockHeight {
+					return true
+				}
+			}
+			return err != nil
+		}, time.Second*20, time.Second, "chain can still be queried")
 
 		// chain is halted due to pending upgrade, take down existing validator and orchestrator nodes
 		for _, oc := range s.orchResources {

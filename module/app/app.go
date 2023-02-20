@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	v3 "github.com/peggyjv/gravity-bridge/module/v3/app/upgrades/v3"
 	"io"
 	"net/http"
 	"os"
@@ -812,6 +813,13 @@ func (app *Gravity) setupUpgradeHandlers() {
 			app.mm,
 			app.configurator,
 			app.bankKeeper,
+		),
+	)
+	app.upgradeKeeper.SetUpgradeHandler(
+		v3.UpgradeName,
+		v3.CreateUpgradeHandler(
+			app.mm,
+			app.configurator,
 		),
 	)
 }
