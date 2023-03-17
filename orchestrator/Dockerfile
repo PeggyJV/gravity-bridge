@@ -1,7 +1,7 @@
 # Reference: https://www.lpalmieri.com/posts/fast-rust-docker-builds/
 
-FROM rust:1.58 as cargo-chef-rust
-RUN cargo install cargo-chef
+FROM rust:1.63 as cargo-chef-rust
+RUN cargo install cargo-chef --version 0.1.51
 
 FROM cargo-chef-rust as planner
 WORKDIR app
