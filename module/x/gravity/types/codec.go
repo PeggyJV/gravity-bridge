@@ -16,6 +16,8 @@ import (
 // provided LegacyAmino codec. These types are used for Amino JSON serialization
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgDelegateKeys{}, "gravity-bridge/", nil)
+	cdc.RegisterConcrete(&MsgSendToEthereum{}, "gravity-bridge/", nil)
+	cdc.RegisterConcrete(&MsgCancelSendToEthereum{}, "gravity-bridge/", nil)
 }
 
 var (
