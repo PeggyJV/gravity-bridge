@@ -3,7 +3,7 @@ name = "gorc"
 authors = []
 version = "2.0.4"
 edition = "2021"
-rust-version = "1.58"
+rust-version = "1.63"
 
 [dependencies]
 clap = "3"

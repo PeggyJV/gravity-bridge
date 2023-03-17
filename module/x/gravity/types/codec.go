@@ -15,7 +15,9 @@ import (
 // RegisterLegacyAminoCodec registers the vesting interfaces and concrete types on the
 // provided LegacyAmino codec. These types are used for Amino JSON serialization
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgDelegateKeys{}, "gravity-bridge/", nil)
+	cdc.RegisterConcrete(&MsgDelegateKeys{}, "gravity-bridge/MsgDelegateKeys", nil)
+	cdc.RegisterConcrete(&MsgSendToEthereum{}, "gravity-bridge/MsgSendToEthereum", nil)
+	cdc.RegisterConcrete(&MsgCancelSendToEthereum{}, "gravity-bridge/MsgCancelSendToEthereum", nil)
 }
 
 var (
