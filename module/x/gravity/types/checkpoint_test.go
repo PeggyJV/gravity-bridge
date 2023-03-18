@@ -21,13 +21,13 @@ func TestBatchTxCheckpoint(t *testing.T) {
 	src := BatchTx{
 		BatchNonce: 1,
 		Timeout:    2111,
-		Transactions: []*SendToEthereum{
+		Transactions: []*SendToEVM{
 			{
-				Id:                0x1,
-				Sender:            senderAddr.String(),
-				EthereumRecipient: "0x9FC9C2DfBA3b6cF204C37a5F690619772b926e39",
-				Erc20Token:        NewSDKIntERC20Token(sdk.NewInt(0x1), erc20Addr),
-				Erc20Fee:          NewSDKIntERC20Token(sdk.NewInt(0x1), erc20Addr),
+				Id:           0x1,
+				Sender:       senderAddr.String(),
+				EVMRecipient: "0x9FC9C2DfBA3b6cF204C37a5F690619772b926e39",
+				Erc20Token:   NewSDKIntERC20Token(EthereumChainID, sdk.NewInt(0x1), erc20Addr),
+				Erc20Fee:     NewSDKIntERC20Token(EthereumChainID, sdk.NewInt(0x1), erc20Addr),
 			},
 		},
 		TokenContract: erc20Addr.Hex(),
@@ -50,7 +50,7 @@ func TestContractCallTxCheckpoint(t *testing.T) {
 	invalidationId, err := hex.DecodeString("0x696e76616c69646174696f6e4964000000000000000000000000000000000000"[2:])
 	require.NoError(t, err)
 
-	token := []ERC20Token{NewSDKIntERC20Token(sdk.NewIntFromUint64(1), gethcommon.HexToAddress("0xC26eFfa98B8A2632141562Ae7E34953Cfe5B4888"))}
+	token := []ERC20Token{NewSDKIntERC20Token(EthereumChainID, sdk.NewIntFromUint64(1), gethcommon.HexToAddress("0xC26eFfa98B8A2632141562Ae7E34953Cfe5B4888"))}
 	call := ContractCallTx{
 		Tokens:            token,
 		Fees:              token,
@@ -72,9 +72,9 @@ func TestContractCallTxCheckpoint(t *testing.T) {
 }
 
 func TestValsetCheckpoint(t *testing.T) {
-	src := NewSignerSetTx(0, 0, EthereumSigners{{
-		Power:           6667,
-		EthereumAddress: "0xc783df8a850f42e7F7e57013759C285caa701eB6",
+	src := NewSignerSetTx(EthereumChainID, 0, 0, EVMSigners{{
+		Power:      6667,
+		EVMAddress: "0xc783df8a850f42e7F7e57013759C285caa701eB6",
 	}})
 
 	// TODO: this is hardcoded to foo, replace

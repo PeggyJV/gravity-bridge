@@ -3,18 +3,20 @@ use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_proto::gravity::*;
 use gravity_utils::error::GravityError;
-use gravity_utils::ethereum::format_eth_address;
+use gravity_utils::ethereum::format_evm_address;
 use gravity_utils::types::*;
 use tonic::transport::Channel;
 
 /// get the valset for a given nonce (block) height
 pub async fn get_valset(
     client: &mut GravityQueryClient<Channel>,
+    chain_id: u32,
     nonce: u64,
 ) -> Result<Option<Valset>, GravityError> {
     let response = client
         .signer_set_tx(SignerSetTxRequest {
             signer_set_nonce: nonce,
+            chain_id,
         })
         .await?;
     let valset = response.into_inner().signer_set.map(Into::into);
@@ -25,11 +27,13 @@ pub async fn get_valset(
 /// an array of validator sets we have not already signed
 pub async fn get_oldest_unsigned_valsets(
     client: &mut GravityQueryClient<Channel>,
+    chain_id: u32,
     address: Address,
 ) -> Result<Vec<Valset>, GravityError> {
     let response = client
         .unsigned_signer_set_txs(UnsignedSignerSetTxsRequest {
             address: address.to_string(),
+            chain_id,
         })
         .await?;
     let valsets = response.into_inner().signer_sets;
@@ -42,9 +46,12 @@ pub async fn get_oldest_unsigned_valsets(
 /// a relayer looking to ferry confirmations
 pub async fn get_latest_valset(
     client: &mut GravityQueryClient<Channel>,
+    chain_id: u32,
 ) -> Result<Option<Valset>, GravityError> {
     let response = client
-        .latest_signer_set_tx(LatestSignerSetTxRequest {})
+        .latest_signer_set_tx(LatestSignerSetTxRequest {
+            chain_id,
+        })
         .await?;
     let valset = response.into_inner().signer_set.map(Into::into);
     Ok(valset)
@@ -53,11 +60,13 @@ pub async fn get_latest_valset(
 /// get all valset confirmations for a given nonce
 pub async fn get_all_valset_confirms(
     client: &mut GravityQueryClient<Channel>,
+    chain_id: u32,
     nonce: u64,
 ) -> Result<Vec<ValsetConfirmResponse>, GravityError> {
     let request = client
         .signer_set_tx_confirmations(SignerSetTxConfirmationsRequest {
             signer_set_nonce: nonce,
+            chain_id,
         })
         .await?;
     let confirms = request.into_inner().signatures;
@@ -70,11 +79,13 @@ pub async fn get_all_valset_confirms(
 
 pub async fn get_oldest_unsigned_transaction_batch(
     client: &mut GravityQueryClient<Channel>,
+    chain_id: u32,
     address: Address,
 ) -> Result<Option<TransactionBatch>, GravityError> {
     let request = client
         .unsigned_batch_txs(UnsignedBatchTxsRequest {
             address: address.to_string(),
+            chain_id,
         })
         .await?;
     let batches = extract_valid_batches(request.into_inner().batches);
@@ -89,9 +100,13 @@ pub async fn get_oldest_unsigned_transaction_batch(
 /// for relayers to consider relaying
 pub async fn get_latest_transaction_batches(
     client: &mut GravityQueryClient<Channel>,
+    chain_id: u32,
 ) -> Result<Vec<TransactionBatch>, GravityError> {
     let request = client
-        .batch_txs(BatchTxsRequest { pagination: None })
+        .batch_txs(BatchTxsRequest {
+            pagination: None,
+            chain_id,
+        })
         .await?;
     Ok(extract_valid_batches(request.into_inner().batches))
 }
@@ -112,13 +127,15 @@ fn extract_valid_batches(batches: Vec<BatchTx>) -> Vec<TransactionBatch> {
 /// get all batch confirmations for a given nonce and denom
 pub async fn get_transaction_batch_signatures(
     client: &mut GravityQueryClient<Channel>,
+    chain_id: u32,
     nonce: u64,
     contract_address: EthAddress,
 ) -> Result<Vec<BatchConfirmResponse>, GravityError> {
     let request = client
         .batch_tx_confirmations(BatchTxConfirmationsRequest {
             batch_nonce: nonce,
-            token_contract: format_eth_address(contract_address),
+            token_contract: format_evm_address(contract_address),
+            chain_id,
         })
         .await?;
     let batch_confirms = request.into_inner().signatures;
@@ -133,11 +150,13 @@ pub async fn get_transaction_batch_signatures(
 /// catch up with what the current event nonce should be if a oracle is restarted
 pub async fn get_last_event_nonce(
     client: &mut GravityQueryClient<Channel>,
+    chain_id: u32,
     address: Address,
 ) -> Result<u64, GravityError> {
     let request = client
-        .last_submitted_ethereum_event(LastSubmittedEthereumEventRequest {
+        .last_submitted_evm_event(LastSubmittedEvmEventRequest {
             address: address.to_string(),
+            chain_id,
         })
         .await?;
     Ok(request.into_inner().event_nonce)
@@ -146,9 +165,13 @@ pub async fn get_last_event_nonce(
 /// Gets the 100 latest logic calls for a relayer to consider relaying
 pub async fn get_latest_logic_calls(
     client: &mut GravityQueryClient<Channel>,
+    chain_id: u32,
 ) -> Result<Vec<LogicCall>, GravityError> {
     let request = client
-        .contract_call_txs(ContractCallTxsRequest { pagination: None })
+        .contract_call_txs(ContractCallTxsRequest {
+            pagination: None,
+            chain_id,
+        })
         .await?;
     let calls = request.into_inner().calls;
     let mut out = Vec::new();
@@ -167,6 +190,7 @@ pub async fn get_latest_logic_calls(
 
 pub async fn get_logic_call_signatures(
     client: &mut GravityQueryClient<Channel>,
+    chain_id: u32,
     invalidation_scope: Vec<u8>,
     invalidation_nonce: u64,
 ) -> Result<Vec<LogicCallConfirmResponse>, GravityError> {
@@ -174,6 +198,7 @@ pub async fn get_logic_call_signatures(
         .contract_call_tx_confirmations(ContractCallTxConfirmationsRequest {
             invalidation_scope,
             invalidation_nonce,
+            chain_id,
         })
         .await?;
     let call_confirms = request.into_inner().signatures;
@@ -186,11 +211,13 @@ pub async fn get_logic_call_signatures(
 
 pub async fn get_oldest_unsigned_logic_call(
     client: &mut GravityQueryClient<Channel>,
+    chain_id: u32,
     address: Address,
 ) -> Result<Vec<LogicCall>, GravityError> {
     let request = client
         .unsigned_contract_call_txs(UnsignedContractCallTxsRequest {
             address: address.to_string(),
+            chain_id,
         })
         .await?;
     let calls = request.into_inner().calls;
@@ -212,10 +239,12 @@ fn extract_valid_batches_test() {
         erc20_token: Some(gravity_proto::gravity::Erc20Token {
             contract: erc20_addr.clone(),
             amount: "1".to_string(),
+            chain_id: 1,
         }),
         erc20_fee: Some(gravity_proto::gravity::Erc20Token {
             contract: erc20_addr,
             amount: "1".to_string(),
+            chain_id: 1
         }),
     }];
 
@@ -225,6 +254,7 @@ fn extract_valid_batches_test() {
         transactions,
         token_contract: token_contract.clone(),
         height: 2,
+        chain_id: 1,
     };
 
     let invalid_batch = BatchTx {
@@ -233,6 +263,7 @@ fn extract_valid_batches_test() {
         transactions: Vec::new(),
         token_contract,
         height: 2,
+        chain_id: 1,
     };
 
     let valid_batches = extract_valid_batches(vec![valid_batch, invalid_batch.clone()]);

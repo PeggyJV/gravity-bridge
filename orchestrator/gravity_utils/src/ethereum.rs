@@ -36,11 +36,11 @@ pub fn downcast_to_u128(input: U256) -> Option<u128> {
     }
 }
 
-pub fn format_eth_address(address: EthAddress) -> String {
+pub fn format_evm_address(address: EthAddress) -> String {
     format!("0x{}", bytes_to_hex_str(address.as_bytes()))
 }
 
-pub fn format_eth_hash(hash: H256) -> String {
+pub fn format_evm_hash(hash: H256) -> String {
     format!("0x{}", bytes_to_hex_str(hash.as_bytes()))
 }
 

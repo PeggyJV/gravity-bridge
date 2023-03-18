@@ -58,6 +58,9 @@ impl Runnable for CosmosToEthCmd {
         let cosmos_prefix = config.cosmos.prefix.trim();
         let cosmos_address = cosmos_key.to_address(cosmos_prefix).unwrap();
         let cosmos_grpc = config.cosmos.grpc.trim();
+
+        let chain_id_s = self.args.get(3).expect("evm chain ID is required");
+        let chain_id: u32 = chain_id_s.parse().unwrap();
         println!("Sending from Cosmos address {}", cosmos_address);
         abscissa_tokio::run_with_actix(&APP, async {
         let connections = create_rpc_connections(
@@ -72,6 +75,7 @@ impl Runnable for CosmosToEthCmd {
         let res = grpc
             .denom_to_erc20(DenomToErc20Request {
                 denom: gravity_denom.clone(),
+                chain_id,
             })
             .await;
         match res {
@@ -146,6 +150,7 @@ impl Runnable for CosmosToEthCmd {
             );
             let res = send_to_eth(
                 cosmos_key,
+                chain_id,
                 eth_dest,
                 amount.clone(),
                 bridge_fee.clone(),
@@ -166,7 +171,7 @@ impl Runnable for CosmosToEthCmd {
         if successful_sends > 0 {
             if !self.flag_no_batch {
                 println!("Requesting a batch to push transaction along immediately");
-                send_request_batch_tx(cosmos_key, gravity_denom,config.cosmos.gas_price.as_tuple(), &contact,config.cosmos.gas_adjustment)
+                send_request_batch_tx(cosmos_key, chain_id, gravity_denom,config.cosmos.gas_price.as_tuple(), &contact,config.cosmos.gas_adjustment)
                     .await
                     .expect("Failed to request batch");
             } else {

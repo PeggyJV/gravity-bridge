@@ -12,20 +12,20 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
 type msgServer struct {
 	Keeper
 }
 
+var _ types.MsgServer = msgServer{}
+
 // NewMsgServerImpl returns an implementation of the gov MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
-
-var _ types.MsgServer = msgServer{}
 
 func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys) (*types.MsgDelegateKeysResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
@@ -40,27 +40,27 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 		return nil, err
 	}
 
-	ethAddr := common.HexToAddress(msg.EthereumAddress)
+	ethAddr := common.HexToAddress(msg.EVMAddress)
 
 	// ensure that the validator exists
 	if k.Keeper.StakingKeeper.Validator(ctx, valAddr) == nil {
 		return nil, sdkerrors.Wrap(stakingtypes.ErrNoValidatorFound, valAddr.String())
 	}
 
-	// check if the Ethereum address is currently not used
-	validators := k.getValidatorsByEthereumAddress(ctx, ethAddr)
+	// check if the EVM address is currently not used
+	validators := k.getValidatorsByEVMAddress(ctx, ethAddr)
 	if len(validators) > 0 {
 		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "ethereum address %s in use", ethAddr)
 	}
 
 	// check if the orchestrator address is currently not used
-	ethAddrs := k.getEthereumAddressesByOrchestrator(ctx, orchAddr)
+	ethAddrs := k.getEVMAddressesByOrchestrator(ctx, orchAddr)
 	if len(ethAddrs) > 0 {
 		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "orchestrator address %s in use", orchAddr)
 	}
 
 	valAccAddr := sdk.AccAddress(valAddr)
-	valAccSeq, err := k.accountKeeper.GetSequence(ctx, valAccAddr)
+	valAccSeq, err := k.AccountKeeper.GetSequence(ctx, valAccAddr)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "failed to get sequence for validator account %s", valAccAddr)
 	}
@@ -70,7 +70,7 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 		nonce = valAccSeq - 1
 	}
 
-	signMsgBz := k.cdc.MustMarshal(&types.DelegateKeysSignMsg{
+	signMsgBz := k.Cdc.MustMarshal(&types.DelegateKeysSignMsg{
 		ValidatorAddress: valAddr.String(),
 		// We decrement since we process the message after the ante-handler which
 		// increments the nonce.
@@ -79,24 +79,24 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 
 	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
 
-	if err = types.ValidateEthereumSignature(hash, msg.EthSignature, ethAddr); err != nil {
+	if err = types.ValidateEVMSignature(hash, msg.EVMSignature, ethAddr); err != nil {
 		return nil, sdkerrors.Wrapf(
 			types.ErrDelegateKeys,
-			"failed to validate delegate keys signature for Ethereum address %X; %s ;%d",
+			"failed to validate delegate keys signature for EVM address %X; %s ;%d",
 			ethAddr, err, nonce,
 		)
 	}
 
 	k.SetOrchestratorValidatorAddress(ctx, valAddr, orchAddr)
-	k.setValidatorEthereumAddress(ctx, valAddr, ethAddr)
-	k.setEthereumOrchestratorAddress(ctx, ethAddr, orchAddr)
+	k.setValidatorEVMAddress(ctx, valAddr, ethAddr)
+	k.setEVMOrchestratorAddress(ctx, ethAddr, orchAddr)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, msg.Type()),
 			sdk.NewAttribute(types.AttributeKeySetOrchestratorAddr, orchAddr.String()),
-			sdk.NewAttribute(types.AttributeKeySetEthereumAddr, ethAddr.Hex()),
+			sdk.NewAttribute(types.AttributeKeySetEVMAddr, ethAddr.Hex()),
 			sdk.NewAttribute(types.AttributeKeyValidatorAddr, valAddr.String()),
 		),
 	)
@@ -105,8 +105,15 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 
 }
 
-// SubmitEthereumTxConfirmation handles MsgSubmitEthereumTxConfirmation
-func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.MsgSubmitEthereumTxConfirmation) (*types.MsgSubmitEthereumTxConfirmationResponse, error) {
+func (k msgServer) errOnUnsupportedEVM(ctx sdk.Context, chainID uint32) error {
+	if !k.chainIDsContains(ctx, chainID) {
+		return sdkerrors.Wrap(types.ErrUnsupportedEVM, fmt.Sprintf("unsupported chain ID: %d", chainID))
+	}
+	return nil
+}
+
+// SubmitEVMTxConfirmation handles MsgSubmitEVMTxConfirmation
+func (k msgServer) SubmitEVMTxConfirmation(c context.Context, msg *types.MsgSubmitEVMTxConfirmation) (*types.MsgSubmitEVMTxConfirmationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	confirmation, err := types.UnpackConfirmation(msg.Confirmation)
@@ -119,24 +126,29 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 		return nil, err
 	}
 
+	if err := k.errOnUnsupportedEVM(ctx, msg.ChainId); err != nil {
+		return nil, err
+	}
+
 	otx := k.GetOutgoingTx(ctx, confirmation.GetStoreIndex())
 	if otx == nil {
 		k.Logger(ctx).Error(
 			"no outgoing tx",
 			"store index", fmt.Sprintf("%x", confirmation.GetStoreIndex()),
+			"chain id", msg.ChainId,
 		)
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "couldn't find outgoing tx")
 	}
 
-	gravityID := k.getGravityID(ctx)
+	gravityID := k.getGravityID(ctx, msg.ChainId)
 	checkpoint := otx.GetCheckpoint([]byte(gravityID))
 
-	ethAddress := k.GetValidatorEthereumAddress(ctx, val)
+	ethAddress := k.GetValidatorEVMAddress(ctx, val)
 	if ethAddress != confirmation.GetSigner() {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "eth address does not match signer eth address")
 	}
 
-	if err = types.ValidateEthereumSignature(checkpoint, confirmation.GetSignature(), ethAddress); err != nil {
+	if err = types.ValidateEVMSignature(checkpoint, confirmation.GetSignature(), ethAddress); err != nil {
 		k.Logger(ctx).Error("error validating signature",
 			"eth addr", ethAddress.String(),
 			"gravityID", gravityID,
@@ -155,24 +167,24 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 		))
 	}
 	// TODO: should validators be able to overwrite their signatures?
-	if k.getEthereumSignature(ctx, confirmation.GetStoreIndex(), val) != nil {
+	if k.getEVMSignature(ctx, confirmation.GetStoreIndex(), val) != nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "signature duplicate")
 	}
 
-	key := k.SetEthereumSignature(ctx, confirmation, val)
+	key := k.SetEVMSignature(ctx, confirmation, val)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, msg.Type()),
-			sdk.NewAttribute(types.AttributeKeyEthereumSignatureKey, string(key)),
+			sdk.NewAttribute(types.AttributeKeyEVMSignatureKey, string(key)),
 		),
 	)
-	return &types.MsgSubmitEthereumTxConfirmationResponse{}, nil
+	return &types.MsgSubmitEVMTxConfirmationResponse{}, nil
 }
 
-// SubmitEthereumEvent handles MsgSubmitEthereumEvent
-func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEthereumEvent) (*types.MsgSubmitEthereumEventResponse, error) {
+// SubmitEVMEvent handles MsgSubmitEVMEvent
+func (k msgServer) SubmitEVMEvent(c context.Context, msg *types.MsgSubmitEVMEvent) (*types.MsgSubmitEVMEventResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	event, err := types.UnpackEvent(msg.Event)
@@ -183,6 +195,10 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 	// return an error if the validator isn't in the active set
 	val, err := k.getSignerValidator(ctx, msg.Signer)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := k.errOnUnsupportedEVM(ctx, msg.ChainId); err != nil {
 		return nil, err
 	}
 
@@ -198,15 +214,15 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, fmt.Sprintf("%T", event)),
 			// TODO: maybe return something better here? is this the right string representation?
-			sdk.NewAttribute(types.AttributeKeyEthereumEventVoteRecordID, string(types.MakeEthereumEventVoteRecordKey(event.GetEventNonce(), event.Hash()))),
+			sdk.NewAttribute(types.AttributeKeyEVMEventVoteRecordID, string(types.MakeEVMEventVoteRecordKey(msg.ChainId, event.GetEventNonce(), event.Hash()))),
 		),
 	)
 
-	return &types.MsgSubmitEthereumEventResponse{}, nil
+	return &types.MsgSubmitEVMEventResponse{}, nil
 }
 
-// SendToEthereum handles MsgSendToEthereum
-func (k msgServer) SendToEthereum(c context.Context, msg *types.MsgSendToEthereum) (*types.MsgSendToEthereumResponse, error) {
+// SendToEVM handles MsgSendToEVM
+func (k msgServer) SendToEVM(c context.Context, msg *types.MsgSendToEVM) (*types.MsgSendToEVMResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -217,7 +233,11 @@ func (k msgServer) SendToEthereum(c context.Context, msg *types.MsgSendToEthereu
 	types.NormalizeCoinDenom(&msg.Amount)
 	types.NormalizeCoinDenom(&msg.BridgeFee)
 
-	txID, err := k.createSendToEthereum(ctx, sender, msg.EthereumRecipient, msg.Amount, msg.BridgeFee)
+	if err := k.errOnUnsupportedEVM(ctx, msg.ChainId); err != nil {
+		return nil, err
+	}
+
+	txID, err := k.createSendToEVM(ctx, msg.ChainId, sender, msg.EVMRecipient, msg.Amount, msg.BridgeFee)
 	if err != nil {
 		return nil, err
 	}
@@ -226,8 +246,7 @@ func (k msgServer) SendToEthereum(c context.Context, msg *types.MsgSendToEthereu
 		sdk.NewEvent(
 			types.EventTypeBridgeWithdrawalReceived,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
-			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
+			sdk.NewAttribute(types.AttributeKeyChainID, strconv.Itoa(int(msg.ChainId))),
 			sdk.NewAttribute(types.AttributeKeyOutgoingTXID, strconv.Itoa(int(txID))),
 			sdk.NewAttribute(types.AttributeKeyNonce, fmt.Sprint(txID)),
 		),
@@ -238,7 +257,7 @@ func (k msgServer) SendToEthereum(c context.Context, msg *types.MsgSendToEthereu
 		),
 	})
 
-	return &types.MsgSendToEthereumResponse{Id: txID}, nil
+	return &types.MsgSendToEVMResponse{Id: txID}, nil
 }
 
 // RequestBatchTx handles MsgRequestBatchTx
@@ -246,14 +265,17 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 	// TODO: limit this to only orchestrators and validators?
 	ctx := sdk.UnwrapSDKContext(c)
 
+	if err := k.errOnUnsupportedEVM(ctx, msg.ChainId); err != nil {
+		return nil, err
+	}
+
 	// Check if the denom is a gravity coin, if not, check if there is a deployed ERC20 representing it.
-	// If not, error out. Normalizes the format of the input denom if it's a gravity denom.
-	_, tokenContract, err := k.DenomToERC20Lookup(ctx, types.NormalizeDenom(msg.Denom))
+	_, tokenContract, err := k.DenomToERC20Lookup(ctx, msg.ChainId, types.NormalizeDenom(msg.Denom))
 	if err != nil {
 		return nil, err
 	}
 
-	batchID := k.BuildBatchTx(ctx, tokenContract, BatchTxSize)
+	batchID := k.BuildBatchTx(ctx, msg.ChainId, tokenContract, BatchTxSize)
 	if batchID == nil {
 		return nil, fmt.Errorf("no suitable batch to create")
 	}
@@ -264,16 +286,21 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 			sdk.NewAttribute(sdk.AttributeKeyModule, msg.Type()),
 			sdk.NewAttribute(types.AttributeKeyContract, tokenContract.Hex()),
 			sdk.NewAttribute(types.AttributeKeyBatchNonce, fmt.Sprint(batchID.BatchNonce)),
+			sdk.NewAttribute(types.AttributeKeyChainID, fmt.Sprint(msg.ChainId)),
 		),
 	)
 
 	return &types.MsgRequestBatchTxResponse{}, nil
 }
 
-func (k msgServer) CancelSendToEthereum(c context.Context, msg *types.MsgCancelSendToEthereum) (*types.MsgCancelSendToEthereumResponse, error) {
+func (k msgServer) CancelSendToEVM(c context.Context, msg *types.MsgCancelSendToEVM) (*types.MsgCancelSendToEVMResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	err := k.Keeper.cancelSendToEthereum(ctx, msg.Id, msg.Sender)
+	if err := k.errOnUnsupportedEVM(ctx, msg.ChainId); err != nil {
+		return nil, err
+	}
+
+	err := k.Keeper.cancelSendToEVM(ctx, msg.ChainId, msg.Id, msg.Sender)
 	if err != nil {
 		return nil, err
 	}
@@ -282,8 +309,7 @@ func (k msgServer) CancelSendToEthereum(c context.Context, msg *types.MsgCancelS
 		sdk.NewEvent(
 			types.EventTypeBridgeWithdrawCanceled,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyContract, k.getBridgeContractAddress(ctx)),
-			sdk.NewAttribute(types.AttributeKeyBridgeChainID, strconv.Itoa(int(k.getBridgeChainID(ctx)))),
+			sdk.NewAttribute(types.AttributeKeyChainID, fmt.Sprint(msg.ChainId)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -292,10 +318,10 @@ func (k msgServer) CancelSendToEthereum(c context.Context, msg *types.MsgCancelS
 		),
 	})
 
-	return &types.MsgCancelSendToEthereumResponse{}, nil
+	return &types.MsgCancelSendToEVMResponse{}, nil
 }
 
-func (k msgServer) SubmitEthereumHeightVote(c context.Context, msg *types.MsgEthereumHeightVote) (*types.MsgEthereumHeightVoteResponse, error) {
+func (k msgServer) SubmitEVMHeightVote(c context.Context, msg *types.MsgEVMHeightVote) (*types.MsgEVMHeightVoteResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	val, err := k.getSignerValidator(ctx, msg.Signer)
@@ -303,9 +329,9 @@ func (k msgServer) SubmitEthereumHeightVote(c context.Context, msg *types.MsgEth
 		return nil, err
 	}
 
-	k.Keeper.SetEthereumHeightVote(ctx, val, msg.EthereumHeight)
+	k.Keeper.SetEVMHeightVote(ctx, msg.ChainId, val, msg.EvmHeight)
 
-	return &types.MsgEthereumHeightVoteResponse{}, nil
+	return &types.MsgEVMHeightVoteResponse{}, nil
 }
 
 // getSignerValidator takes an sdk.AccAddress that represents either a validator or orchestrator address and returns

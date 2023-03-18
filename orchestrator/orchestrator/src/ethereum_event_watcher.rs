@@ -43,6 +43,7 @@ pub async fn check_for_events(
     let our_cosmos_address = cosmos_key.to_address(&prefix).unwrap();
     let latest_block = get_block_number_with_retry(eth_client.clone()).await;
     let latest_block = latest_block - block_delay;
+    let chain_id = eth_client.signer().chain_id() as u32;
 
     let mut ending_block = starting_block + blocks_to_search;
     if ending_block > latest_block {
@@ -110,7 +111,7 @@ pub async fn check_for_events(
     // block, so we also need this routine so make sure we don't send in the first event in this hypothetical
     // multi event block again. In theory we only send all events for every block and that will pass of fail
     // atomicly but lets not take that risk.
-    let last_event_nonce = get_last_event_nonce(grpc_client, our_cosmos_address).await?;
+    let last_event_nonce = get_last_event_nonce(grpc_client, chain_id, our_cosmos_address).await?;
     metrics::set_cosmos_last_event_nonce(last_event_nonce);
 
     let erc20_deployed_events: Vec<Erc20DeployedEvent> =
@@ -184,6 +185,7 @@ pub async fn check_for_events(
         let messages = build::ethereum_event_messages(
             contact,
             cosmos_key,
+            chain_id,
             send_to_cosmos_events.to_owned(),
             transaction_batch_events.to_owned(),
             erc20_deployed_events.to_owned(),
@@ -229,7 +231,7 @@ pub async fn check_for_events(
         // TODO(bolten): we are only waiting one block, is it possible if we are sending multiple
         // events via the sender, they could be received over the block boundary and thus our new
         // event nonce does not reflect full processing of the above events?
-        let new_event_nonce = get_last_event_nonce(grpc_client, our_cosmos_address).await?;
+        let new_event_nonce = get_last_event_nonce(grpc_client, chain_id, our_cosmos_address).await?;
         if new_event_nonce == last_event_nonce {
             return Err(GravityError::InvalidBridgeStateError(
                 format!("Claims did not process, trying to update but still on {}, trying again in a moment", last_event_nonce),
@@ -281,7 +283,7 @@ pub async fn get_block_delay(eth_client: EthClient) -> Result<U64, GravityError>
         1 | 3 | 61 | 63 => Ok(13u8.into()),
         // Dev, our own Gravity Ethereum testnet, Hardhat
         // all non-pow chains
-        2018 | 15 | 31337 => Ok(0u8.into()),
+        2018 | 15 | 31337 | 43114 => Ok(0u8.into()),
         // Rinkeby, Goerli, Kotti
         // Clique (POA) Consensus
         4 | 5 | 6 => Ok(10u8.into()),

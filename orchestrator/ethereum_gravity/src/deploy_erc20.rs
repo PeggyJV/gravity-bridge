@@ -7,7 +7,7 @@ use ethers::prelude::*;
 use gravity_abi::gravity::*;
 use gravity_utils::{
     error::GravityError,
-    ethereum::{downcast_to_f64, format_eth_hash},
+    ethereum::{downcast_to_f64, format_evm_hash},
 };
 use std::{result::Result, time::Duration};
 
@@ -49,14 +49,14 @@ pub async fn deploy_erc20(
 
     let pending_tx = contract_call.send().await?;
     let tx_hash = *pending_tx;
-    info!("Deploying ERC-20 with tx hash {}", format_eth_hash(tx_hash));
+    info!("Deploying ERC-20 with tx hash {}", format_evm_hash(tx_hash));
     // TODO(bolten): ethers interval default is 7s, this mirrors what web30 was doing, should we adjust?
     // additionally we are mirroring only waiting for 1 confirmation by leaving that as default
     let pending_tx = pending_tx.interval(Duration::from_secs(1));
     let potential_error = GravityError::GravityContractError(format!(
         "Did not receive transaction receipt when deploying ERC-20 {}: {}",
         erc20_symbol,
-        format_eth_hash(tx_hash)
+        format_evm_hash(tx_hash)
     ));
 
     if let Some(timeout) = wait_timeout {

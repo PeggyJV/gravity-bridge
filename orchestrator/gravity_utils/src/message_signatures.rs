@@ -50,7 +50,7 @@ fn test_valset_signature() {
         nonce: 0,
         members: vec![
             ValsetMember {
-                eth_address: Some(
+                evm_address: Some(
                     "0xc783df8a850f42e7F7e57013759C285caa701eB6"
                         .parse()
                         .unwrap(),
@@ -58,7 +58,7 @@ fn test_valset_signature() {
                 power: 3333,
             },
             ValsetMember {
-                eth_address: Some(
+                evm_address: Some(
                     "0xeAD9C93b79Ae7C1591b1FB5323BD777E86e150d4"
                         .parse()
                         .unwrap(),
@@ -66,7 +66,7 @@ fn test_valset_signature() {
                 power: 3333,
             },
             ValsetMember {
-                eth_address: Some(
+                evm_address: Some(
                     "0xE5904695748fe4A84b40b3fc79De2277660BD1D3"
                         .parse()
                         .unwrap(),
@@ -84,7 +84,7 @@ fn test_valset_signature() {
         nonce: 1,
         members: vec![
             ValsetMember {
-                eth_address: Some(
+                evm_address: Some(
                     "0xc783df8a850f42e7F7e57013759C285caa701eB6"
                         .parse()
                         .unwrap(),
@@ -92,7 +92,7 @@ fn test_valset_signature() {
                 power: 3333,
             },
             ValsetMember {
-                eth_address: Some(
+                evm_address: Some(
                     "0xeAD9C93b79Ae7C1591b1FB5323BD777E86e150d4"
                         .parse()
                         .unwrap(),
@@ -100,7 +100,7 @@ fn test_valset_signature() {
                 power: 3333,
             },
             ValsetMember {
-                eth_address: Some(
+                evm_address: Some(
                     "0xE5904695748fe4A84b40b3fc79De2277660BD1D3"
                         .parse()
                         .unwrap(),
@@ -170,7 +170,7 @@ async fn test_batch_signature() {
         nonce: 1u64,
         transactions: vec![BatchTransaction {
             id: 1u64,
-            ethereum_recipient: "0x9FC9C2DfBA3b6cF204C37a5F690619772b926e39"
+            evm_recipient: "0x9FC9C2DfBA3b6cF204C37a5F690619772b926e39"
                 .parse()
                 .unwrap(),
             sender: sender_addr,
@@ -230,7 +230,7 @@ async fn test_specific_batch_signature() {
         nonce: 15u64,
         transactions: vec![BatchTransaction {
             id: 1301u64,
-            ethereum_recipient: "0x64D110e00064F2b428476cD64295d8E35836ffd6"
+            evm_recipient: "0x64D110e00064F2b428476cD64295d8E35836ffd6"
                 .parse()
                 .unwrap(),
             sender: sender_addr,

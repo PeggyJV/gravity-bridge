@@ -35,17 +35,16 @@ type ABIEncodedValsetArgs struct {
 // GetStoreIndex //
 ///////////////////
 
-// TODO: do we need a prefix byte for the different types?
 func (sstx *SignerSetTx) GetStoreIndex() []byte {
-	return MakeSignerSetTxKey(sstx.Nonce)
+	return MakeSignerSetTxStoreIndex(sstx.ChainId, sstx.Nonce)
 }
 
 func (btx *BatchTx) GetStoreIndex() []byte {
-	return MakeBatchTxKey(gethcommon.HexToAddress(btx.TokenContract), btx.BatchNonce)
+	return MakeBatchTxStoreIndex(btx.ChainId, gethcommon.HexToAddress(btx.TokenContract), btx.BatchNonce)
 }
 
 func (cctx *ContractCallTx) GetStoreIndex() []byte {
-	return MakeContractCallTxKey(cctx.InvalidationScope, cctx.InvalidationNonce)
+	return MakeContractCallTxStoreIndex(cctx.ChainId, cctx.InvalidationScope, cctx.InvalidationNonce)
 }
 
 ///////////////////
@@ -89,7 +88,7 @@ func (u SignerSetTx) GetCheckpoint(gravityID []byte) []byte {
 	memberAddresses := make([]gethcommon.Address, len(u.Signers))
 	convertedPowers := make([]*big.Int, len(u.Signers))
 	for i, m := range u.Signers {
-		memberAddresses[i] = gethcommon.HexToAddress(m.EthereumAddress)
+		memberAddresses[i] = gethcommon.HexToAddress(m.EVMAddress)
 		convertedPowers[i] = big.NewInt(int64(m.Power))
 	}
 
@@ -132,7 +131,7 @@ func (b BatchTx) GetCheckpoint(gravityID []byte) []byte {
 	txFees := make([]*big.Int, len(b.Transactions))
 	for i, tx := range b.Transactions {
 		txAmounts[i] = tx.Erc20Token.Amount.BigInt()
-		txDestinations[i] = gethcommon.HexToAddress(tx.EthereumRecipient)
+		txDestinations[i] = gethcommon.HexToAddress(tx.EVMRecipient)
 		txFees[i] = tx.Erc20Fee.Amount.BigInt()
 	}
 

@@ -11,18 +11,18 @@ import (
 	"github.com/stretchr/testify/require"
 
 	ethCrypto "github.com/ethereum/go-ethereum/crypto"
-	"github.com/peggyjv/gravity-bridge/module/v2/app"
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity"
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/app"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
-func TestHandleMsgSendToEthereum(t *testing.T) {
+func TestHandleMsgSendToEVM(t *testing.T) {
 	var (
 		userCosmosAddr, _               = sdk.AccAddressFromBech32("cosmos1990z7dqsvh8gthw9pa5sn4wuy2xrsd80mg5z6y")
 		blockTime                       = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
 		blockHeight           int64     = 200
-		denom                           = types.GravityDenom(common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"))
+		denom                           = types.GravityDenom(types.EthereumChainID, common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"))
 		startingCoinAmount, _           = sdk.NewIntFromString("150000000000000000000") // 150 ETH worth, required to reach above u64 limit (which is about 18 ETH)
 		sendAmount, _                   = sdk.NewIntFromString("50000000000000000000")  // 50 ETH
 		feeAmount, _                    = sdk.NewIntFromString("5000000000000000000")   // 5 ETH
@@ -42,11 +42,13 @@ func TestHandleMsgSendToEthereum(t *testing.T) {
 	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, startingCoinAmount)}, balance1) // 150
 
 	// send some coins
-	msg := &types.MsgSendToEthereum{
-		Sender:            userCosmosAddr.String(),
-		EthereumRecipient: ethDestination,
-		Amount:            sendingCoin,
-		BridgeFee:         feeCoin}
+	msg := &types.MsgSendToEVM{
+		Sender:       userCosmosAddr.String(),
+		EVMRecipient: ethDestination,
+		Amount:       sendingCoin,
+		BridgeFee:    feeCoin,
+		ChainId:      types.EthereumChainID,
+	}
 	ctx = ctx.WithBlockTime(blockTime).WithBlockHeight(blockHeight)
 	_, err := h(ctx, msg) // send 55
 	require.NoError(t, err)
@@ -54,11 +56,13 @@ func TestHandleMsgSendToEthereum(t *testing.T) {
 	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, startingCoinAmount.Sub(sendAmount).Sub(feeAmount))}, balance2)
 
 	// do the same thing again and make sure it works twice
-	msg1 := &types.MsgSendToEthereum{
-		Sender:            userCosmosAddr.String(),
-		EthereumRecipient: ethDestination,
-		Amount:            sendingCoin,
-		BridgeFee:         feeCoin}
+	msg1 := &types.MsgSendToEVM{
+		Sender:       userCosmosAddr.String(),
+		EVMRecipient: ethDestination,
+		Amount:       sendingCoin,
+		BridgeFee:    feeCoin,
+		ChainId:      types.EthereumChainID,
+	}
 	ctx = ctx.WithBlockTime(blockTime).WithBlockHeight(blockHeight)
 	_, err1 := h(ctx, msg1) // send 55
 	require.NoError(t, err1)
@@ -67,11 +71,13 @@ func TestHandleMsgSendToEthereum(t *testing.T) {
 	require.Equal(t, sdk.Coins{sdk.NewCoin(denom, finalAmount3)}, balance3)
 
 	// now we should be out of coins and error
-	msg2 := &types.MsgSendToEthereum{
-		Sender:            userCosmosAddr.String(),
-		EthereumRecipient: ethDestination,
-		Amount:            sendingCoin,
-		BridgeFee:         feeCoin}
+	msg2 := &types.MsgSendToEVM{
+		Sender:       userCosmosAddr.String(),
+		EVMRecipient: ethDestination,
+		Amount:       sendingCoin,
+		BridgeFee:    feeCoin,
+		ChainId:      types.EthereumChainID,
+	}
 	ctx = ctx.WithBlockTime(blockTime).WithBlockHeight(blockHeight)
 	_, err2 := h(ctx, msg2) // send 55
 	require.Error(t, err2)
@@ -87,7 +93,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		myNonce                           = uint64(1)
 		anyETHAddr                        = common.HexToAddress("0xf9613b532673Cc223aBa451dFA8539B87e1F666D")
 		tokenETHAddr                      = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e")
-		denom                             = types.GravityDenom(tokenETHAddr)
+		denom                             = types.GravityDenom(types.EthereumChainID, tokenETHAddr)
 		myBlockTime                       = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
 		amountA, _                        = sdk.NewIntFromString("50000000000000000000")  // 50 ETH
 		amountB, _                        = sdk.NewIntFromString("100000000000000000000") // 100 ETH
@@ -109,14 +115,19 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EthereumSender: anyETHAddr.Hex(),
+		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
+		ChainId:        types.EthereumChainID,
 	}
 
 	eva, err := types.PackEvent(sendToCosmosEvent)
 	require.NoError(t, err)
 
-	msgSubmitEvent := &types.MsgSubmitEthereumEvent{eva, myOrchestratorAddr.String()}
+	msgSubmitEvent := &types.MsgSubmitEVMEvent{
+		Event:   eva,
+		Signer:  myOrchestratorAddr.String(),
+		ChainId: types.EthereumChainID,
+	}
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
 	_, err = h(ctx, msgSubmitEvent)
@@ -124,7 +135,7 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// and attestation persisted
-	a := gk.GetEthereumEventVoteRecord(ctx, myNonce, sendToCosmosEvent.Hash())
+	a := gk.GetEVMEventVoteRecord(ctx, types.EthereumChainID, myNonce, sendToCosmosEvent.Hash())
 	require.NotNil(t, a)
 	// and vouchers added to the account
 
@@ -147,14 +158,19 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		EventNonce:     uint64(3),
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EthereumSender: anyETHAddr.Hex(),
+		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
+		ChainId:        types.EthereumChainID,
 	}
 
 	eva, err = types.PackEvent(sendToCosmosEvent)
 	require.NoError(t, err)
 
-	msgSubmitEvent = &types.MsgSubmitEthereumEvent{eva, myOrchestratorAddr.String()}
+	msgSubmitEvent = &types.MsgSubmitEVMEvent{
+		Event:   eva,
+		Signer:  myOrchestratorAddr.String(),
+		ChainId: types.EthereumChainID,
+	}
 
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
@@ -171,14 +187,18 @@ func TestMsgSubmitEthreumEventSendToCosmosSingleValidator(t *testing.T) {
 		EventNonce:     uint64(2),
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EthereumSender: anyETHAddr.Hex(),
+		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
+		ChainId:        types.EthereumChainID,
 	}
 
 	eva, err = types.PackEvent(sendToCosmosEvent)
 	require.NoError(t, err)
 
-	msgSubmitEvent = &types.MsgSubmitEthereumEvent{eva, myOrchestratorAddr.String()}
+	msgSubmitEvent = &types.MsgSubmitEVMEvent{
+		Event: eva, Signer: myOrchestratorAddr.String(),
+		ChainId: types.EthereumChainID,
+	}
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
 	_, err = h(ctx, msgSubmitEvent)
@@ -202,7 +222,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		myNonce              = uint64(1)
 		anyETHAddr           = common.HexToAddress("0xf9613b532673Cc223aBa451dFA8539B87e1F666D")
 		tokenETHAddr         = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e")
-		denom                = types.GravityDenom(tokenETHAddr)
+		denom                = types.GravityDenom(types.EthereumChainID, tokenETHAddr)
 		myBlockTime          = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
 	)
 	input := keeper.CreateTestEnv(t)
@@ -222,32 +242,35 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EthereumSender: anyETHAddr.Hex(),
+		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
+		ChainId:        types.EthereumChainID,
 	}
 	ethClaim1a, err := types.PackEvent(ethClaim1)
 	require.NoError(t, err)
-	ethClaim1Msg := &types.MsgSubmitEthereumEvent{ethClaim1a, orchestratorAddr1.String()}
+	ethClaim1Msg := &types.MsgSubmitEVMEvent{Event: ethClaim1a, Signer: orchestratorAddr1.String(), ChainId: types.EthereumChainID}
 	ethClaim2 := &types.SendToCosmosEvent{
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EthereumSender: anyETHAddr.Hex(),
+		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
+		ChainId:        types.EthereumChainID,
 	}
 	ethClaim2a, err := types.PackEvent(ethClaim2)
 	require.NoError(t, err)
-	ethClaim2Msg := &types.MsgSubmitEthereumEvent{ethClaim2a, orchestratorAddr2.String()}
+	ethClaim2Msg := &types.MsgSubmitEVMEvent{Event: ethClaim2a, Signer: orchestratorAddr2.String(), ChainId: types.EthereumChainID}
 	ethClaim3 := &types.SendToCosmosEvent{
 		EventNonce:     myNonce,
 		TokenContract:  myErc20.Contract,
 		Amount:         myErc20.Amount,
-		EthereumSender: anyETHAddr.Hex(),
+		EVMSender:      anyETHAddr.Hex(),
 		CosmosReceiver: myCosmosAddr.String(),
+		ChainId:        types.EthereumChainID,
 	}
 	ethClaim3a, err := types.PackEvent(ethClaim3)
 	require.NoError(t, err)
-	ethClaim3Msg := &types.MsgSubmitEthereumEvent{ethClaim3a, orchestratorAddr3.String()}
+	ethClaim3Msg := &types.MsgSubmitEVMEvent{Event: ethClaim3a, Signer: orchestratorAddr3.String(), ChainId: types.EthereumChainID}
 
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
@@ -255,7 +278,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	gravity.EndBlocker(ctx, input.GravityKeeper)
 	require.NoError(t, err)
 	// and attestation persisted
-	a1 := input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim1.Hash())
+	a1 := input.GravityKeeper.GetEVMEventVoteRecord(ctx, types.EthereumChainID, myNonce, ethClaim1.Hash())
 	require.NotNil(t, a1)
 	// and vouchers not yet added to the account
 	balance1 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
@@ -268,7 +291,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// and attestation persisted
-	a2 := input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim2.Hash())
+	a2 := input.GravityKeeper.GetEVMEventVoteRecord(ctx, types.EthereumChainID, myNonce, ethClaim2.Hash())
 	require.NotNil(t, a2)
 	// and vouchers now added to the account
 	balance2 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
@@ -281,7 +304,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// and attestation persisted
-	a3 := input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim3.Hash())
+	a3 := input.GravityKeeper.GetEVMEventVoteRecord(ctx, types.EthereumChainID, myNonce, ethClaim3.Hash())
 	require.NotNil(t, a3)
 	// and no additional added to the account
 	balance3 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
@@ -331,7 +354,7 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	}
 	signMsgBz := input.Marshaler.MustMarshal(&ethMsg)
 	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
-	sig, err := types.NewEthereumSignature(hash, ethPrivKey)
+	sig, err := types.NewEVMSignature(hash, ethPrivKey)
 	require.NoError(t, err)
 
 	k := input.GravityKeeper
@@ -343,14 +366,14 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	_, err = h(ctx, msg)
 	require.NoError(t, err)
 
-	require.Equal(t, ethAddress.String(), k.GetValidatorEthereumAddress(ctx, valAddress).Hex())
+	require.Equal(t, ethAddress.String(), k.GetValidatorEVMAddress(ctx, valAddress).Hex())
 	require.Equal(t, valAddress, k.GetOrchestratorValidatorAddress(ctx, cosmosAddress))
-	require.Equal(t, cosmosAddress, k.GetEthereumOrchestratorAddress(ctx, common.HexToAddress(ethAddress.String())))
+	require.Equal(t, cosmosAddress, k.GetEVMOrchestratorAddress(ctx, common.HexToAddress(ethAddress.String())))
 
 	_, err = k.DelegateKeysByOrchestrator(wctx, &types.DelegateKeysByOrchestratorRequest{OrchestratorAddress: cosmosAddress.String()})
 	require.NoError(t, err)
 
-	_, err = k.DelegateKeysByEthereumSigner(wctx, &types.DelegateKeysByEthereumSignerRequest{EthereumSigner: ethAddress.String()})
+	_, err = k.DelegateKeysByEVMSigner(wctx, &types.DelegateKeysByEVMSignerRequest{EVMSigner: ethAddress.String()})
 	require.NoError(t, err)
 
 	_, err = k.DelegateKeysByValidator(wctx, &types.DelegateKeysByValidatorRequest{ValidatorAddress: valAddress.String()})
@@ -364,7 +387,7 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	signMsgBz = input.Marshaler.MustMarshal(&ethMsg)
 	hash = crypto.Keccak256Hash(signMsgBz).Bytes()
 
-	sig, err = types.NewEthereumSignature(hash, ethPrivKey2)
+	sig, err = types.NewEVMSignature(hash, ethPrivKey2)
 	require.NoError(t, err)
 
 	msg = types.NewMsgDelegateKeys(valAddress, cosmosAddress2, ethAddress2.String(), sig)
@@ -372,14 +395,14 @@ func TestMsgSetDelegateAddresses(t *testing.T) {
 	_, err = h(ctx, msg)
 	require.NoError(t, err)
 
-	require.Equal(t, ethAddress2.String(), k.GetValidatorEthereumAddress(ctx, valAddress).Hex())
+	require.Equal(t, ethAddress2.String(), k.GetValidatorEVMAddress(ctx, valAddress).Hex())
 	require.Equal(t, valAddress, k.GetOrchestratorValidatorAddress(ctx, cosmosAddress2))
-	require.Equal(t, cosmosAddress2, k.GetEthereumOrchestratorAddress(ctx, common.HexToAddress(ethAddress2.String())))
+	require.Equal(t, cosmosAddress2, k.GetEVMOrchestratorAddress(ctx, common.HexToAddress(ethAddress2.String())))
 
 	_, err = k.DelegateKeysByOrchestrator(wctx, &types.DelegateKeysByOrchestratorRequest{OrchestratorAddress: cosmosAddress2.String()})
 	require.NoError(t, err)
 
-	_, err = k.DelegateKeysByEthereumSigner(wctx, &types.DelegateKeysByEthereumSignerRequest{EthereumSigner: ethAddress2.String()})
+	_, err = k.DelegateKeysByEVMSigner(wctx, &types.DelegateKeysByEVMSignerRequest{EVMSigner: ethAddress2.String()})
 	require.NoError(t, err)
 
 	_, err = k.DelegateKeysByValidator(wctx, &types.DelegateKeysByValidatorRequest{ValidatorAddress: valAddress.String()})

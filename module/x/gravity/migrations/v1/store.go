@@ -7,7 +7,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/migrations/v1/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/migrations/v1/types"
 )
 
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
@@ -18,7 +18,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 	migrateCosmosOriginatedERC20ToDenom(store)
 	migrateContractCallTxTimeouts(store, cdc)
 
-	ctx.Logger().Info("Gravty v1 to v2: Store migration complete")
+	ctx.Logger().Info("Gravity v1 to v2: Store migration complete")
 
 	return nil
 }

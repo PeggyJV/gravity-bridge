@@ -5,7 +5,7 @@ use ethers::prelude::*;
 use gravity_proto::gravity::{DenomToErc20ParamsRequest, DenomToErc20Request};
 use gravity_utils::{
     connection_prep::{check_for_eth, create_rpc_connections},
-    ethereum::{downcast_to_u64, format_eth_hash},
+    ethereum::{downcast_to_u64, format_evm_hash},
 };
 use std::convert::TryFrom;
 use std::process::exit;
@@ -72,8 +72,10 @@ impl Erc20 {
 
         check_for_eth(eth_client.address(), eth_client.clone()).await;
 
+        let chain_id = eth_client.signer().chain_id() as u32;
         let req = DenomToErc20ParamsRequest {
             denom: denom.clone(),
+            chain_id,
         };
 
         let res = grpc
@@ -98,12 +100,13 @@ impl Erc20 {
         .expect("Could not deploy ERC20");
 
         println!("We have deployed ERC20 contract at tx hash {}, waiting to see if the Cosmos chain choses to adopt it",
-            format_eth_hash(res));
+                 format_evm_hash(res));
 
         match tokio::time::timeout(Duration::from_secs(300), async {
             loop {
                 let req = DenomToErc20Request {
                     denom: denom.clone(),
+                    chain_id,
                 };
 
                 let res = grpc.denom_to_erc20(req).await;

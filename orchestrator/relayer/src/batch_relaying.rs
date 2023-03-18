@@ -39,8 +39,9 @@ pub async fn relay_batches(
     eth_gas_price_multiplier: f32,
     eth_gas_multiplier: f32,
 ) {
+    let chain_id = eth_client.signer().chain_id() as u32;
     let possible_batches =
-        get_batches_and_signatures(current_valset.clone(), grpc_client, gravity_id.clone()).await;
+        get_batches_and_signatures(current_valset.clone(), grpc_client, gravity_id.clone(), chain_id).await;
 
     debug!("possible batches {:?}", possible_batches);
 
@@ -69,8 +70,9 @@ async fn get_batches_and_signatures(
     current_valset: Valset,
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_id: String,
+    chain_id: u32,
 ) -> HashMap<EthAddress, Vec<SubmittableBatch>> {
-    let latest_batches = if let Ok(lb) = get_latest_transaction_batches(grpc_client).await {
+    let latest_batches = if let Ok(lb) = get_latest_transaction_batches(grpc_client, chain_id).await {
         lb
     } else {
         return HashMap::new();
@@ -80,7 +82,7 @@ async fn get_batches_and_signatures(
     let mut possible_batches = HashMap::new();
     for batch in latest_batches {
         let sigs =
-            get_transaction_batch_signatures(grpc_client, batch.nonce, batch.token_contract).await;
+            get_transaction_batch_signatures(grpc_client, chain_id, batch.nonce, batch.token_contract).await;
         debug!("Got sigs {:?}", sigs);
         if let Ok(sigs) = sigs {
             // this checks that the signatures for the batch are actually possible to submit to the chain

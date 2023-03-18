@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/bytes"
 )
@@ -26,7 +26,9 @@ func TestKeeper_LatestSignerSetTx(t *testing.T) {
 		ctx := env.Context
 		gk := env.GravityKeeper
 
-		req := &types.LatestSignerSetTxRequest{}
+		req := &types.LatestSignerSetTxRequest{
+			ChainId: types.EthereumChainID,
+		}
 		res, err := gk.LatestSignerSetTx(sdk.WrapSDKContext(ctx), req)
 		require.Error(t, err)
 		require.Nil(t, res)
@@ -36,11 +38,13 @@ func TestKeeper_LatestSignerSetTx(t *testing.T) {
 		ctx := env.Context
 		gk := env.GravityKeeper
 		{ // setup
-			sstx := gk.CreateSignerSetTx(env.Context)
+			sstx := gk.CreateSignerSetTx(env.Context, types.EthereumChainID)
 			require.NotNil(t, sstx)
 		}
 		{ // validate
-			req := &types.LatestSignerSetTxRequest{}
+			req := &types.LatestSignerSetTxRequest{
+				ChainId: types.EthereumChainID,
+			}
 			res, err := gk.LatestSignerSetTx(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, res)
@@ -56,12 +60,15 @@ func TestKeeper_SignerSetTx(t *testing.T) {
 
 		var signerSetNonce uint64
 		{ // setup
-			sstx := gk.CreateSignerSetTx(env.Context)
+			sstx := gk.CreateSignerSetTx(env.Context, types.EthereumChainID)
 			require.NotNil(t, sstx)
 			signerSetNonce = sstx.Nonce
 		}
 		{ // validate
-			req := &types.SignerSetTxRequest{SignerSetNonce: signerSetNonce}
+			req := &types.SignerSetTxRequest{
+				SignerSetNonce: signerSetNonce,
+				ChainId:        types.EthereumChainID,
+			}
 			res, err := gk.SignerSetTx(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, res)
@@ -88,12 +95,14 @@ func TestKeeper_BatchTx(t *testing.T) {
 				Transactions:  nil,
 				TokenContract: tokenContract,
 				Height:        100,
+				ChainId:       types.EthereumChainID,
 			})
 		}
 		{ // validate
 			req := &types.BatchTxRequest{
 				BatchNonce:    batchNonce,
 				TokenContract: tokenContract,
+				ChainId:       types.EthereumChainID,
 			}
 
 			res, err := gk.BatchTx(sdk.WrapSDKContext(ctx), req)
@@ -119,12 +128,14 @@ func TestKeeper_ContractCallTx(t *testing.T) {
 			gk.SetOutgoingTx(ctx, &types.ContractCallTx{
 				InvalidationNonce: invalidationNonce,
 				InvalidationScope: bytes.HexBytes(invalidationScope),
+				ChainId:           types.EthereumChainID,
 			})
 		}
 		{ // validate
 			req := &types.ContractCallTxRequest{
 				InvalidationNonce: invalidationNonce,
 				InvalidationScope: bytes.HexBytes(invalidationScope),
+				ChainId:           types.EthereumChainID,
 			}
 
 			res, err := gk.ContractCallTx(sdk.WrapSDKContext(ctx), req)
@@ -142,11 +153,13 @@ func TestKeeper_SignerSetTxs(t *testing.T) {
 		gk := env.GravityKeeper
 
 		{ // setup
-			require.NotNil(t, gk.CreateSignerSetTx(env.Context))
-			require.NotNil(t, gk.CreateSignerSetTx(env.Context))
+			require.NotNil(t, gk.CreateSignerSetTx(env.Context, types.EthereumChainID))
+			require.NotNil(t, gk.CreateSignerSetTx(env.Context, types.EthereumChainID))
 		}
 		{ // validate
-			req := &types.SignerSetTxsRequest{}
+			req := &types.SignerSetTxsRequest{
+				ChainId: types.EthereumChainID,
+			}
 			res, err := gk.SignerSetTxs(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, res)
@@ -168,6 +181,7 @@ func TestKeeper_BatchTxs(t *testing.T) {
 				Transactions:  nil,
 				TokenContract: "0x835973768750b3ED2D5c3EF5AdcD5eDb44d12aD4",
 				Height:        1000,
+				ChainId:       types.EthereumChainID,
 			})
 			gk.SetOutgoingTx(ctx, &types.BatchTx{
 				BatchNonce:    1001,
@@ -175,10 +189,13 @@ func TestKeeper_BatchTxs(t *testing.T) {
 				Transactions:  nil,
 				TokenContract: "0x835973768750b3ED2D5c3EF5AdcD5eDb44d12aD4",
 				Height:        1001,
+				ChainId:       types.EthereumChainID,
 			})
 		}
 		{ // validate
-			req := &types.BatchTxsRequest{}
+			req := &types.BatchTxsRequest{
+				ChainId: types.EthereumChainID,
+			}
 			got, err := gk.BatchTxs(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, got)
@@ -197,15 +214,18 @@ func TestKeeper_ContractCallTxs(t *testing.T) {
 			gk.SetOutgoingTx(ctx, &types.ContractCallTx{
 				InvalidationNonce: 5,
 				InvalidationScope: []byte("an-invalidation-scope"),
-				// TODO
+				ChainId:           types.EthereumChainID,
 			})
 			gk.SetOutgoingTx(ctx, &types.ContractCallTx{
 				InvalidationNonce: 6,
 				InvalidationScope: []byte("an-invalidation-scope"),
+				ChainId:           types.EthereumChainID,
 			})
 		}
 		{ // validate
-			req := &types.ContractCallTxsRequest{}
+			req := &types.ContractCallTxsRequest{
+				ChainId: types.EthereumChainID,
+			}
 			got, err := gk.ContractCallTxs(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, got)
@@ -214,7 +234,7 @@ func TestKeeper_ContractCallTxs(t *testing.T) {
 	})
 }
 
-// TODO(levi) ensure coverage for:
+// TODO: ensure coverage for:
 // ContractCallTx(context.Context, *ContractCallTxRequest) (*ContractCallTxResponse, error)
 // ContractCallTxs(context.Context, *ContractCallTxsRequest) (*ContractCallTxsResponse, error)
 

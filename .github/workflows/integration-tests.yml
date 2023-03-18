@@ -200,8 +200,8 @@ jobs:
       - name: build-and-push
         uses: docker/build-push-action@v2
         with:
-          context: integration_tests/ethereum
-          file: integration_tests/ethereum/Dockerfile
+          context: integration_tests/evm
+          file: integration_tests/evm/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -221,17 +221,19 @@ jobs:
       fail-fast: false
       matrix:
         test_type: [
-            "HappyPath",
-            "ValsetUpdate",
-            "ValidatorOut",
-            "TransactionStress",
+          "HappyPath",
+          "ValsetUpdate",
+          "ValidatorOut",
+          "TransactionStress",
+          "MultiEVMUpgrade",
         ]
 
     steps:
-      - name: Set up Go 1.15
+      - name: Set up Go 1.16
         uses: actions/setup-go@v2
         with:
-          go-version: 1.15
+          go-version: ^1.16
+
       - name: checkout
         uses: actions/checkout@v2
       - name: go-cache
@@ -275,7 +277,7 @@ jobs:
       - name: pull hardhat image
         run: docker pull ${{ steps.meta-hardhat.outputs.tags }}
       - name: rename hardhat image
-        run: docker tag ${{ steps.meta-hardhat.outputs.tags }} ethereum:prebuilt
+        run: docker tag ${{ steps.meta-hardhat.outputs.tags }} evm:prebuilt
       - name: clean slate
         run: make e2e_clean_slate
       - name: build go test binary

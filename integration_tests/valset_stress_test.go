@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	gravity "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	gravity "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
 // call stress_test for a range of nonce values
@@ -15,13 +15,17 @@ import (
 /// Write test_valset_update test to get latest nonce value
 func (s *IntegrationTestSuite) TestValsetStressUpdate() {
 	s.Run("Bring up chain, and test the valset update", func() {
+		chainIndex := 0
+		ethereum := s.evms[chainIndex]
+		gravityContract := gravityContracts[chainIndex]
+
 		orchKey := s.chain.orchestrators[1]
 		keyring := orchKey.keyring
 
 		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", keyring, "orch", orchKey.keyInfo.GetAddress())
 		s.Require().NoError(err)
 
-		startingNonce, err := s.getLastValsetNonce(gravityContract)
+		startingNonce, err := getLastValsetNonce(ethereum, gravityContract)
 		s.Require().NoError(err, "error getting starting nonce")
 
 		bondTokens := sdk.TokensFromConsensusPower(50000, sdk.DefaultPowerReduction)
@@ -83,13 +87,13 @@ func (s *IntegrationTestSuite) TestValsetStressUpdate() {
 		}, 20*time.Second, 1*time.Second, "Signerset can't be retrieved")
 
 		// Grab current nonce.
-		currentNonce, err := s.getLastValsetNonce(gravityContract)
+		currentNonce, err := getLastValsetNonce(ethereum, gravityContract)
 		s.Require().NoError(err, "error getting current nonce")
 
 		// Run a loop until you get a nonce higher than the initial nonce
 		s.Require().Eventuallyf(func() bool {
 			for currentNonce == startingNonce {
-				currentNonce, err = s.getLastValsetNonce(gravityContract)
+				currentNonce, err = getLastValsetNonce(ethereum, gravityContract)
 				if currentNonce != startingNonce {
 					return true
 				}

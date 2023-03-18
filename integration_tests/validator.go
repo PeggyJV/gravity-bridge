@@ -24,8 +24,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/peggyjv/gravity-bridge/module/v2/app"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/app"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/p2p"
@@ -256,7 +256,7 @@ func (v *validator) buildDelegateKeysMsg() sdk.Msg {
 
 	signMsgBz := cdc.MustMarshal(&signMsg)
 	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
-	ethSig, err := gravitytypes.NewEthereumSignature(hash, privKey)
+	ethSig, err := gravitytypes.NewEVMSignature(hash, privKey)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create Ethereum signature: %s", err))
 	}

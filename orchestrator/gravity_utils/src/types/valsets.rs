@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     error::GravityError,
-    ethereum::{format_eth_address, u8_slice_to_fixed_32},
+    ethereum::{format_evm_address, u8_slice_to_fixed_32},
 };
 use deep_space::error::CosmosGrpcError;
 use ethers::types::{Address as EthAddress, Signature as EthSignature};
@@ -25,14 +25,14 @@ fn gravity_power_to_percent(input: u64) -> f32 {
 /// This trait implements an overarching interface for signature confirmations
 /// so that they can all use the same method to order signatures
 pub trait Confirm {
-    fn get_eth_address(&self) -> EthAddress;
+    fn get_evm_address(&self) -> EthAddress;
     fn get_signature(&self) -> EthSignature;
 }
 
 pub fn get_hashmap<T: Confirm + Clone>(input: &[T]) -> HashMap<EthAddress, T> {
     let mut out = HashMap::new();
     for i in input.iter() {
-        out.insert(i.get_eth_address(), i.clone());
+        out.insert(i.get_evm_address(), i.clone());
     }
     out
 }
@@ -55,9 +55,9 @@ struct SignatureStatus {
 /// the response we get when querying for a valset confirmation
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ValsetConfirmResponse {
-    pub eth_signer: EthAddress,
+    pub evm_signer: EthAddress,
     pub nonce: u64,
-    pub eth_signature: EthSignature,
+    pub evm_signature: EthSignature,
 }
 
 impl ValsetConfirmResponse {
@@ -65,19 +65,19 @@ impl ValsetConfirmResponse {
         input: gravity_proto::gravity::SignerSetTxConfirmation,
     ) -> Result<Self, GravityError> {
         Ok(ValsetConfirmResponse {
-            eth_signer: input.ethereum_signer.parse()?,
+            evm_signer: input.evm_signer.parse()?,
             nonce: input.signer_set_nonce,
-            eth_signature: EthSignature::try_from(input.signature.as_slice())?,
+            evm_signature: EthSignature::try_from(input.signature.as_slice())?,
         })
     }
 }
 
 impl Confirm for ValsetConfirmResponse {
-    fn get_eth_address(&self) -> EthAddress {
-        self.eth_signer
+    fn get_evm_address(&self) -> EthAddress {
+        self.evm_signer
     }
     fn get_signature(&self) -> EthSignature {
-        self.eth_signature
+        self.evm_signature
     }
 }
 
@@ -96,7 +96,7 @@ impl Valset {
         let mut addresses = Vec::new();
         let mut powers = Vec::new();
         for val in self.members.iter() {
-            match val.eth_address {
+            match val.evm_address {
                 Some(a) => {
                     addresses.push(a);
                     powers.push(val.power);
@@ -112,7 +112,7 @@ impl Valset {
 
     pub fn get_power(&self, address: EthAddress) -> Result<u64, CosmosGrpcError> {
         for val in self.members.iter() {
-            if val.eth_address == Some(address) {
+            if val.evm_address == Some(address) {
                 return Ok(val.power);
             }
         }
@@ -147,14 +147,14 @@ impl Valset {
         let mut power_of_invalid_signers = 0;
         let mut number_of_invalid_signers = 0;
         for member in self.members.iter() {
-            if let Some(eth_address) = member.eth_address {
+            if let Some(eth_address) = member.evm_address {
                 if let Some(sig) = signatures_hashmap.get(&eth_address) {
                     let sig_hash = u8_slice_to_fixed_32(signed_message)?;
                     let recover_key = sig.get_signature().recover(sig_hash)?;
-                    if recover_key == sig.get_eth_address() {
+                    if recover_key == sig.get_evm_address() {
                         out.push(GravitySignature {
                             power: member.power,
-                            eth_address: sig.get_eth_address(),
+                            eth_address: sig.get_evm_address(),
                             v: sig.get_signature().v,
                             r: sig.get_signature().r,
                             s: sig.get_signature().s,
@@ -255,7 +255,7 @@ impl Valset {
     pub fn to_hashmap(&self) -> HashMap<EthAddress, u64> {
         let mut res = HashMap::new();
         for item in self.members.iter() {
-            if let Some(address) = item.eth_address {
+            if let Some(address) = item.evm_address {
                 res.insert(address, item.power);
             } else {
                 error!("Validator in active set without Eth Address! This must be corrected immediately!")
@@ -268,7 +268,7 @@ impl Valset {
     pub fn to_hashset(&self) -> HashSet<EthAddress> {
         let mut res = HashSet::new();
         for item in self.members.iter() {
-            if let Some(address) = item.eth_address {
+            if let Some(address) = item.evm_address {
                 res.insert(address);
             } else {
                 error!("Validator in active set without Eth Address! This must be corrected immediately!")
@@ -323,7 +323,7 @@ impl From<&gravity_proto::gravity::SignerSetTxResponse> for Valset {
 pub struct ValsetMember {
     // ord sorts on the first member first, so this produces the correct sorting
     pub power: u64,
-    pub eth_address: Option<EthAddress>,
+    pub evm_address: Option<EthAddress>,
 }
 
 impl Ord for ValsetMember {
@@ -339,7 +339,7 @@ impl Ord for ValsetMember {
         if self.power != other.power {
             self.power.cmp(&other.power)
         } else {
-            self.eth_address.cmp(&other.eth_address).reverse()
+            self.evm_address.cmp(&other.evm_address).reverse()
         }
     }
 }
@@ -362,11 +362,11 @@ impl ValsetMember {
 
 impl fmt::Display for ValsetMember {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.eth_address {
+        match self.evm_address {
             Some(a) => write!(
                 f,
                 "Address: {} Power: {}",
-                format_eth_address(a),
+                format_evm_address(a),
                 self.power
             ),
             None => write!(f, "Address: None Power: {}", self.power),
@@ -374,41 +374,41 @@ impl fmt::Display for ValsetMember {
     }
 }
 
-impl From<gravity_proto::gravity::EthereumSigner> for ValsetMember {
-    fn from(input: gravity_proto::gravity::EthereumSigner) -> Self {
-        let eth_address = match input.ethereum_address.parse() {
+impl From<gravity_proto::gravity::EvmSigner> for ValsetMember {
+    fn from(input: gravity_proto::gravity::EvmSigner) -> Self {
+        let evm_address = match input.evm_address.parse() {
             Ok(e) => Some(e),
             Err(_) => None,
         };
         ValsetMember {
             power: input.power as u64,
-            eth_address,
+            evm_address,
         }
     }
 }
 
-impl From<&gravity_proto::gravity::EthereumSigner> for ValsetMember {
-    fn from(input: &gravity_proto::gravity::EthereumSigner) -> Self {
-        let eth_address = match input.ethereum_address.parse() {
+impl From<&gravity_proto::gravity::EvmSigner> for ValsetMember {
+    fn from(input: &gravity_proto::gravity::EvmSigner) -> Self {
+        let evm_address = match input.evm_address.parse() {
             Ok(e) => Some(e),
             Err(_) => None,
         };
         ValsetMember {
             power: input.power as u64,
-            eth_address,
+            evm_address,
         }
     }
 }
 
-impl From<&ValsetMember> for gravity_proto::gravity::EthereumSigner {
-    fn from(input: &ValsetMember) -> gravity_proto::gravity::EthereumSigner {
-        let ethereum_address = match input.eth_address {
-            Some(e) => format_eth_address(e),
+impl From<&ValsetMember> for gravity_proto::gravity::EvmSigner {
+    fn from(input: &ValsetMember) -> gravity_proto::gravity::EvmSigner {
+        let evm_address = match input.evm_address {
+            Some(e) => format_evm_address(e),
             None => String::new(),
         };
-        gravity_proto::gravity::EthereumSigner {
+        gravity_proto::gravity::EvmSigner {
             power: input.power,
-            ethereum_address,
+            evm_address,
         }
     }
 }

@@ -1,7 +1,10 @@
 package integration_tests
 
 import (
+	"crypto/ecdsa"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
@@ -43,5 +46,27 @@ func decodeTx(txBytes []byte) (*sdktx.Tx, error) {
 		Body:       &body,
 		AuthInfo:   &authInfo,
 		Signatures: raw.Signatures,
+	}, nil
+}
+
+func generateEthereumKey() (*ethereumKey, error) {
+	privateKey, err := crypto.GenerateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	privateKeyBytes := crypto.FromECDSA(privateKey)
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return nil, fmt.Errorf("unexpected public key type; expected: %T, got: %T", &ecdsa.PublicKey{}, publicKey)
+	}
+
+	publicKeyBytes := crypto.FromECDSAPub(publicKeyECDSA)
+	return &ethereumKey{
+		privateKey: hexutil.Encode(privateKeyBytes),
+		publicKey:  hexutil.Encode(publicKeyBytes),
+		address:    crypto.PubkeyToAddress(*publicKeyECDSA).Hex(),
 	}, nil
 }

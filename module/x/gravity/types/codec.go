@@ -1,6 +1,7 @@
 package types
 
 import (
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -9,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // RegisterLegacyAminoCodec registers the vesting interfaces and concrete types on the
@@ -41,18 +41,18 @@ func init() {
 // RegisterInterfaces registers the interfaces for the proto stuff
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgSendToEthereum{},
-		&MsgCancelSendToEthereum{},
+		&MsgSendToEVM{},
+		&MsgCancelSendToEVM{},
 		&MsgRequestBatchTx{},
-		&MsgSubmitEthereumEvent{},
-		&MsgSubmitEthereumTxConfirmation{},
+		&MsgSubmitEVMEvent{},
+		&MsgSubmitEVMTxConfirmation{},
 		&MsgDelegateKeys{},
-		&MsgEthereumHeightVote{},
+		&MsgEVMHeightVote{},
 	)
 
 	registry.RegisterInterface(
-		"gravity.v1.EthereumEvent",
-		(*EthereumEvent)(nil),
+		"gravity.v1.EVMEvent",
+		(*EVMEvent)(nil),
 		&SendToCosmosEvent{},
 		&BatchExecutedEvent{},
 		&ERC20DeployedEvent{},
@@ -61,8 +61,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	registry.RegisterInterface(
-		"gravity.v1.EthereumSignature",
-		(*EthereumTxConfirmation)(nil),
+		"gravity.v1.EVMSignature",
+		(*EVMTxConfirmation)(nil),
 		&BatchTxConfirmation{},
 		&ContractCallTxConfirmation{},
 		&SignerSetTxConfirmation{},
@@ -77,13 +77,13 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	registry.RegisterImplementations((*govtypes.Content)(nil),
-		&CommunityPoolEthereumSpendProposal{},
+		&CommunityPoolEVMSpendProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
-func PackEvent(event EthereumEvent) (*types.Any, error) {
+func PackEvent(event EVMEvent) (*types.Any, error) {
 	msg, ok := event.(proto.Message)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", event)
@@ -97,22 +97,22 @@ func PackEvent(event EthereumEvent) (*types.Any, error) {
 	return anyEvent, nil
 }
 
-// UnpackEvent unpacks an Any into an EthereumEvent. It returns an error if the
+// UnpackEvent unpacks an Any into an EVMEvent. It returns an error if the
 // event can't be unpacked.
-func UnpackEvent(any *types.Any) (EthereumEvent, error) {
+func UnpackEvent(any *types.Any) (EVMEvent, error) {
 	if any == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, "protobuf Any message cannot be nil")
 	}
 
-	event, ok := any.GetCachedValue().(EthereumEvent)
+	event, ok := any.GetCachedValue().(EVMEvent)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnpackAny, "cannot unpack Any into EthereumEvent %T", any)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnpackAny, "cannot unpack Any into EVMEvent %T", any)
 	}
 
 	return event, nil
 }
 
-func PackConfirmation(confirmation EthereumTxConfirmation) (*types.Any, error) {
+func PackConfirmation(confirmation EVMTxConfirmation) (*types.Any, error) {
 	msg, ok := confirmation.(proto.Message)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", confirmation)
@@ -128,14 +128,14 @@ func PackConfirmation(confirmation EthereumTxConfirmation) (*types.Any, error) {
 
 // UnpackConfirmation unpacks an Any into a Confirm interface. It returns an error if the
 // confirmation can't be unpacked.
-func UnpackConfirmation(any *types.Any) (EthereumTxConfirmation, error) {
+func UnpackConfirmation(any *types.Any) (EVMTxConfirmation, error) {
 	if any == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, "protobuf Any message cannot be nil")
 	}
 
-	confirm, ok := any.GetCachedValue().(EthereumTxConfirmation)
+	confirm, ok := any.GetCachedValue().(EVMTxConfirmation)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnpackAny, "cannot unpack Any into EthereumSignature %T", any)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnpackAny, "cannot unpack Any into EVMSignature %T", any)
 	}
 
 	return confirm, nil

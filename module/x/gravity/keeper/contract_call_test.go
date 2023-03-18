@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,12 +15,12 @@ func TestContractCallTxExecuted(t *testing.T) {
 	storeKey := input.GravityStoreKey
 	cdc := input.Marshaler
 
-	latestEthereumBlockHeight := &types.LatestEthereumBlockHeight{
-		CosmosHeight:   100,
-		EthereumHeight: 1000,
+	latestEVMBlockHeight := &types.LatestEVMBlockHeight{
+		CosmosHeight: 100,
+		EVMHeight:    1000,
 	}
 
-	ctx.KVStore(storeKey).Set([]byte{types.LastEthereumBlockHeightKey}, cdc.MustMarshal(latestEthereumBlockHeight))
+	ctx.KVStore(storeKey).Set([]byte{types.LastEVMBlockHeightKey}, cdc.MustMarshal(latestEVMBlockHeight))
 
 	scope := []byte("test-scope")
 	contract := common.HexToAddress("0x2a24af0501a534fca004ee1bd667b783f205a546")
@@ -36,6 +36,7 @@ func TestContractCallTxExecuted(t *testing.T) {
 
 	input.GravityKeeper.CreateContractCallTx(
 		ctx,
+		types.EthereumChainID,
 		nonce1,
 		scope,
 		contract,
@@ -46,6 +47,7 @@ func TestContractCallTxExecuted(t *testing.T) {
 
 	input.GravityKeeper.CreateContractCallTx(
 		ctx,
+		types.EthereumChainID,
 		nonce2,
 		scope,
 		contract,
@@ -54,26 +56,28 @@ func TestContractCallTxExecuted(t *testing.T) {
 		erc20Tokens,
 	)
 
-	cctx1 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeContractCallTxKey(scope, nonce1)).(*types.ContractCallTx)
-	assert.Equal(t, cctx1.InvalidationScope, scope)
-	assert.Equal(t, cctx1.InvalidationNonce, nonce1)
-	assert.Equal(t, cctx1.Address, contract.Hex())
-	assert.Equal(t, cctx1.Payload, payload)
-	assert.Equal(t, cctx1.Tokens, erc20Tokens)
-	assert.Equal(t, cctx1.Fees, erc20Tokens)
+	cctx1 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeContractCallTxStoreIndex(types.EthereumChainID, scope, nonce1)).(*types.ContractCallTx)
+	assert.Equal(t, scope, cctx1.InvalidationScope)
+	assert.Equal(t, nonce1, cctx1.InvalidationNonce)
+	assert.Equal(t, contract.Hex(), cctx1.Address)
+	assert.Equal(t, payload, cctx1.Payload)
+	assert.Equal(t, erc20Tokens, cctx1.Tokens)
+	assert.Equal(t, erc20Tokens, cctx1.Fees)
+	assert.Equal(t, uint32(types.EthereumChainID), cctx1.ChainId)
 
-	cctx2 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeContractCallTxKey(scope, nonce2)).(*types.ContractCallTx)
-	assert.Equal(t, cctx2.InvalidationScope, scope)
-	assert.Equal(t, cctx2.InvalidationNonce, nonce2)
-	assert.Equal(t, cctx2.Address, contract.Hex())
-	assert.Equal(t, cctx2.Payload, payload)
-	assert.Equal(t, cctx2.Tokens, erc20Tokens)
-	assert.Equal(t, cctx2.Fees, erc20Tokens)
+	cctx2 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeContractCallTxStoreIndex(types.EthereumChainID, scope, nonce2)).(*types.ContractCallTx)
+	assert.Equal(t, scope, cctx2.InvalidationScope)
+	assert.Equal(t, nonce2, cctx2.InvalidationNonce)
+	assert.Equal(t, contract.Hex(), cctx2.Address)
+	assert.Equal(t, payload, cctx2.Payload)
+	assert.Equal(t, erc20Tokens, cctx2.Tokens)
+	assert.Equal(t, erc20Tokens, cctx2.Fees)
+	assert.Equal(t, uint32(types.EthereumChainID), cctx2.ChainId)
 
-	input.GravityKeeper.contractCallExecuted(ctx, scope, nonce2)
+	input.GravityKeeper.contractCallExecuted(ctx, types.EthereumChainID, scope, nonce2)
 
-	otx1 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeContractCallTxKey(scope, nonce1))
-	otx2 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeContractCallTxKey(scope, nonce2))
+	otx1 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeContractCallTxStoreIndex(types.EthereumChainID, scope, nonce1))
+	otx2 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeContractCallTxStoreIndex(types.EthereumChainID, scope, nonce2))
 
 	assert.Nil(t, otx1)
 	assert.Nil(t, otx2)

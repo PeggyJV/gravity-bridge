@@ -6,8 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +20,7 @@ func TestV2UpgradeDenomNormalization(t *testing.T) {
 	amount := sdk.NewInt(1000)
 
 	// mint some tokens
-	incorrectDenom := strings.ToLower(types.GravityDenom(erc20contract))
+	incorrectDenom := strings.ToLower(types.GravityDenom(types.EthereumChainID, erc20contract))
 	gravityCoins := sdk.NewCoins(sdk.NewCoin(incorrectDenom, amount))
 	err := input.BankKeeper.MintCoins(ctx, types.ModuleName, gravityCoins)
 	require.NoError(t, err)

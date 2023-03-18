@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	v3 "github.com/peggyjv/gravity-bridge/module/v3/app/upgrades/v3"
 	"io"
 	"net/http"
 	"os"
@@ -79,12 +80,12 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
 	"github.com/gorilla/mux"
-	gravityparams "github.com/peggyjv/gravity-bridge/module/v2/app/params"
-	v2 "github.com/peggyjv/gravity-bridge/module/v2/app/upgrades/v2"
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity"
-	gravityclient "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/client"
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/keeper"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	gravityparams "github.com/peggyjv/gravity-bridge/module/v3/app/params"
+	v2 "github.com/peggyjv/gravity-bridge/module/v3/app/upgrades/v2"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity"
+	gravityclient "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/client"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/keeper"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -354,14 +355,6 @@ func NewGravityApp(
 		app.BaseApp,
 	)
 
-	app.stakingKeeper = *stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(
-			app.distrKeeper.Hooks(),
-			app.slashingKeeper.Hooks(),
-			//app.gravityKeeper.Hooks(), TODO(bolten): this hook is broken, do not set it, to be fixed
-		),
-	)
-
 	app.ibcKeeper = ibckeeper.NewKeeper(
 		appCodec,
 		keys[ibchost.StoreKey],
@@ -404,13 +397,21 @@ func NewGravityApp(
 		app.ModuleAccountAddressesToNames([]string{distrtypes.ModuleName}),
 	)
 
+	app.stakingKeeper = *stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(
+			app.distrKeeper.Hooks(),
+			app.slashingKeeper.Hooks(),
+			app.gravityKeeper.Hooks(),
+		),
+	)
+
 	govRouter := govtypes.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
 		AddRoute(paramsproposal.RouterKey, params.NewParamChangeProposalHandler(app.paramsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.distrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.upgradeKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.ibcKeeper.ClientKeeper)).
-		AddRoute(gravitytypes.RouterKey, gravity.NewCommunityPoolEthereumSpendProposalHandler(app.gravityKeeper))
+		AddRoute(gravitytypes.RouterKey, gravity.NewCommunityPoolEVMSpendProposalHandler(app.gravityKeeper))
 
 	app.govKeeper = govkeeper.NewKeeper(
 		appCodec,
@@ -812,6 +813,13 @@ func (app *Gravity) setupUpgradeHandlers() {
 			app.mm,
 			app.configurator,
 			app.bankKeeper,
+		),
+	)
+	app.upgradeKeeper.SetUpgradeHandler(
+		v3.UpgradeName,
+		v3.CreateUpgradeHandler(
+			app.mm,
+			app.configurator,
 		),
 	)
 }

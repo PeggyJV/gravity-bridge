@@ -13,6 +13,7 @@ use gravity_utils::{
     message_signatures::encode_valset_confirm_hashed, types::Valset,
 };
 use tonic::transport::Channel;
+use ethers::prelude::*;
 
 /// Check the last validator set on Ethereum, if it's lower than our latest validator
 /// set then we should package and submit the update as an Ethereum transaction
@@ -36,7 +37,8 @@ pub async fn relay_valsets(
 
     // we should determine if we need to relay one
     // to Ethereum for that we will find the latest confirmed valset and compare it to the ethereum chain
-    let latest_valset = get_latest_valset(grpc_client).await;
+    let chain_id = eth_client.signer().chain_id() as u32;
+    let latest_valset = get_latest_valset(grpc_client, chain_id).await;
     if latest_valset.is_err() {
         error!("Failed to get latest valset! {:?}", latest_valset);
         return;
@@ -57,12 +59,13 @@ pub async fn relay_valsets(
     let mut latest_cosmos_valset = None;
     // this is used to display the state of the last validator set to fail signature checks
     let mut last_error = None;
+
     while latest_nonce > 0 {
-        match get_valset(grpc_client, latest_nonce).await {
+        match get_valset(grpc_client, chain_id, latest_nonce).await {
             Ok(Some(cosmos_valset)) => {
                 assert_eq!(cosmos_valset.nonce, latest_nonce);
 
-                match get_all_valset_confirms(grpc_client, latest_nonce).await {
+                match get_all_valset_confirms(grpc_client, chain_id, latest_nonce).await {
                     Ok(confirms) => {
                         debug!(
                             "Considering cosmos_valset {:?} confirms {:?}",

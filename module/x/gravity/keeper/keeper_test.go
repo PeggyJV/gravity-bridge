@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
 func TestCurrentValsetNormalization(t *testing.T) {
@@ -40,10 +40,10 @@ func TestCurrentValsetNormalization(t *testing.T) {
 					Operator: cAddr,
 					Power:    int64(v),
 				}
-				input.GravityKeeper.setValidatorEthereumAddress(ctx, cAddr, common.HexToAddress("0xf71402f886b45c134743F4c00750823Bbf5Fd045"))
+				input.GravityKeeper.setValidatorEVMAddress(ctx, cAddr, common.HexToAddress("0xf71402f886b45c134743F4c00750823Bbf5Fd045"))
 			}
 			input.GravityKeeper.StakingKeeper = NewStakingKeeperWeightedMock(operators...)
-			r := input.GravityKeeper.CreateSignerSetTx(ctx)
+			r := input.GravityKeeper.CreateSignerSetTx(ctx, types.EthereumChainID)
 			assert.Equal(t, spec.expPowers, r.Signers.GetPowers())
 		})
 	}
@@ -54,7 +54,7 @@ func TestAttestationIterator(t *testing.T) {
 	ctx := input.Context
 	// add some attestations to the store
 
-	att1 := &types.EthereumEventVoteRecord{
+	att1 := &types.EVMEventVoteRecord{
 		Accepted: true,
 		Votes:    []string{},
 	}
@@ -62,10 +62,10 @@ func TestAttestationIterator(t *testing.T) {
 		EventNonce:     1,
 		TokenContract:  TokenContractAddrs[0],
 		Amount:         sdk.NewInt(100),
-		EthereumSender: EthAddrs[0].String(),
+		EVMSender:      EthAddrs[0].String(),
 		CosmosReceiver: AccAddrs[0].String(),
 	}
-	att2 := &types.EthereumEventVoteRecord{
+	att2 := &types.EVMEventVoteRecord{
 		Accepted: true,
 		Votes:    []string{},
 	}
@@ -73,14 +73,14 @@ func TestAttestationIterator(t *testing.T) {
 		EventNonce:     2,
 		TokenContract:  TokenContractAddrs[0],
 		Amount:         sdk.NewInt(100),
-		EthereumSender: EthAddrs[0].String(),
+		EVMSender:      EthAddrs[0].String(),
 		CosmosReceiver: AccAddrs[0].String(),
 	}
-	input.GravityKeeper.setEthereumEventVoteRecord(ctx, dep1.EventNonce, dep1.Hash(), att1)
-	input.GravityKeeper.setEthereumEventVoteRecord(ctx, dep2.EventNonce, dep2.Hash(), att2)
+	input.GravityKeeper.setEVMEventVoteRecord(ctx, types.EthereumChainID, dep1.EventNonce, dep1.Hash(), att1)
+	input.GravityKeeper.setEVMEventVoteRecord(ctx, types.EthereumChainID, dep2.EventNonce, dep2.Hash(), att2)
 
-	var atts []*types.EthereumEventVoteRecord
-	input.GravityKeeper.iterateEthereumEventVoteRecords(ctx, func(_ []byte, att *types.EthereumEventVoteRecord) bool {
+	var atts []*types.EVMEventVoteRecord
+	input.GravityKeeper.iterateEVMEventVoteRecords(ctx, types.EthereumChainID, func(_ []byte, att *types.EVMEventVoteRecord) bool {
 		atts = append(atts, att)
 		return false
 	})
@@ -120,15 +120,15 @@ func TestDelegateKeys(t *testing.T) {
 		require.NoError(t, err2)
 
 		k.SetOrchestratorValidatorAddress(ctx, val, orch)
-		k.setValidatorEthereumAddress(ctx, val, ethAddrs[i])
-		k.setEthereumOrchestratorAddress(ctx, ethAddrs[i], orch)
+		k.setValidatorEVMAddress(ctx, val, ethAddrs[i])
+		k.setEVMOrchestratorAddress(ctx, ethAddrs[i], orch)
 	}
 	addresses := k.getDelegateKeys(ctx)
 	for i := range addresses {
 		res := addresses[i]
 		assert.Equal(t, valAddrs[i], res.ValidatorAddress)
 		assert.Equal(t, orchAddrs[i], res.OrchestratorAddress)
-		assert.Equal(t, ethAddrs[i].Hex(), res.EthereumAddress)
+		assert.Equal(t, ethAddrs[i].Hex(), res.EVMAddress)
 	}
 }
 
@@ -139,15 +139,15 @@ func TestStoreEventVoteRecord(t *testing.T) {
 	stce := &types.SendToCosmosEvent{
 		EventNonce:     1,
 		TokenContract:  EthAddrs[0].Hex(),
-		EthereumSender: EthAddrs[0].Hex(),
+		EVMSender:      EthAddrs[0].Hex(),
 		CosmosReceiver: AccAddrs[0].String(),
-		EthereumHeight: 10,
+		EVMHeight:      10,
 		Amount:         sdk.NewInt(1000000),
 	}
 	stcea, err := types.PackEvent(stce)
 	require.NoError(t, err)
 
-	evr := &types.EthereumEventVoteRecord{
+	evr := &types.EVMEventVoteRecord{
 		Event: stcea,
 		Votes: []string{
 			ValAddrs[0].String(),
@@ -161,13 +161,13 @@ func TestStoreEventVoteRecord(t *testing.T) {
 		EventNonce:        2,
 		InvalidationScope: []byte{0x1, 0x2},
 		InvalidationNonce: 1,
-		EthereumHeight:    11,
+		EVMHeight:         11,
 	}
 
 	cctxea, err := types.PackEvent(cctxe)
 	require.NoError(t, err)
 
-	evr2 := &types.EthereumEventVoteRecord{
+	evr2 := &types.EVMEventVoteRecord{
 		Event: cctxea,
 		Votes: []string{
 			ValAddrs[2].String(),
@@ -176,16 +176,16 @@ func TestStoreEventVoteRecord(t *testing.T) {
 		},
 	}
 
-	gk.setEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash(), evr)
-	gk.setEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash(), evr2)
+	gk.setEVMEventVoteRecord(ctx, types.EthereumChainID, stce.GetEventNonce(), stce.Hash(), evr)
+	gk.setEVMEventVoteRecord(ctx, types.EthereumChainID, cctxe.GetEventNonce(), cctxe.Hash(), evr2)
 
-	stored := gk.GetEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash())
+	stored := gk.GetEVMEventVoteRecord(ctx, types.EthereumChainID, stce.GetEventNonce(), stce.Hash())
 	require.NotNil(t, stored)
 
-	stored1 := gk.GetEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash())
+	stored1 := gk.GetEVMEventVoteRecord(ctx, types.EthereumChainID, cctxe.GetEventNonce(), cctxe.Hash())
 	require.NotNil(t, stored1)
 
-	// var storedEvent, storedEvent1 types.EthereumEvent
+	// var storedEvent, storedEvent1 types.EVMEvent
 	storedEvent, err := types.UnpackEvent(stored.Event)
 	require.NoError(t, err)
 	storedEvent1, err := types.UnpackEvent(stored1.Event)
@@ -197,7 +197,7 @@ func TestStoreEventVoteRecord(t *testing.T) {
 	require.EqualValues(t, storedEvent1.GetEventNonce(), 2)
 	require.EqualValues(t, storedEvent1.Hash(), cctxe.Hash())
 
-	mapping := gk.GetEthereumEventVoteRecordMapping(ctx)
+	mapping := gk.GetEVMEventVoteRecordMapping(ctx, types.EthereumChainID)
 	require.EqualValues(t, 3, len(mapping[1][0].Votes))
 	require.EqualValues(t, 3, len(mapping[2][0].Votes))
 
@@ -219,37 +219,37 @@ func TestLastSlashedValsetNonce(t *testing.T) {
 	i := 1
 	for ; i < 10; i++ {
 		ctx = ctx.WithBlockHeight(int64(i))
-		_ = k.CreateSignerSetTx(ctx)
+		_ = k.CreateSignerSetTx(ctx, types.EthereumChainID)
 	}
 
-	latestValsetNonce := k.GetLatestSignerSetTxNonce(ctx)
+	latestValsetNonce := k.GetLatestSignerSetTxNonce(ctx, types.EthereumChainID)
 	assert.Equal(t, uint64(i-1), latestValsetNonce)
 
 	//  lastSlashedValsetNonce should be zero initially.
-	lastSlashedValsetNonce := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
+	lastSlashedValsetNonce := k.GetLastSlashedOutgoingTxBlockHeight(ctx, types.EthereumChainID)
 	assert.Equal(t, uint64(0), lastSlashedValsetNonce)
-	unslashedValsets := k.GetUnSlashedOutgoingTxs(ctx, uint64(12))
+	unslashedValsets := k.GetUnSlashedOutgoingTxs(ctx, types.EthereumChainID, uint64(12))
 	assert.Equal(t, 9, len(unslashedValsets))
 
 	// check if last Slashed Valset nonce is set properly or not
-	k.SetLastSlashedOutgoingTxBlockHeight(ctx, uint64(3))
-	lastSlashedValsetNonce = k.GetLastSlashedOutgoingTxBlockHeight(ctx)
+	k.SetLastSlashedOutgoingTxBlockHeight(ctx, types.EthereumChainID, uint64(3))
+	lastSlashedValsetNonce = k.GetLastSlashedOutgoingTxBlockHeight(ctx, types.EthereumChainID)
 	assert.Equal(t, uint64(3), lastSlashedValsetNonce)
 
 	// when maxHeight < lastSlashedValsetNonce, len(unslashedValsets) should be zero
-	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, uint64(2))
+	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, types.EthereumChainID, uint64(2))
 	assert.Equal(t, 0, len(unslashedValsets))
 
 	// when maxHeight == lastSlashedValsetNonce, len(unslashedValsets) should be zero
-	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, uint64(3))
+	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, types.EthereumChainID, uint64(3))
 	assert.Equal(t, 0, len(unslashedValsets))
 
 	// when maxHeight > lastSlashedValsetNonce && maxHeight <= latestValsetNonce
-	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, uint64(6))
+	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, types.EthereumChainID, uint64(6))
 	assert.Equal(t, 2, len(unslashedValsets))
 
 	// when maxHeight > latestValsetNonce
-	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, uint64(15))
+	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, types.EthereumChainID, uint64(15))
 	assert.Equal(t, 6, len(unslashedValsets))
 }
 
@@ -261,7 +261,7 @@ func TestKeeper_GetLatestSignerSetTx(t *testing.T) {
 		ctx := env.Context
 		gk := env.GravityKeeper
 
-		got := gk.GetLatestSignerSetTx(ctx)
+		got := gk.GetLatestSignerSetTx(ctx, types.EthereumChainID)
 		require.Nil(t, got)
 	})
 
@@ -272,16 +272,17 @@ func TestKeeper_GetLatestSignerSetTx(t *testing.T) {
 
 		{ // setup
 			gk.SetOutgoingTx(ctx, &types.SignerSetTx{
-				Nonce:   gk.incrementLatestSignerSetTxNonce(ctx),
+				Nonce:   gk.incrementLatestSignerSetTxNonce(ctx, types.EthereumChainID),
 				Height:  1,
 				Signers: nil,
+				ChainId: types.EthereumChainID,
 			})
 		}
 
 		{ // validate
-			got := gk.GetLatestSignerSetTx(env.Context)
+			got := gk.GetLatestSignerSetTx(env.Context, types.EthereumChainID)
 			require.NotNil(t, got)
-			require.EqualValues(t, got.Height, gk.GetLatestSignerSetTxNonce(ctx))
+			require.EqualValues(t, got.Height, gk.GetLatestSignerSetTxNonce(ctx, types.EthereumChainID))
 		}
 	})
 }
@@ -292,7 +293,7 @@ func TestKeeper_GetSignerSetTxs(t *testing.T) {
 		ctx := env.Context
 		gk := env.GravityKeeper
 
-		got := gk.GetSignerSetTxs(ctx)
+		got := gk.GetSignerSetTxs(ctx, types.EthereumChainID)
 		require.Nil(t, got)
 	})
 
@@ -303,14 +304,15 @@ func TestKeeper_GetSignerSetTxs(t *testing.T) {
 
 		{ // setup
 			gk.SetOutgoingTx(ctx, &types.SignerSetTx{
-				Nonce:   gk.incrementLatestSignerSetTxNonce(ctx),
+				Nonce:   gk.incrementLatestSignerSetTxNonce(ctx, types.EthereumChainID),
 				Height:  1,
 				Signers: nil,
+				ChainId: types.EthereumChainID,
 			})
 		}
 
 		{ // validate
-			got := gk.GetSignerSetTxs(ctx)
+			got := gk.GetSignerSetTxs(ctx, types.EthereumChainID)
 			require.NotNil(t, got)
 			require.Len(t, got, 1)
 		}
@@ -323,7 +325,7 @@ func TestKeeper_GetLastObservedSignerSetTx(t *testing.T) {
 		ctx := env.Context
 		gk := env.GravityKeeper
 
-		got := gk.GetLastObservedSignerSetTx(ctx)
+		got := gk.GetLastObservedSignerSetTx(ctx, types.EthereumChainID)
 		require.Nil(t, got)
 	})
 
@@ -333,7 +335,7 @@ func TestKeeper_GetLastObservedSignerSetTx(t *testing.T) {
 		gk := env.GravityKeeper
 
 		{ // setup
-			gk.setLastObservedSignerSetTx(ctx, types.SignerSetTx{
+			gk.SetLastObservedSignerSetTx(ctx, types.EthereumChainID, types.SignerSetTx{
 				Nonce:   1,
 				Height:  1,
 				Signers: nil,
@@ -341,7 +343,7 @@ func TestKeeper_GetLastObservedSignerSetTx(t *testing.T) {
 		}
 
 		{ // validate
-			got := gk.GetLastObservedSignerSetTx(ctx)
+			got := gk.GetLastObservedSignerSetTx(ctx, types.EthereumChainID)
 			require.NotNil(t, got)
 		}
 	})
@@ -373,19 +375,19 @@ func TestKeeper_GetLastUnbondingBlockHeight(t *testing.T) {
 	})
 }
 
-func TestKeeper_GetEthereumSignatures(t *testing.T) {
+func TestKeeper_GetEVMSignatures(t *testing.T) {
 	t.Run("read before there's anything in state", func(t *testing.T) {
 		env := CreateTestEnv(t)
 		ctx := env.Context
 		gk := env.GravityKeeper
 
 		storeIndexes := [][]byte{
-			types.MakeSignerSetTxKey(1),
-			types.MakeBatchTxKey(common.HexToAddress(""), 1), // weird that empty address is okay
-			types.MakeContractCallTxKey(nil, 0),
+			types.MakeSignerSetTxStoreIndex(types.EthereumChainID, 1),
+			types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(""), 1), // weird that empty address is okay
+			types.MakeContractCallTxStoreIndex(types.EthereumChainID, nil, 0),
 		}
 		for _, storeIndex := range storeIndexes {
-			got := gk.GetEthereumSignatures(ctx, storeIndex)
+			got := gk.GetEVMSignatures(ctx, storeIndex)
 			require.Empty(t, got)
 		}
 	})
@@ -404,22 +406,23 @@ func TestKeeper_GetEthereumSignatures(t *testing.T) {
 		{ // setup
 			signerSetTxConfirmation := &types.SignerSetTxConfirmation{
 				SignerSetNonce: signerSetNonce,
-				EthereumSigner: ethAddr.Hex(),
+				EVMSigner:      ethAddr.Hex(),
 				Signature:      []byte("fake-signature"),
+				ChainId:        types.EthereumChainID,
 			}
-			key := gk.SetEthereumSignature(ctx, signerSetTxConfirmation, valAddr)
+			key := gk.SetEVMSignature(ctx, signerSetTxConfirmation, valAddr)
 			require.NotEmpty(t, key)
 		}
 
 		{ // validate
-			storeIndex := types.MakeSignerSetTxKey(signerSetNonce)
+			storeIndex := types.MakeSignerSetTxStoreIndex(types.EthereumChainID, signerSetNonce)
 
-			{ // getEthereumSignature
-				got := gk.getEthereumSignature(ctx, storeIndex, valAddr)
+			{ // getEVMSignature
+				got := gk.getEVMSignature(ctx, storeIndex, valAddr)
 				require.Equal(t, []byte("fake-signature"), got)
 			}
-			{ // GetEthereumSignatures
-				got := gk.GetEthereumSignatures(ctx, storeIndex)
+			{ // GetEVMSignatures
+				got := gk.GetEVMSignatures(ctx, storeIndex)
 				require.Len(t, got, 1)
 			}
 		}
@@ -441,24 +444,25 @@ func TestKeeper_GetEthereumSignatures(t *testing.T) {
 
 		{ // setup
 			batchTxConfirmation := &types.BatchTxConfirmation{
-				TokenContract:  tokenContract,
-				BatchNonce:     batchNonce,
-				EthereumSigner: ethAddr.Hex(),
-				Signature:      []byte("fake-signature"),
+				TokenContract: tokenContract,
+				BatchNonce:    batchNonce,
+				EVMSigner:     ethAddr.Hex(),
+				Signature:     []byte("fake-signature"),
+				ChainId:       types.EthereumChainID,
 			}
-			key := gk.SetEthereumSignature(ctx, batchTxConfirmation, valAddr)
+			key := gk.SetEVMSignature(ctx, batchTxConfirmation, valAddr)
 			require.NotEmpty(t, key)
 		}
 
 		{ // validate
-			storeIndex := types.MakeBatchTxKey(common.HexToAddress(tokenContract), batchNonce)
+			storeIndex := types.MakeBatchTxStoreIndex(types.EthereumChainID, common.HexToAddress(tokenContract), batchNonce)
 
-			{ // getEthereumSignature
-				got := gk.getEthereumSignature(ctx, storeIndex, valAddr)
+			{ // getEVMSignature
+				got := gk.getEVMSignature(ctx, storeIndex, valAddr)
 				require.Equal(t, []byte("fake-signature"), got)
 			}
-			{ // GetEthereumSignatures
-				got := gk.GetEthereumSignatures(ctx, storeIndex)
+			{ // GetEVMSignatures
+				got := gk.GetEVMSignatures(ctx, storeIndex)
 				require.Len(t, got, 1)
 			}
 		}
@@ -483,22 +487,23 @@ func TestKeeper_GetEthereumSignatures(t *testing.T) {
 			contractCallConfirmation := &types.ContractCallTxConfirmation{
 				InvalidationScope: []byte(invalidationScope),
 				InvalidationNonce: invalidationNonce,
-				EthereumSigner:    ethAddr.Hex(),
+				EVMSigner:         ethAddr.Hex(),
 				Signature:         []byte("fake-signature"),
+				ChainId:           types.EthereumChainID,
 			}
-			key := gk.SetEthereumSignature(ctx, contractCallConfirmation, valAddr)
+			key := gk.SetEVMSignature(ctx, contractCallConfirmation, valAddr)
 			require.NotEmpty(t, key)
 		}
 
 		{ // validate
-			storeIndex := types.MakeContractCallTxKey([]byte(invalidationScope), invalidationNonce)
+			storeIndex := types.MakeContractCallTxStoreIndex(types.EthereumChainID, []byte(invalidationScope), invalidationNonce)
 
-			{ // getEthereumSignature
-				got := gk.getEthereumSignature(ctx, storeIndex, valAddr)
+			{ // getEVMSignature
+				got := gk.getEVMSignature(ctx, storeIndex, valAddr)
 				require.Equal(t, []byte("fake-signature"), got)
 			}
-			{ // GetEthereumSignatures
-				got := gk.GetEthereumSignatures(ctx, storeIndex)
+			{ // GetEVMSignatures
+				got := gk.GetEVMSignatures(ctx, storeIndex)
 				require.Len(t, got, 1)
 			}
 		}
@@ -514,15 +519,15 @@ func TestKeeper_Migration(t *testing.T) {
 	stce := &types.SendToCosmosEvent{
 		EventNonce:     1,
 		TokenContract:  EthAddrs[0].Hex(),
-		EthereumSender: EthAddrs[0].Hex(),
+		EVMSender:      EthAddrs[0].Hex(),
 		CosmosReceiver: AccAddrs[0].String(),
-		EthereumHeight: 10,
+		EVMHeight:      10,
 		Amount:         sdk.NewInt(1000000),
 	}
 	stcea, err := types.PackEvent(stce)
 	require.NoError(t, err)
 
-	evr := &types.EthereumEventVoteRecord{
+	evr := &types.EVMEventVoteRecord{
 		Event: stcea,
 		Votes: []string{
 			ValAddrs[0].String(),
@@ -536,13 +541,13 @@ func TestKeeper_Migration(t *testing.T) {
 		EventNonce:        2,
 		InvalidationScope: []byte{0x1, 0x2},
 		InvalidationNonce: 1,
-		EthereumHeight:    11,
+		EVMHeight:         11,
 	}
 
 	cctxea, err := types.PackEvent(cctxe)
 	require.NoError(t, err)
 
-	evr2 := &types.EthereumEventVoteRecord{
+	evr2 := &types.EVMEventVoteRecord{
 		Event: cctxea,
 		Votes: []string{
 			ValAddrs[2].String(),
@@ -559,7 +564,7 @@ func TestKeeper_Migration(t *testing.T) {
 		myReceiver          = common.HexToAddress("0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7")
 		myTokenContractAddr = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5") // Pickle
 		allVouchers         = sdk.NewCoins(
-			types.NewERC20Token(99999, myTokenContractAddr).GravityCoin(),
+			types.NewERC20Token(types.EthereumChainID, 99999, myTokenContractAddr).GravityCoin(),
 		)
 	)
 
@@ -570,27 +575,27 @@ func TestKeeper_Migration(t *testing.T) {
 	require.NoError(t, fundAccount(ctx, input.BankKeeper, mySender, allVouchers))
 
 	// add some TX to the pool
-	input.AddSendToEthTxsToPool(t, ctx, myTokenContractAddr, mySender, myReceiver, 2, 3, 2, 1)
+	input.AddSendToEVMTxsToPool(t, ctx, myTokenContractAddr, mySender, myReceiver, 2, 3, 2, 1)
 
 	// when
 	ctx = ctx.WithBlockTime(now)
 
 	// tx batch size is 2, so that some of them stay behind
-	firstBatch := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
+	firstBatch := input.GravityKeeper.BuildBatchTx(ctx, types.EthereumChainID, myTokenContractAddr, 2)
 
 	// then batch is persisted
 	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, firstBatch.GetStoreIndex())
 	require.NotNil(t, gotFirstBatch)
 
-	gk.setEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash(), evr)
-	gk.setLastObservedEventNonce(ctx, stce.GetEventNonce())
-	gk.setEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash(), evr2)
-	gk.setLastObservedEventNonce(ctx, cctxe.GetEventNonce())
+	gk.setEVMEventVoteRecord(ctx, types.EthereumChainID, stce.GetEventNonce(), stce.Hash(), evr)
+	gk.SetLastObservedEventNonce(ctx, types.EthereumChainID, stce.GetEventNonce())
+	gk.setEVMEventVoteRecord(ctx, types.EthereumChainID, cctxe.GetEventNonce(), cctxe.Hash(), evr2)
+	gk.SetLastObservedEventNonce(ctx, types.EthereumChainID, cctxe.GetEventNonce())
 
-	stored := gk.GetEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash())
+	stored := gk.GetEVMEventVoteRecord(ctx, types.EthereumChainID, stce.GetEventNonce(), stce.Hash())
 	require.NotNil(t, stored)
 
-	stored2 := gk.GetEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash())
+	stored2 := gk.GetEVMEventVoteRecord(ctx, types.EthereumChainID, cctxe.GetEventNonce(), cctxe.Hash())
 	require.NotNil(t, stored2)
 
 	ethAddr := common.HexToAddress("0x3146D2d6Eed46Afa423969f5dDC3152DfC359b09")
@@ -600,62 +605,64 @@ func TestKeeper_Migration(t *testing.T) {
 
 	{ // setup
 		batchTxConfirmation := &types.BatchTxConfirmation{
-			TokenContract:  myTokenContractAddr.Hex(),
-			BatchNonce:     firstBatch.BatchNonce,
-			EthereumSigner: ethAddr.Hex(),
-			Signature:      []byte("fake-signature"),
+			TokenContract: myTokenContractAddr.Hex(),
+			BatchNonce:    firstBatch.BatchNonce,
+			EVMSigner:     ethAddr.Hex(),
+			Signature:     []byte("fake-signature"),
+			ChainId:       types.EthereumChainID,
 		}
-		key := gk.SetEthereumSignature(ctx, batchTxConfirmation, valAddr)
+		key := gk.SetEVMSignature(ctx, batchTxConfirmation, valAddr)
 		require.NotEmpty(t, key)
 	}
 
 	{ // validate
 		storeIndex := gotFirstBatch.GetStoreIndex()
 
-		{ // getEthereumSignature
-			got := gk.getEthereumSignature(ctx, storeIndex, valAddr)
+		{ // getEVMSignature
+			got := gk.getEVMSignature(ctx, storeIndex, valAddr)
 			require.Equal(t, []byte("fake-signature"), got)
 		}
-		{ // GetEthereumSignatures
-			got := gk.GetEthereumSignatures(ctx, storeIndex)
+		{ // GetEVMSignatures
+			got := gk.GetEVMSignatures(ctx, storeIndex)
 			require.Len(t, got, 1)
 		}
 	}
 
-	nonce := gk.GetLastObservedEventNonce(ctx)
+	nonce := gk.GetLastObservedEventNonce(ctx, types.EthereumChainID)
 	require.Equal(t, cctxe.GetEventNonce(), nonce)
 
-	gk.setLastObservedSignerSetTx(ctx, types.SignerSetTx{
+	gk.SetLastObservedSignerSetTx(ctx, types.EthereumChainID, types.SignerSetTx{
 		Nonce:   1,
 		Height:  1,
 		Signers: nil,
+		ChainId: types.EthereumChainID,
 	})
 
 	for _, val := range ValAddrs {
-		gk.setLastEventNonceByValidator(ctx, val, nonce)
+		gk.setLastEventNonceByValidator(ctx, types.EthereumChainID, val, nonce)
 	}
 
-	gk.MigrateGravityContract(ctx, "0x5e175bE4d23Fa25604CE7848F60FB340894D5CDA", 1000)
+	gk.MigrateGravityContract(ctx, types.EthereumChainID, "0x5e175bE4d23Fa25604CE7848F60FB340894D5CDA", 1000)
 
-	storedAfterMigrate := gk.GetEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash())
+	storedAfterMigrate := gk.GetEVMEventVoteRecord(ctx, types.EthereumChainID, stce.GetEventNonce(), stce.Hash())
 	require.Nil(t, storedAfterMigrate)
 
-	stored2AfterMigrate := gk.GetEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash())
+	stored2AfterMigrate := gk.GetEVMEventVoteRecord(ctx, types.EthereumChainID, cctxe.GetEventNonce(), cctxe.Hash())
 	require.Nil(t, stored2AfterMigrate)
 
-	nonce2 := gk.GetLastObservedEventNonce(ctx)
+	nonce2 := gk.GetLastObservedEventNonce(ctx, types.EthereumChainID)
 	require.Equal(t, uint64(0), nonce2)
 
 	for _, val := range ValAddrs {
-		require.Equal(t, uint64(0), gk.getLastEventNonceByValidator(ctx, val))
+		require.Equal(t, uint64(0), gk.getLastEventNonceByValidator(ctx, types.EthereumChainID, val))
 	}
 
-	got := gk.GetLastObservedSignerSetTx(ctx)
-	require.Equal(t, got, &types.SignerSetTx{Nonce: 0x0, Height: 0x0, Signers: types.EthereumSigners(nil)})
+	got := gk.GetLastObservedSignerSetTx(ctx, types.EthereumChainID)
+	require.Equal(t, &types.SignerSetTx{Nonce: 0x0, Height: 0x0, Signers: types.EVMSigners(nil), ChainId: types.EthereumChainID}, got)
 
-	{ // GetEthereumSignatures
+	{ // GetEVMSignatures
 		storeIndex := gotFirstBatch.GetStoreIndex()
-		got := gk.GetEthereumSignatures(ctx, storeIndex)
+		got := gk.GetEVMSignatures(ctx, storeIndex)
 		require.Len(t, got, 0)
 	}
 
@@ -663,4 +670,4 @@ func TestKeeper_Migration(t *testing.T) {
 
 // TODO(levi) review/ensure coverage for:
 // PaginateOutgoingTxsByType
-// GetUnbondingvalidators(unbondingVals []byte) stakingtypes.ValAddresses
+// GetUnbondingValidators(unbondingVals []byte) stakingtypes.ValAddresses

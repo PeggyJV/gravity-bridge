@@ -7,12 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
-func (k Keeper) getCosmosOriginatedDenom(ctx sdk.Context, tokenContract common.Address) (string, bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.MakeERC20ToDenomKey(tokenContract))
+func (k Keeper) getCosmosOriginatedDenom(ctx sdk.Context, chainID uint32, tokenContract common.Address) (string, bool) {
+	store := ctx.KVStore(k.StoreKey)
+	bz := store.Get(types.MakeERC20ToDenomKey(chainID, tokenContract.Hex()))
 
 	if bz != nil {
 		return string(bz), true
@@ -20,9 +20,9 @@ func (k Keeper) getCosmosOriginatedDenom(ctx sdk.Context, tokenContract common.A
 	return "", false
 }
 
-func (k Keeper) getCosmosOriginatedERC20(ctx sdk.Context, denom string) (common.Address, bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.MakeDenomToERC20Key(denom))
+func (k Keeper) getCosmosOriginatedERC20(ctx sdk.Context, chainID uint32, denom string) (common.Address, bool) {
+	store := ctx.KVStore(k.StoreKey)
+	bz := store.Get(types.MakeDenomToERC20Key(chainID, denom))
 
 	if bz != nil {
 		return common.BytesToAddress(bz), true
@@ -30,10 +30,10 @@ func (k Keeper) getCosmosOriginatedERC20(ctx sdk.Context, denom string) (common.
 	return common.BytesToAddress([]byte{}), false
 }
 
-func (k Keeper) setCosmosOriginatedDenomToERC20(ctx sdk.Context, denom string, tokenContract common.Address) {
-	store := ctx.KVStore(k.storeKey)
-	store.Set(types.MakeDenomToERC20Key(denom), tokenContract.Bytes())
-	store.Set(types.MakeERC20ToDenomKey(tokenContract), []byte(denom))
+func (k Keeper) setCosmosOriginatedDenomToERC20(ctx sdk.Context, chainID uint32, denom string, tokenContract common.Address) {
+	store := ctx.KVStore(k.StoreKey)
+	store.Set(types.MakeDenomToERC20Key(chainID, denom), tokenContract.Bytes())
+	store.Set(types.MakeERC20ToDenomKey(chainID, tokenContract.Hex()), []byte(denom))
 }
 
 // DenomToERC20 returns (bool isCosmosOriginated, string ERC20, err)
@@ -41,18 +41,22 @@ func (k Keeper) setCosmosOriginatedDenomToERC20(ctx sdk.Context, denom string, t
 // and get its corresponding ERC20 address.
 // This will return an error if it cant parse the denom as a gravity denom, and then also can't find the denom
 // in an index of ERC20 contracts deployed on Ethereum to serve as synthetic Cosmos assets.
-func (k Keeper) DenomToERC20Lookup(ctx sdk.Context, denom string) (bool, common.Address, error) {
+func (k Keeper) DenomToERC20Lookup(ctx sdk.Context, chainID uint32, denom string) (bool, common.Address, error) {
 	// First try parsing the ERC20 out of the denom
-	tc1, err := types.GravityDenomToERC20(denom)
+	denomChainID, tc1, err := types.GravityDenomToERC20(denom)
 	if err != nil {
 		// Look up ERC20 contract in index and error if it's not in there.
-		tc2, exists := k.getCosmosOriginatedERC20(ctx, denom)
+		tc2, exists := k.getCosmosOriginatedERC20(ctx, chainID, denom)
 		if !exists {
 			return false, common.Address{},
 				fmt.Errorf("denom not a gravity voucher coin: %s, and also not in cosmos-originated ERC20 index", err)
 		}
 		// This is a cosmos-originated asset
 		return true, tc2, nil
+	}
+
+	if chainID != denomChainID {
+		return true, common.HexToAddress(tc1), fmt.Errorf("denom matched a different chain ID than queries. queried: %d, matched: %d, denom: %s", chainID, denomChainID, denom)
 	}
 
 	// This is an ethereum-originated asset
@@ -62,21 +66,21 @@ func (k Keeper) DenomToERC20Lookup(ctx sdk.Context, denom string) (bool, common.
 // ERC20ToDenom returns (bool isCosmosOriginated, string denom, err)
 // Using this information, you can see if an ERC20 address represents an asset is native to Cosmos or Ethereum,
 // and get its corresponding denom
-func (k Keeper) ERC20ToDenomLookup(ctx sdk.Context, tokenContract common.Address) (bool, string) {
+func (k Keeper) ERC20ToDenomLookup(ctx sdk.Context, chainID uint32, tokenContract common.Address) (bool, string) {
 	// First try looking up tokenContract in index
-	dn1, exists := k.getCosmosOriginatedDenom(ctx, tokenContract)
+	dn1, exists := k.getCosmosOriginatedDenom(ctx, chainID, tokenContract)
 	if exists {
 		// It is a cosmos originated asset
 		return true, dn1
 	}
 
 	// If it is not in there, it is not a cosmos originated token, turn the ERC20 into a gravity denom
-	return false, types.GravityDenom(tokenContract)
+	return false, types.GravityDenom(chainID, tokenContract)
 }
 
 // iterateERC20ToDenom iterates over erc20 to denom relations
-func (k Keeper) iterateERC20ToDenom(ctx sdk.Context, cb func([]byte, *types.ERC20ToDenom) bool) {
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.ERC20ToDenomKey})
+func (k Keeper) iterateERC20ToDenom(ctx sdk.Context, chainID uint32, cb func([]byte, *types.ERC20ToDenom) bool) {
+	prefixStore := prefix.NewStore(ctx.KVStore(k.StoreKey), types.MakeERC20ToDenomKeyPrefix(chainID))
 	iter := prefixStore.Iterator(nil, nil)
 	defer iter.Close()
 

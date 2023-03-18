@@ -33,7 +33,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	tmconfig "github.com/tendermint/tendermint/config"
@@ -42,10 +42,9 @@ import (
 )
 
 const (
-	testDenom           = "testgb"
-	initBalanceStr      = "1000000000000testgb"
-	minGasPrice         = "2"
-	ethChainID     uint = 15
+	testDenom      = "testgb"
+	initBalanceStr = "1000000000000testgb"
+	minGasPrice    = "2"
 )
 
 func MNEMONICS() []string {
@@ -57,11 +56,35 @@ func MNEMONICS() []string {
 	}
 }
 
+var ChainIds = []uint32{gravitytypes.EthereumChainID, gravitytypes.AvalancheCChainID}
+
+// var ChainIds = []uint32{gravitytypes.EthereumChainID}
+// var ChainIds = []uint32{gravitytypes.AvalancheCChainID}
+var ChainNames = []string{"ethereum", "avalanche"}
+
+type EVM struct {
+	ID       uint32
+	Name     string
+	Resource *dockertest.Resource
+}
+
+func chainIDStrings() []string {
+	chainIDStrings := make([]string, len(ChainIds))
+	for i, v := range ChainIds {
+		chainIDStrings[i] = strconv.Itoa(int(v))
+	}
+
+	return chainIDStrings
+}
+
 var (
-	stakeAmount, _    = sdk.NewIntFromString("100000000000")
-	stakeAmountCoin   = sdk.NewCoin(testDenom, stakeAmount)
-	gravityContract   = common.HexToAddress("0x04C89607413713Ec9775E14b954286519d836FEf")
-	testERC20contract = common.HexToAddress("0x4C4a2f8c81640e47606d3fd77B353E87Ba015584")
+	stakeAmount, _          = sdk.NewIntFromString("100000000000")
+	stakeAmountCoin         = sdk.NewCoin(testDenom, stakeAmount)
+	gravityContracts        = make([]common.Address, len(ChainIds))
+	testERC20Contracts      = make([]common.Address, len(ChainIds))
+	gravityDenoms           = make([]string, len(ChainIds))
+	testReceivers           = make([]common.Address, len(ChainIds))
+	communitySpendReceivers = make([]common.Address, len(ChainIds))
 )
 
 type IntegrationTestSuite struct {
@@ -70,7 +93,7 @@ type IntegrationTestSuite struct {
 	chain         *chain
 	dockerPool    *dockertest.Pool
 	dockerNetwork *dockertest.Network
-	ethResource   *dockertest.Resource
+	evms          []EVM
 	valResources  []*dockertest.Resource
 	orchResources []*dockertest.Resource
 }
@@ -90,8 +113,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// initialization
 	mnemonics := MNEMONICS()
+	s.Require().NoError(s.chain.createAndInitValidators(len(mnemonics)))
 	s.initNodesWithMnemonics(mnemonics...)
-	s.initEthereumFromMnemonics(mnemonics)
+
+	// we only need to generate eth keys, there is no genesis for hardhat
+	for i, val := range s.chain.validators {
+		s.Require().NoError(val.generateEthereumKeyFromMnemonic(mnemonics[i]))
+	}
 	s.initGenesis()
 	s.initValidatorConfigs()
 
@@ -102,7 +130,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// container infrastructure
-	s.runEthContainer()
+	s.runEVMContainers()
 	s.runValidators()
 	s.runOrchestrators()
 }
@@ -120,7 +148,11 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 	s.T().Log("tearing down e2e integration test suite...")
 
-	s.Require().NoError(s.dockerPool.Purge(s.ethResource))
+	s.Require().NoError(os.RemoveAll(s.chain.dataDir))
+
+	for _, ec := range s.evms {
+		s.Require().NoError(s.dockerPool.RemoveContainerByName(ec.Resource.Container.Name))
+	}
 
 	for _, vc := range s.valResources {
 		s.Require().NoError(s.dockerPool.RemoveContainerByName(vc.Container.Name))
@@ -134,37 +166,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.Require().NoError(os.RemoveAll(s.chain.dataDir))
 }
 
-func (s *IntegrationTestSuite) initNodes(nodeCount int) {
-	s.Require().NoError(s.chain.createAndInitValidators(nodeCount))
-	s.Require().NoError(s.chain.createAndInitOrchestrators(nodeCount))
-
-	// initialize a genesis file for the first validator
-	val0ConfigDir := s.chain.validators[0].configDir()
-	for _, val := range s.chain.validators {
-		s.Require().NoError(
-			addGenesisAccount(val0ConfigDir, "", initBalanceStr, val.keyInfo.GetAddress()),
-		)
-	}
-
-	// add orchestrator accounts to genesis file
-	for _, orch := range s.chain.orchestrators {
-		s.Require().NoError(
-			addGenesisAccount(val0ConfigDir, "", initBalanceStr, orch.keyInfo.GetAddress()),
-		)
-	}
-
-	// copy the genesis file to the remaining validators
-	for _, val := range s.chain.validators[1:] {
-		err := copyFile(
-			filepath.Join(val0ConfigDir, "config", "genesis.json"),
-			filepath.Join(val.configDir(), "config", "genesis.json"),
-		)
-		s.Require().NoError(err)
-	}
-}
-
 func (s *IntegrationTestSuite) initNodesWithMnemonics(mnemonics ...string) {
-	s.Require().NoError(s.chain.createAndInitValidatorsWithMnemonics(mnemonics))
+	s.Require().NoError(s.chain.setValidatorKeysWithMnemonics(mnemonics))
 	s.Require().NoError(s.chain.createAndInitOrchestratorsWithMnemonics(mnemonics))
 
 	//initialize a genesis file for the first validator
@@ -192,56 +195,29 @@ func (s *IntegrationTestSuite) initNodesWithMnemonics(mnemonics ...string) {
 	}
 }
 
-func (s *IntegrationTestSuite) initEthereum() {
+func (s *IntegrationTestSuite) initEVMFromMnemonics(chainID uint, mnemonics []string) {
 	// generate ethereum keys for validators add them to the ethereum genesis
-	ethGenesis := EthereumGenesis{
-		Difficulty: "0x400",
-		GasLimit:   "0xB71B00",
-		Config:     EthereumConfig{ChainID: ethChainID},
-		Alloc:      make(map[string]Allocation, len(s.chain.validators)+1),
-	}
+	//ethGenesis := EthereumGenesis{
+	//	Difficulty: "0x400",
+	//	GasLimit:   "0xB71B00",
+	//	Config:     EthereumConfig{ChainID: chainID},
+	//	Alloc:      make(map[string]Allocation, len(s.chain.validators)+1),
+	//}
 
-	alloc := Allocation{
-		Balance: "0x1337000000000000000000",
-	}
-
-	ethGenesis.Alloc["0xBf660843528035a5A4921534E156a27e64B231fE"] = alloc
-	for _, val := range s.chain.validators {
-		s.Require().NoError(val.generateEthereumKey())
-		ethGenesis.Alloc[val.ethereumKey.address] = alloc
-	}
-
-	ethGenBz, err := json.MarshalIndent(ethGenesis, "", "  ")
-	s.Require().NoError(err)
-
-	// write out the genesis file
-	s.Require().NoError(writeFile(filepath.Join(s.chain.configDir(), "eth_genesis.json"), ethGenBz))
-}
-
-func (s *IntegrationTestSuite) initEthereumFromMnemonics(mnemonics []string) {
-	// generate ethereum keys for validators add them to the ethereum genesis
-	ethGenesis := EthereumGenesis{
-		Difficulty: "0x400",
-		GasLimit:   "0xB71B00",
-		Config:     EthereumConfig{ChainID: ethChainID},
-		Alloc:      make(map[string]Allocation, len(s.chain.validators)+1),
-	}
-
-	alloc := Allocation{
-		Balance: "0x1337000000000000000000",
-	}
-
-	ethGenesis.Alloc["0xBf660843528035a5A4921534E156a27e64B231fE"] = alloc
+	//alloc := Allocation{
+	//	Balance: "0x1337000000000000000000",
+	//}
+	//
+	//ethGenesis.Alloc["0xBf660843528035a5A4921534E156a27e64B231fE"] = alloc
 	for i, val := range s.chain.validators {
 		s.Require().NoError(val.generateEthereumKeyFromMnemonic(mnemonics[i]))
-		ethGenesis.Alloc[val.ethereumKey.address] = alloc
 	}
 
-	ethGenBz, err := json.MarshalIndent(ethGenesis, "", "  ")
-	s.Require().NoError(err)
-
-	// write out the genesis file
-	s.Require().NoError(writeFile(filepath.Join(s.chain.configDir(), "eth_genesis.json"), ethGenBz))
+	//ethGenBz, err := json.MarshalIndent(ethGenesis, "", "  ")
+	//s.Require().NoError(err)
+	//
+	//// write out the genesis file
+	//s.Require().NoError(writeFile(filepath.Join(s.chain.configDir(), strconv.Itoa(int(chainID)), "eth_genesis.json"), ethGenBz))
 }
 
 func (s *IntegrationTestSuite) initGenesis() {
@@ -342,10 +318,15 @@ func (s *IntegrationTestSuite) initGenesis() {
 	// set contract addr
 	var gravityGenState gravitytypes.GenesisState
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
-	gravityGenState.Params.GravityId = "gravitytest"
-	gravityGenState.Params.BridgeEthereumAddress = gravityContract.String()
-	gravityGenState.Params.SignedBatchesWindow = 35
 
+	gravityGenState.Params.ParamsForChains = make([]*gravitytypes.ParamsForChain, len(ChainIds))
+	for i, chainID := range ChainIds {
+		pfc := gravitytypes.DefaultParamsForChain()
+		pfc.ChainId = chainID
+		pfc.GravityId = fmt.Sprintf("gravitytest-%d", chainID)
+		pfc.SignedBatchesWindow = 50
+		gravityGenState.Params.ParamsForChains[i] = pfc
+	}
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)
 	appGenState[gravitytypes.ModuleName] = bz
@@ -387,6 +368,9 @@ func (s *IntegrationTestSuite) initValidatorConfigs() {
 		valConfig.Consensus.TimeoutCommit = 1 * time.Second
 		valConfig.Consensus.TimeoutPropose = 1 * time.Second
 
+		// just to get stuff to compile
+		//valConfig.Storage = &tmconfig.StorageConfig{DiscardABCIResponses: true}
+
 		var peers []string
 
 		for j := 0; j < len(s.chain.validators); j++ {
@@ -415,101 +399,109 @@ func (s *IntegrationTestSuite) initValidatorConfigs() {
 	}
 }
 
-func (s *IntegrationTestSuite) runHardhatContainer() {
-	s.T().Log("starting Ethereum Hardhat container...")
+func (s *IntegrationTestSuite) runEVMContainers() {
+	for i, chainID := range ChainIds {
+		chainName := ChainNames[i]
 
-}
+		s.T().Logf("starting %s container, chain id %d...", chainName, chainID)
+		var err error
+		port := 8545 + i
+		portS := fmt.Sprintf("%d", port)
 
-func (s *IntegrationTestSuite) runEthContainer() {
-	s.T().Log("starting Ethereum container...")
-	var err error
+		runOpts := dockertest.RunOptions{
+			Name:       fmt.Sprintf("evm-%d", chainID),
+			Repository: "evm",
+			Tag:        "prebuilt",
+			NetworkID:  s.dockerNetwork.Network.ID,
+			PortBindings: map[docker.Port][]docker.PortBinding{
+				"8545/tcp": {{HostIP: "", HostPort: portS}},
+			},
+			ExposedPorts: []string{"8545/tcp"},
+			Env: []string{
+				fmt.Sprintf("EVM_CHAIN_ID=%d", chainID),
+			},
+		}
 
-	nodeURL := os.Getenv("ARCHIVE_NODE_URL")
-	s.Require().NotEmptyf(nodeURL, "ARCHIVE_NODE_URL env variable must be set")
+		resource, err := s.dockerPool.RunWithOptions(
+			&runOpts,
+			noRestart,
+		)
+		s.Require().NoError(err)
+		s.evms = append(s.evms, EVM{
+			ID:       uint32(chainID),
+			Name:     chainName,
+			Resource: resource,
+		})
 
-	runOpts := dockertest.RunOptions{
-		Name:       "ethereum",
-		Repository: "ethereum",
-		Tag:        "prebuilt",
-		NetworkID:  s.dockerNetwork.Network.ID,
-		PortBindings: map[docker.Port][]docker.PortBinding{
-			"8545/tcp": {{HostIP: "", HostPort: "8545"}},
-		},
-		ExposedPorts: []string{"8545/tcp"},
-		Env:          []string{fmt.Sprintf("ARCHIVE_NODE_URL=%s", nodeURL)},
+		ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", resource.GetHostPort("8545/tcp")))
+		s.Require().NoError(err)
+
+		// Wait for the EVM node to respond to a request
+		s.Require().Eventually(
+			func() bool {
+				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+				defer cancel()
+
+				s.T().Logf("container state: %s", s.evms[i].Resource.Container.State.String())
+
+				balance, err := ethClient.BalanceAt(ctx, common.HexToAddress(s.chain.validators[0].ethereumKey.address), nil)
+				if err != nil {
+					s.T().Logf("error querying balance: %e", err)
+					return false
+				}
+
+				if balance == nil {
+					s.T().Logf("balance for first validator is nil")
+				}
+
+				if balance.Cmp(big.NewInt(0)) == 0 {
+					s.T().Logf("balance for first validator is %s", balance.String())
+					return false
+				}
+
+				return true
+			},
+			5*time.Minute,
+			10*time.Second,
+			"%s node failed to respond",
+			chainName,
+		)
+
+		s.T().Logf("waiting for contract to deploy")
+		ethereumLogOutput := bytes.Buffer{}
+		err = s.dockerPool.Client.Logs(docker.LogsOptions{
+			Container:    resource.Container.ID,
+			OutputStream: &ethereumLogOutput,
+			Stdout:       true,
+		})
+		s.Require().NoError(err, "error getting contract deployer logs")
+
+		s.Require().Eventuallyf(func() bool {
+			for _, s := range strings.Split(ethereumLogOutput.String(), "\n") {
+				if strings.HasPrefix(s, "gravity contract deployed at") {
+					strSpl := strings.Split(s, "-")
+					gravityContracts[i] = common.HexToAddress(strings.ReplaceAll(strSpl[1], " ", ""))
+					return true
+				}
+			}
+			return false
+		}, time.Minute*5, time.Second*10, "unable to retrieve gravity address from logs")
+		s.T().Logf("gravity contract deployed at %s", gravityContracts[i].String())
+
+		s.Require().Eventuallyf(func() bool {
+			for _, s := range strings.Split(ethereumLogOutput.String(), "\n") {
+				if strings.HasPrefix(s, "test ERC20 TestGB TGB deployed at") {
+					strSpl := strings.Split(s, "-")
+					testERC20Contracts[i] = common.HexToAddress(strings.ReplaceAll(strSpl[1], " ", ""))
+					return true
+				}
+			}
+			return false
+		}, time.Minute*5, time.Second*10, "unable to retrieve test erc20 address from logs")
+		s.T().Logf("test erc20 contract deployed at %s", testERC20Contracts[i].String())
+
+		s.T().Logf("started %s container: %s", chainName, resource.Container.ID)
 	}
-
-	s.ethResource, err = s.dockerPool.RunWithOptions(
-		&runOpts,
-		noRestart,
-	)
-	s.Require().NoError(err)
-
-	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
-	s.Require().NoError(err)
-
-	// Wait for the Ethereum node to respond to a request
-	s.Require().Eventually(
-		func() bool {
-			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-			defer cancel()
-
-			balance, err := ethClient.BalanceAt(ctx, common.HexToAddress(s.chain.validators[0].ethereumKey.address), nil)
-			if err != nil {
-				s.T().Logf("error querying balance: %e", err)
-				return false
-			}
-
-			if balance == nil {
-				s.T().Logf("balance for first validator is nil")
-			}
-
-			if balance.Cmp(big.NewInt(0)) == 0 {
-				s.T().Logf("balance for first validator is %s", balance.String())
-				return false
-			}
-
-			return true
-		},
-		5*time.Minute,
-		10*time.Second,
-		"ethereum node failed to respond",
-	)
-
-	s.T().Logf("waiting for contract to deploy")
-	ethereumLogOutput := bytes.Buffer{}
-	err = s.dockerPool.Client.Logs(docker.LogsOptions{
-		Container:    s.ethResource.Container.ID,
-		OutputStream: &ethereumLogOutput,
-		Stdout:       true,
-	})
-	s.Require().NoError(err, "error getting contract deployer logs")
-
-	s.Require().Eventuallyf(func() bool {
-		for _, s := range strings.Split(ethereumLogOutput.String(), "\n") {
-			if strings.HasPrefix(s, "gravity contract deployed at") {
-				strSpl := strings.Split(s, "-")
-				gravityContract = common.HexToAddress(strings.ReplaceAll(strSpl[1], " ", ""))
-				return true
-			}
-		}
-		return false
-	}, time.Minute*5, time.Second*10, "unable to retrieve gravity address from logs")
-	s.T().Logf("gravity contract deployed at %s", gravityContract.String())
-
-	s.Require().Eventuallyf(func() bool {
-		for _, s := range strings.Split(ethereumLogOutput.String(), "\n") {
-			if strings.HasPrefix(s, "test ERC20 TestGB TGB deployed at") {
-				strSpl := strings.Split(s, "-")
-				testERC20contract = common.HexToAddress(strings.ReplaceAll(strSpl[1], " ", ""))
-				return true
-			}
-		}
-		return false
-	}, time.Minute*5, time.Second*10, "unable to retrieve test erc20 address from logs")
-	s.T().Logf("test erc20 contract deployed at %s", testERC20contract.String())
-
-	s.T().Logf("started Ethereum container: %s", s.ethResource.Container.ID)
 }
 
 func (s *IntegrationTestSuite) runValidators() {
@@ -592,7 +584,13 @@ func (s *IntegrationTestSuite) runOrchestrators() {
 
 	s.orchResources = make([]*dockertest.Resource, len(s.chain.orchestrators))
 	for i, orch := range s.chain.orchestrators {
-		gorcCfg := fmt.Sprintf(`keystore = "/root/gorc/keystore/"
+		val := s.chain.validators[i]
+
+		gorcCfgPath := path.Join(val.configDir(), "gorc")
+		s.Require().NoError(os.MkdirAll(gorcCfgPath, 0755))
+
+		for j, chainID := range ChainIds {
+			gorcCfg := fmt.Sprintf(`keystore = "/root/gorc/%d/keystore/"
 
 [gravity]
 contract = "%s"
@@ -609,23 +607,27 @@ gas_price = { amount = %s, denom = "%s" }
 prefix = "cosmos"
 gas_adjustment = 2.0
 msg_batch_size = 5
+
+[metrics]
+listen_addr = "127.0.0.1:300%d"
 `,
-			gravityContract.String(),
-			testDenom,
-			// NOTE: container names are prefixed with '/'
-			s.ethResource.Container.Name[1:],
-			s.valResources[i].Container.Name[1:],
-			minGasPrice,
-			testDenom,
-		)
+				chainID,
+				gravityContracts[j].String(),
+				testDenom,
+				// NOTE: container names are prefixed with '/'
+				s.evms[j].Resource.Container.Name[1:],
+				s.valResources[i].Container.Name[1:],
+				minGasPrice,
+				testDenom,
+				j,
+			)
 
-		val := s.chain.validators[i]
+			gorcChainCfgPath := path.Join(gorcCfgPath, strconv.Itoa(int(chainID)))
+			s.Require().NoError(os.MkdirAll(gorcChainCfgPath, 0755))
 
-		gorcCfgPath := path.Join(val.configDir(), "gorc")
-		s.Require().NoError(os.MkdirAll(gorcCfgPath, 0755))
-
-		filePath := path.Join(gorcCfgPath, "config.toml")
-		s.Require().NoError(writeFile(filePath, []byte(gorcCfg)))
+			filePath := path.Join(gorcChainCfgPath, "config.toml")
+			s.Require().NoError(writeFile(filePath, []byte(gorcCfg)))
+		}
 
 		// We must first populate the orchestrator's keystore prior to starting
 		// the orchestrator gorc process. The keystore must contain the Ethereum
@@ -651,6 +653,7 @@ msg_batch_size = 5
 					fmt.Sprintf("%s/:/root/gorc", gorcCfgPath),
 				},
 				Env: []string{
+					fmt.Sprintf("CHAIN_IDS=%s", strings.Join(chainIDStrings(), ";")),
 					fmt.Sprintf("ORCH_MNEMONIC=%s", orch.mnemonic),
 					fmt.Sprintf("ETH_PRIV_KEY=%s", val.ethereumKey.privateKey),
 					"RUST_BACKTRACE=full",
@@ -727,20 +730,20 @@ func (s *IntegrationTestSuite) TestBasicChain() {
 	})
 }
 
-func (s *IntegrationTestSuite) deployERC20(denom string, name string, symbol string, decimals uint8) error {
-	return s.SendEthTransaction(&s.chain.validators[0].ethereumKey, gravityContract, PackDeployERC20(denom, name, symbol, decimals))
+func (s *IntegrationTestSuite) deployERC20(evm EVM, gravityContract common.Address, denom string, name string, symbol string, decimals uint8) error {
+	return sendEthTransaction(evm, &s.chain.validators[0].ethereumKey, gravityContract, PackDeployERC20(denom, name, symbol, decimals))
 }
 
-func (s *IntegrationTestSuite) approveERC20() error {
-	return s.SendEthTransaction(&s.chain.validators[0].ethereumKey, testERC20contract, PackApproveERC20(gravityContract))
+func (s *IntegrationTestSuite) approveERC20(evm EVM, contract common.Address, gravityContract common.Address) error {
+	return sendEthTransaction(evm, &s.chain.validators[0].ethereumKey, contract, PackApproveERC20(gravityContract))
 }
 
-func (s *IntegrationTestSuite) sendToCosmos(destination sdk.AccAddress, amount sdk.Int) error {
-	return s.SendEthTransaction(&s.chain.validators[0].ethereumKey, gravityContract, PackSendToCosmos(testERC20contract, destination, amount))
+func (s *IntegrationTestSuite) sendToCosmos(evm EVM, gravityContract common.Address, contract common.Address, destination sdk.AccAddress, amount sdk.Int) error {
+	return sendEthTransaction(evm, &s.chain.validators[0].ethereumKey, gravityContract, PackSendToCosmos(contract, destination, amount))
 }
 
-func (s *IntegrationTestSuite) getEthTokenBalanceOf(account common.Address, erc20contract common.Address) (*sdk.Int, error) {
-	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
+func (s *IntegrationTestSuite) getEthTokenBalanceOf(evm EVM, account common.Address, erc20contract common.Address) (*sdk.Int, error) {
+	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", evm.Resource.GetHostPort("8545/tcp")))
 	if err != nil {
 		return nil, err
 	}
@@ -762,8 +765,8 @@ func (s *IntegrationTestSuite) getEthTokenBalanceOf(account common.Address, erc2
 	return &balance, err
 }
 
-func (s *IntegrationTestSuite) getERC20AllowanceOf(owner common.Address, spender common.Address) (*sdk.Int, error) {
-	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
+func (s *IntegrationTestSuite) getERC20AllowanceOf(evm EVM, contract common.Address, owner common.Address, spender common.Address) (*sdk.Int, error) {
+	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", evm.Resource.GetHostPort("8545/tcp")))
 	if err != nil {
 		return nil, err
 	}
@@ -772,7 +775,7 @@ func (s *IntegrationTestSuite) getERC20AllowanceOf(owner common.Address, spender
 
 	response, err := ethClient.CallContract(context.Background(), ethereum.CallMsg{
 		From: common.HexToAddress(s.chain.validators[0].ethereumKey.address),
-		To:   &testERC20contract,
+		To:   &contract,
 		Gas:  0,
 		Data: data,
 	}, nil)
@@ -785,8 +788,8 @@ func (s *IntegrationTestSuite) getERC20AllowanceOf(owner common.Address, spender
 	return &allowance, err
 }
 
-func (s *IntegrationTestSuite) SendEthTransaction(ethereumKey *ethereumKey, toAddress common.Address, data []byte) error {
-	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
+func sendEthTransaction(evm EVM, ethereumKey *ethereumKey, toAddress common.Address, data []byte) error {
+	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", evm.Resource.GetHostPort("8545/tcp")))
 	if err != nil {
 		return err
 	}
@@ -835,8 +838,8 @@ func (s *IntegrationTestSuite) SendEthTransaction(ethereumKey *ethereumKey, toAd
 	return nil
 }
 
-func (s *IntegrationTestSuite) getLastValsetNonce(erc20contract common.Address) (*sdk.Int, error) {
-	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
+func getLastValsetNonce(evm EVM, erc20contract common.Address) (*sdk.Int, error) {
+	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", evm.Resource.GetHostPort("8545/tcp")))
 	if err != nil {
 		return nil, err
 	}

@@ -37,7 +37,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
 // GenTxCmd builds the application's gentx command.
@@ -116,10 +116,10 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 				return errors.Wrapf(err, "failed to fetch '%s' from the keyring", name)
 			}
 
-			ethAddress := args[2]
+			evmAddress := args[2]
 
-			if !common.IsHexAddress(ethAddress) {
-				return errors.Wrapf(gravitytypes.ErrInvalid, "invalid ethereum address")
+			if !common.IsHexAddress(evmAddress) {
+				return errors.Wrapf(gravitytypes.ErrInvalid, "invalid evm address")
 			}
 
 			orchAddress, err := sdk.AccAddressFromBech32(args[3])
@@ -187,8 +187,8 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 			delegateGravityMsg := &gravitytypes.MsgDelegateKeys{
 				ValidatorAddress:    sdk.ValAddress(key.GetAddress()).String(),
 				OrchestratorAddress: orchAddress.String(),
-				EthereumAddress:     ethAddress,
-				EthSignature:        ethSig,
+				EVMAddress:          evmAddress,
+				EVMSignature:        ethSig,
 			}
 
 			msgs := []sdk.Msg{msg, delegateGravityMsg}

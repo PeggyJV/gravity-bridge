@@ -6,9 +6,9 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
-// EthereumTxConfirmation represents one validtors signature for a given
-// outgoing ethereum transaction
-type EthereumTxConfirmation interface {
+// EVMTxConfirmation represents one validtors signature for a given
+// outgoing EVM transaction
+type EVMTxConfirmation interface {
 	proto.Message
 
 	GetSigner() common.Address
@@ -17,23 +17,25 @@ type EthereumTxConfirmation interface {
 	Validate() error
 }
 
-// EthereumEvent represents a event from the gravity contract
-// on the counterparty ethereum chain
-type EthereumEvent interface {
+// EVMEvent represents a event from the gravity contract
+// on the counterparty EVM chain
+type EVMEvent interface {
 	proto.Message
 
 	GetEventNonce() uint64
-	GetEthereumHeight() uint64
+	GetEVMHeight() uint64
 	Hash() tmbytes.HexBytes
 	Validate() error
+	ChainID() uint32
 }
 
 type OutgoingTx interface {
 	// NOTE: currently the function signatures here don't match, figure out how to do this proprly
 	// maybe add an interface arg here and typecheck in each implementation?
 
-	// The only one that will be problematic is BatchTx which needs to pull all the constituent
+	// The only one that will be problematic is BatchTx, which needs to pull all the constituent
 	// transactions before calculating the checkpoint
+
 	GetCheckpoint([]byte) []byte
 	GetStoreIndex() []byte
 	GetCosmosHeight() uint64

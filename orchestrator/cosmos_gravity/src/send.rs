@@ -12,7 +12,7 @@ use gravity_proto::cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
 use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use gravity_proto::gravity as proto;
 use gravity_utils::error::GravityError;
-use gravity_utils::ethereum::format_eth_address;
+use gravity_utils::ethereum::format_evm_address;
 use prost::Message;
 use std::cmp;
 use std::collections::HashSet;
@@ -62,8 +62,8 @@ pub async fn update_gravity_delegate_addresses(
     let msg = proto::MsgDelegateKeys {
         validator_address: our_valoper_address.to_string(),
         orchestrator_address: delegate_cosmos_address.to_string(),
-        ethereum_address: format_eth_address(delegate_eth_address),
-        eth_signature: eth_signature.to_vec(),
+        evm_address: format_evm_address(delegate_eth_address),
+        evm_signature: eth_signature.to_vec(),
     };
     let msg = Msg::new("/gravity.v1.MsgDelegateKeys", msg);
 
@@ -74,6 +74,7 @@ pub async fn update_gravity_delegate_addresses(
 /// they will require some time to be included in a batch
 pub async fn send_to_eth(
     cosmos_key: CosmosPrivateKey,
+    chain_id: u32,
     destination: EthAddress,
     amount: Coin,
     bridge_fee: Coin,
@@ -92,18 +93,20 @@ pub async fn send_to_eth(
 
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
 
-    let msg = proto::MsgSendToEthereum {
+    let msg = proto::MsgSendToEvm {
         sender: cosmos_address.to_string(),
-        ethereum_recipient: format_eth_address(destination),
+        evm_recipient: format_evm_address(destination),
         amount: Some(amount.into()),
         bridge_fee: Some(bridge_fee.clone().into()),
+        chain_id,
     };
-    let msg = Msg::new("/gravity.v1.MsgSendToEthereum", msg);
+    let msg = Msg::new("/gravity.v2.MsgSendToEvm", msg);
     send_messages(contact, cosmos_key, gas_price, vec![msg], gas_adjustment).await
 }
 
 pub async fn send_request_batch_tx(
     cosmos_key: CosmosPrivateKey,
+    chain_id: u32,
     denom: String,
     gas_price: (f64, String),
     contact: &Contact,
@@ -113,6 +116,7 @@ pub async fn send_request_batch_tx(
     let msg_request_batch = proto::MsgRequestBatchTx {
         signer: cosmos_address.to_string(),
         denom,
+        chain_id,
     };
     let msg = Msg::new("/gravity.v1.MsgRequestBatchTx", msg_request_batch);
     send_messages(contact, cosmos_key, gas_price, vec![msg], gas_adjustment).await

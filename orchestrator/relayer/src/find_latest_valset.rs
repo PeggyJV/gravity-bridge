@@ -20,6 +20,7 @@ pub async fn find_latest_valset(
 ) -> Result<Valset, GravityError> {
     // calculate some constant U64 values only once
     const BLOCKS_TO_SEARCH: u64 = 5_000u64;
+    let chain_id = eth_client.signer().chain_id() as u32;
 
     let mut filter = Filter::new()
         .address(ValueOrArray::Value(gravity_contract_address))
@@ -57,7 +58,7 @@ pub async fn find_latest_valset(
                         members: valset_updated_event.members,
                     };
                     let cosmos_chain_valset =
-                        cosmos_gravity::query::get_valset(grpc_client, latest_eth_valset.nonce)
+                        cosmos_gravity::query::get_valset(grpc_client, chain_id, latest_eth_valset.nonce)
                             .await?;
                     check_if_valsets_differ(cosmos_chain_valset, &latest_eth_valset)?;
                     return Ok(latest_eth_valset);

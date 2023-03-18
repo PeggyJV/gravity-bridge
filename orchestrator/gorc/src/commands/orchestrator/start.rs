@@ -6,13 +6,14 @@ use gravity_utils::{
         check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
         wait_for_cosmos_node_ready,
     },
-    ethereum::{downcast_to_u64, format_eth_address},
+    ethereum::{format_evm_address},
 };
 use orchestrator::main_loop::{
     orchestrator_main_loop, ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED,
 };
 use relayer::main_loop::LOOP_SPEED as RELAYER_LOOP_SPEED;
 use std::{cmp::min, sync::Arc};
+use gravity_utils::ethereum::downcast_to_u64;
 
 /// Start the Orchestrator
 #[derive(Command, Debug, Parser)]
@@ -38,7 +39,7 @@ impl Runnable for StartCommand {
         let cosmos_address = cosmos_key.to_address(&cosmos_prefix).unwrap();
 
         let ethereum_wallet = config.load_ethers_wallet(self.ethereum_key.clone());
-        let ethereum_address = ethereum_wallet.address();
+        let evm_address = ethereum_wallet.address();
 
         let contract_address: EthAddress = config
             .gravity
@@ -60,7 +61,7 @@ impl Runnable for StartCommand {
                 Some(config.ethereum.rpc.clone()),
                 timeout,
             )
-            .await;
+                .await;
 
             let mut grpc = connections.grpc.clone().unwrap();
             let contact = connections.contact.clone().unwrap();
@@ -69,14 +70,15 @@ impl Runnable for StartCommand {
                 .get_chainid()
                 .await
                 .expect("Could not retrieve chain ID during orchestrator start");
-            let chain_id =
-                downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
+            let chain_id = downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
+
             let eth_client =
-                SignerMiddleware::new(provider, ethereum_wallet.clone().with_chain_id(chain_id));
+                SignerMiddleware::new(provider.clone(), ethereum_wallet.clone().with_chain_id( chain_id));
+
             let eth_client = Arc::new(eth_client);
 
             info!("Starting Relayer + Oracle + Ethereum Signer");
-            info!("Ethereum Address: {}", format_eth_address(ethereum_address));
+            info!("EVM Address: {}", format_evm_address(evm_address));
             info!("Cosmos Address {}", cosmos_address);
 
             // check if the cosmos node is syncing, if so wait for it
@@ -87,15 +89,15 @@ impl Runnable for StartCommand {
             // check if the delegate addresses are correctly configured
             check_delegate_addresses(
                 &mut grpc,
-                ethereum_address,
+                evm_address,
                 cosmos_address,
                 &contact.get_prefix(),
             )
-            .await;
+                .await;
 
             // check if we actually have the promised balance of tokens to pay fees
             check_for_fee_denom(&fees_denom, cosmos_address, &contact).await;
-            check_for_eth(ethereum_address, eth_client.clone()).await;
+            check_for_eth(evm_address, eth_client.clone()).await;
 
             let gas_price = config.cosmos.gas_price.as_tuple();
 
@@ -114,11 +116,11 @@ impl Runnable for StartCommand {
                 self.orchestrator_only,
                 config.cosmos.msg_batch_size,
             )
-            .await;
+                .await;
         })
-        .unwrap_or_else(|e| {
-            status_err!("executor exited with error: {}", e);
-            std::process::exit(1);
-        });
+            .unwrap_or_else(|e| {
+                status_err!("executor exited with error: {}", e);
+                std::process::exit(1);
+            });
     }
 }

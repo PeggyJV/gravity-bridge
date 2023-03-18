@@ -21,9 +21,10 @@ import (
 	sdkTx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/peggyjv/gravity-bridge/module/v2/app"
-	"github.com/peggyjv/gravity-bridge/module/v2/app/params"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	premultievmgravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v3/app"
+	"github.com/peggyjv/gravity-bridge/module/v3/app/params"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
@@ -46,6 +47,7 @@ func init() {
 		&stakingtypes.MsgCreateValidator{},
 		&stakingtypes.MsgBeginRedelegate{},
 		&gravitytypes.MsgDelegateKeys{},
+		&premultievmgravitytypes.MsgDelegateKeys{},
 	)
 	encodingConfig.InterfaceRegistry.RegisterImplementations(
 		(*cryptotypes.PubKey)(nil),
@@ -90,32 +92,6 @@ func (c *chain) configDir() string {
 
 func (c *chain) createAndInitValidators(count int) error {
 	for i := 0; i < count; i++ {
-		node := c.createValidator(i)
-
-		// generate genesis files
-		if err := node.init(); err != nil {
-			return err
-		}
-
-		c.validators = append(c.validators, node)
-
-		// create keys
-		if err := node.createKey("val"); err != nil {
-			return err
-		}
-		if err := node.createNodeKey(); err != nil {
-			return err
-		}
-		if err := node.createConsensusKey(); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (c *chain) createAndInitValidatorsWithMnemonics(mnemonics []string) error {
-	for i := 0; i < len(mnemonics); i++ {
 		// create node
 		node := c.createValidator(i)
 
@@ -125,6 +101,15 @@ func (c *chain) createAndInitValidatorsWithMnemonics(mnemonics []string) error {
 		}
 
 		c.validators = append(c.validators, node)
+	}
+
+	return nil
+}
+
+func (c *chain) setValidatorKeysWithMnemonics(mnemonics []string) error {
+	for i := 0; i < len(mnemonics); i++ {
+		// create node
+		node := c.validators[i]
 
 		// create keys
 		if err := node.createKeyFromMnemonic("val", mnemonics[i], ""); err != nil {
@@ -197,6 +182,7 @@ func (c *chain) clientContext(nodeURI string, kb *keyring.Keyring, fromName stri
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil),
 		&stakingtypes.MsgCreateValidator{},
 		&gravitytypes.MsgDelegateKeys{},
+		&premultievmgravitytypes.MsgDelegateKeys{},
 	)
 	interfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{}, &ed25519.PubKey{})
 
