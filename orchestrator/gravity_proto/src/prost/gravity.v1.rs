@@ -929,6 +929,13 @@ pub struct UnbatchedSendToEthereumsResponse {
     pub pagination:
         ::core::option::Option<cosmos_sdk_proto::cosmos::base::query::v1beta1::PageResponse>,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct LastObservedEthereumHeightRequest {}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct LastObservedEthereumHeightResponse {
+    #[prost(message, optional, tag = "1")]
+    pub last_observed_ethereum_height: ::core::option::Option<LatestEthereumBlockHeight>,
+}
 #[doc = r" Generated client implementations."]
 pub mod query_client {
     #![allow(unused_variables, dead_code, missing_docs)]
@@ -1350,6 +1357,23 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/DelegateKeys");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn last_observed_ethereum_height(
+            &mut self,
+            request: impl tonic::IntoRequest<super::LastObservedEthereumHeightRequest>,
+        ) -> Result<tonic::Response<super::LastObservedEthereumHeightResponse>, tonic::Status>
+        {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/gravity.v1.Query/LastObservedEthereumHeight",
+            );
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
