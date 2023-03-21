@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.2.1
 	github.com/cosmos/cosmos-sdk v0.45.13
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/ethereum/go-ethereum v1.10.11
+	github.com/ethereum/go-ethereum v1.10.22
 	github.com/ory/dockertest/v3 v3.6.5
 	github.com/peggyjv/gravity-bridge/module/v3 v3.0.0-20230321181437-ee9f95a7d6b8
 	github.com/stretchr/testify v1.8.1
