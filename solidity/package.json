@@ -20,7 +20,7 @@
     "@ethersproject/bignumber": "^5.0.8",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
-    "@openzeppelin/contracts": "4.3.2",
+    "@openzeppelin/contracts": "^4.7.3",
     "@typechain/ethers-v5": "^5.0.0",
     "@types/chai": "^4.2.13",
     "@types/command-line-args": "^5.0.0",
@@ -67,8 +67,14 @@
   "dependencies": {
     "@cosmjs/stargate": "^0.25.3",
     "@cosmjs/tendermint-rpc": "^0.25.3",
+    "body-parser": "^1.20.1",
+    "cookiejar": "^2.1.4",
+    "decode-uri-component": "^0.2.2",
+    "express": "^4.18.2",
     "hardhat-deploy": "^0.9.10",
     "pkg": "^5.4.1",
+    "protobufjs": "^6.10.3",
+    "qs": "^6.11.0",
     "ts-proto": "^1.81.1"
   }
 }
