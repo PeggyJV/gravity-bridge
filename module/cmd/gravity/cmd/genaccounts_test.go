@@ -80,26 +80,6 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 				require.Error(t, cmd.ExecuteContext(ctx))
 			} else {
 				require.NoError(t, cmd.ExecuteContext(ctx))
-<<<<<<< Updated upstream
-=======
-
-				genFile := serverCtx.Config.GenesisFile()
-				bytes, err := os.ReadFile(genFile)
-				require.NoError(t, err)
-
-				var genDoc tmtypes.GenesisDoc
-				tmjson.Unmarshal(bytes, &genDoc)
-
-				var appState map[string]json.RawMessage
-				err = json.Unmarshal(genDoc.AppState, &appState)
-				require.NoError(t, err)
-
-				var bankGenState banktypes.GenesisState
-				bankGenStateBz := appState[banktypes.ModuleName]
-				clientCtx.Codec.MustUnmarshalJSON(bankGenStateBz, &bankGenState)
-
-				require.Equal(t, bankGenState.Supply.String(), tc.denom)
->>>>>>> Stashed changes
 			}
 		})
 	}
