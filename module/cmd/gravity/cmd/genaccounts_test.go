@@ -85,20 +85,22 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 				require.Error(t, cmd.ExecuteContext(ctx))
 			} else {
 				require.NoError(t, cmd.ExecuteContext(ctx))
-				config := serverCtx.Config
-				genFile := config.GenesisFile()
+
+				genFile := serverCtx.Config.GenesisFile()
 				bytes, err := os.ReadFile(genFile)
 				require.NoError(t, err)
+
 				var genDoc tmtypes.GenesisDoc
 				tmjson.Unmarshal(bytes, &genDoc)
+
 				var appState map[string]json.RawMessage
 				err = json.Unmarshal(genDoc.AppState, &appState)
 				require.NoError(t, err)
-				bankGenStateBz := appState[banktypes.ModuleName]
+
 				var bankGenState banktypes.GenesisState
-				depCdc := clientCtx.Codec
-				cdc := depCdc.(codec.Codec)
-				cdc.MustUnmarshalJSON(bankGenStateBz, &bankGenState)
+				bankGenStateBz := appState[banktypes.ModuleName]
+				clientCtx.Codec.MustUnmarshalJSON(bankGenStateBz, &bankGenState)
+
 				require.Equal(t, bankGenState.Supply.String(), tc.denom)
 			}
 		})
