@@ -1,8 +1,10 @@
-package cmd_test
+package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -13,11 +15,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simcmd "github.com/cosmos/cosmos-sdk/simapp/simd/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
@@ -45,7 +49,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 		{
 			name:      "multiple denoms",
 			addr:      addr1.String(),
-			denom:     "1000atom, 2000stake",
+			denom:     "1000atom,2000stake",
 			expectErr: false,
 		},
 	}
@@ -69,7 +73,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmd := simcmd.AddGenesisAccountCmd(home)
+			cmd := AddGenesisAccountCmd(home)
 			cmd.SetArgs([]string{
 				tc.addr,
 				tc.denom,
@@ -80,6 +84,23 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 				require.Error(t, cmd.ExecuteContext(ctx))
 			} else {
 				require.NoError(t, cmd.ExecuteContext(ctx))
+
+				genFile := serverCtx.Config.GenesisFile()
+				bytes, err := os.ReadFile(genFile)
+				require.NoError(t, err)
+
+				var genDoc tmtypes.GenesisDoc
+				tmjson.Unmarshal(bytes, &genDoc)
+
+				var appState map[string]json.RawMessage
+				err = json.Unmarshal(genDoc.AppState, &appState)
+				require.NoError(t, err)
+
+				var bankGenState banktypes.GenesisState
+				bankGenStateBz := appState[banktypes.ModuleName]
+				clientCtx.Codec.MustUnmarshalJSON(bankGenStateBz, &bankGenState)
+
+				require.Equal(t, bankGenState.Supply.String(), tc.denom)
 			}
 		})
 	}
