@@ -652,7 +652,7 @@ func CmdDenomToERC20() *cobra.Command {
 func CmdUnbatchedSendToEthereums() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbatched-send-to-ethereums [sender-address]",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.ExactArgs(1),
 		Short: "query all unbatched send to ethereum messages",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
