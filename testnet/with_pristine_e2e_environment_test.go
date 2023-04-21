@@ -105,6 +105,8 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 		Description: "footoken",
 		Display:     "mfootoken",
 		Base:        "footoken",
+		Name:        "mfoot",
+		Symbol:      "MFT",
 		DenomUnits: []DenomUnit{
 			{
 				Denom:    "footoken",
@@ -120,6 +122,8 @@ func withPristineE2EEnvironment(t *testing.T, cb func(
 		Description: "stake",
 		Display:     "mstake",
 		Base:        "stake",
+		Name:        "MyStake",
+		Symbol:      "MST",
 		DenomUnits: []DenomUnit{
 			{
 				Denom:    "stake",
