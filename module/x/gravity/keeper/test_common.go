@@ -227,6 +227,20 @@ func (input TestInput) AddBalanceToBank(ctx sdk.Context, addr sdk.AccAddress, ba
 	return fundAccount(ctx, input.BankKeeper, addr, balances)
 }
 
+// AssertInvariants tests each modules invariants individually, this is easier than
+// dealing with all the init required to get the crisis keeper working properly by
+// running appModuleBasic for every module and allowing them to register their invariants
+func (t TestInput) AssertInvariants() {
+	gravInvariantFunc := AllInvariants(t.GravityKeeper)
+	invariantStr, invariantViolated := gravInvariantFunc(t.Context)
+	if invariantViolated {
+		panic(invariantStr)
+	}
+
+	// TODO: add the other module invariants
+	t.Context.Logger().Info("All invariants successful")
+}
+
 // SetupFiveValChain does all the initialization for a 5 Validator chain using the keys here
 func SetupFiveValChain(t *testing.T) (TestInput, sdk.Context) {
 	t.Helper()
