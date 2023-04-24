@@ -206,18 +206,16 @@ func (k Keeper) GetValidatorEthereumAddress(ctx sdk.Context, valAddr sdk.ValAddr
 	return common.BytesToAddress(store.Get(key))
 }
 
-func (k Keeper) getValidatorsByEthereumAddress(ctx sdk.Context, ethAddr common.Address) (vals []sdk.ValAddress) {
+func (k Keeper) validatorForEthAddressExists(ctx sdk.Context, ethAddr common.Address) bool {
 	iter := ctx.KVStore(k.storeKey).Iterator(nil, nil)
 
 	for ; iter.Valid(); iter.Next() {
 		if common.BytesToAddress(iter.Value()) == ethAddr {
-			valBs := bytes.TrimPrefix(iter.Key(), []byte{types.ValidatorEthereumAddressKey})
-			val := sdk.ValAddress(valBs)
-			vals = append(vals, val)
+			return true
 		}
 	}
 
-	return
+	return false
 }
 
 ////////////////////////
@@ -240,18 +238,16 @@ func (k Keeper) GetEthereumOrchestratorAddress(ctx sdk.Context, ethAddr common.A
 	return store.Get(key)
 }
 
-func (k Keeper) getEthereumAddressesByOrchestrator(ctx sdk.Context, orch sdk.AccAddress) (ethAddrs []common.Address) {
+func (k Keeper) ethAddressForOrchestratorExists(ctx sdk.Context, orch sdk.AccAddress) bool {
 	iter := ctx.KVStore(k.storeKey).Iterator(nil, nil)
 
 	for ; iter.Valid(); iter.Next() {
 		if sdk.AccAddress(iter.Value()).String() == orch.String() {
-			ethBs := bytes.TrimPrefix(iter.Key(), []byte{types.EthereumOrchestratorAddressKey})
-			ethAddr := common.BytesToAddress(ethBs)
-			ethAddrs = append(ethAddrs, ethAddr)
+			return true
 		}
 	}
 
-	return
+	return false
 }
 
 // CreateSignerSetTx gets the current signer set from the staking keeper, increments the nonce,
