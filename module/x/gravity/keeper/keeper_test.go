@@ -112,6 +112,7 @@ func TestDelegateKeys(t *testing.T) {
 			"cosmos1nt2uwjh5peg9vz2wfh2m3jjwqnu9kpjlhgpmen",
 		}
 	)
+
 	for i := range ethAddrs {
 		// set some addresses
 		val, err1 := sdk.ValAddressFromBech32(valAddrs[i])
@@ -119,9 +120,15 @@ func TestDelegateKeys(t *testing.T) {
 		require.NoError(t, err1)
 		require.NoError(t, err2)
 
+		assert.False(t, k.validatorForEthAddressExists(ctx, ethAddrs[i]))
+		assert.False(t, k.ethAddressForOrchestratorExists(ctx, orch))
+
 		k.SetOrchestratorValidatorAddress(ctx, val, orch)
 		k.setValidatorEthereumAddress(ctx, val, ethAddrs[i])
 		k.setEthereumOrchestratorAddress(ctx, ethAddrs[i], orch)
+
+		assert.True(t, k.validatorForEthAddressExists(ctx, ethAddrs[i]))
+		assert.True(t, k.ethAddressForOrchestratorExists(ctx, orch))
 	}
 	addresses := k.getDelegateKeys(ctx)
 	for i := range addresses {

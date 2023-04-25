@@ -48,14 +48,12 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 	}
 
 	// check if the Ethereum address is currently not used
-	validators := k.getValidatorsByEthereumAddress(ctx, ethAddr)
-	if len(validators) > 0 {
+	if k.validatorForEthAddressExists(ctx, ethAddr) {
 		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "ethereum address %s in use", ethAddr)
 	}
 
 	// check if the orchestrator address is currently not used
-	ethAddrs := k.getEthereumAddressesByOrchestrator(ctx, orchAddr)
-	if len(ethAddrs) > 0 {
+	if k.ethAddressForOrchestratorExists(ctx, orchAddr) {
 		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "orchestrator address %s in use", orchAddr)
 	}
 
