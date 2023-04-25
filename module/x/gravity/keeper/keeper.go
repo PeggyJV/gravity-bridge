@@ -207,7 +207,8 @@ func (k Keeper) GetValidatorEthereumAddress(ctx sdk.Context, valAddr sdk.ValAddr
 }
 
 func (k Keeper) validatorForEthAddressExists(ctx sdk.Context, ethAddr common.Address) bool {
-	iter := ctx.KVStore(k.storeKey).Iterator(nil, nil)
+	store := ctx.KVStore(k.storeKey)
+	iter := prefix.NewStore(store, []byte{types.ValidatorEthereumAddressKey}).Iterator(nil, nil)
 
 	for ; iter.Valid(); iter.Next() {
 		if common.BytesToAddress(iter.Value()) == ethAddr {
@@ -239,7 +240,8 @@ func (k Keeper) GetEthereumOrchestratorAddress(ctx sdk.Context, ethAddr common.A
 }
 
 func (k Keeper) ethAddressForOrchestratorExists(ctx sdk.Context, orch sdk.AccAddress) bool {
-	iter := ctx.KVStore(k.storeKey).Iterator(nil, nil)
+	store := ctx.KVStore(k.storeKey)
+	iter := prefix.NewStore(store, []byte{types.EthereumOrchestratorAddressKey}).Iterator(nil, nil)
 
 	for ; iter.Valid(); iter.Next() {
 		if sdk.AccAddress(iter.Value()).String() == orch.String() {
