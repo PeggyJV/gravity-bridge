@@ -151,6 +151,14 @@ func (k Keeper) GetEthereumSignatures(ctx sdk.Context, storeIndex []byte) map[st
 	return signatures
 }
 
+// DeleteEthereumSignatures deletes all ethereum signatures for a given outgoing tx by store index
+func (k Keeper) DeleteEthereumSignatures(ctx sdk.Context, storeIndex []byte) {
+	k.iterateEthereumSignatures(ctx, storeIndex, func(val sdk.ValAddress, h []byte) bool {
+		ctx.KVStore(k.storeKey).Delete(types.MakeEthereumSignatureKey(storeIndex, val))
+		return false
+	})
+}
+
 // iterateEthereumSignatures iterates through all valset confirms by nonce in ASC order
 func (k Keeper) iterateEthereumSignatures(ctx sdk.Context, storeIndex []byte, cb func(sdk.ValAddress, []byte) bool) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.EthereumSignatureKey}, storeIndex...))
@@ -680,7 +688,7 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string,
 
 	// Reset all ethereum event nonces to zero
 	k.setLastObservedEventNonce(ctx, 0)
-	k.iterateEthereumEventVoteRecords(ctx, func(_ []byte, voteRecord *types.EthereumEventVoteRecord) bool {
+	k.IterateEthereumEventVoteRecords(ctx, func(_ []byte, voteRecord *types.EthereumEventVoteRecord) bool {
 		for _, vote := range voteRecord.Votes {
 			val, err := sdk.ValAddressFromBech32(vote)
 

@@ -22,6 +22,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	createSignerSetTxs(ctx, k)
 	createBatchTxs(ctx, k)
 	pruneSignerSetTxs(ctx, k)
+	pruneEventVoteRecords(ctx, k)
 }
 
 // EndBlocker is called at the end of every block
@@ -100,10 +101,27 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 		earliestToPrune := currentBlock - params.SignedSignerSetTxsWindow
 		for _, set := range k.GetSignerSetTxs(ctx) {
 			if set.Nonce < lastObserved.Nonce && set.Height < earliestToPrune {
+				k.DeleteEthereumSignatures(ctx, set.GetStoreIndex())
 				k.DeleteOutgoingTx(ctx, set.GetStoreIndex())
 			}
 		}
 	}
+}
+
+// pruneEventVoteRecords deletes all event vote records with nonces that are older than the last observed event nonce
+func pruneEventVoteRecords(ctx sdk.Context, k keeper.Keeper) {
+	k.IterateEthereumEventVoteRecords(ctx, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
+		event, err := types.UnpackEvent(eventVoteRecord.Event)
+		if err != nil {
+			panic(err)
+		}
+		nonce := event.GetEventNonce()
+		if nonce < k.GetLastObservedEventNonce(ctx) {
+			k.DeleteEthereumEventVoteRecord(ctx, nonce, event.Hash())
+		}
+
+		return false
+	})
 }
 
 // Iterate over all attestations currently being voted on in order of nonce and

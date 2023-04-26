@@ -80,7 +80,7 @@ func TestAttestationIterator(t *testing.T) {
 	input.GravityKeeper.setEthereumEventVoteRecord(ctx, dep2.EventNonce, dep2.Hash(), att2)
 
 	var atts []*types.EthereumEventVoteRecord
-	input.GravityKeeper.iterateEthereumEventVoteRecords(ctx, func(_ []byte, att *types.EthereumEventVoteRecord) bool {
+	input.GravityKeeper.IterateEthereumEventVoteRecords(ctx, func(_ []byte, att *types.EthereumEventVoteRecord) bool {
 		atts = append(atts, att)
 		return false
 	})

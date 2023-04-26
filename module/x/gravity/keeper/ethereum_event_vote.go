@@ -140,6 +140,10 @@ func (k Keeper) setEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, c
 	ctx.KVStore(k.storeKey).Set(types.MakeEthereumEventVoteRecordKey(eventNonce, claimHash), k.cdc.MustMarshal(eventVoteRecord))
 }
 
+func (k Keeper) DeleteEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte) {
+	ctx.KVStore(k.storeKey).Delete(types.MakeEthereumEventVoteRecordKey(eventNonce, claimHash))
+}
+
 // GetEthereumEventVoteRecord return a vote record given a nonce
 func (k Keeper) GetEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, claimHash []byte) *types.EthereumEventVoteRecord {
 	if bz := ctx.KVStore(k.storeKey).Get(types.MakeEthereumEventVoteRecordKey(eventNonce, claimHash)); bz == nil {
@@ -154,7 +158,7 @@ func (k Keeper) GetEthereumEventVoteRecord(ctx sdk.Context, eventNonce uint64, c
 // GetEthereumEventVoteRecordMapping returns a mapping of eventnonce -> attestations at that nonce
 func (k Keeper) GetEthereumEventVoteRecordMapping(ctx sdk.Context) (out map[uint64][]*types.EthereumEventVoteRecord) {
 	out = make(map[uint64][]*types.EthereumEventVoteRecord)
-	k.iterateEthereumEventVoteRecords(ctx, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
+	k.IterateEthereumEventVoteRecords(ctx, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
 		event, err := types.UnpackEvent(eventVoteRecord.Event)
 		if err != nil {
 			panic(err)
@@ -170,7 +174,7 @@ func (k Keeper) GetEthereumEventVoteRecordMapping(ctx sdk.Context) (out map[uint
 }
 
 // iterateEthereumEventVoteRecords iterates through all attestations
-func (k Keeper) iterateEthereumEventVoteRecords(ctx sdk.Context, cb func([]byte, *types.EthereumEventVoteRecord) bool) {
+func (k Keeper) IterateEthereumEventVoteRecords(ctx sdk.Context, cb func([]byte, *types.EthereumEventVoteRecord) bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.EthereumEventVoteRecordKey})
 	iter := store.Iterator(nil, nil)
 	defer iter.Close()
