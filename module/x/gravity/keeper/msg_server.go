@@ -251,7 +251,7 @@ func (k msgServer) RequestBatchTx(c context.Context, msg *types.MsgRequestBatchT
 		return nil, err
 	}
 
-	batchID := k.BuildBatchTx(ctx, tokenContract, BatchTxSize)
+	batchID := k.CreateBatchTx(ctx, tokenContract, BatchTxSize)
 	if batchID == nil {
 		return nil, fmt.Errorf("no suitable batch to create")
 	}
