@@ -15,12 +15,12 @@ import (
 const BatchTxSize = 100
 
 // BuildBatchTx starts the following process chain:
-// - find bridged denominator for given voucher type
-// - determine if a an unexecuted batch is already waiting for this token type, if so confirm the new batch would
-//   have a higher total fees. If not exit withtout creating a batch
-// - select available transactions from the outgoing transaction pool sorted by fee desc
-// - persist an outgoing batch object with an incrementing ID = nonce
-// - emit an event
+//   - find bridged denominator for given voucher type
+//   - determine if a an unexecuted batch is already waiting for this token type, if so confirm the new batch would
+//     have a higher total fees. If not exit withtout creating a batch
+//   - select available transactions from the outgoing transaction pool sorted by fee desc
+//   - persist an outgoing batch object with an incrementing ID = nonce
+//   - emit an event
 func (k Keeper) BuildBatchTx(ctx sdk.Context, contractAddress common.Address, maxElements int) *types.BatchTx {
 	// if there is a more profitable batch for this token type do not create a new batch
 	if lastBatch := k.getLastOutgoingBatchByTokenType(ctx, contractAddress); lastBatch != nil {
@@ -81,6 +81,7 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 		}
 		return false
 	})
+	k.DeleteEthereumSignatures(ctx, batchTx.GetStoreIndex())
 	k.DeleteOutgoingTx(ctx, batchTx.GetStoreIndex())
 }
 
@@ -123,6 +124,7 @@ func (k Keeper) CancelBatchTx(ctx sdk.Context, batch *types.BatchTx) {
 	}
 
 	// Delete batch since it is finished
+	k.DeleteEthereumSignatures(ctx, batch.GetStoreIndex())
 	k.DeleteOutgoingTx(ctx, batch.GetStoreIndex())
 
 	ctx.EventManager().EmitEvent(

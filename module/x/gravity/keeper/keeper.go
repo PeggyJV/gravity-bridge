@@ -129,12 +129,12 @@ func (k Keeper) GetLastUnbondingBlockHeight(ctx sdk.Context) uint64 {
 //     ETHEREUM SIGNATURES   //
 ///////////////////////////////
 
-// getEthereumSignature returns a valset confirmation by a nonce and validator address
+// getEthereumSignature returns an ethereum signature by a nonce and validator address
 func (k Keeper) getEthereumSignature(ctx sdk.Context, storeIndex []byte, validator sdk.ValAddress) []byte {
 	return ctx.KVStore(k.storeKey).Get(types.MakeEthereumSignatureKey(storeIndex, validator))
 }
 
-// SetEthereumSignature sets a valset confirmation
+// SetEthereumSignature sets an ethereum signature
 func (k Keeper) SetEthereumSignature(ctx sdk.Context, sig types.EthereumTxConfirmation, val sdk.ValAddress) []byte {
 	key := types.MakeEthereumSignatureKey(sig.GetStoreIndex(), val)
 	ctx.KVStore(k.storeKey).Set(key, sig.GetSignature())
