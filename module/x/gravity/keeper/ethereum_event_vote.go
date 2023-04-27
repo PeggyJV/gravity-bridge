@@ -50,7 +50,11 @@ func (k Keeper) recordEventVote(
 	// Add the validator's vote to this EthereumEventVoteRecord
 	eventVoteRecord.Votes = append(eventVoteRecord.Votes, val.String())
 
-	k.setEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash(), eventVoteRecord)
+	// ignore "old" event votes but still record the nonce for the submitting validator
+	if event.GetEventNonce() > k.GetLastObservedEventNonce(ctx) {
+		k.setEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash(), eventVoteRecord)
+	}
+
 	k.setLastEventNonceByValidator(ctx, val, event.GetEventNonce())
 
 	return eventVoteRecord, nil
