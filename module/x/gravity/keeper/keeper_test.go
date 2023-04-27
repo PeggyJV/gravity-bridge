@@ -558,7 +558,7 @@ func TestKeeper_Migration(t *testing.T) {
 		},
 	}
 
-	//Put an outgoing transaction into the system
+	// Submit SendToEthereums, and create an OutgoingTx (BatchTx) from them
 
 	var (
 		now                 = time.Now().UTC()

@@ -53,7 +53,7 @@ message MsgSendToEthereum {
 // will be included in the batch tx.
 message MsgSendToEthereumResponse { uint64 id = 1; }
 
-// MsgCancelSendToEthereum allows the sender to cancel its own outgoing
+// MsgCancelSendToEthereum allows the sender to cancel its own unbatched
 // SendToEthereum tx and recieve a refund of the tokens and bridge fees. This tx
 // will only succeed if the SendToEthereum tx hasn't been batched to be
 // processed and relayed to Ethereum.
