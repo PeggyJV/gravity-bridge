@@ -274,18 +274,24 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	balance2 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(denom, 12)}, balance2)
 
+	// and vouchers added to the account
+	// this happens when 2/3 of the voting power have submitted claims, so the third isn't required
+	balance3 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(denom, 12)}, balance3)
+
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
 	_, err = h(ctx, ethClaim3Msg)
 	gravity.EndBlocker(ctx, input.GravityKeeper)
 	require.NoError(t, err)
 
-	// and attestation persisted
+	// and attestations pruned
+	a1 = input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim1.Hash())
+	a2 = input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim2.Hash())
 	a3 := input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim3.Hash())
-	require.NotNil(t, a3)
-	// and no additional added to the account
-	balance3 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(denom, 12)}, balance3)
+	require.Nil(t, a1)
+	require.Nil(t, a2)
+	require.Nil(t, a3)
 }
 
 func TestMsgSetDelegateAddresses(t *testing.T) {
