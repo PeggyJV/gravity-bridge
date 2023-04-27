@@ -30,7 +30,6 @@ func GetTxCmd(storeKey string) *cobra.Command {
 	gravityTxCmd.AddCommand(
 		CmdSendToEthereum(),
 		CmdCancelSendToEthereum(),
-		CmdRequestBatchTx(),
 		CmdSetDelegateKeys(),
 	)
 
@@ -108,35 +107,6 @@ func CmdCancelSendToEthereum() *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-	return cmd
-}
-
-func CmdRequestBatchTx() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "request-batch-tx [denom] [signer]",
-		Args:  cobra.ExactArgs(2),
-		Short: "Request batch transaction for denom by signer",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			denom := args[0]
-			signer, err := sdk.AccAddressFromHex(args[1])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgRequestBatchTx(denom, signer)
-			if err = msg.ValidateBasic(); err != nil {
-				return err
-			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

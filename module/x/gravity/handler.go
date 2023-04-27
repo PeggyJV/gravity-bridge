@@ -25,10 +25,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.CancelSendToEthereum(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
-		case *types.MsgRequestBatchTx:
-			res, err := msgServer.RequestBatchTx(sdk.WrapSDKContext(ctx), msg)
-			return sdk.WrapServiceResult(ctx, res, err)
-
 		case *types.MsgSubmitEthereumTxConfirmation:
 			res, err := msgServer.SubmitEthereumTxConfirmation(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
