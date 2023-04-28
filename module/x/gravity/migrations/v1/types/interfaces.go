@@ -28,7 +28,6 @@ type EthereumEvent interface {
 	Validate() error
 }
 
-// OutgoingTx represents a transaction that is ready to be signed and/or submitted by the orchestrator and relayer respectively
 type OutgoingTx interface {
 	// NOTE: currently the function signatures here don't match, figure out how to do this proprly
 	// maybe add an interface arg here and typecheck in each implementation?
