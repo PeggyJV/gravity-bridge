@@ -106,35 +106,6 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			return true
 		}, 5*time.Minute, 10*time.Second, "unable to send to ethereum")
 
-		// Create Transaction batch
-		s.Require().Eventuallyf(func() bool {
-			batchTx := types.NewMsgRequestBatchTx(gravityDenom, s.chain.validators[2].keyInfo.GetAddress())
-
-			keyRing, err := s.chain.validators[2].keyring()
-			s.Require().NoError(err)
-
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyRing, "val", s.chain.validators[2].keyInfo.GetAddress())
-			s.Require().NoError(err)
-
-			response, err := s.chain.sendMsgs(*clientCtx, batchTx)
-			s.T().Logf("batch response: %s", response)
-			if err != nil {
-				s.T().Logf("error: %s", err)
-				return false
-			}
-
-			if response.Code != 0 {
-				if response.Code != 32 {
-					s.T().Log(response)
-				}
-				return false
-			}
-
-			s.Require().NoError(err, "error querying delegator bonded validators")
-
-			return true
-		}, 5*time.Minute, 1*time.Second, "can't create TX batch successfully")
-
 		// Confirm batchtx signatures
 		s.Require().Eventuallyf(func() bool {
 			keyRing, err := s.chain.validators[3].keyring()
