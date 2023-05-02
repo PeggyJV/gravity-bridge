@@ -25,7 +25,7 @@ const (
 
 // EthereumAddrLessThan migrates the Ethereum address less than function
 func EthereumAddrLessThan(e, o string) bool {
-	return bytes.Compare([]byte(e)[:], []byte(o)[:]) == -1
+	return bytes.Compare(common.HexToAddress(e).Bytes(), common.HexToAddress(o).Bytes()) == -1
 }
 
 // ValidateEthereumAddress validates the ethereum address strings
