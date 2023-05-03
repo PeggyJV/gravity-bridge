@@ -120,7 +120,7 @@ pub fn one_hundred_eth_uint256() -> Uint256 {
 //     }
 // }
 
-#[actix_rt::main]
+#[tokio::main]
 pub async fn main() {
     env_logger::init();
 
