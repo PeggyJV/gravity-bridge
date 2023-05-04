@@ -112,56 +112,45 @@ impl Runnable for CosmosToEthCmd {
 
             println!("Cosmos balances {:?}", balances);
 
-            let times = self.args.get(4).expect("times is required");
-            let times = times.parse::<usize>().expect("cannot parse times");
-
             match found {
                 None => panic!("You don't have any {} tokens!", gravity_denom),
                 Some(found) => {
-                    if amount.amount.clone() * times.into() >= found.amount && times == 1 {
+                    if amount.amount.clone() >= found.amount {
                         if is_cosmos_originated {
                             panic!("Your transfer of {} {} tokens is greater than your balance of {} tokens. Remember you need some to pay for fees!", print_atom(amount.amount), gravity_denom, print_atom(found.amount.clone()));
                         } else {
                             panic!("Your transfer of {} {} tokens is greater than your balance of {} tokens. Remember you need some to pay for fees!", print_eth(amount.amount), gravity_denom, print_eth(found.amount.clone()));
                         }
-                    } else if amount.amount.clone() * times.into() >= found.amount {
+                    } else if amount.amount.clone() >= found.amount {
                         if is_cosmos_originated {
-                            panic!("Your transfer of {} * {} {} tokens is greater than your balance of {} tokens. Try to reduce the amount or the --times parameter", print_atom(amount.amount), times, gravity_denom, print_atom(found.amount.clone()));
+                            panic!("Your transfer of {} * {} tokens is greater than your balance of {} tokens. Try to reduce the amount or the --times parameter", print_atom(amount.amount), gravity_denom, print_atom(found.amount.clone()));
                         } else {
-                            panic!("Your transfer of {} * {} {} tokens is greater than your balance of {} tokens. Try to reduce the amount or the --times parameter", print_eth(amount.amount), times, gravity_denom, print_eth(found.amount.clone()));
+                            panic!("Your transfer of {} * {} tokens is greater than your balance of {} tokens. Try to reduce the amount or the --times parameter", print_eth(amount.amount), gravity_denom, print_eth(found.amount.clone()));
                         }
                     }
                 }
             }
 
-            let mut successful_sends = 0;
-            for _ in 0..times {
-                println!(
-                    "Locking {} / {} into the batch pool",
-                    amount.clone(),
-                    gravity_denom
-                );
-                let res = send_to_eth(
-                    cosmos_key,
-                    eth_dest,
-                    amount.clone(),
-                    bridge_fee.clone(),
-                    config.cosmos.gas_price.as_tuple(),
-                    &contact,
-                    1.0
-                )
-                .await;
-                match res {
-                    Ok(tx_id) => {
-                        successful_sends += 1;
-                        println!("Send to Eth txid {}", tx_id.txhash);
-                    }
-                    Err(e) => println!("Failed to send tokens! {:?}", e),
+            println!(
+                "Locking {} / {} into the batch pool",
+                amount.clone(),
+                gravity_denom
+            );
+            let res = send_to_eth(
+                cosmos_key,
+                eth_dest,
+                amount.clone(),
+                bridge_fee.clone(),
+                config.cosmos.gas_price.as_tuple(),
+                &contact,
+                1.0
+            )
+            .await;
+            match res {
+                Ok(tx_id) => {
+                    println!("Send to Eth txid {}", tx_id.txhash);
                 }
-            }
-
-            if successful_sends == 0 {
-                println!("No successful sends, no batch will be sent")
+                Err(e) => println!("Failed to send tokens! {:?}", e),
             }
         })
         .unwrap_or_else(|e| {
