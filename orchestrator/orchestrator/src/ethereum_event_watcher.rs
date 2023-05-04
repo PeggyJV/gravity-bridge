@@ -5,8 +5,8 @@ use crate::get_with_retry::get_block_number_with_retry;
 use crate::get_with_retry::get_chain_id_with_retry;
 use crate::metrics;
 use cosmos_gravity::build;
-use cosmos_gravity::query::get_last_event_nonce;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
+use cosmos_gravity::query::get_last_event_nonce;
 use deep_space::{Contact, Msg};
 use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
@@ -241,7 +241,6 @@ pub async fn check_for_events(
 
     Ok(ending_block)
 }
-
 
 /// The number of blocks behind the 'latest block' on Ethereum our event checking should be.
 /// Ethereum does not have finality and as such is subject to chain reorgs and temporary forks
