@@ -81,7 +81,6 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 		}
 		return false
 	})
-	k.DeleteEthereumSignatures(ctx, batchTx.GetStoreIndex())
 	k.DeleteOutgoingTx(ctx, batchTx.GetStoreIndex())
 }
 
@@ -124,7 +123,6 @@ func (k Keeper) CancelBatchTx(ctx sdk.Context, batch *types.BatchTx) {
 	}
 
 	// Delete batch since it is finished
-	k.DeleteEthereumSignatures(ctx, batch.GetStoreIndex())
 	k.DeleteOutgoingTx(ctx, batch.GetStoreIndex())
 
 	ctx.EventManager().EmitEvent(

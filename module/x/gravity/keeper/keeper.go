@@ -464,6 +464,7 @@ func (k Keeper) SetOutgoingTx(ctx sdk.Context, outgoing types.OutgoingTx) {
 // DeleteOutgoingTx deletes a given outgoingtx
 func (k Keeper) DeleteOutgoingTx(ctx sdk.Context, storeIndex []byte) {
 	ctx.KVStore(k.storeKey).Delete(types.MakeOutgoingTxKey(storeIndex))
+	k.DeleteEthereumSignatures(ctx, storeIndex)
 }
 
 func (k Keeper) PaginateOutgoingTxsByType(ctx sdk.Context, pageReq *query.PageRequest, prefixByte byte, cb func(key []byte, outgoing types.OutgoingTx) bool) (*query.PageResponse, error) {

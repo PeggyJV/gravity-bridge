@@ -27,7 +27,6 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 // EndBlocker is called at the end of every block
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	outgoingTxSlashing(ctx, k)
-	// Do we need to concern ourselves with future slashing windows for this pruning?
 	pruneEventVoteRecords(ctx, k)
 	eventVoteRecordTally(ctx, k)
 	updateObservedEthereumHeight(ctx, k)
@@ -102,7 +101,6 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 		earliestToPrune := currentBlock - params.SignedSignerSetTxsWindow
 		for _, set := range k.GetSignerSetTxs(ctx) {
 			if set.Nonce < lastObserved.Nonce && set.Height < earliestToPrune {
-				k.DeleteEthereumSignatures(ctx, set.GetStoreIndex())
 				k.DeleteOutgoingTx(ctx, set.GetStoreIndex())
 			}
 		}
@@ -287,7 +285,6 @@ func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper) {
 	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		cctx, _ := otx.(*types.ContractCallTx)
 		if cctx.Timeout < ethereumHeight {
-			k.DeleteEthereumSignatures(ctx, cctx.GetStoreIndex())
 			k.DeleteOutgoingTx(ctx, cctx.GetStoreIndex())
 		}
 		return true
