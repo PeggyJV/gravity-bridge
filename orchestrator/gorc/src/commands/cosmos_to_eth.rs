@@ -121,12 +121,6 @@ impl Runnable for CosmosToEthCmd {
                         } else {
                             panic!("Your transfer of {} {} tokens is greater than your balance of {} tokens. Remember you need some to pay for fees!", print_eth(amount.amount), gravity_denom, print_eth(found.amount.clone()));
                         }
-                    } else if amount.amount.clone() >= found.amount {
-                        if is_cosmos_originated {
-                            panic!("Your transfer of {} * {} tokens is greater than your balance of {} tokens. Try to reduce the amount or the --times parameter", print_atom(amount.amount), gravity_denom, print_atom(found.amount.clone()));
-                        } else {
-                            panic!("Your transfer of {} * {} tokens is greater than your balance of {} tokens. Try to reduce the amount or the --times parameter", print_eth(amount.amount), gravity_denom, print_eth(found.amount.clone()));
-                        }
                     }
                 }
             }
