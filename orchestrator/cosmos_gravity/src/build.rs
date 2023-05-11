@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 
 use crate::crypto::PrivateKey as CosmosPrivateKey;
 
-lazy_static!{
+lazy_static! {
     static ref DENOM_REGEX: Regex = Regex::new("^[a-zA-Z][a-zA-Z0-9/-]{2,127}$").unwrap();
 }
 
@@ -247,7 +247,7 @@ pub fn ethereum_event_messages(
 // be rejected by the chain when processed.
 pub fn denom_string(input_denom: String) -> String {
     if !DENOM_REGEX.is_match(input_denom.as_str()) {
-        return "invalid".to_string()
+        return "invalid".to_string();
     }
 
     input_denom

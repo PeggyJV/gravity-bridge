@@ -75,11 +75,7 @@ impl Runnable for EthToCosmosCmd {
                     contract_address
                 );
             } else if amount > erc20_balance {
-                panic!(
-                    "Insufficient balance {} > {}",
-                    amount,
-                    erc20_balance
-                );
+                panic!("Insufficient balance {} > {}", amount, erc20_balance);
             }
 
             println!(
