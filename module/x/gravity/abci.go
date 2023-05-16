@@ -22,6 +22,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	createSignerSetTxs(ctx, k)
 	createBatchTxs(ctx, k)
 	pruneSignerSetTxs(ctx, k)
+	pruneTxHistory(ctx, k)
 }
 
 // EndBlocker is called at the end of every block
@@ -101,6 +102,7 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 		earliestToPrune := currentBlock - params.SignedSignerSetTxsWindow
 		for _, set := range k.GetSignerSetTxs(ctx) {
 			if set.Nonce < lastObserved.Nonce && set.Height < earliestToPrune {
+				k.DeleteEthereumSignatures(ctx, set.GetStoreIndex())
 				k.DeleteOutgoingTx(ctx, set.GetStoreIndex())
 			}
 		}
@@ -109,17 +111,33 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 
 // pruneEventVoteRecords deletes all event vote records with nonces that are older than the last observed event nonce
 func pruneEventVoteRecords(ctx sdk.Context, k keeper.Keeper) {
-	lastObservedEventNonce := k.GetLastObservedEventNonce(ctx)
 	k.IterateEthereumEventVoteRecords(ctx, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
 		event, err := types.UnpackEvent(eventVoteRecord.Event)
 		if err != nil {
 			panic(err)
 		}
-		eventNonce := event.GetEventNonce()
-		if eventNonce <= lastObservedEventNonce {
-			k.DeleteEthereumEventVoteRecord(ctx, eventNonce, event.Hash())
+		minEthereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight - k.GetParams(ctx).EventVoteWindow
+		if event.GetEthereumHeight() < minEthereumHeight {
+			k.DeleteEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash())
 		}
 
+		return false
+	})
+}
+
+// pruneTxHistory deletes historical outgoing tx info and their signatures if they are outside of TxHistoryWindow
+func pruneTxHistory(ctx sdk.Context, k keeper.Keeper) {
+	k.IterateCompletedOutgoingTxs(ctx, func(key []byte, cotx types.OutgoingTx) bool {
+		txHistoryWindow := k.GetParams(ctx).TxHistoryWindow
+		currentHeight := uint64(ctx.BlockHeight())
+		if currentHeight <= txHistoryWindow {
+			return true
+		}
+		cotxHeight := cotx.GetCosmosHeight()
+		if cotxHeight < currentHeight-txHistoryWindow {
+			k.DeleteEthereumSignatures(ctx, cotx.GetStoreIndex())
+			k.DeleteCompletedOutgoingTx(ctx, cotx.GetStoreIndex())
+		}
 		return false
 	})
 }
@@ -262,6 +280,7 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 
 		if btx.Timeout < ethereumHeight {
 			k.CancelBatchTx(ctx, btx)
+			k.SetCompletedOutgoingTx(ctx, btx)
 		}
 
 		return false
@@ -300,7 +319,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 		return
 	}
 
-	usotxs := k.GetUnSlashedOutgoingTxs(ctx, maxHeight)
+	usotxs := k.GetUnslashedOutgoingTxs(ctx, maxHeight)
 	if len(usotxs) == 0 {
 		return
 	}

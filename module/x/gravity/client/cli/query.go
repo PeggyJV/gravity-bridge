@@ -46,6 +46,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdDelegateKeysByOrchestrator(),
 		CmdDelegateKeys(),
 		CmdLastObservedEthereumHeight(),
+		CmdCompletedOutgoingTxs(),
 	)
 
 	return gravityQueryCmd
@@ -818,6 +819,30 @@ func CmdLastObservedEthereumHeight() *cobra.Command {
 			}
 
 			res, err := queryClient.LastObservedEthereumHeight(cmd.Context(), &types.LastObservedEthereumHeightRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdCompletedOutgoingTxs() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "completed-outgoing-txs",
+		Args:  cobra.NoArgs,
+		Short: "query completed outgoing transactions that have not been pruned",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.CompletedOutgoingTxs(cmd.Context(), &types.CompletedOutgoingTxsRequest{})
 			if err != nil {
 				return err
 			}

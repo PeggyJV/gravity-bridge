@@ -23,10 +23,12 @@ func (k Keeper) contractCallExecuted(ctx sdk.Context, invalidationScope []byte, 
 		cctx, _ := otx.(*types.ContractCallTx)
 		if (cctx.InvalidationNonce < completedCallTx.InvalidationNonce) &&
 			bytes.Equal(cctx.InvalidationScope, completedCallTx.InvalidationScope) {
+			k.DeleteEthereumSignatures(ctx, cctx.GetStoreIndex())
 			k.DeleteOutgoingTx(ctx, cctx.GetStoreIndex())
 		}
 		return false
 	})
 
+	k.SetCompletedOutgoingTx(ctx, completedCallTx)
 	k.DeleteOutgoingTx(ctx, completedCallTx.GetStoreIndex())
 }

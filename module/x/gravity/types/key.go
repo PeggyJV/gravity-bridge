@@ -62,6 +62,9 @@ const (
 
 	// EthereumHeightVoteKey indexes the latest heights observed by each validator
 	EthereumHeightVoteKey
+
+	// CompletedOutgoingTxKey indexes the completed outgoing txs
+	CompletedOutgoingTxKey
 )
 
 ////////////////////
@@ -115,6 +118,11 @@ func MakeEthereumEventVoteRecordKey(eventNonce uint64, claimHash []byte) []byte 
 // MakeOutgoingTxKey returns the store index passed with a prefix
 func MakeOutgoingTxKey(storeIndex []byte) []byte {
 	return append([]byte{OutgoingTxKey}, storeIndex...)
+}
+
+// MakeCompletedOutgoingTxKey returns the store index passed with a prefix
+func MakeCompletedOutgoingTxKey(storeIndex []byte) []byte {
+	return append([]byte{CompletedOutgoingTxKey}, storeIndex...)
 }
 
 //////////////////////

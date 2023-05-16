@@ -154,6 +154,12 @@ service Query {
     // option (google.api.http).get =
     // "/gravity/v1/last_observed_ethereum_height"
   }
+
+  rpc CompletedOutgoingTxs(CompletedOutgoingTxsRequest)
+      returns (CompletedOutgoingTxsResponse) {
+    // option (google.api.http).get =
+    // "/gravity/v1/completed_outgoing_txs";
+  }
 }
 
 //  rpc Params
@@ -330,4 +336,10 @@ message UnbatchedSendToEthereumsResponse {
 message LastObservedEthereumHeightRequest {}
 message LastObservedEthereumHeightResponse {
   LatestEthereumBlockHeight last_observed_ethereum_height = 1;
+}
+
+message CompletedOutgoingTxsRequest{}
+message CompletedOutgoingTxsResponse{
+  repeated BatchTx completed_batch_txs = 1;
+  repeated ContractCallTx completed_logic_calls = 2;
 }

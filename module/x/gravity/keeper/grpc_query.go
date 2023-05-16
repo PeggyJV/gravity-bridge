@@ -471,3 +471,25 @@ func (k Keeper) LastObservedEthereumHeight(c context.Context, req *types.LastObs
 
 	return res, nil
 }
+
+func (k Keeper) CompletedOutgoingTxs(c context.Context, req *types.CompletedOutgoingTxsRequest) (*types.CompletedOutgoingTxsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var batches []*types.BatchTx
+	var contractCalls []*types.ContractCallTx
+	k.IterateCompletedOutgoingTxs(ctx, func(_ []byte, tx types.OutgoingTx) bool {
+		switch tx := tx.(type) {
+		case *types.BatchTx:
+			batches = append(batches, tx)
+		case *types.ContractCallTx:
+			contractCalls = append(contractCalls, tx)
+		}
+		return false
+	})
+
+	res := &types.CompletedOutgoingTxsResponse{
+		CompletedBatchTxs:   batches,
+		CompletedLogicCalls: contractCalls,
+	}
+	return res, nil
+}

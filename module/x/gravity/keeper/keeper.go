@@ -463,7 +463,6 @@ func (k Keeper) SetOutgoingTx(ctx sdk.Context, outgoing types.OutgoingTx) {
 
 // DeleteOutgoingTx deletes a given outgoingtx
 func (k Keeper) DeleteOutgoingTx(ctx sdk.Context, storeIndex []byte) {
-	k.DeleteEthereumSignatures(ctx, storeIndex)
 	ctx.KVStore(k.storeKey).Delete(types.MakeOutgoingTxKey(storeIndex))
 }
 
@@ -597,6 +596,50 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 		"eth_tx_timeout", strconv.FormatUint(params.TargetEthTxTimeout, 10),
 	)
 	return newContractCallTx
+}
+
+// SetCompletedOutgoingTx sets a completed outgoing tx
+func (k Keeper) SetCompletedOutgoingTx(ctx sdk.Context, outgoing types.OutgoingTx) {
+	any, err := types.PackOutgoingTx(outgoing)
+	if err != nil {
+		panic(err)
+	}
+	ctx.KVStore(k.storeKey).Set(
+		types.MakeCompletedOutgoingTxKey(outgoing.GetStoreIndex()),
+		k.cdc.MustMarshal(any),
+	)
+}
+
+// GetCompletedOutgoingTx gets a completed outgoing tx
+func (k Keeper) GetCompletedOutgoingTx(ctx sdk.Context, storeIndex []byte) (out types.OutgoingTx) {
+	if err := k.cdc.UnmarshalInterface(ctx.KVStore(k.storeKey).Get(types.MakeCompletedOutgoingTxKey(storeIndex)), &out); err != nil {
+		panic(err)
+	}
+	return out
+}
+
+// IterateOutgoingTxs iterates over a specific type of outgoing transaction denoted by the chosen prefix byte
+func (k Keeper) IterateCompletedOutgoingTxs(ctx sdk.Context, cb func(key []byte, outgoing types.OutgoingTx) bool) {
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.CompletedOutgoingTxKey})
+	iter := prefixStore.ReverseIterator(nil, nil)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var any cdctypes.Any
+		k.cdc.MustUnmarshal(iter.Value(), &any)
+		var otx types.OutgoingTx
+		if err := k.cdc.UnpackAny(&any, &otx); err != nil {
+			panic(err)
+		}
+		if cb(iter.Key(), otx) {
+			break
+		}
+	}
+}
+
+// DeleteCompletedOutgoingTx deletes a given outgoingtx
+func (k Keeper) DeleteCompletedOutgoingTx(ctx sdk.Context, storeIndex []byte) {
+	k.DeleteEthereumSignatures(ctx, storeIndex)
+	ctx.KVStore(k.storeKey).Delete(types.MakeOutgoingTxKey(storeIndex))
 }
 
 //////////////////////////////////////

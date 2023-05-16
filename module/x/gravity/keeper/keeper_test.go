@@ -235,7 +235,7 @@ func TestLastSlashedValsetNonce(t *testing.T) {
 	//  lastSlashedValsetNonce should be zero initially.
 	lastSlashedValsetNonce := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
 	assert.Equal(t, uint64(0), lastSlashedValsetNonce)
-	unslashedValsets := k.GetUnSlashedOutgoingTxs(ctx, uint64(12))
+	unslashedValsets := k.GetUnslashedOutgoingTxs(ctx, uint64(12))
 	assert.Equal(t, 9, len(unslashedValsets))
 
 	// check if last Slashed Valset nonce is set properly or not
@@ -244,19 +244,19 @@ func TestLastSlashedValsetNonce(t *testing.T) {
 	assert.Equal(t, uint64(3), lastSlashedValsetNonce)
 
 	// when maxHeight < lastSlashedValsetNonce, len(unslashedValsets) should be zero
-	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, uint64(2))
+	unslashedValsets = k.GetUnslashedOutgoingTxs(ctx, uint64(2))
 	assert.Equal(t, 0, len(unslashedValsets))
 
 	// when maxHeight == lastSlashedValsetNonce, len(unslashedValsets) should be zero
-	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, uint64(3))
+	unslashedValsets = k.GetUnslashedOutgoingTxs(ctx, uint64(3))
 	assert.Equal(t, 0, len(unslashedValsets))
 
 	// when maxHeight > lastSlashedValsetNonce && maxHeight <= latestValsetNonce
-	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, uint64(6))
+	unslashedValsets = k.GetUnslashedOutgoingTxs(ctx, uint64(6))
 	assert.Equal(t, 2, len(unslashedValsets))
 
 	// when maxHeight > latestValsetNonce
-	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, uint64(15))
+	unslashedValsets = k.GetUnslashedOutgoingTxs(ctx, uint64(15))
 	assert.Equal(t, 6, len(unslashedValsets))
 }
 

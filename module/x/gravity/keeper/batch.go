@@ -77,10 +77,13 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 		// If the iterated batches nonce is lower than the one that was just executed, cancel it
 		btx, _ := otx.(*types.BatchTx)
 		if (btx.BatchNonce < batchTx.BatchNonce) && (btx.TokenContract == batchTx.TokenContract) {
+			k.DeleteEthereumSignatures(ctx, btx.GetStoreIndex())
 			k.CancelBatchTx(ctx, btx)
 		}
 		return false
 	})
+
+	k.SetCompletedOutgoingTx(ctx, batchTx)
 	k.DeleteOutgoingTx(ctx, batchTx.GetStoreIndex())
 }
 
@@ -166,7 +169,7 @@ func (k Keeper) GetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context) uint64 {
 	}
 }
 
-func (k Keeper) GetUnSlashedOutgoingTxs(ctx sdk.Context, maxHeight uint64) (out []types.OutgoingTx) {
+func (k Keeper) GetUnslashedOutgoingTxs(ctx sdk.Context, maxHeight uint64) (out []types.OutgoingTx) {
 	lastSlashed := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
 	k.iterateOutgoingTxs(ctx, func(key []byte, otx types.OutgoingTx) bool {
 		if (otx.GetCosmosHeight() < maxHeight) && (otx.GetCosmosHeight() > lastSlashed) {
