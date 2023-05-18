@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
@@ -190,6 +191,24 @@ func (k Keeper) IterateEthereumEventVoteRecords(ctx sdk.Context, cb func([]byte,
 			return
 		}
 	}
+}
+
+func (k Keeper) PaginateEthereumEventVoteRecords(ctx sdk.Context, pageReq *query.PageRequest, cb func(key []byte, record *types.EthereumEventVoteRecord) bool) (*query.PageResponse, error) {
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.EthereumEventVoteRecordKey})
+
+	return query.FilteredPaginate(prefixStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		if !accumulate {
+			return false, nil
+		}
+
+		eevr := &types.EthereumEventVoteRecord{}
+		k.cdc.MustUnmarshal(value, eevr)
+		if accumulate {
+			return cb(key, eevr), nil
+		}
+
+		return false, nil
+	})
 }
 
 // GetLastObservedEventNonce returns the latest observed event nonce

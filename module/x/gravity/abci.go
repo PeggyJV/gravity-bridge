@@ -111,12 +111,19 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 
 // pruneEventVoteRecords deletes all event vote records with nonces that are older than the last observed event nonce
 func pruneEventVoteRecords(ctx sdk.Context, k keeper.Keeper) {
+	lastEthereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight
+	window := k.GetParams(ctx).EventVoteWindow
+	if lastEthereumHeight < window {
+		return
+	}
+	minEthereumHeight := lastEthereumHeight - window
+
 	k.IterateEthereumEventVoteRecords(ctx, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
 		event, err := types.UnpackEvent(eventVoteRecord.Event)
 		if err != nil {
 			panic(err)
 		}
-		minEthereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight - k.GetParams(ctx).EventVoteWindow
+
 		if event.GetEthereumHeight() < minEthereumHeight {
 			k.DeleteEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash())
 		}

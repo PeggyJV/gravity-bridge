@@ -493,3 +493,103 @@ func (k Keeper) CompletedOutgoingTxs(c context.Context, req *types.CompletedOutg
 	}
 	return res, nil
 }
+
+func (k Keeper) BatchTxConfirmationsByValidator(c context.Context, req *types.BatchTxConfirmationsByValidatorRequest) (*types.BatchTxConfirmationsByValidatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	var confirms []*types.BatchTxConfirmation
+	k.IterateBatchTxEthereumSignatures(ctx, func(contractAddress common.Address, nonce uint64, val sdk.ValAddress, sig []byte) bool {
+		if !val.Equals(valAddr) {
+			return false
+		}
+
+		confirms = append(confirms, &types.BatchTxConfirmation{
+			TokenContract:  contractAddress.Hex(),
+			BatchNonce:     nonce,
+			EthereumSigner: k.GetValidatorEthereumAddress(ctx, val).Hex(),
+			Signature:      sig,
+		})
+		return false
+	})
+
+	res := &types.BatchTxConfirmationsByValidatorResponse{
+		BatchTxConfirmations: confirms,
+	}
+	return res, nil
+}
+
+func (k Keeper) ContractCallTxConfirmationsByValidator(c context.Context, req *types.ContractCallTxConfirmationsByValidatorRequest) (*types.ContractCallTxConfirmationsByValidatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	var confirms []*types.ContractCallTxConfirmation
+	k.IterateContractCallTxEthereumSignatures(ctx, func(invalidationScope []byte, invalidationNonce uint64, val sdk.ValAddress, sig []byte) bool {
+		if !val.Equals(valAddr) {
+			return false
+		}
+
+		confirms = append(confirms, &types.ContractCallTxConfirmation{
+			InvalidationScope: invalidationScope,
+			InvalidationNonce: invalidationNonce,
+			EthereumSigner:    k.GetValidatorEthereumAddress(ctx, val).Hex(),
+			Signature:         sig,
+		})
+		return false
+	})
+
+	res := &types.ContractCallTxConfirmationsByValidatorResponse{
+		ContractCallTxConfirmations: confirms,
+	}
+	return res, nil
+}
+
+func (k Keeper) SignerSetTxConfirmationsByValidator(c context.Context, req *types.SignerSetTxConfirmationsByValidatorRequest) (*types.SignerSetTxConfirmationsByValidatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	var confirms []*types.SignerSetTxConfirmation
+	k.IterateSignerSetTxEthereumSignatures(ctx, func(nonce uint64, val sdk.ValAddress, sig []byte) bool {
+		if !val.Equals(valAddr) {
+			return false
+		}
+
+		confirms = append(confirms, &types.SignerSetTxConfirmation{
+			SignerSetNonce: nonce,
+			EthereumSigner: k.GetValidatorEthereumAddress(ctx, val).Hex(),
+			Signature:      sig,
+		})
+		return false
+	})
+
+	res := &types.SignerSetTxConfirmationsByValidatorResponse{
+		SignerSetTxConfirmations: confirms,
+	}
+	return res, nil
+}
+
+func (k Keeper) EthereumEventVoteRecords(c context.Context, req *types.EthereumEventVoteRecordsRequest) (*types.EthereumEventVoteRecordsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	res := &types.EthereumEventVoteRecordsResponse{}
+	pageRes, err := k.PaginateEthereumEventVoteRecords(ctx, req.Pagination, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
+		res.Records = append(res.Records, eventVoteRecord)
+
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res.Pagination = pageRes
+
+	return res, nil
+}

@@ -160,6 +160,30 @@ service Query {
     // option (google.api.http).get =
     // "/gravity/v1/completed_outgoing_txs";
   }
+
+  rpc BatchTxConfirmationsByValidator(BatchTxConfirmationsByValidatorRequest)
+      returns (BatchTxConfirmationsByValidatorResponse) {
+    // option (google.api.http).get =
+    // "/gravity/v1/batch_tx_confirmations_by_validator/{validator}";
+  }
+
+  rpc ContractCallTxConfirmationsByValidator(ContractCallTxConfirmationsByValidatorRequest)
+      returns (ContractCallTxConfirmationsByValidatorResponse) {
+    // option (google.api.http).get =
+    // "/gravity/v1/contract_call_tx_confirmations_by_validator/{validator}";
+  }
+
+  rpc SignerSetTxConfirmationsByValidator(SignerSetTxConfirmationsByValidatorRequest)
+      returns (SignerSetTxConfirmationsByValidatorResponse) {
+    // option (google.api.http).get =
+    // "/gravity/v1/signer_set_tx_confirmations_by_validator/{validator}";
+  }
+
+  rpc EthereumEventVoteRecords(EthereumEventVoteRecordsRequest)
+      returns (EthereumEventVoteRecordsResponse) {
+    // option (google.api.http).get =
+    // "/gravity/v1/event_vote_records";
+  }
 }
 
 //  rpc Params
@@ -338,8 +362,41 @@ message LastObservedEthereumHeightResponse {
   LatestEthereumBlockHeight last_observed_ethereum_height = 1;
 }
 
-message CompletedOutgoingTxsRequest{}
-message CompletedOutgoingTxsResponse{
+message CompletedOutgoingTxsRequest {}
+message CompletedOutgoingTxsResponse {
   repeated BatchTx completed_batch_txs = 1;
   repeated ContractCallTx completed_logic_calls = 2;
+}
+
+message BatchTxConfirmationsByValidatorRequest {
+  string validator_address = 1;
+}
+
+message BatchTxConfirmationsByValidatorResponse {
+  repeated BatchTxConfirmation batch_tx_confirmations = 1;
+}
+
+message ContractCallTxConfirmationsByValidatorRequest {
+  string validator_address = 1;
+}
+
+message ContractCallTxConfirmationsByValidatorResponse {
+  repeated ContractCallTxConfirmation contract_call_tx_confirmations = 2;
+}
+
+message SignerSetTxConfirmationsByValidatorRequest {
+  string validator_address = 1;
+}
+
+message SignerSetTxConfirmationsByValidatorResponse {
+  repeated SignerSetTxConfirmation signer_set_tx_confirmations = 3;
+}
+
+message EthereumEventVoteRecordsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message EthereumEventVoteRecordsResponse {
+  repeated EthereumEventVoteRecord records = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

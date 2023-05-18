@@ -173,6 +173,59 @@ func (k Keeper) iterateEthereumSignatures(ctx sdk.Context, storeIndex []byte, cb
 	}
 }
 
+func (k Keeper) IterateBatchTxEthereumSignatures(ctx sdk.Context, cb func(common.Address, uint64, sdk.ValAddress, []byte) bool) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, []byte{types.EthereumSignatureKey, types.BatchTxPrefixByte})
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		key := bytes.NewBuffer(iter.Key())
+		key.Next(2) // trim prefix bytes
+		contractAddr := common.BytesToAddress(key.Next(20))
+		nonce := binary.BigEndian.Uint64(key.Next(8))
+		val := sdk.ValAddress(key.Next(20))
+
+		if cb(contractAddr, nonce, val, iter.Value()) {
+			break
+		}
+	}
+}
+
+func (k Keeper) IterateContractCallTxEthereumSignatures(ctx sdk.Context, cb func([]byte, uint64, sdk.ValAddress, []byte) bool) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, []byte{types.EthereumSignatureKey, types.ContractCallTxPrefixByte})
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		key := bytes.NewBuffer(iter.Key())
+		key.Next(2) // trim prefix bytes
+		invalidationScope := key.Next(32)
+		nonce := binary.BigEndian.Uint64(key.Next(8))
+		val := sdk.ValAddress(key.Next(20))
+
+		if cb(invalidationScope, nonce, val, iter.Value()) {
+			break
+		}
+	}
+}
+
+func (k Keeper) IterateSignerSetTxEthereumSignatures(ctx sdk.Context, cb func(uint64, sdk.ValAddress, []byte) bool) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, []byte{types.EthereumSignatureKey, types.SignerSetTxPrefixByte})
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		key := bytes.NewBuffer(iter.Key())
+		key.Next(2) // trim prefix bytes
+		nonce := binary.BigEndian.Uint64(key.Next(8))
+		val := sdk.ValAddress(key.Next(20))
+
+		if cb(nonce, val, iter.Value()) {
+			break
+		}
+	}
+}
+
 /////////////////////////
 //  ORC -> VAL ADDRESS //
 /////////////////////////
