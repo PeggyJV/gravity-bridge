@@ -101,7 +101,6 @@ message Params {
   ];
   uint64 unbond_slashing_signer_set_txs_window = 17;
   uint64 event_vote_window = 18;
-  uint64 tx_history_window = 19;
 }
 
 // GenesisState struct

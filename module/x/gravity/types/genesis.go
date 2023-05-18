@@ -142,7 +142,6 @@ func DefaultParams() *Params {
 		UnbondSlashingSignerSetTxsWindow:          10000,
 		// this is in ethereum blocks. ethereum block time is ~12 seconds, about twice as long as Sommelier
 		EventVoteWindow: 5000,
-		TxHistoryWindow: 432000,
 	}
 }
 
@@ -196,9 +195,6 @@ func (p Params) ValidateBasic() error {
 	if err := validateEventVoteWindow(p.EventVoteWindow); err != nil {
 		return sdkerrors.Wrap(err, "event vote window")
 	}
-	if err := validateTxHistoryWindow(p.TxHistoryWindow); err != nil {
-		return sdkerrors.Wrap(err, "tx history window")
-	}
 
 	return nil
 }
@@ -228,7 +224,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionConflictingEthereumSignature, &p.SlashFractionConflictingEthereumSignature, validateSlashFractionConflictingEthereumSignature),
 		paramtypes.NewParamSetPair(ParamStoreUnbondSlashingSignerSetTxsWindow, &p.UnbondSlashingSignerSetTxsWindow, validateUnbondSlashingSignerSetTxsWindow),
 		paramtypes.NewParamSetPair(ParamStoreEventVoteWindow, &p.EventVoteWindow, validateEventVoteWindow),
-		paramtypes.NewParamSetPair(ParamStoreTxHistoryWindow, &p.TxHistoryWindow, validateTxHistoryWindow),
 	}
 }
 

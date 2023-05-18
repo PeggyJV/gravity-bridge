@@ -22,7 +22,6 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	createSignerSetTxs(ctx, k)
 	createBatchTxs(ctx, k)
 	pruneSignerSetTxs(ctx, k)
-	pruneTxHistory(ctx, k)
 }
 
 // EndBlocker is called at the end of every block
@@ -128,23 +127,6 @@ func pruneEventVoteRecords(ctx sdk.Context, k keeper.Keeper) {
 			k.DeleteEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash())
 		}
 
-		return false
-	})
-}
-
-// pruneTxHistory deletes historical outgoing tx info and their signatures if they are outside of TxHistoryWindow
-func pruneTxHistory(ctx sdk.Context, k keeper.Keeper) {
-	k.IterateCompletedOutgoingTxs(ctx, func(key []byte, cotx types.OutgoingTx) bool {
-		txHistoryWindow := k.GetParams(ctx).TxHistoryWindow
-		currentHeight := uint64(ctx.BlockHeight())
-		if currentHeight <= txHistoryWindow {
-			return true
-		}
-		cotxHeight := cotx.GetCosmosHeight()
-		if cotxHeight < currentHeight-txHistoryWindow {
-			k.DeleteEthereumSignatures(ctx, cotx.GetStoreIndex())
-			k.DeleteCompletedOutgoingTx(ctx, cotx.GetStoreIndex())
-		}
 		return false
 	})
 }
