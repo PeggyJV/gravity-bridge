@@ -245,8 +245,9 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 		btx, _ := otx.(*types.BatchTx)
 
 		if btx.Timeout < ethereumHeight {
-			k.CancelBatchTx(ctx, btx)
+			// we keep the data around for slashing in case the timeout was due to a lack of signatures
 			k.SetCompletedOutgoingTx(ctx, btx)
+			k.CancelBatchTx(ctx, btx)
 		}
 
 		return false
@@ -270,6 +271,8 @@ func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper) {
 	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		cctx, _ := otx.(*types.ContractCallTx)
 		if cctx.Timeout < ethereumHeight {
+			// we keep the data around for slashing in case the timeout was due to a lack of signatures
+			k.SetCompletedOutgoingTx(ctx, cctx)
 			k.DeleteOutgoingTx(ctx, cctx.GetStoreIndex())
 		}
 		return true
@@ -340,7 +343,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 	}
 
 	for _, otx := range usotxs {
-		// SLASH BONDED VALIDATORS who didn't sign batch txs
+		// SLASH BONDED VALIDATORS who didn't sign outgoing txs
 		signatures := k.GetEthereumSignatures(ctx, otx.GetStoreIndex())
 		for _, valInfo := range valInfos {
 			// Don't slash validators who joined after outgoingtx is created
@@ -407,7 +410,8 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 			}
 		}
 
-		// then we set the latest slashed outgoing tx block
+		k.DeleteEthereumSignatures(ctx, otx.GetStoreIndex())
+		k.DeleteCompletedOutgoingTx(ctx, otx.GetStoreIndex())
 		k.SetLastSlashedOutgoingTxBlockHeight(ctx, otx.GetCosmosHeight())
 	}
 }

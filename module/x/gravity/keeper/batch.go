@@ -171,9 +171,9 @@ func (k Keeper) GetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context) uint64 {
 
 func (k Keeper) GetUnslashedOutgoingTxs(ctx sdk.Context, maxHeight uint64) (out []types.OutgoingTx) {
 	lastSlashed := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
-	k.iterateOutgoingTxs(ctx, func(key []byte, otx types.OutgoingTx) bool {
-		if (otx.GetCosmosHeight() < maxHeight) && (otx.GetCosmosHeight() > lastSlashed) {
-			out = append(out, otx)
+	k.IterateCompletedOutgoingTxs(ctx, func(key []byte, cotx types.OutgoingTx) bool {
+		if (cotx.GetCosmosHeight() < maxHeight) && (cotx.GetCosmosHeight() > lastSlashed) {
+			out = append(out, cotx)
 		}
 		return false
 	})
