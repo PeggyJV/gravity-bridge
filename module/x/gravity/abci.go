@@ -21,6 +21,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	cleanupTimedOutContractCallTxs(ctx, k)
 	createSignerSetTxs(ctx, k)
 	createBatchTxs(ctx, k)
+	pruneSignerSetTxs(ctx, k)
 }
 
 // EndBlocker is called at the end of every block
@@ -82,6 +83,28 @@ func createSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 
 	if shouldCreate {
 		k.CreateSignerSetTx(ctx)
+	}
+}
+
+func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
+	params := k.GetParams(ctx)
+	// Validator set pruning
+	// prune all validator sets with a nonce less than the
+	// last observed nonce, they can't be submitted any longer
+	//
+	// Only prune valsets after the signed valsets window has passed
+	// so that slashing can occur the block before we remove them
+	lastObserved := k.GetLastObservedSignerSetTx(ctx)
+	currentBlock := uint64(ctx.BlockHeight())
+	tooEarly := currentBlock < params.SignedSignerSetTxsWindow
+	if lastObserved != nil && !tooEarly {
+		earliestToPrune := currentBlock - params.SignedSignerSetTxsWindow
+		for _, set := range k.GetSignerSetTxs(ctx) {
+			if set.Nonce < lastObserved.Nonce && set.Height < earliestToPrune {
+				k.DeleteEthereumSignatures(ctx, set.GetStoreIndex())
+				k.DeleteOutgoingTx(ctx, set.GetStoreIndex())
+			}
+		}
 	}
 }
 
