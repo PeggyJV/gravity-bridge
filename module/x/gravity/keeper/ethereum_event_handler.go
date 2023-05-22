@@ -81,7 +81,11 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 			Nonce:   event.SignerSetTxNonce,
 			Signers: event.Members,
 		}
-		k.SetCompletedOutgoingTx(ctx, sstx)
+		// if the outgoing tx is nil, slashing has already occured for this tx and it has been pruned,
+		// so we don't set it as completed because that would require a second pruning handler.
+		if k.GetOutgoingTx(ctx, sstx.GetStoreIndex()) != nil {
+			k.SetCompletedOutgoingTx(ctx, sstx)
+		}
 		k.setLastObservedSignerSetTx(ctx, *sstx)
 		k.AfterSignerSetExecutedEvent(ctx, *event)
 		return nil

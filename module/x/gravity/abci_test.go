@@ -175,7 +175,7 @@ func TestBatchSlashing(t *testing.T) {
 		TokenContract: keeper.TokenContractAddrs[0],
 		Height:        uint64(ctx.BlockHeight() - int64(params.SignedBatchesWindow+1)),
 	}
-	gravityKeeper.SetOutgoingTx(ctx, batch)
+	gravityKeeper.SetCompletedOutgoingTx(ctx, batch)
 
 	for i, val := range keeper.ValAddrs {
 		if i == 0 {
@@ -234,7 +234,7 @@ func TestSignerSetTxSetting(t *testing.T) {
 	require.EqualValues(t, 1, len(gk.GetSignerSetTxs(ctx)))
 }
 
-/// Test batch timeout
+// Test batch timeout
 func TestBatchTxTimeout(t *testing.T) {
 	input, ctx := keeper.SetupFiveValChain(t)
 	gravityKeeper := input.GravityKeeper

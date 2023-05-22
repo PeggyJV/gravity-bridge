@@ -27,6 +27,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 // EndBlocker is called at the end of every block
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	outgoingTxSlashing(ctx, k)
+	pruneTxsOutsideSlashingWindow(ctx, k)
 	pruneEventVoteRecords(ctx, k)
 	eventVoteRecordTally(ctx, k)
 	updateObservedEthereumHeight(ctx, k)
@@ -106,6 +107,21 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 			}
 		}
 	}
+}
+
+// pruneTxsOutsideSlashingWindow deletes all completed txs and their signatures whos block height is below the last slashed
+// height. This accounts for the corner case where a tx becomes a CompletedOutgoingTx right after its relevant block height
+// has been slashed for, since it's possible for a relayer to submit a tx right before its slashing height.
+func pruneTxsOutsideSlashingWindow(ctx sdk.Context, k keeper.Keeper) {
+	lastSlashed := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
+	k.IterateCompletedOutgoingTxs(ctx, func(key []byte, cotx types.OutgoingTx) bool {
+		if cotx.GetCosmosHeight() <= lastSlashed {
+			k.DeleteEthereumSignatures(ctx, cotx.GetStoreIndex())
+			k.DeleteCompletedOutgoingTx(ctx, cotx.GetStoreIndex())
+		}
+		return false
+	})
+
 }
 
 // pruneEventVoteRecords deletes all event vote records with nonces that are older than the last observed event nonce
@@ -433,8 +449,10 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 			}
 		}
 
-		k.DeleteEthereumSignatures(ctx, otx.GetStoreIndex())
-		k.DeleteCompletedOutgoingTx(ctx, otx.GetStoreIndex())
-		k.SetLastSlashedOutgoingTxBlockHeight(ctx, otx.GetCosmosHeight())
+		// since we changed the logic for gathering unslashed txs, the order of the block heights is
+		// not guaranteed to be ascending
+		if otx.GetCosmosHeight() > k.GetLastSlashedOutgoingTxBlockHeight(ctx) {
+			k.SetLastSlashedOutgoingTxBlockHeight(ctx, otx.GetCosmosHeight())
+		}
 	}
 }

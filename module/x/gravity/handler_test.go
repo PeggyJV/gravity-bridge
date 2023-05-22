@@ -204,9 +204,13 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		tokenETHAddr         = common.HexToAddress("0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e")
 		denom                = types.GravityDenom(tokenETHAddr)
 		myBlockTime          = time.Date(2020, 9, 14, 15, 20, 10, 0, time.UTC)
+		eventVoteWindow      = uint64(5)
 	)
 	input := keeper.CreateTestEnv(t)
 	ctx := input.Context
+	params := types.DefaultParams()
+	params.EventVoteWindow = eventVoteWindow
+	input.GravityKeeper.SetParams(ctx, *params)
 	input.GravityKeeper.StakingKeeper = keeper.NewStakingKeeperMock(valAddr1, valAddr2, valAddr3)
 	input.GravityKeeper.SetOrchestratorValidatorAddress(ctx, valAddr1, orchestratorAddr1)
 	input.GravityKeeper.SetOrchestratorValidatorAddress(ctx, valAddr2, orchestratorAddr2)
@@ -282,13 +286,28 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
 	_, err = h(ctx, ethClaim3Msg)
-	gravity.EndBlocker(ctx, input.GravityKeeper)
 	require.NoError(t, err)
+	gravity.EndBlocker(ctx, input.GravityKeeper)
+
+	// and attestations persisted
+	a1 = input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim1.Hash())
+	a2 = input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim2.Hash())
+	a3 := input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim3.Hash())
+	require.NotNil(t, a1)
+	require.NotNil(t, a2)
+	require.NotNil(t, a3)
+
+	// make observed ethereum height high enough to trigger pruning
+	input.GravityKeeper.SetLastObservedEthereumBlockHeight(
+		ctx,
+		input.GravityKeeper.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight+eventVoteWindow+uint64(1),
+	)
+	gravity.EndBlocker(ctx, input.GravityKeeper)
 
 	// and attestations pruned
 	a1 = input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim1.Hash())
 	a2 = input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim2.Hash())
-	a3 := input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim3.Hash())
+	a3 = input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim3.Hash())
 	require.Nil(t, a1)
 	require.Nil(t, a2)
 	require.Nil(t, a3)

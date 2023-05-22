@@ -12,7 +12,7 @@ import (
 
 // InitGenesis starts a chain from a genesis state
 func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
-	k.setParams(ctx, *data.Params)
+	k.SetParams(ctx, *data.Params)
 
 	// reset pool transactions in state
 	for _, tx := range data.UnbatchedSendToEthereumTxs {
