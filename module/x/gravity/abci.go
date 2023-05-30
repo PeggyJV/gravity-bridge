@@ -116,7 +116,6 @@ func pruneTxsOutsideSlashingWindow(ctx sdk.Context, k keeper.Keeper) {
 	lastSlashed := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
 	k.IterateCompletedOutgoingTxs(ctx, func(key []byte, cotx types.OutgoingTx) bool {
 		if cotx.GetCosmosHeight() <= lastSlashed {
-			k.DeleteEthereumSignatures(ctx, cotx.GetStoreIndex())
 			k.DeleteCompletedOutgoingTx(ctx, cotx.GetStoreIndex())
 		}
 		return false

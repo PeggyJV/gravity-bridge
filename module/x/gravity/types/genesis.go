@@ -127,9 +127,16 @@ func DefaultGenesisState() *GenesisState {
 // DefaultParams returns a copy of the default params
 func DefaultParams() *Params {
 	return &Params{
-		GravityId:                                 "defaultgravityid",
-		BridgeEthereumAddress:                     "0x0000000000000000000000000000000000000000",
-		SignedSignerSetTxsWindow:                  10000,
+		GravityId:                "defaultgravityid",
+		BridgeEthereumAddress:    "0x0000000000000000000000000000000000000000",
+		SignedSignerSetTxsWindow: 10000,
+		// SignedBatchesWindow is named poorly in that it has become the window for slashing all
+		// types that implement OutgoingTx. It's important to note that if this window is too
+		// small, txs may be pruned before they having slashing applied to them. This is because,
+		// except for signer sets, the slashing logic applies to *completed* txs. Therefore, this param
+		// should be set to a value that results in an amount of time that is comfortably higher
+		// than the amount of time it takes for a transaction to be observed after submission and/or
+		// whatever a typical timeout time is.
 		SignedBatchesWindow:                       10000,
 		EthereumSignaturesWindow:                  10000,
 		TargetEthTxTimeout:                        43200000,
