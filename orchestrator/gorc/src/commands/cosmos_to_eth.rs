@@ -1,7 +1,7 @@
 use crate::application::APP;
 use abscissa_core::{clap::Parser, status_err, Application, Command, Runnable};
 use clarity::Uint256;
-use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
+use cosmos_gravity::send::send_to_eth;
 use deep_space::coin::Coin;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::DenomToErc20Request;
@@ -14,9 +14,6 @@ const TIMEOUT: Duration = Duration::from_secs(60);
 #[derive(Command, Debug, Default, Parser)]
 pub struct CosmosToEthCmd {
     pub args: Vec<String>,
-
-    #[clap(short, long)]
-    pub flag_no_batch: bool,
 }
 
 pub fn one_eth() -> f64 {
@@ -60,85 +57,74 @@ impl Runnable for CosmosToEthCmd {
         let cosmos_grpc = config.cosmos.grpc.trim();
         println!("Sending from Cosmos address {}", cosmos_address);
         abscissa_tokio::run_with_actix(&APP, async {
-        let connections = create_rpc_connections(
-            cosmos_prefix.to_string(),
-            Some(cosmos_grpc.to_string()),
-            None,
-            TIMEOUT,
-        )
-        .await;
-        let contact = connections.contact.unwrap();
-        let mut grpc = connections.grpc.unwrap();
-        let res = grpc
-            .denom_to_erc20(DenomToErc20Request {
-                denom: gravity_denom.clone(),
-            })
+            let connections = create_rpc_connections(
+                cosmos_prefix.to_string(),
+                Some(cosmos_grpc.to_string()),
+                None,
+                TIMEOUT,
+            )
             .await;
-        match res {
-            Ok(val) => println!(
-                "Asset {} has ERC20 representation {}",
-                gravity_denom,
-                val.into_inner().erc20
-            ),
-            Err(_e) => {
-                println!(
-                    "Asset {} has no ERC20 representation, you may need to deploy an ERC20 for it!",
-                    gravity_denom
-                );
-                exit(1);
+            let contact = connections.contact.unwrap();
+            let mut grpc = connections.grpc.unwrap();
+            let res = grpc
+                .denom_to_erc20(DenomToErc20Request {
+                    denom: gravity_denom.clone(),
+                })
+                .await;
+            match res {
+                Ok(val) => println!(
+                    "Asset {} has ERC20 representation {}",
+                    gravity_denom,
+                    val.into_inner().erc20
+                ),
+                Err(_e) => {
+                    println!(
+                        "Asset {} has no ERC20 representation, you may need to deploy an ERC20 for it!",
+                        gravity_denom
+                    );
+                    exit(1);
+                }
             }
-        }
 
-        let amount = Coin {
-            amount: amount.clone(),
-            denom: gravity_denom.clone(),
-        };
-        let bridge_fee = Coin {
-            amount: 1u64.into(),
-            denom: gravity_denom.clone(),
-        };
+            let amount = Coin {
+                amount: amount.clone(),
+                denom: gravity_denom.clone(),
+            };
+            let bridge_fee = Coin {
+                amount: 1u64.into(),
+                denom: gravity_denom.clone(),
+            };
 
-        let eth_dest = self.args.get(3).expect("ethereum destination is required");
-        let eth_dest: EthAddress = eth_dest.parse().expect("cannot parse ethereum address");
-        check_for_fee_denom(&gravity_denom, cosmos_address, &contact).await;
+            let eth_dest = self.args.get(3).expect("ethereum destination is required");
+            let eth_dest: EthAddress = eth_dest.parse().expect("cannot parse ethereum address");
+            check_for_fee_denom(&gravity_denom, cosmos_address, &contact).await;
 
-        let balances = contact
-            .get_balances(cosmos_address)
-            .await
-            .expect("Failed to get balances!");
-        let mut found = None;
-        for coin in balances.iter() {
-            if coin.denom == gravity_denom {
-                found = Some(coin);
+            let balances = contact
+                .get_balances(cosmos_address)
+                .await
+                .expect("Failed to get balances!");
+            let mut found = None;
+            for coin in balances.iter() {
+                if coin.denom == gravity_denom {
+                    found = Some(coin);
+                }
             }
-        }
 
-        println!("Cosmos balances {:?}", balances);
+            println!("Cosmos balances {:?}", balances);
 
-        let times = self.args.get(4).expect("times is required");
-        let times = times.parse::<usize>().expect("cannot parse times");
-
-        match found {
-            None => panic!("You don't have any {} tokens!", gravity_denom),
-            Some(found) => {
-                if amount.amount.clone() * times.into() >= found.amount && times == 1 {
-                    if is_cosmos_originated {
-                        panic!("Your transfer of {} {} tokens is greater than your balance of {} tokens. Remember you need some to pay for fees!", print_atom(amount.amount), gravity_denom, print_atom(found.amount.clone()));
-                    } else {
-                        panic!("Your transfer of {} {} tokens is greater than your balance of {} tokens. Remember you need some to pay for fees!", print_eth(amount.amount), gravity_denom, print_eth(found.amount.clone()));
-                    }
-                } else if amount.amount.clone() * times.into() >= found.amount {
-                    if is_cosmos_originated {
-                        panic!("Your transfer of {} * {} {} tokens is greater than your balance of {} tokens. Try to reduce the amount or the --times parameter", print_atom(amount.amount), times, gravity_denom, print_atom(found.amount.clone()));
-                    } else {
-                        panic!("Your transfer of {} * {} {} tokens is greater than your balance of {} tokens. Try to reduce the amount or the --times parameter", print_eth(amount.amount), times, gravity_denom, print_eth(found.amount.clone()));
+            match found {
+                None => panic!("You don't have any {} tokens!", gravity_denom),
+                Some(found) => {
+                    if amount.amount.clone() >= found.amount {
+                        if is_cosmos_originated {
+                            panic!("Your transfer of {} {} tokens is greater than your balance of {} tokens. Remember you need some to pay for fees!", print_atom(amount.amount), gravity_denom, print_atom(found.amount.clone()));
+                        } else {
+                            panic!("Your transfer of {} {} tokens is greater than your balance of {} tokens. Remember you need some to pay for fees!", print_eth(amount.amount), gravity_denom, print_eth(found.amount.clone()));
+                        }
                     }
                 }
             }
-        }
 
-        let mut successful_sends = 0;
-        for _ in 0..times {
             println!(
                 "Locking {} / {} into the batch pool",
                 amount.clone(),
@@ -156,25 +142,10 @@ impl Runnable for CosmosToEthCmd {
             .await;
             match res {
                 Ok(tx_id) => {
-                    successful_sends += 1;
                     println!("Send to Eth txid {}", tx_id.txhash);
                 }
                 Err(e) => println!("Failed to send tokens! {:?}", e),
             }
-        }
-
-        if successful_sends > 0 {
-            if !self.flag_no_batch {
-                println!("Requesting a batch to push transaction along immediately");
-                send_request_batch_tx(cosmos_key, gravity_denom,config.cosmos.gas_price.as_tuple(), &contact,config.cosmos.gas_adjustment)
-                    .await
-                    .expect("Failed to request batch");
-            } else {
-                println!("--no-batch specified, your transfer will wait until someone requests a batch for this token type")
-            }
-        } else {
-            println!("No successful sends, no batch will be sent")
-        }
         })
         .unwrap_or_else(|e| {
             status_err!("executor exited with error: {}", e);

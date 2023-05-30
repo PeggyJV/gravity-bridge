@@ -584,7 +584,7 @@ func TestKeeper_Migration(t *testing.T) {
 	ctx = ctx.WithBlockTime(now)
 
 	// tx batch size is 2, so that some of them stay behind
-	firstBatch := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
+	firstBatch := input.GravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
 
 	// then batch is persisted
 	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, firstBatch.GetStoreIndex())

@@ -13,7 +13,6 @@ var (
 	_ sdk.Msg = &MsgDelegateKeys{}
 	_ sdk.Msg = &MsgSendToEthereum{}
 	_ sdk.Msg = &MsgCancelSendToEthereum{}
-	_ sdk.Msg = &MsgRequestBatchTx{}
 	_ sdk.Msg = &MsgSubmitEthereumEvent{}
 	_ sdk.Msg = &MsgSubmitEthereumTxConfirmation{}
 	_ sdk.Msg = &MsgEthereumHeightVote{}
@@ -202,46 +201,6 @@ func (msg MsgSendToEthereum) GetSignBytes() []byte {
 // GetSigners defines whose signature is required
 func (msg MsgSendToEthereum) GetSigners() []sdk.AccAddress {
 	acc, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-
-	return []sdk.AccAddress{acc}
-}
-
-// NewMsgRequestBatchTx returns a new msgRequestBatch
-func NewMsgRequestBatchTx(denom string, signer sdk.AccAddress) *MsgRequestBatchTx {
-	return &MsgRequestBatchTx{
-		Denom:  denom,
-		Signer: signer.String(),
-	}
-}
-
-// Route should return the name of the module
-func (msg MsgRequestBatchTx) Route() string { return RouterKey }
-
-// Type should return the action
-func (msg MsgRequestBatchTx) Type() string { return "request_batch" }
-
-// ValidateBasic performs stateless checks
-func (msg MsgRequestBatchTx) ValidateBasic() error {
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return sdkerrors.Wrap(err, "denom is invalid")
-	}
-	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Signer)
-	}
-	return nil
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgRequestBatchTx) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// GetSigners defines whose signature is required
-func (msg MsgRequestBatchTx) GetSigners() []sdk.AccAddress {
-	acc, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		panic(err)
 	}

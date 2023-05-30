@@ -69,45 +69,35 @@ impl Runnable for EthToCosmosCmd {
                     .await
                     .expect("Failed to get balance, check ERC20 contract address");
 
-            let times = self.args.get(5).expect("times is required");
-            let times_usize = times.parse::<usize>().expect("cannot parse times as usize");
-            let times_u256 = U256::from_dec_str(times).expect("cannot parse times as U256");
-
             if erc20_balance == 0u8.into() {
                 panic!(
                     "You have zero {} tokens, please double check your sender and erc20 addresses!",
                     contract_address
                 );
-            } else if amount * times_u256 > erc20_balance {
-                panic!(
-                    "Insufficient balance {} > {}",
-                    amount * times_u256,
-                    erc20_balance
-                );
+            } else if amount > erc20_balance {
+                panic!("Insufficient balance {} > {}", amount, erc20_balance);
             }
 
-            for _ in 0..times_usize {
-                println!(
-                    "Sending {} / {} to Cosmos from {} to {}",
-                    init_amount.parse::<f64>().unwrap(),
-                    erc20_address,
-                    ethereum_address,
-                    cosmos_dest
-                );
-                // we send some erc20 tokens to the gravity contract to register a deposit
-                let res = send_to_cosmos(
-                    erc20_address,
-                    contract_address,
-                    amount,
-                    cosmos_dest,
-                    Some(TIMEOUT),
-                    eth_client.clone(),
-                )
-                .await;
-                match res {
-                    Ok(tx_id) => println!("Send to Cosmos txid: {}", tx_id),
-                    Err(e) => println!("Failed to send tokens! {:?}", e),
-                }
+            println!(
+                "Sending {} / {} to Cosmos from {} to {}",
+                init_amount.parse::<f64>().unwrap(),
+                erc20_address,
+                ethereum_address,
+                cosmos_dest
+            );
+            // we send some erc20 tokens to the gravity contract to register a deposit
+            let res = send_to_cosmos(
+                erc20_address,
+                contract_address,
+                amount,
+                cosmos_dest,
+                Some(TIMEOUT),
+                eth_client.clone(),
+            )
+            .await;
+            match res {
+                Ok(tx_id) => println!("Send to Cosmos txid: {}", tx_id),
+                Err(e) => println!("Failed to send tokens! {:?}", e),
             }
         })
         .unwrap_or_else(|e| {

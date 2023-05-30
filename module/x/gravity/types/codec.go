@@ -43,7 +43,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSendToEthereum{},
 		&MsgCancelSendToEthereum{},
-		&MsgRequestBatchTx{},
 		&MsgSubmitEthereumEvent{},
 		&MsgSubmitEthereumTxConfirmation{},
 		&MsgDelegateKeys{},
