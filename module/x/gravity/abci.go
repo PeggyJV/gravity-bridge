@@ -396,7 +396,9 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 							power,
 							params.SlashFractionBatch,
 						)
-						k.StakingKeeper.Jail(ctx, valInfo.cons)
+						if !valInfo.val.Jailed {
+							k.StakingKeeper.Jail(ctx, valInfo.cons)
+						}
 
 						ctx.EventManager().EmitEvent(
 							sdk.NewEvent(
@@ -431,7 +433,9 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 								power,
 								params.SlashFractionSignerSetTx,
 							)
-							k.StakingKeeper.Jail(ctx, valInfo.cons)
+							if !valInfo.val.Jailed {
+								k.StakingKeeper.Jail(ctx, valInfo.cons)
+							}
 
 							ctx.EventManager().EmitEvent(
 								sdk.NewEvent(
