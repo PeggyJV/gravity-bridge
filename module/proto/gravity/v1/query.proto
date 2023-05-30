@@ -366,6 +366,7 @@ message CompletedOutgoingTxsRequest {}
 message CompletedOutgoingTxsResponse {
   repeated BatchTx completed_batch_txs = 1;
   repeated ContractCallTx completed_logic_calls = 2;
+  repeated SignerSetTx completed_signer_set_txs = 3;
 }
 
 message BatchTxConfirmationsByValidatorRequest {

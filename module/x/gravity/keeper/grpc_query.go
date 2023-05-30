@@ -477,19 +477,23 @@ func (k Keeper) CompletedOutgoingTxs(c context.Context, req *types.CompletedOutg
 
 	var batches []*types.BatchTx
 	var contractCalls []*types.ContractCallTx
+	var signerSetCalls []*types.SignerSetTx
 	k.IterateCompletedOutgoingTxs(ctx, func(_ []byte, tx types.OutgoingTx) bool {
 		switch tx := tx.(type) {
 		case *types.BatchTx:
 			batches = append(batches, tx)
 		case *types.ContractCallTx:
 			contractCalls = append(contractCalls, tx)
+		case *types.SignerSetTx:
+			signerSetCalls = append(signerSetCalls, tx)
 		}
 		return false
 	})
 
 	res := &types.CompletedOutgoingTxsResponse{
-		CompletedBatchTxs:   batches,
-		CompletedLogicCalls: contractCalls,
+		CompletedBatchTxs:     batches,
+		CompletedLogicCalls:   contractCalls,
+		CompletedSignerSetTxs: signerSetCalls,
 	}
 	return res, nil
 }
