@@ -41,7 +41,7 @@ func TestBatches(t *testing.T) {
 	ctx = ctx.WithBlockTime(now)
 
 	// tx batch size is 2, so that some of them stay behind
-	firstBatch := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
+	firstBatch := input.GravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
 
 	// then batch is persisted
 	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, firstBatch.GetStoreIndex())
@@ -81,7 +81,7 @@ func TestBatches(t *testing.T) {
 	// create the more profitable batch
 	ctx = ctx.WithBlockTime(now)
 	// tx batch size is 2, so that some of them stay behind
-	secondBatch := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
+	secondBatch := input.GravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
 
 	// check that the more profitable batch has the right txs in it
 	expSecondBatch := &types.BatchTx{
@@ -160,7 +160,7 @@ func TestBatchesFullCoins(t *testing.T) {
 	ctx = ctx.WithBlockTime(now)
 
 	// tx batch size is 2, so that some of them stay behind
-	firstBatch := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
+	firstBatch := input.GravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
 
 	// then batch is persisted
 	gotFirstBatch := input.GravityKeeper.GetOutgoingTx(ctx, firstBatch.GetStoreIndex())
@@ -228,7 +228,7 @@ func TestBatchesFullCoins(t *testing.T) {
 	// create the more profitable batch
 	ctx = ctx.WithBlockTime(now)
 	// tx batch size is 2, so that some of them stay behind
-	secondBatch := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
+	secondBatch := input.GravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
 
 	// check that the more profitable batch has the right txs in it
 	expSecondBatch := &types.BatchTx{
@@ -340,7 +340,7 @@ func TestPoolTxRefund(t *testing.T) {
 	ctx = ctx.WithBlockTime(now)
 
 	// tx batch size is 2, so that some of them stay behind
-	input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
+	input.GravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
 
 	// try to refund a tx that's in a batch
 	err := input.GravityKeeper.cancelSendToEthereum(ctx, 2, mySender.String())
@@ -376,7 +376,7 @@ func TestEmptyBatch(t *testing.T) {
 
 	// no transactions should be included in this batch
 	ctx = ctx.WithBlockTime(now)
-	batchTx := input.GravityKeeper.BuildBatchTx(ctx, myTokenContractAddr, 2)
+	batchTx := input.GravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
 
 	require.Nil(t, batchTx)
 }

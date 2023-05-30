@@ -48,7 +48,7 @@ func createBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 
 		for _, c := range contracts {
 			// NOTE: this doesn't emit events which would be helpful for client processes
-			k.BuildBatchTx(ctx, common.HexToAddress(c), 100)
+			k.CreateBatchTx(ctx, common.HexToAddress(c), 100)
 		}
 	}
 }
@@ -155,11 +155,11 @@ func eventVoteRecordTally(ctx sdk.Context, k keeper.Keeper) {
 // order to keep this information current regardless of the level of bridge activity.
 //
 // We determine if we should update the latest heights based on the following criteria:
-// 1. A consensus of validators agrees that the proposed height is equal to or less than their
-//    last observed height, in order to reconcile the many different heights that will be submitted.
-//    The highest height that meets this criteria will be the proposed height.
-// 2. The proposed consensus heights from this process are greater than the values stored from the last time
-//    we observed an Ethereum event from the bridge
+//  1. A consensus of validators agrees that the proposed height is equal to or less than their
+//     last observed height, in order to reconcile the many different heights that will be submitted.
+//     The highest height that meets this criteria will be the proposed height.
+//  2. The proposed consensus heights from this process are greater than the values stored from the last time
+//     we observed an Ethereum event from the bridge
 func updateObservedEthereumHeight(ctx sdk.Context, k keeper.Keeper) {
 	// wait some minutes before checking the height votes
 	if ctx.BlockHeight()%50 != 0 {
@@ -228,12 +228,14 @@ func updateObservedEthereumHeight(ctx sdk.Context, k keeper.Keeper) {
 // cleanupTimedOutBatchTxs deletes batches that have passed their expiration on Ethereum
 // keep in mind several things when modifying this function
 // A) unlike nonces timeouts are not monotonically increasing, meaning batch 5 can have a later timeout than batch 6
-//    this means that we MUST only cleanup a single batch at a time
+// this means that we MUST only cleanup a single batch at a time
+//
 // B) it is possible for ethereumHeight to be zero if no events have ever occurred, make sure your code accounts for this
 // C) When we compute the timeout we do our best to estimate the Ethereum block height at that very second. But what we work with
-//    here is the Ethereum block height at the time of the last Deposit or Withdraw to be observed. It's very important we do not
-//    project, if we do a slowdown on ethereum could cause a double spend. Instead timeouts will *only* occur after the timeout period
-//    AND any deposit or withdraw has occurred to update the Ethereum block height.
+//
+//	here is the Ethereum block height at the time of the last Deposit or Withdraw to be observed. It's very important we do not
+//	project, if we do a slowdown on ethereum could cause a double spend. Instead timeouts will *only* occur after the timeout period
+//	AND any deposit or withdraw has occurred to update the Ethereum block height.
 func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 	ethereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight
 	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
@@ -250,12 +252,15 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 // cleanupTimedOutContractCallTxs deletes logic calls that have passed their expiration on Ethereum
 // keep in mind several things when modifying this function
 // A) unlike nonces timeouts are not monotonically increasing, meaning call 5 can have a later timeout than batch 6
-//    this means that we MUST only cleanup a single call at a time
+//
+//	this means that we MUST only cleanup a single call at a time
+//
 // B) it is possible for ethereumHeight to be zero if no events have ever occurred, make sure your code accounts for this
 // C) When we compute the timeout we do our best to estimate the Ethereum block height at that very second. But what we work with
-//    here is the Ethereum block height at the time of the last Deposit or Withdraw to be observed. It's very important we do not
-//    project, if we do a slowdown on ethereum could cause a double spend. Instead timeouts will *only* occur after the timeout period
-//    AND any deposit or withdraw has occurred to update the Ethereum block height.
+//
+//	here is the Ethereum block height at the time of the last Deposit or Withdraw to be observed. It's very important we do not
+//	project, if we do a slowdown on ethereum could cause a double spend. Instead timeouts will *only* occur after the timeout period
+//	AND any deposit or withdraw has occurred to update the Ethereum block height.
 func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper) {
 	ethereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight
 	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {

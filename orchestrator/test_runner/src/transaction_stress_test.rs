@@ -2,7 +2,7 @@ use crate::{
     one_eth, one_hundred_eth, one_hundred_eth_uint256, utils::*, MINER_CLIENT, TOTAL_TIMEOUT,
 };
 use clarity::Uint256;
-use cosmos_gravity::send::{send_request_batch_tx, send_to_eth};
+use cosmos_gravity::send::send_to_eth;
 use deep_space::coin::Coin;
 use deep_space::Contact;
 use ethereum_gravity::{
@@ -187,20 +187,6 @@ pub async fn transaction_stress_test(
             "Successfully placed {} {} into the tx pool",
             NUM_USERS, token
         );
-    }
-
-    for denom in denoms {
-        info!("Requesting batch for {}", denom);
-        let res = send_request_batch_tx(
-            keys[0].validator_key,
-            denom,
-            (0f64, "".to_string()),
-            contact,
-            1.0,
-        )
-        .await
-        .unwrap();
-        info!("batch request response is {:?}", res);
     }
 
     match tokio::time::timeout(TOTAL_TIMEOUT, async {

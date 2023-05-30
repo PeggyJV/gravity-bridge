@@ -102,22 +102,6 @@ pub async fn send_to_eth(
     send_messages(contact, cosmos_key, gas_price, vec![msg], gas_adjustment).await
 }
 
-pub async fn send_request_batch_tx(
-    cosmos_key: CosmosPrivateKey,
-    denom: String,
-    gas_price: (f64, String),
-    contact: &Contact,
-    gas_adjustment: f64,
-) -> Result<TxResponse, GravityError> {
-    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let msg_request_batch = proto::MsgRequestBatchTx {
-        signer: cosmos_address.to_string(),
-        denom,
-    };
-    let msg = Msg::new("/gravity.v1.MsgRequestBatchTx", msg_request_batch);
-    send_messages(contact, cosmos_key, gas_price, vec![msg], gas_adjustment).await
-}
-
 pub async fn send_messages(
     contact: &Contact,
     cosmos_key: CosmosPrivateKey,
