@@ -345,7 +345,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	gravityGenState.Params.GravityId = "gravitytest"
 	gravityGenState.Params.BridgeEthereumAddress = gravityContract.String()
 	gravityGenState.Params.SignedBatchesWindow = 100
-	gravityGenState.Params.TargetEthTxTimeout = 60000
+	gravityGenState.Params.TargetEthTxTimeout = 3600000
 	gravityGenState.Params.AverageBlockTime = 1000
 	gravityGenState.Params.AverageEthereumBlockTime = 1000
 
