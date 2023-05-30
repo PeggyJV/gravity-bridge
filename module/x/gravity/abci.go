@@ -387,7 +387,8 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 			// Don't slash validators who joined after outgoingtx is created
 			if valInfo.exist && valInfo.sigs.StartHeight < int64(otx.GetCosmosHeight()) {
 				if _, ok := signatures[valInfo.val.GetOperator().String()]; !ok {
-					if !valInfo.val.IsJailed() {
+					// we query the validator afresh in case its jailing status was changed in a previous iteration
+					if validator, _ := k.StakingKeeper.GetValidator(ctx, valInfo.val.GetOperator()); !validator.IsJailed() {
 						power := valInfo.val.ConsensusPower(k.PowerReduction)
 						k.StakingKeeper.Slash(
 							ctx,
@@ -396,9 +397,8 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 							power,
 							params.SlashFractionBatch,
 						)
-						if !valInfo.val.Jailed {
-							k.StakingKeeper.Jail(ctx, valInfo.cons)
-						}
+
+						k.StakingKeeper.Jail(ctx, valInfo.cons)
 
 						ctx.EventManager().EmitEvent(
 							sdk.NewEvent(
@@ -423,7 +423,8 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 					sstx.Height < uint64(valInfo.val.UnbondingHeight)+params.UnbondSlashingSignerSetTxsWindow {
 					// check if validator has confirmed valset or not
 					if _, found := signatures[valInfo.val.GetOperator().String()]; !found {
-						if !valInfo.val.IsJailed() {
+						// we query the validator afresh in case its jailing status was changed in a previous iteration
+						if validator, _ := k.StakingKeeper.GetValidator(ctx, valInfo.val.GetOperator()); !validator.IsJailed() {
 							// TODO: Do we want to slash jailed validators?
 							power := valInfo.val.ConsensusPower(k.PowerReduction)
 							k.StakingKeeper.Slash(
@@ -433,9 +434,8 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 								power,
 								params.SlashFractionSignerSetTx,
 							)
-							if !valInfo.val.Jailed {
-								k.StakingKeeper.Jail(ctx, valInfo.cons)
-							}
+
+							k.StakingKeeper.Jail(ctx, valInfo.cons)
 
 							ctx.EventManager().EmitEvent(
 								sdk.NewEvent(

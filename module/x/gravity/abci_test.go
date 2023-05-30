@@ -161,14 +161,17 @@ func TestSignerSetTxSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testi
 	// check if tokens shouldn't be slashed for val2.
 }
 
-func TestBatchSlashingAndPruning(t *testing.T) {
+// TestBatchAndContractCallSlashingAndPruning tests that slashing and pruning are working properly for the
+// batch and contract call implementations of OutgoingTx. It also implicitly tests that two slashes against
+// a validator do not result in a second jail call, which would cause panic and chain halt.
+func TestBatchAndContractCallSlashingAndPruning(t *testing.T) {
 	input, ctx := keeper.SetupFiveValChain(t)
 	gravityKeeper := input.GravityKeeper
 	params := gravityKeeper.GetParams(ctx)
 
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + int64(params.SignedBatchesWindow) + 2)
 
-	// First store a batch
+	// First store a batch and contract call
 	batch := &types.BatchTx{
 		BatchNonce:    1,
 		Transactions:  []*types.SendToEthereum{},
@@ -176,6 +179,12 @@ func TestBatchSlashingAndPruning(t *testing.T) {
 		Height:        uint64(ctx.BlockHeight() - int64(params.SignedBatchesWindow+1)),
 	}
 	gravityKeeper.SetCompletedOutgoingTx(ctx, batch)
+	contractCall := &types.ContractCallTx{
+		InvalidationNonce: 1,
+		InvalidationScope: []byte("test"),
+		Height:            uint64(ctx.BlockHeight() - int64(params.SignedBatchesWindow+1)),
+	}
+	gravityKeeper.SetCompletedOutgoingTx(ctx, contractCall)
 
 	for i, val := range keeper.ValAddrs {
 		if i == 0 {
@@ -196,52 +205,6 @@ func TestBatchSlashingAndPruning(t *testing.T) {
 			EthereumSigner: keeper.EthAddrs[i].String(),
 			Signature:      []byte("dummysig"),
 		}, val)
-	}
-
-	gravity.EndBlocker(ctx, gravityKeeper)
-
-	// ensure that the  validator is jailed and slashed
-	require.True(t, input.StakingKeeper.Validator(ctx, keeper.ValAddrs[0]).IsJailed())
-
-	// ensure that the 2nd  validator is not jailed and slashed
-	require.False(t, input.StakingKeeper.Validator(ctx, keeper.ValAddrs[1]).IsJailed())
-
-	// Ensure that the last slashed signer set tx nonce is set properly
-	require.Equal(t, input.GravityKeeper.GetLastSlashedOutgoingTxBlockHeight(ctx), batch.Height)
-
-	// ensure completed batch and signatures pruned
-	require.Nil(t, input.GravityKeeper.GetCompletedOutgoingTx(ctx, batch.GetStoreIndex()))
-	require.Empty(t, input.GravityKeeper.GetEthereumSignatures(ctx, batch.GetStoreIndex()))
-}
-
-func TestContractCallSlashingAndPruning(t *testing.T) {
-	input, ctx := keeper.SetupFiveValChain(t)
-	gravityKeeper := input.GravityKeeper
-	params := gravityKeeper.GetParams(ctx)
-
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + int64(params.SignedBatchesWindow) + 2)
-
-	// First store a contract call
-	contractCall := &types.ContractCallTx{
-		InvalidationNonce: 1,
-		InvalidationScope: []byte("test"),
-		Height:            uint64(ctx.BlockHeight() - int64(params.SignedBatchesWindow+1)),
-	}
-	gravityKeeper.SetCompletedOutgoingTx(ctx, contractCall)
-
-	for i, val := range keeper.ValAddrs {
-		if i == 0 {
-			// don't sign with first validator
-			continue
-		}
-		if i == 1 {
-			// don't sign with 2nd validator. set val bond height > batch block height
-			validator := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[i])
-			valConsAddr, _ := validator.GetConsAddr()
-			valSigningInfo := slashingtypes.ValidatorSigningInfo{StartHeight: int64(contractCall.Height + 1)}
-			input.SlashingKeeper.SetValidatorSigningInfo(ctx, valConsAddr, valSigningInfo)
-			continue
-		}
 		gravityKeeper.SetEthereumSignature(ctx, &types.ContractCallTxConfirmation{
 			InvalidationNonce: 1,
 			InvalidationScope: []byte("test"),
@@ -258,8 +221,12 @@ func TestContractCallSlashingAndPruning(t *testing.T) {
 	// ensure that the 2nd  validator is not jailed and slashed
 	require.False(t, input.StakingKeeper.Validator(ctx, keeper.ValAddrs[1]).IsJailed())
 
-	// Ensure that the last slashed signer set tx nonce is set properly
-	require.Equal(t, input.GravityKeeper.GetLastSlashedOutgoingTxBlockHeight(ctx), contractCall.Height)
+	// Ensure that the last slashed ougoing tx block height is set properly
+	require.Equal(t, input.GravityKeeper.GetLastSlashedOutgoingTxBlockHeight(ctx), batch.Height)
+
+	// ensure completed batch and signatures pruned
+	require.Nil(t, input.GravityKeeper.GetCompletedOutgoingTx(ctx, batch.GetStoreIndex()))
+	require.Empty(t, input.GravityKeeper.GetEthereumSignatures(ctx, batch.GetStoreIndex()))
 
 	// ensure completed contract call and signatures pruned
 	require.Nil(t, input.GravityKeeper.GetCompletedOutgoingTx(ctx, contractCall.GetStoreIndex()))
