@@ -344,7 +344,10 @@ func (s *IntegrationTestSuite) initGenesis() {
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
 	gravityGenState.Params.GravityId = "gravitytest"
 	gravityGenState.Params.BridgeEthereumAddress = gravityContract.String()
-	gravityGenState.Params.SignedBatchesWindow = 35
+	gravityGenState.Params.SignedBatchesWindow = 100
+	gravityGenState.Params.TargetEthTxTimeout = 60000
+	gravityGenState.Params.AverageBlockTime = 1000
+	gravityGenState.Params.AverageEthereumBlockTime = 1000
 
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)

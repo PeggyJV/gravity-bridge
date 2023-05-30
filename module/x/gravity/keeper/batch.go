@@ -171,7 +171,7 @@ func (k Keeper) GetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context) uint64 {
 
 func (k Keeper) GetUnslashedOutgoingTxs(ctx sdk.Context, maxHeight uint64) (out []types.OutgoingTx) {
 	lastSlashed := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
-	// since signer sets have no timeout, we need to slash them before they are completed, therefore we exclude
+	// since signer sets are more vital, we need to slash for them before they are completed, therefore we exclude
 	// them from this iteration and get them from the regular OutgoingTx store
 	k.IterateCompletedOutgoingTxs(ctx, func(key []byte, cotx types.OutgoingTx) bool {
 		if _, ok := cotx.(*types.SignerSetTx); ok {

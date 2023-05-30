@@ -692,7 +692,7 @@ func (k Keeper) IterateCompletedOutgoingTxs(ctx sdk.Context, cb func(key []byte,
 // DeleteCompletedOutgoingTx deletes a given outgoingtx
 func (k Keeper) DeleteCompletedOutgoingTx(ctx sdk.Context, storeIndex []byte) {
 	k.DeleteEthereumSignatures(ctx, storeIndex)
-	ctx.KVStore(k.storeKey).Delete(types.MakeOutgoingTxKey(storeIndex))
+	ctx.KVStore(k.storeKey).Delete(types.MakeCompletedOutgoingTxKey(storeIndex))
 }
 
 //////////////////////////////////////
