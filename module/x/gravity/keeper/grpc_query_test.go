@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/migrations/v1/keeper"
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/bytes"
@@ -214,17 +216,141 @@ func TestKeeper_ContractCallTxs(t *testing.T) {
 	})
 }
 
-// TODO(levi) ensure coverage for:
-// ContractCallTx(context.Context, *ContractCallTxRequest) (*ContractCallTxResponse, error)
-// ContractCallTxs(context.Context, *ContractCallTxsRequest) (*ContractCallTxsResponse, error)
+func TestKeeper_UnsignedSignerSetTxs(t *testing.T) {
+	t.Run("read after there's something in state", func(t *testing.T) {
+		env, ctx := SetupFiveValChain(t)
+		gk := env.GravityKeeper
+		orchAddr := keeper.AccAddrs[0]
+		signer := orchAddr.String()
+		valAddr, err := sdk.ValAddressFromBech32(env.StakingKeeper.GetValidators(ctx, 5)[0].OperatorAddress)
+		require.NoError(t, err)
 
+		{ // setup
+			require.NotNil(t, gk.CreateSignerSetTx(env.Context))
+			require.NotNil(t, gk.CreateSignerSetTx(env.Context))
+			gk.SetCompletedOutgoingTx(ctx, &types.SignerSetTx{
+				Nonce:   1,
+				Height:  0,
+				Signers: []*types.EthereumSigner{},
+			})
+			// should not be returned
+			gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+				BatchNonce: 1,
+				Height:     0,
+			})
+			gk.SetOrchestratorValidatorAddress(ctx, valAddr, orchAddr)
+			gk.setEthereumOrchestratorAddress(ctx, common.HexToAddress("0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), orchAddr)
+		}
+		{ // validate
+			req := &types.UnsignedSignerSetTxsRequest{
+				Address: signer,
+			}
+			res, err := gk.UnsignedSignerSetTxs(sdk.WrapSDKContext(ctx), req)
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			require.Len(t, res.SignerSets, 3)
+		}
+	})
+}
+
+func TestKeeper_UnsignedBatchTxs(t *testing.T) {
+	t.Run("read after there's something in state", func(t *testing.T) {
+		env, ctx := SetupFiveValChain(t)
+		gk := env.GravityKeeper
+		orchAddr := keeper.AccAddrs[0]
+		signer := orchAddr.String()
+		valAddr, err := sdk.ValAddressFromBech32(env.StakingKeeper.GetValidators(ctx, 5)[0].OperatorAddress)
+		require.NoError(t, err)
+
+		// setup
+		{
+			gk.SetOutgoingTx(ctx, &types.BatchTx{
+				BatchNonce:    1000,
+				Timeout:       1000,
+				Transactions:  nil,
+				TokenContract: "0x835973768750b3ED2D5c3EF5AdcD5eDb44d12aD4",
+				Height:        1000,
+			})
+			gk.SetOutgoingTx(ctx, &types.BatchTx{
+				BatchNonce:    1001,
+				Timeout:       1000,
+				Transactions:  nil,
+				TokenContract: "0x835973768750b3ED2D5c3EF5AdcD5eDb44d12aD4",
+				Height:        1001,
+			})
+			gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+				BatchNonce: 1,
+				Height:     0,
+			})
+			// should not be returned
+			gk.SetCompletedOutgoingTx(ctx, &types.ContractCallTx{
+				InvalidationNonce: 1,
+				InvalidationScope: []byte("an-invalidation-scope"),
+				Height:            0,
+			})
+			gk.SetOrchestratorValidatorAddress(ctx, valAddr, orchAddr)
+			gk.setEthereumOrchestratorAddress(ctx, common.HexToAddress("0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), orchAddr)
+		}
+		{ // validate
+			req := &types.UnsignedBatchTxsRequest{
+				Address: signer,
+			}
+			res, err := gk.UnsignedBatchTxs(sdk.WrapSDKContext(ctx), req)
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			require.Len(t, res.Batches, 3)
+		}
+	})
+}
+
+func TestKeeper_UnsignedContractCallTxs(t *testing.T) {
+	t.Run("read after there's something in state", func(t *testing.T) {
+		env, ctx := SetupFiveValChain(t)
+		gk := env.GravityKeeper
+		orchAddr := keeper.AccAddrs[0]
+		signer := orchAddr.String()
+		valAddr, err := sdk.ValAddressFromBech32(env.StakingKeeper.GetValidators(ctx, 5)[0].OperatorAddress)
+		require.NoError(t, err)
+
+		{ // setup
+			gk.SetOutgoingTx(ctx, &types.ContractCallTx{
+				InvalidationNonce: 5,
+				InvalidationScope: []byte("an-invalidation-scope"),
+				// TODO
+			})
+			gk.SetOutgoingTx(ctx, &types.ContractCallTx{
+				InvalidationNonce: 6,
+				InvalidationScope: []byte("an-invalidation-scope"),
+			})
+			gk.SetCompletedOutgoingTx(ctx, &types.ContractCallTx{
+				InvalidationNonce: 1,
+				InvalidationScope: []byte("an-invalidation-scope"),
+				Height:            0,
+			})
+			// should not be returned
+			gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+				BatchNonce: 1,
+				Height:     0,
+			})
+			gk.SetOrchestratorValidatorAddress(ctx, valAddr, orchAddr)
+			gk.setEthereumOrchestratorAddress(ctx, common.HexToAddress("0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), orchAddr)
+		}
+		{ // validate
+			req := &types.UnsignedContractCallTxsRequest{
+				Address: signer,
+			}
+			res, err := gk.UnsignedContractCallTxs(sdk.WrapSDKContext(ctx), req)
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			require.Len(t, res.Calls, 3)
+		}
+	})
+}
+
+// TODO(levi) ensure coverage for:
 // SignerSetTxConfirmations(context.Context, *SignerSetTxConfirmationsRequest) (*SignerSetTxConfirmationsResponse, error)
 // BatchTxConfirmations(context.Context, *BatchTxConfirmationsRequest) (*BatchTxConfirmationsResponse, error)
 // ContractCallTxConfirmations(context.Context, *ContractCallTxConfirmationsRequest) (*ContractCallTxConfirmationsResponse, error)
-
-// UnsignedSignerSetTxs(context.Context, *UnsignedSignerSetTxsRequest) (*UnsignedSignerSetTxsResponse, error)
-// UnsignedBatchTxs(context.Context, *UnsignedBatchTxsRequest) (*UnsignedBatchTxsResponse, error)
-// UnsignedContractCallTxs(context.Context, *UnsignedContractCallTxsRequest) (*UnsignedContractCallTxsResponse, error)
 
 // BatchTxFees(context.Context, *BatchTxFeesRequest) (*BatchTxFeesResponse, error)
 // ERC20ToDenom(context.Context, *ERC20ToDenomRequest) (*ERC20ToDenomResponse, error)

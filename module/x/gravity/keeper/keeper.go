@@ -689,6 +689,24 @@ func (k Keeper) IterateCompletedOutgoingTxs(ctx sdk.Context, cb func(key []byte,
 	}
 }
 
+// IterateCompletedOutgoingTxsByType iterates over a specific type of completed outgoing transaction denoted by the chosen prefix byte
+func (k Keeper) IterateCompletedOutgoingTxsByType(ctx sdk.Context, prefixByte byte, cb func(key []byte, outgoing types.OutgoingTx) (stop bool)) {
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.MakeCompletedOutgoingTxKey([]byte{prefixByte}))
+	iter := prefixStore.ReverseIterator(nil, nil)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var any cdctypes.Any
+		k.cdc.MustUnmarshal(iter.Value(), &any)
+		var cotx types.OutgoingTx
+		if err := k.cdc.UnpackAny(&any, &cotx); err != nil {
+			panic(err)
+		}
+		if cb(iter.Key(), cotx) {
+			break
+		}
+	}
+}
+
 // DeleteCompletedOutgoingTx deletes a given outgoingtx
 func (k Keeper) DeleteCompletedOutgoingTx(ctx sdk.Context, storeIndex []byte) {
 	k.DeleteEthereumSignatures(ctx, storeIndex)
