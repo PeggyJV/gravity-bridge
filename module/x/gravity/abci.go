@@ -123,7 +123,7 @@ func pruneTxsOutsideSlashingWindow(ctx sdk.Context, k keeper.Keeper) {
 
 }
 
-// pruneEventVoteRecords deletes all event vote records with nonces that are older than the last observed event nonce
+// pruneEventVoteRecords deletes all event vote records for events that are oustide of the event vote window
 func pruneEventVoteRecords(ctx sdk.Context, k keeper.Keeper) {
 	lastEthereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight
 	window := k.GetParams(ctx).EventVoteWindow
