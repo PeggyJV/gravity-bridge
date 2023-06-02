@@ -121,7 +121,6 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 		// Check jail status of validators
 		s.T().Logf("waiting for validator 3 to become jailed")
 		s.Require().Eventuallyf(func() bool {
-			observed_jailing := true
 			orchKey := s.chain.validators[3]
 			keyring, err := orchKey.keyring()
 			s.Require().NoError(err)
@@ -129,37 +128,34 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", s.chain.validators[3].keyInfo.GetAddress())
 			s.Require().NoError(err)
 			newQ := stakingtypes.NewQueryClient(clientCtx)
-			valThree, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[3].keyInfo.GetAddress()).String()})
+
+			val0, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[0].keyInfo.GetAddress()).String()})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
-			if !valThree.GetValidator().IsJailed() {
-				observed_jailing = false
-			}
+			s.Require().False(val0.GetValidator().IsJailed())
 
-			valTwo, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[2].keyInfo.GetAddress()).String()})
+			val1, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[1].keyInfo.GetAddress()).String()})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
-			s.Require().False(valTwo.GetValidator().IsJailed())
+			s.Require().False(val1.GetValidator().IsJailed())
 
-			valOne, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[1].keyInfo.GetAddress()).String()})
+			val2, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[2].keyInfo.GetAddress()).String()})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
-			s.Require().False(valOne.GetValidator().IsJailed())
+			s.Require().False(val2.GetValidator().IsJailed())
 
-			valZero, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[0].keyInfo.GetAddress()).String()})
+			val3, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[3].keyInfo.GetAddress()).String()})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
-			s.Require().False(valZero.GetValidator().IsJailed())
-
-			return observed_jailing
+			return val3.GetValidator().IsJailed()
 		}, 5*time.Minute, 5*time.Second, "can't confirm jailing status")
 	})
 }
