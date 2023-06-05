@@ -171,20 +171,9 @@ func (k Keeper) GetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context) uint64 {
 
 func (k Keeper) GetUnslashedOutgoingTxs(ctx sdk.Context, maxHeight uint64) (out []types.OutgoingTx) {
 	lastSlashed := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
-	// since signer sets are more vital, we need to slash for them before they are completed, therefore we exclude
-	// them from this iteration and get them from the regular OutgoingTx store
-	k.IterateCompletedOutgoingTxs(ctx, func(key []byte, cotx types.OutgoingTx) bool {
-		if _, ok := cotx.(*types.SignerSetTx); ok {
-			return false
-		}
+	k.iterateOutgoingTxs(ctx, func(key []byte, cotx types.OutgoingTx) bool {
 		if (cotx.GetCosmosHeight() < maxHeight) && (cotx.GetCosmosHeight() > lastSlashed) {
 			out = append(out, cotx)
-		}
-		return false
-	})
-	k.IterateOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
-		if (otx.GetCosmosHeight() < maxHeight) && (otx.GetCosmosHeight() > lastSlashed) {
-			out = append(out, otx)
 		}
 		return false
 	})

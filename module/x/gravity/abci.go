@@ -318,8 +318,8 @@ func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper) {
 func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 	params := k.GetParams(ctx)
 	maxHeight := uint64(0)
-	if uint64(ctx.BlockHeight()) > params.SignedBatchesWindow {
-		maxHeight = uint64(ctx.BlockHeight()) - params.SignedBatchesWindow
+	if uint64(ctx.BlockHeight()) > params.ConfirmedOutgoingTxWindow {
+		maxHeight = uint64(ctx.BlockHeight()) - params.ConfirmedOutgoingTxWindow
 	} else {
 		return
 	}
@@ -377,10 +377,6 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 			}
 		}
 
-		// TODO: Eric please remind me to check if this is still true after the first round of reviews items:
-
-		// since we changed the logic for gathering unslashed txs, the order of the block heights is
-		// not guaranteed to be ascending
 		if otx.GetCosmosHeight() > k.GetLastSlashedOutgoingTxBlockHeight(ctx) {
 			k.SetLastSlashedOutgoingTxBlockHeight(ctx, otx.GetCosmosHeight())
 		}

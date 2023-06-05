@@ -35,7 +35,7 @@ var (
 	// ParamsStoreKeySignedSignerSetTxsWindow stores the signed blocks window
 	ParamsStoreKeySignedSignerSetTxsWindow = []byte("SignedSignerSetTxWindow")
 
-	// ParamsStoreKeySignedBatchesWindow stores the signed blocks window
+	// ParamsStoreKeyConfirmedOutgoingTxWindow stores the signed blocks window
 	ParamsStoreKeySignedBatchesWindow = []byte("SignedBatchesWindow")
 
 	// ParamsStoreKeyEthereumSignaturesWindow stores the signed blocks window
@@ -70,6 +70,9 @@ var (
 
 	// ParamStoreTxHistoryWindow stores the tx history window
 	ParamStoreTxHistoryWindow = []byte("TxHistoryWindow")
+
+	//  ParamStoreUnbondSlashingSignerSetTxsWindow stores unbond slashing valset window
+	ParamStoreConfirmedOutgoingTxWindow = []byte("ConfirmedOutgoingTxWindow")
 
 	// Ensure that params implements the proper interface
 	_ paramtypes.ParamSet = &Params{}
@@ -127,16 +130,9 @@ func DefaultGenesisState() *GenesisState {
 // DefaultParams returns a copy of the default params
 func DefaultParams() *Params {
 	return &Params{
-		GravityId:                "defaultgravityid",
-		BridgeEthereumAddress:    "0x0000000000000000000000000000000000000000",
-		SignedSignerSetTxsWindow: 10000,
-		// SignedBatchesWindow is named poorly in that it has become the window for slashing all
-		// types that implement OutgoingTx. It's important to note that if this window is too
-		// small, txs may be pruned before they having slashing applied to them. This is because,
-		// except for signer sets, the slashing logic applies to *completed* txs. Therefore, this param
-		// should be set to a value that results in an amount of time that is comfortably higher
-		// than the amount of time it takes for a transaction to be observed after submission and/or
-		// whatever a typical timeout time is.
+		GravityId:                                 "defaultgravityid",
+		BridgeEthereumAddress:                     "0x0000000000000000000000000000000000000000",
+		SignedSignerSetTxsWindow:                  10000,
 		SignedBatchesWindow:                       10000,
 		EthereumSignaturesWindow:                  10000,
 		TargetEthTxTimeout:                        43200000,
@@ -148,7 +144,8 @@ func DefaultParams() *Params {
 		SlashFractionConflictingEthereumSignature: sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		UnbondSlashingSignerSetTxsWindow:          10000,
 		// this is in ethereum blocks. ethereum block time is ~12 seconds, about twice as long as Sommelier
-		EventVoteWindow: 5000,
+		EventVoteWindow:           5000,
+		ConfirmedOutgoingTxWindow: 10000,
 	}
 }
 
@@ -202,6 +199,9 @@ func (p Params) ValidateBasic() error {
 	if err := validateEventVoteWindow(p.EventVoteWindow); err != nil {
 		return sdkerrors.Wrap(err, "event vote window")
 	}
+	if err := validateConfirmedOutgoingTxWindow(p.ConfirmedOutgoingTxWindow); err != nil {
+		return sdkerrors.Wrap(err, "confirmed outgoing tx window")
+	}
 
 	return nil
 }
@@ -231,6 +231,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionConflictingEthereumSignature, &p.SlashFractionConflictingEthereumSignature, validateSlashFractionConflictingEthereumSignature),
 		paramtypes.NewParamSetPair(ParamStoreUnbondSlashingSignerSetTxsWindow, &p.UnbondSlashingSignerSetTxsWindow, validateUnbondSlashingSignerSetTxsWindow),
 		paramtypes.NewParamSetPair(ParamStoreEventVoteWindow, &p.EventVoteWindow, validateEventVoteWindow),
+		paramtypes.NewParamSetPair(ParamStoreConfirmedOutgoingTxWindow, &p.ConfirmedOutgoingTxWindow, validateConfirmedOutgoingTxWindow),
 	}
 }
 
@@ -408,4 +409,12 @@ func byteArrayToFixByteArray(b []byte) (out [32]byte, err error) {
 	}
 	copy(out[:], b)
 	return out, nil
+}
+
+func validateConfirmedOutgoingTxWindow(i interface{}) error {
+	// TODO: do we want to set some bounds on this value?
+	if _, ok := i.(uint64); !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
 }

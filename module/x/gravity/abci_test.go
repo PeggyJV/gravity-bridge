@@ -168,35 +168,35 @@ func TestBatchAndContractCallSlashingAndPruning(t *testing.T) {
 	input, ctx := keeper.SetupFiveValChain(t)
 	gravityKeeper := input.GravityKeeper
 	params := gravityKeeper.GetParams(ctx)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + int64(params.SignedBatchesWindow) + 2)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + int64(params.ConfirmedOutgoingTxWindow) + 2)
 
 	// First store a batch and contract call
 	batch := &types.BatchTx{
 		BatchNonce:    1,
 		Transactions:  []*types.SendToEthereum{},
 		TokenContract: keeper.TokenContractAddrs[0],
-		Height:        uint64(ctx.BlockHeight() - int64(params.SignedBatchesWindow+1)),
+		Height:        uint64(ctx.BlockHeight() - int64(params.ConfirmedOutgoingTxWindow+1)),
 	}
 	batchNoPrune := &types.BatchTx{
 		BatchNonce:    2,
 		Transactions:  []*types.SendToEthereum{},
 		TokenContract: keeper.TokenContractAddrs[0],
-		Height:        uint64(ctx.BlockHeight() - int64(params.SignedBatchesWindow)),
+		Height:        uint64(ctx.BlockHeight() - int64(params.ConfirmedOutgoingTxWindow)),
 	}
 	contractCall := &types.ContractCallTx{
 		InvalidationNonce: 1,
 		InvalidationScope: []byte("test"),
-		Height:            uint64(ctx.BlockHeight() - int64(params.SignedBatchesWindow+1)),
+		Height:            uint64(ctx.BlockHeight() - int64(params.ConfirmedOutgoingTxWindow+1)),
 	}
 	contractCallNoPrune := &types.ContractCallTx{
 		InvalidationNonce: 2,
 		InvalidationScope: []byte("test"),
-		Height:            uint64(ctx.BlockHeight() - int64(params.SignedBatchesWindow)),
+		Height:            uint64(ctx.BlockHeight() - int64(params.ConfirmedOutgoingTxWindow)),
 	}
-	gravityKeeper.SetCompletedOutgoingTx(ctx, batch)
-	gravityKeeper.SetCompletedOutgoingTx(ctx, batchNoPrune)
-	gravityKeeper.SetCompletedOutgoingTx(ctx, contractCall)
-	gravityKeeper.SetCompletedOutgoingTx(ctx, contractCallNoPrune)
+	gravityKeeper.SetOutgoingTx(ctx, batch)
+	gravityKeeper.SetOutgoingTx(ctx, batchNoPrune)
+	gravityKeeper.SetOutgoingTx(ctx, contractCall)
+	gravityKeeper.SetOutgoingTx(ctx, contractCallNoPrune)
 
 	for i, val := range keeper.ValAddrs {
 		if i == 0 {
@@ -237,6 +237,11 @@ func TestBatchAndContractCallSlashingAndPruning(t *testing.T) {
 	require.Equal(t, input.GravityKeeper.GetLastSlashedOutgoingTxBlockHeight(ctx), batch.Height)
 
 	// Check txs pruning behavior
+	gravityKeeper.SetCompletedOutgoingTx(ctx, batch)
+	gravityKeeper.SetCompletedOutgoingTx(ctx, batchNoPrune)
+	gravityKeeper.SetCompletedOutgoingTx(ctx, contractCall)
+	gravityKeeper.SetCompletedOutgoingTx(ctx, contractCallNoPrune)
+
 	gravity.BeginBlocker(ctx, gravityKeeper)
 
 	require.Nil(t, input.GravityKeeper.GetCompletedOutgoingTx(ctx, batch.GetStoreIndex()))
