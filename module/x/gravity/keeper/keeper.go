@@ -465,7 +465,7 @@ func (k Keeper) getDelegateKeys(ctx sdk.Context) (out []*types.MsgDelegateKeys) 
 
 // GetUnbondingvalidators returns UnbondingValidators.
 // Adding here in gravity keeper as cdc is available inside endblocker.
-func (k Keeper) GetUnbondingvalidators(unbondingVals []byte) stakingtypes.ValAddresses {
+func (k Keeper) GetUnbondingValidators(unbondingVals []byte) stakingtypes.ValAddresses {
 	unbondingValidators := stakingtypes.ValAddresses{}
 	k.cdc.MustUnmarshal(unbondingVals, &unbondingValidators)
 	return unbondingValidators
