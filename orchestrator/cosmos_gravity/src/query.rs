@@ -23,12 +23,12 @@ pub async fn get_valset(
 
 /// This hits the /pending_valset_requests endpoint and will provide
 /// an array of validator sets we have not already signed
-pub async fn get_oldest_unsigned_valsets(
+pub async fn get_oldest_unconfirmed_valsets(
     client: &mut GravityQueryClient<Channel>,
     address: Address,
 ) -> Result<Vec<Valset>, GravityError> {
     let response = client
-        .unsigned_signer_set_txs(UnsignedSignerSetTxsRequest {
+        .unconfirmed_signer_set_txs(UnconfirmedSignerSetTxsRequest {
             address: address.to_string(),
         })
         .await?;
@@ -60,7 +60,7 @@ pub async fn get_all_valset_confirms(
             signer_set_nonce: nonce,
         })
         .await?;
-    let confirms = request.into_inner().signatures;
+    let confirms = request.into_inner().confirmations;
     let mut parsed_confirms = Vec::new();
     for item in confirms {
         parsed_confirms.push(ValsetConfirmResponse::from_proto(item)?)
@@ -68,12 +68,12 @@ pub async fn get_all_valset_confirms(
     Ok(parsed_confirms)
 }
 
-pub async fn get_oldest_unsigned_transaction_batch(
+pub async fn get_oldest_unconfirmed_transaction_batch(
     client: &mut GravityQueryClient<Channel>,
     address: Address,
 ) -> Result<Option<TransactionBatch>, GravityError> {
     let request = client
-        .unsigned_batch_txs(UnsignedBatchTxsRequest {
+        .unconfirmed_batch_txs(UnconfirmedBatchTxsRequest {
             address: address.to_string(),
         })
         .await?;
@@ -110,7 +110,7 @@ fn extract_valid_batches(batches: Vec<BatchTx>) -> Vec<TransactionBatch> {
 }
 
 /// get all batch confirmations for a given nonce and denom
-pub async fn get_transaction_batch_signatures(
+pub async fn get_transaction_batch_confirmations(
     client: &mut GravityQueryClient<Channel>,
     nonce: u64,
     contract_address: EthAddress,
@@ -121,7 +121,7 @@ pub async fn get_transaction_batch_signatures(
             token_contract: format_eth_address(contract_address),
         })
         .await?;
-    let batch_confirms = request.into_inner().signatures;
+    let batch_confirms = request.into_inner().confirmations;
     let mut out = Vec::new();
     for confirm in batch_confirms {
         out.push(BatchConfirmResponse::from_proto(confirm)?)
@@ -165,7 +165,7 @@ pub async fn get_latest_logic_calls(
     Ok(out)
 }
 
-pub async fn get_logic_call_signatures(
+pub async fn get_logic_call_confirmations(
     client: &mut GravityQueryClient<Channel>,
     invalidation_scope: Vec<u8>,
     invalidation_nonce: u64,
@@ -176,7 +176,7 @@ pub async fn get_logic_call_signatures(
             invalidation_nonce,
         })
         .await?;
-    let call_confirms = request.into_inner().signatures;
+    let call_confirms = request.into_inner().confirmations;
     let mut out = Vec::new();
     for confirm in call_confirms {
         out.push(LogicCallConfirmResponse::from_proto(confirm)?)
@@ -184,12 +184,12 @@ pub async fn get_logic_call_signatures(
     Ok(out)
 }
 
-pub async fn get_oldest_unsigned_logic_call(
+pub async fn get_oldest_unconfirmed_logic_call(
     client: &mut GravityQueryClient<Channel>,
     address: Address,
 ) -> Result<Vec<LogicCall>, GravityError> {
     let request = client
-        .unsigned_contract_call_txs(UnsignedContractCallTxsRequest {
+        .unconfirmed_contract_call_txs(UnconfirmedContractCallTxsRequest {
             address: address.to_string(),
         })
         .await?;

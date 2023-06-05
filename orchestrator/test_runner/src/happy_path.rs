@@ -9,7 +9,7 @@ use crate::TOTAL_TIMEOUT;
 use clarity::Uint256;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::send::send_to_eth;
-use cosmos_gravity::{build, query::get_oldest_unsigned_transaction_batch, send};
+use cosmos_gravity::{build, query::get_oldest_unconfirmed_transaction_batch, send};
 use deep_space::address::Address as CosmosAddress;
 use deep_space::coin::Coin;
 use deep_space::Contact;
@@ -350,7 +350,7 @@ async fn test_batch(
     let requester_address = requester_cosmos_private_key
         .to_address(&contact.get_prefix())
         .unwrap();
-    get_oldest_unsigned_transaction_batch(grpc_client, requester_address)
+    get_oldest_unconfirmed_transaction_batch(grpc_client, requester_address)
         .await
         .expect("Failed to get batch to sign");
 

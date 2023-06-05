@@ -115,7 +115,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			s.Require().NoError(err)
 			queryClient := types.NewQueryClient(clientCtx)
 			res, err := queryClient.BatchTxConfirmations(context.Background(), &types.BatchTxConfirmationsRequest{BatchNonce: 1, TokenContract: testERC20contract.String()})
-			return len(res.GetSignatures()) != 0
+			return len(res.GetConfirmations()) != 0
 		}, 5*time.Minute, 10*time.Second, "Can't find Batchtx signing info")
 
 		// Check jail status of validators
