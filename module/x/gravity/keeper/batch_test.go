@@ -380,3 +380,52 @@ func TestEmptyBatch(t *testing.T) {
 
 	require.Nil(t, batchTx)
 }
+
+func TestGetUnconfirmedBatchTxs(t *testing.T) {
+	input, ctx := SetupFiveValChain(t)
+	gk := input.GravityKeeper
+	vals := input.StakingKeeper.GetAllValidators(ctx)
+	val1, err := sdk.ValAddressFromBech32(vals[0].OperatorAddress)
+	require.NoError(t, err)
+	val2, err := sdk.ValAddressFromBech32(vals[1].OperatorAddress)
+	require.NoError(t, err)
+
+	address := common.HexToAddress("0x2a24af0501a534fca004ee1bd667b783f205a546")
+	maxElements := 100
+	sig := []byte("dummysig")
+	gk.CreateBatchTx(ctx, address, maxElements)
+	gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+		BatchNonce: 2,
+		Height:     uint64(ctx.BlockHeight()),
+	})
+
+	// val1 signs both
+	// val2 signs one
+	gk.SetEthereumSignature(
+		ctx,
+		&types.BatchTxConfirmation{
+			BatchNonce: 1,
+			Signature:  sig,
+		},
+		val1,
+	)
+	gk.SetEthereumSignature(
+		ctx,
+		&types.BatchTxConfirmation{
+			BatchNonce: 2,
+			Signature:  sig,
+		},
+		val1,
+	)
+	gk.SetEthereumSignature(
+		ctx,
+		&types.BatchTxConfirmation{
+			BatchNonce: 1,
+			Signature:  sig,
+		},
+		val2,
+	)
+
+	require.Empty(t, gk.GetUnconfirmedBatchTxs(ctx, val1))
+	require.Equal(t, 1, len(gk.GetUnconfirmedBatchTxs(ctx, val2)))
+}

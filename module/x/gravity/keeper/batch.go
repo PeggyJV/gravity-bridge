@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
@@ -183,6 +184,34 @@ func (k Keeper) GetUnslashedOutgoingTxs(ctx sdk.Context, maxHeight uint64) (out 
 		return false
 	})
 	return
+}
+
+func (k Keeper) GetUnconfirmedBatchTxs(ctx sdk.Context, val sdk.ValAddress) []*types.BatchTx {
+	var unconfirmed []*types.BatchTx
+	k.IterateCompletedOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
+		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)
+		if len(sig) == 0 { // it's pending
+			batch, ok := cotx.(*types.BatchTx)
+			if !ok {
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for completed tx %s", cotx))
+			}
+			unconfirmed = append(unconfirmed, batch)
+		}
+		return false
+	})
+	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
+		if len(sig) == 0 { // it's pending
+			batch, ok := otx.(*types.BatchTx)
+			if !ok {
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
+			}
+			unconfirmed = append(unconfirmed, batch)
+		}
+		return false
+	})
+
+	return unconfirmed
 }
 
 func (k Keeper) incrementLastOutgoingBatchNonce(ctx sdk.Context) uint64 {

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
@@ -29,4 +30,32 @@ func (k Keeper) signerSetExecuted(ctx sdk.Context, nonce uint64) {
 
 	k.setLastObservedSignerSetTx(ctx, *completedSignerSetTx)
 	k.Complete(ctx, completedSignerSetTx)
+}
+
+func (k Keeper) GetUnconfirmedSignerSetTxs(ctx sdk.Context, val sdk.ValAddress) []*types.SignerSetTx {
+	var unconfirmed []*types.SignerSetTx
+	k.IterateCompletedOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
+		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)
+		if len(sig) == 0 {
+			signerSet, ok := cotx.(*types.SignerSetTx)
+			if !ok {
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for completed tx %s", cotx))
+			}
+			unconfirmed = append(unconfirmed, signerSet)
+		}
+		return false
+	})
+	k.IterateOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
+		if len(sig) == 0 {
+			signerSet, ok := otx.(*types.SignerSetTx)
+			if !ok {
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %s", otx))
+			}
+			unconfirmed = append(unconfirmed, signerSet)
+		}
+		return false
+	})
+
+	return unconfirmed
 }

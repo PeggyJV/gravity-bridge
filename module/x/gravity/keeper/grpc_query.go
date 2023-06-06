@@ -210,30 +210,8 @@ func (k Keeper) UnconfirmedSignerSetTxs(c context.Context, req *types.Unconfirme
 	if err != nil {
 		return nil, err
 	}
-	var signerSets []*types.SignerSetTx
-	k.IterateOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
-		if len(sig) == 0 { // it's pending
-			signerSet, ok := otx.(*types.SignerSetTx)
-			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %s", otx))
-			}
-			signerSets = append(signerSets, signerSet)
-		}
-		return false
-	})
-	k.IterateCompletedOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
-		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)
-		if len(sig) == 0 { // it's pending
-			signerSet, ok := cotx.(*types.SignerSetTx)
-			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for completed tx %s", cotx))
-			}
-			signerSets = append(signerSets, signerSet)
-		}
-		return false
-	})
-	return &types.UnconfirmedSignerSetTxsResponse{SignerSets: signerSets}, nil
+
+	return &types.UnconfirmedSignerSetTxsResponse{SignerSets: k.GetUnconfirmedSignerSetTxs(ctx, val)}, nil
 }
 
 // UnconfirmedBatchTxs returns all batch txs that have not been signed by the given validator
@@ -243,30 +221,8 @@ func (k Keeper) UnconfirmedBatchTxs(c context.Context, req *types.UnconfirmedBat
 	if err != nil {
 		return nil, err
 	}
-	var batches []*types.BatchTx
-	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
-		if len(sig) == 0 { // it's pending
-			batch, ok := otx.(*types.BatchTx)
-			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
-			}
-			batches = append(batches, batch)
-		}
-		return false
-	})
-	k.IterateCompletedOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
-		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)
-		if len(sig) == 0 { // it's pending
-			batch, ok := cotx.(*types.BatchTx)
-			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for completed tx %s", cotx))
-			}
-			batches = append(batches, batch)
-		}
-		return false
-	})
-	return &types.UnconfirmedBatchTxsResponse{Batches: batches}, nil
+
+	return &types.UnconfirmedBatchTxsResponse{Batches: k.GetUnconfirmedBatchTxs(ctx, val)}, nil
 }
 
 // UnconfirmedContractCallTxs returns all contract call txs that have not been signed by the given validator
@@ -276,30 +232,8 @@ func (k Keeper) UnconfirmedContractCallTxs(c context.Context, req *types.Unconfi
 	if err != nil {
 		return nil, err
 	}
-	var calls []*types.ContractCallTx
-	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
-		if len(sig) == 0 { // it's pending
-			call, ok := otx.(*types.ContractCallTx)
-			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %s", otx))
-			}
-			calls = append(calls, call)
-		}
-		return false
-	})
-	k.IterateCompletedOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
-		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)
-		if len(sig) == 0 { // it's pending
-			call, ok := cotx.(*types.ContractCallTx)
-			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for completed tx %s", cotx))
-			}
-			calls = append(calls, call)
-		}
-		return false
-	})
-	return &types.UnconfirmedContractCallTxsResponse{Calls: calls}, nil
+
+	return &types.UnconfirmedContractCallTxsResponse{Calls: k.GetUnconfirmedContractCallTxs(ctx, val)}, nil
 }
 
 func (k Keeper) LastSubmittedEthereumEvent(c context.Context, req *types.LastSubmittedEthereumEventRequest) (*types.LastSubmittedEthereumEventResponse, error) {

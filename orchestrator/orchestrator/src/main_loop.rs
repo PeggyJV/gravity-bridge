@@ -14,8 +14,8 @@ use cosmos_gravity::send::send_main_loop;
 use cosmos_gravity::{
     build,
     query::{
-        get_oldest_unconfirmed_logic_call, get_oldest_unconfirmed_transaction_batch,
-        get_oldest_unconfirmed_valsets,
+        get_unconfirmed_logic_calls, get_unconfirmed_transaction_batches,
+        get_unconfirmed_valsets,
     },
 };
 use deep_space::client::ChainStatus;
@@ -304,7 +304,7 @@ pub async fn eth_signer_main_loop(
                 }
 
                 // sign the last unconfirmed valsets
-                match get_oldest_unconfirmed_valsets(&mut grpc_client, our_cosmos_address).await {
+                match get_unconfirmed_valsets(&mut grpc_client, our_cosmos_address).await {
                     Ok(valsets) => {
                         if valsets.is_empty() {
                             trace!("No validator sets to sign, node is caught up!")
@@ -338,7 +338,7 @@ pub async fn eth_signer_main_loop(
                 }
 
                 // sign the last unconfirmed batch, TODO check if we already have signed this
-                match get_oldest_unconfirmed_transaction_batch(&mut grpc_client, our_cosmos_address)
+                match get_unconfirmed_transaction_batches(&mut grpc_client, our_cosmos_address)
                     .await
                 {
                     Ok(Some(last_unconfirmed_batch)) => {
@@ -374,7 +374,7 @@ pub async fn eth_signer_main_loop(
                 }
 
                 let logic_calls =
-                    get_oldest_unconfirmed_logic_call(&mut grpc_client, our_cosmos_address).await;
+                    get_unconfirmed_logic_calls(&mut grpc_client, our_cosmos_address).await;
                 if let Ok(logic_calls) = logic_calls {
                     for logic_call in logic_calls {
                         info!(

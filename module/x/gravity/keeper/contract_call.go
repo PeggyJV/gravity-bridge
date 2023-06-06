@@ -5,8 +5,37 @@ import (
 	"encoding/hex"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
+
+func (k Keeper) GetUnconfirmedContractCallTxs(ctx sdk.Context, val sdk.ValAddress) []*types.ContractCallTx {
+	var unconfirmed []*types.ContractCallTx
+	k.IterateCompletedOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
+		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)
+		if len(sig) == 0 {
+			call, ok := cotx.(*types.ContractCallTx)
+			if !ok {
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for completed tx %s", cotx))
+			}
+			unconfirmed = append(unconfirmed, call)
+		}
+		return false
+	})
+	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
+		if len(sig) == 0 {
+			call, ok := otx.(*types.ContractCallTx)
+			if !ok {
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %s", otx))
+			}
+			unconfirmed = append(unconfirmed, call)
+		}
+		return false
+	})
+
+	return unconfirmed
+}
 
 func (k Keeper) contractCallExecuted(ctx sdk.Context, invalidationScope []byte, invalidationNonce uint64) {
 	otx := k.GetOutgoingTx(ctx, types.MakeContractCallTxKey(invalidationScope, invalidationNonce))

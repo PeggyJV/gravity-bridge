@@ -21,9 +21,7 @@ pub async fn get_valset(
     Ok(valset)
 }
 
-/// This hits the /pending_valset_requests endpoint and will provide
-/// an array of validator sets we have not already signed
-pub async fn get_oldest_unconfirmed_valsets(
+pub async fn get_unconfirmed_valsets(
     client: &mut GravityQueryClient<Channel>,
     address: Address,
 ) -> Result<Vec<Valset>, GravityError> {
@@ -68,7 +66,7 @@ pub async fn get_all_valset_confirms(
     Ok(parsed_confirms)
 }
 
-pub async fn get_oldest_unconfirmed_transaction_batch(
+pub async fn get_unconfirmed_transaction_batches(
     client: &mut GravityQueryClient<Channel>,
     address: Address,
 ) -> Result<Option<TransactionBatch>, GravityError> {
@@ -184,7 +182,7 @@ pub async fn get_logic_call_confirmations(
     Ok(out)
 }
 
-pub async fn get_oldest_unconfirmed_logic_call(
+pub async fn get_unconfirmed_logic_calls(
     client: &mut GravityQueryClient<Channel>,
     address: Address,
 ) -> Result<Vec<LogicCall>, GravityError> {
