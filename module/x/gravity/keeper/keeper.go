@@ -153,10 +153,15 @@ func (k Keeper) GetEthereumSignatures(ctx sdk.Context, storeIndex []byte) map[st
 
 // DeleteEthereumSignatures deletes all ethereum signatures for a given outgoing tx by store index
 func (k Keeper) DeleteEthereumSignatures(ctx sdk.Context, storeIndex []byte) {
+	var keys [][]byte
 	k.iterateEthereumSignatures(ctx, storeIndex, func(val sdk.ValAddress, h []byte) bool {
-		ctx.KVStore(k.storeKey).Delete(types.MakeEthereumSignatureKey(storeIndex, val))
+		keys = append(keys, types.MakeEthereumSignatureKey(storeIndex, val))
 		return false
 	})
+
+	for _, key := range keys {
+		ctx.KVStore(k.storeKey).Delete(key)
+	}
 }
 
 // iterateEthereumSignatures iterates through all valset confirms by nonce in ASC order

@@ -264,6 +264,10 @@ func TestKeeper_UnconfirmedBatchTxs(t *testing.T) {
 
 		// setup
 		{
+			gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+				BatchNonce: 999,
+				Height:     0,
+			})
 			toComplete := &types.BatchTx{
 				BatchNonce:    1000,
 				Timeout:       1000,
@@ -279,10 +283,6 @@ func TestKeeper_UnconfirmedBatchTxs(t *testing.T) {
 				Transactions:  nil,
 				TokenContract: "0x835973768750b3ED2D5c3EF5AdcD5eDb44d12aD4",
 				Height:        1001,
-			})
-			gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
-				BatchNonce: 1,
-				Height:     0,
 			})
 			// should not be returned
 			gk.SetCompletedOutgoingTx(ctx, &types.ContractCallTx{
