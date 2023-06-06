@@ -278,11 +278,6 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	balance2 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(denom, 12)}, balance2)
 
-	// and vouchers added to the account
-	// this happens when 2/3 of the voting power have submitted claims, so the third isn't required
-	balance3 := input.BankKeeper.GetAllBalances(ctx, myCosmosAddr)
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(denom, 12)}, balance3)
-
 	// when
 	ctx = ctx.WithBlockTime(myBlockTime)
 	_, err = h(ctx, ethClaim3Msg)

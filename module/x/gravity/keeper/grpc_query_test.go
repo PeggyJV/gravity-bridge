@@ -264,13 +264,15 @@ func TestKeeper_UnconfirmedBatchTxs(t *testing.T) {
 
 		// setup
 		{
-			gk.SetOutgoingTx(ctx, &types.BatchTx{
+			toComplete := &types.BatchTx{
 				BatchNonce:    1000,
 				Timeout:       1000,
 				Transactions:  nil,
 				TokenContract: "0x835973768750b3ED2D5c3EF5AdcD5eDb44d12aD4",
 				Height:        1000,
-			})
+			}
+			gk.SetOutgoingTx(ctx, toComplete)
+			gk.Complete(ctx, toComplete)
 			gk.SetOutgoingTx(ctx, &types.BatchTx{
 				BatchNonce:    1001,
 				Timeout:       1000,

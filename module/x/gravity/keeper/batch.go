@@ -83,8 +83,7 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 		return false
 	})
 
-	k.SetCompletedOutgoingTx(ctx, batchTx)
-	k.DeleteOutgoingTx(ctx, batchTx.GetStoreIndex())
+	k.Complete(ctx, batchTx)
 }
 
 // getBatchFeesByTokenType gets the fees the next batch of a given token type would
@@ -171,7 +170,13 @@ func (k Keeper) GetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context) uint64 {
 
 func (k Keeper) GetUnslashedOutgoingTxs(ctx sdk.Context, maxHeight uint64) (out []types.OutgoingTx) {
 	lastSlashed := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
-	k.iterateOutgoingTxs(ctx, func(key []byte, cotx types.OutgoingTx) bool {
+	k.iterateOutgoingTxs(ctx, func(key []byte, otx types.OutgoingTx) bool {
+		if (otx.GetCosmosHeight() < maxHeight) && (otx.GetCosmosHeight() > lastSlashed) {
+			out = append(out, otx)
+		}
+		return false
+	})
+	k.IterateCompletedOutgoingTxs(ctx, func(key []byte, cotx types.OutgoingTx) bool {
 		if (cotx.GetCosmosHeight() < maxHeight) && (cotx.GetCosmosHeight() > lastSlashed) {
 			out = append(out, cotx)
 		}

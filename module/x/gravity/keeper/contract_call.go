@@ -29,6 +29,5 @@ func (k Keeper) contractCallExecuted(ctx sdk.Context, invalidationScope []byte, 
 		return false
 	})
 
-	k.SetCompletedOutgoingTx(ctx, completedCallTx)
-	k.DeleteOutgoingTx(ctx, completedCallTx.GetStoreIndex())
+	k.Complete(ctx, completedCallTx)
 }
