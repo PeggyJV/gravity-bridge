@@ -97,7 +97,7 @@ pub struct CosmosSection {
     pub grpc: String,
     pub prefix: String,
     pub gas_adjustment: f64,
-    pub msg_batch_size: u32,
+    pub msg_batch_size: usize,
     pub gas_price: GasPrice,
 }
 

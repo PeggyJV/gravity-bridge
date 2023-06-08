@@ -28,7 +28,6 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::bytes_to_hex_str;
 use relayer::main_loop::relayer_main_loop;
-use std::convert::TryInto;
 use std::process::exit;
 use std::{net, time::Duration};
 use tokio::time::sleep as delay_for;
@@ -60,7 +59,7 @@ pub async fn orchestrator_main_loop(
     blocks_to_search: u64,
     gas_adjustment: f64,
     relayer_opt_out: bool,
-    cosmos_msg_batch_size: u32,
+    cosmos_msg_batch_size: usize,
 ) -> Result<(), GravityError> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix())?;
     let gravity_id = get_gravity_id(gravity_contract_address, eth_client.clone()).await?;
@@ -72,7 +71,7 @@ pub async fn orchestrator_main_loop(
         gas_price,
         rx,
         gas_adjustment,
-        cosmos_msg_batch_size.try_into().unwrap(),
+        cosmos_msg_batch_size,
     );
 
     let b = eth_oracle_main_loop(
