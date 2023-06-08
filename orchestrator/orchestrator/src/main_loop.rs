@@ -455,14 +455,3 @@ pub async fn run_signer(
         );
     }
 }
-
-pub async fn check_for_eth(orchestrator_address: EthAddress, eth_client: EthClient) {
-    let balance = eth_client
-        .get_balance(orchestrator_address, None)
-        .await
-        .unwrap();
-    if balance == 0u8.into() {
-        warn!("You don't have any Ethereum! You will need to send some to {} for this program to work. Dust will do for basic operations, more info about average relaying costs will be presented as the program runs", orchestrator_address);
-    }
-    metrics::set_ethereum_bal(balance);
-}
