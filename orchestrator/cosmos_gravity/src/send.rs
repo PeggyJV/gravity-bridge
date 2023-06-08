@@ -90,7 +90,7 @@ pub async fn send_to_eth(
         )));
     }
 
-    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
+    let cosmos_address = cosmos_key.to_address(&contact.get_prefix())?;
 
     let msg = proto::MsgSendToEthereum {
         sender: cosmos_address.to_string(),
@@ -103,13 +103,13 @@ pub async fn send_to_eth(
 }
 
 pub async fn send_messages(
-    contact: &Contact,
+    contact: Contact,
     cosmos_key: CosmosPrivateKey,
     gas_price: (f64, String),
     messages: Vec<Msg>,
     gas_adjustment: f64,
 ) -> Result<TxResponse, GravityError> {
-    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
+    let cosmos_address = cosmos_key.to_address(&contact.get_prefix())?;
 
     let fee_amount = Coin {
         denom: gas_price.1.clone(),
