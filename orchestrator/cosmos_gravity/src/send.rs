@@ -224,7 +224,7 @@ pub async fn send_main_loop(
                 msg_batch_size,
             )
         ).await {
-            error!("cosmos sender failed with: {:?}", err);
+            error!("cosmos sender failed with: {err:?}");
         }
     }
 }

@@ -22,17 +22,19 @@ pub async fn relayer_main_loop(
 ) {
     loop {
         info!("starting relayer");
-        run_relayer(
-            gravity_id.clone(),
-            eth_client.clone(),
-            grpc_client.clone(),
-            gravity_contract_address,
-            eth_gas_price_multiplier,
-            eth_gas_multiplier,
+        if let Err(err) = tokio::task::spawn(
+            run_relayer(
+                gravity_id.clone(),
+                eth_client.clone(),
+                grpc_client.clone(),
+                gravity_contract_address,
+                eth_gas_price_multiplier,
+                eth_gas_multiplier,
+            )
         )
-        .await;
-
-        warn!("relayer exited unexpectedly. restarting!");
+        .await {
+            error!("relayer failed with: {err:?}");
+        }
     }
 }
 

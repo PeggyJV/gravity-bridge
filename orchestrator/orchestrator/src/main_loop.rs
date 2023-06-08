@@ -147,7 +147,7 @@ pub async fn eth_oracle_main_loop(
                 msg_sender.clone(),
             )
         ).await {
-            error!("oracle exited unexpectedly: {:?}", err);
+            error!("oracle failed with: {err:?}");
         }
     }
 }
@@ -294,7 +294,7 @@ pub async fn eth_signer_main_loop(
             )
         )
         .await {
-            error!("eth signer failed with {:?}", err);
+            error!("eth signer failed with {err:?}");
         }
     }
 }
