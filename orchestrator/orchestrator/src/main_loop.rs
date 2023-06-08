@@ -20,7 +20,7 @@ use cosmos_gravity::{
 };
 use deep_space::client::ChainStatus;
 use deep_space::error::CosmosGrpcError;
-use deep_space::{Contact, Msg};
+use deep_space::{Address as CosmosAddress, Contact, Msg};
 use ethereum_gravity::types::EthClient;
 use ethereum_gravity::utils::get_gravity_id;
 use ethers::{prelude::*, types::Address as EthAddress};
@@ -62,6 +62,7 @@ pub async fn orchestrator_main_loop(
     relayer_opt_out: bool,
     cosmos_msg_batch_size: u32,
 ) -> Result<(), GravityError> {
+    let cosmos_address = cosmos_key.to_address(&contact.get_prefix())?;
     let gravity_id = get_gravity_id(gravity_contract_address, eth_client.clone()).await?;
     let (tx, rx) = tokio::sync::mpsc::channel(10);
 
@@ -75,7 +76,7 @@ pub async fn orchestrator_main_loop(
     );
 
     let b = eth_oracle_main_loop(
-        cosmos_key,
+        cosmos_address.clone(),
         contact.clone(),
         eth_client.clone(),
         grpc_client.clone(),
@@ -85,8 +86,8 @@ pub async fn orchestrator_main_loop(
     );
 
     let c = eth_signer_main_loop(
+        cosmos_address,
         gravity_id.clone(),
-        cosmos_key,
         contact.clone(),
         eth_client.clone(),
         grpc_client.clone(),
@@ -121,7 +122,7 @@ const HEIGHT_UPDATE_INTERVAL: u32 = 50;
 
 #[allow(unused_variables)]
 pub async fn eth_oracle_main_loop(
-    cosmos_key: CosmosPrivateKey,
+    cosmos_address: CosmosAddress,
     contact: Contact,
     eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
@@ -132,7 +133,7 @@ pub async fn eth_oracle_main_loop(
     loop {
         info!("starting oracle");
         run_oracle(
-            cosmos_key,
+            cosmos_address,
             contact.clone(),
             eth_client.clone(),
             grpc_client.clone(),
@@ -150,7 +151,7 @@ pub async fn eth_oracle_main_loop(
 /// and ferried over to Cosmos where they will be used to issue tokens or process batches.
 #[allow(unused_variables)]
 pub async fn run_oracle(
-    cosmos_key: CosmosPrivateKey,
+    cosmos_address: CosmosAddress,
     contact: Contact,
     eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
@@ -158,7 +159,6 @@ pub async fn run_oracle(
     blocks_to_search: u64,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
-    let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let block_delay = match get_block_delay(eth_client.clone()).await {
         Ok(block_delay) => block_delay,
         Err(e) => {
@@ -171,7 +171,7 @@ pub async fn run_oracle(
     };
     let mut last_checked_block = get_last_checked_block(
         grpc_client.clone(),
-        our_cosmos_address,
+        cosmos_address,
         gravity_contract_address,
         eth_client.clone(),
         blocks_to_search,
@@ -201,8 +201,7 @@ pub async fn run_oracle(
                         // more confidence we are attesting to a height that has not been re-orged
                         if loop_count % HEIGHT_UPDATE_INTERVAL == 0 {
                             let messages = build::ethereum_vote_height_messages(
-                                &contact,
-                                cosmos_key,
+                                cosmos_address,
                                 latest_eth_block - block_delay,
                             )
                             .await;
@@ -241,11 +240,11 @@ pub async fn run_oracle(
 
                 // Relays events from Ethereum -> Cosmos
                 match check_for_events(
+                    cosmos_address,
                     eth_client.clone(),
                     &contact,
                     &mut grpc_client,
                     gravity_contract_address,
-                    cosmos_key,
                     last_checked_block,
                     blocks_to_search.into(),
                     block_delay,
@@ -278,8 +277,8 @@ pub async fn run_oracle(
 /// valid and signed off on.
 #[allow(unused_variables)]
 pub async fn eth_signer_main_loop(
+    cosmos_address: CosmosAddress,
     gravity_id: String,
-    cosmos_key: CosmosPrivateKey,
     contact: Contact,
     eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
@@ -289,8 +288,8 @@ pub async fn eth_signer_main_loop(
     loop {
         info!("starting ethereum signer");
         run_signer(
+            cosmos_address,
             gravity_id.clone(),
-            cosmos_key,
             contact.clone(),
             eth_client.clone(),
             grpc_client.clone(),
@@ -305,17 +304,15 @@ pub async fn eth_signer_main_loop(
 
 #[allow(unused_variables)]
 pub async fn run_signer(
+    cosmos_address: CosmosAddress,
     gravity_id: String,
-    cosmos_key: CosmosPrivateKey,
     contact: Contact,
     eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
     contract_address: EthAddress,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
-    let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let mut grpc_client = grpc_client;
-
     loop {
         let (async_resp, _) = tokio::join!(
             async {
@@ -358,7 +355,7 @@ pub async fn run_signer(
                 }
 
                 // sign the last unsigned valsets
-                match get_oldest_unsigned_valsets(&mut grpc_client, our_cosmos_address).await {
+                match get_oldest_unsigned_valsets(&mut grpc_client, cosmos_address.clone()).await {
                     Ok(valsets) => {
                         if valsets.is_empty() {
                             trace!("No validator sets to sign, node is caught up!")
@@ -369,10 +366,9 @@ pub async fn run_signer(
                                 valsets[0].nonce
                             );
                             let messages = build::signer_set_tx_confirmation_messages(
-                                &contact,
+                                cosmos_address,
                                 eth_client.clone(),
                                 valsets,
-                                cosmos_key,
                                 gravity_id.clone(),
                             )
                             .await;
@@ -392,7 +388,7 @@ pub async fn run_signer(
                 }
 
                 // sign the last unsigned batch, TODO check if we already have signed this
-                match get_oldest_unsigned_transaction_batch(&mut grpc_client, our_cosmos_address)
+                match get_oldest_unsigned_transaction_batch(&mut grpc_client, cosmos_address.clone())
                     .await
                 {
                     Ok(Some(last_unsigned_batch)) => {
@@ -405,10 +401,9 @@ pub async fn run_signer(
                         );
                         let transaction_batches = vec![last_unsigned_batch];
                         let messages = build::batch_tx_confirmation_messages(
-                            &contact,
+                            cosmos_address.clone(),
                             eth_client.clone(),
                             transaction_batches,
-                            cosmos_key,
                             gravity_id.clone(),
                         )
                         .await;
@@ -428,7 +423,7 @@ pub async fn run_signer(
                 }
 
                 let logic_calls =
-                    get_oldest_unsigned_logic_call(&mut grpc_client, our_cosmos_address).await;
+                    get_oldest_unsigned_logic_call(&mut grpc_client, cosmos_address.clone()).await;
                 if let Ok(logic_calls) = logic_calls {
                     for logic_call in logic_calls {
                         info!(
@@ -438,10 +433,9 @@ pub async fn run_signer(
                         );
                         let logic_calls = vec![logic_call];
                         let messages = build::contract_call_tx_confirmation_messages(
-                            &contact,
+                            cosmos_address,
                             eth_client.clone(),
                             logic_calls,
-                            cosmos_key,
                             gravity_id.clone(),
                         )
                         .await;
