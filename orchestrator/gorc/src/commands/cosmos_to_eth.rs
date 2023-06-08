@@ -136,7 +136,7 @@ impl Runnable for CosmosToEthCmd {
                 amount.clone(),
                 bridge_fee.clone(),
                 config.cosmos.gas_price.as_tuple(),
-                &contact,
+                contact,
                 1.0
             )
             .await;

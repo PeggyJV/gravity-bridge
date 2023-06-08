@@ -66,7 +66,7 @@ pub async fn orchestrator_main_loop(
     let (tx, rx) = tokio::sync::mpsc::channel(10);
 
     let a = send_main_loop(
-        &contact,
+        contact.clone(),
         cosmos_key,
         gas_price,
         rx,
@@ -120,6 +120,8 @@ const DELAY: Duration = Duration::from_secs(5);
 // the number of loop iterations to wait between sending height update messages
 const HEIGHT_UPDATE_INTERVAL: u32 = 50;
 
+/// manages the ethereum oracle thread. `run_oracle` should never return, but in case there are system-caused
+/// panics, we want to make sure we attempt to restart it.
 #[allow(unused_variables)]
 pub async fn eth_oracle_main_loop(
     cosmos_address: CosmosAddress,
@@ -128,22 +130,25 @@ pub async fn eth_oracle_main_loop(
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     blocks_to_search: u64,
+    block_delay: U64,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
     loop {
         info!("starting oracle");
-        run_oracle(
-            cosmos_address,
-            contact.clone(),
-            eth_client.clone(),
-            grpc_client.clone(),
-            gravity_contract_address,
-            blocks_to_search,
-            msg_sender.clone(),
-        )
-        .await;
-
-        warn!("oracle exited unexpectedly. restarting!");
+        if let Err(err) = tokio::task::spawn(
+            run_oracle(
+                cosmos_address,
+                contact.clone(),
+                eth_client.clone(),
+                grpc_client.clone(),
+                gravity_contract_address,
+                blocks_to_search,
+                block_delay,
+                msg_sender.clone(),
+            )
+        ).await {
+            error!("oracle exited unexpectedly: {:?}", err);
+        }
     }
 }
 
@@ -263,9 +268,8 @@ pub async fn run_oracle(
     }
 }
 
-/// The eth_signer simply signs off on any batches or validator sets provided by the validator
-/// since these are provided directly by a trusted Cosmsos node they can simply be assumed to be
-/// valid and signed off on.
+/// manages the ethereum signer task. `run_signer` should never return, but in case there are system-caused
+/// panics, we want to make sure we attempt to restart it.
 #[allow(unused_variables)]
 pub async fn eth_signer_main_loop(
     cosmos_address: CosmosAddress,
@@ -278,21 +282,26 @@ pub async fn eth_signer_main_loop(
 ) {
     loop {
         info!("starting ethereum signer");
-        run_signer(
-            cosmos_address,
-            gravity_id.clone(),
-            contact.clone(),
-            eth_client.clone(),
-            grpc_client.clone(),
-            contract_address,
-            msg_sender.clone(),
+        if let Err(err) = tokio::task::spawn(
+            run_signer(
+                cosmos_address,
+                gravity_id.clone(),
+                contact.clone(),
+                eth_client.clone(),
+                grpc_client.clone(),
+                contract_address,
+                msg_sender.clone(),
+            )
         )
-        .await;
-
-        warn!("signer exited unexpectedly. restarting!");
+        .await {
+            error!("eth signer failed with {:?}", err);
+        }
     }
 }
 
+/// simply signs off on any batches or validator sets provided by the validator since these are
+/// provided directly by a trusted Cosmsos node they can simply be assumed to be valid and signed
+/// off on.
 #[allow(unused_variables)]
 pub async fn run_signer(
     cosmos_address: CosmosAddress,
