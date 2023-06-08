@@ -25,6 +25,7 @@ use ethereum_gravity::types::EthClient;
 use ethereum_gravity::utils::get_gravity_id;
 use ethers::{prelude::*, types::Address as EthAddress};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::bytes_to_hex_str;
 use relayer::main_loop::relayer_main_loop;
 use std::convert::TryInto;
@@ -60,8 +61,9 @@ pub async fn orchestrator_main_loop(
     gas_adjustment: f64,
     relayer_opt_out: bool,
     cosmos_msg_batch_size: u32,
-) {
-    let (tx, rx) = tokio::sync::mpsc::channel(1);
+) -> Result<(), GravityError> {
+    let gravity_id = get_gravity_id(gravity_contract_address, eth_client.clone()).await?;
+    let (tx, rx) = tokio::sync::mpsc::channel(10);
 
     let a = send_main_loop(
         &contact,
@@ -83,6 +85,7 @@ pub async fn orchestrator_main_loop(
     );
 
     let c = eth_signer_main_loop(
+        gravity_id.clone(),
         cosmos_key,
         contact.clone(),
         eth_client.clone(),
@@ -95,6 +98,7 @@ pub async fn orchestrator_main_loop(
 
     if !relayer_opt_out {
         let e = relayer_main_loop(
+            gravity_id,
             eth_client.clone(),
             grpc_client.clone(),
             gravity_contract_address,
@@ -105,6 +109,8 @@ pub async fn orchestrator_main_loop(
     } else {
         futures::future::join4(a, b, c, d).await;
     }
+
+    Ok(())
 }
 
 // the amount of time to wait when encountering error conditions
@@ -113,10 +119,37 @@ const DELAY: Duration = Duration::from_secs(5);
 // the number of loop iterations to wait between sending height update messages
 const HEIGHT_UPDATE_INTERVAL: u32 = 50;
 
+#[allow(unused_variables)]
+pub async fn eth_oracle_main_loop(
+    cosmos_key: CosmosPrivateKey,
+    contact: Contact,
+    eth_client: EthClient,
+    grpc_client: GravityQueryClient<Channel>,
+    gravity_contract_address: EthAddress,
+    blocks_to_search: u64,
+    msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
+) {
+    loop {
+        info!("starting oracle");
+        run_oracle(
+            cosmos_key,
+            contact.clone(),
+            eth_client.clone(),
+            grpc_client.clone(),
+            gravity_contract_address,
+            blocks_to_search,
+            msg_sender.clone(),
+        )
+        .await;
+
+        warn!("oracle exited unexpectedly. restarting!");
+    }
+}
+
 /// This function is responsible for making sure that Ethereum events are retrieved from the Ethereum blockchain
 /// and ferried over to Cosmos where they will be used to issue tokens or process batches.
 #[allow(unused_variables)]
-pub async fn eth_oracle_main_loop(
+pub async fn run_oracle(
     cosmos_key: CosmosPrivateKey,
     contact: Contact,
     eth_client: EthClient,
@@ -245,6 +278,34 @@ pub async fn eth_oracle_main_loop(
 /// valid and signed off on.
 #[allow(unused_variables)]
 pub async fn eth_signer_main_loop(
+    gravity_id: String,
+    cosmos_key: CosmosPrivateKey,
+    contact: Contact,
+    eth_client: EthClient,
+    grpc_client: GravityQueryClient<Channel>,
+    contract_address: EthAddress,
+    msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
+) {
+    loop {
+        info!("starting ethereum signer");
+        run_signer(
+            gravity_id.clone(),
+            cosmos_key,
+            contact.clone(),
+            eth_client.clone(),
+            grpc_client.clone(),
+            contract_address,
+            msg_sender.clone(),
+        )
+        .await;
+
+        warn!("signer exited unexpectedly. restarting!");
+    }
+}
+
+#[allow(unused_variables)]
+pub async fn run_signer(
+    gravity_id: String,
     cosmos_key: CosmosPrivateKey,
     contact: Contact,
     eth_client: EthClient,
@@ -254,13 +315,6 @@ pub async fn eth_signer_main_loop(
 ) {
     let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let mut grpc_client = grpc_client;
-
-    let gravity_id = get_gravity_id(contract_address, eth_client.clone()).await;
-    if gravity_id.is_err() {
-        error!("Failed to get GravityID, check your Eth node");
-        return;
-    }
-    let gravity_id = gravity_id.unwrap();
 
     loop {
         let (async_resp, _) = tokio::join!(

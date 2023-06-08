@@ -149,11 +149,11 @@ pub async fn send_messages(
     Ok(contact.wait_for_tx(response, TIMEOUT).await?)
 }
 
-pub async fn send_main_loop(
+pub async fn run_sender(
     contact: &Contact,
     cosmos_key: CosmosPrivateKey,
     gas_price: (f64, String),
-    mut rx: tokio::sync::mpsc::Receiver<Vec<Msg>>,
+    rx: &mut tokio::sync::mpsc::Receiver<Vec<Msg>>,
     gas_adjustment: f64,
     msg_batch_size: usize,
 ) {
@@ -195,6 +195,29 @@ pub async fn send_main_loop(
                 }
             }
         }
+    }
+}
+
+pub async fn send_main_loop(
+    contact: &Contact,
+    cosmos_key: CosmosPrivateKey,
+    gas_price: (f64, String),
+    mut rx: tokio::sync::mpsc::Receiver<Vec<Msg>>,
+    gas_adjustment: f64,
+    msg_batch_size: usize,
+) {
+    loop {
+        info!("starting cosmos sender");
+        run_sender(
+            contact,
+            cosmos_key,
+            gas_price.to_owned(),
+            &mut rx,
+            gas_adjustment,
+            msg_batch_size,
+        ).await;
+
+        warn!("cosmos sender exited unexpectedly. restarting!")
     }
 }
 
