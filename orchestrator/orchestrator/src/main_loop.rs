@@ -28,7 +28,6 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::bytes_to_hex_str;
 use relayer::main_loop::relayer_main_loop;
-use std::process::exit;
 use std::{net, time::Duration};
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
@@ -62,6 +61,7 @@ pub async fn orchestrator_main_loop(
     cosmos_msg_batch_size: usize,
 ) -> Result<(), GravityError> {
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix())?;
+    let block_delay = get_block_delay(eth_client.clone()).await?;
     let gravity_id = get_gravity_id(gravity_contract_address, eth_client.clone()).await?;
     let (tx, rx) = tokio::sync::mpsc::channel(10);
 
@@ -81,6 +81,7 @@ pub async fn orchestrator_main_loop(
         grpc_client.clone(),
         gravity_contract_address,
         blocks_to_search,
+        block_delay,
         tx.clone(),
     );
 
@@ -156,18 +157,9 @@ pub async fn run_oracle(
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     blocks_to_search: u64,
+    block_delay: U64,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
-    let block_delay = match get_block_delay(eth_client.clone()).await {
-        Ok(block_delay) => block_delay,
-        Err(e) => {
-            error!(
-                "Error encountered when retrieving block delay, cannot continue: {}",
-                e
-            );
-            exit(1);
-        }
-    };
     let mut last_checked_block = get_last_checked_block(
         grpc_client.clone(),
         cosmos_address,
