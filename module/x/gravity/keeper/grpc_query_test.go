@@ -216,7 +216,7 @@ func TestKeeper_ContractCallTxs(t *testing.T) {
 	})
 }
 
-func TestKeeper_UnconfirmedSignerSetTxs(t *testing.T) {
+func TestKeeper_UnsignedSignerSetTxs(t *testing.T) {
 	t.Run("read after there's something in state", func(t *testing.T) {
 		env, ctx := SetupFiveValChain(t)
 		gk := env.GravityKeeper
@@ -242,10 +242,10 @@ func TestKeeper_UnconfirmedSignerSetTxs(t *testing.T) {
 			gk.setEthereumOrchestratorAddress(ctx, common.HexToAddress("0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), orchAddr)
 		}
 		{ // validate
-			req := &types.UnconfirmedSignerSetTxsRequest{
+			req := &types.UnsignedSignerSetTxsRequest{
 				Address: signer,
 			}
-			res, err := gk.UnconfirmedSignerSetTxs(sdk.WrapSDKContext(ctx), req)
+			res, err := gk.UnsignedSignerSetTxs(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, res)
 			require.Len(t, res.SignerSets, 3)
@@ -253,7 +253,7 @@ func TestKeeper_UnconfirmedSignerSetTxs(t *testing.T) {
 	})
 }
 
-func TestKeeper_UnconfirmedBatchTxs(t *testing.T) {
+func TestKeeper_UnsignedBatchTxs(t *testing.T) {
 	t.Run("read after there's something in state", func(t *testing.T) {
 		env, ctx := SetupFiveValChain(t)
 		gk := env.GravityKeeper
@@ -294,10 +294,10 @@ func TestKeeper_UnconfirmedBatchTxs(t *testing.T) {
 			gk.setEthereumOrchestratorAddress(ctx, common.HexToAddress("0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), orchAddr)
 		}
 		{ // validate
-			req := &types.UnconfirmedBatchTxsRequest{
+			req := &types.UnsignedBatchTxsRequest{
 				Address: signer,
 			}
-			res, err := gk.UnconfirmedBatchTxs(sdk.WrapSDKContext(ctx), req)
+			res, err := gk.UnsignedBatchTxs(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, res)
 			require.Len(t, res.Batches, 3)
@@ -305,7 +305,7 @@ func TestKeeper_UnconfirmedBatchTxs(t *testing.T) {
 	})
 }
 
-func TestKeeper_UnconfirmedContractCallTxs(t *testing.T) {
+func TestKeeper_UnsignedContractCallTxs(t *testing.T) {
 	t.Run("read after there's something in state", func(t *testing.T) {
 		env, ctx := SetupFiveValChain(t)
 		gk := env.GravityKeeper
@@ -338,10 +338,10 @@ func TestKeeper_UnconfirmedContractCallTxs(t *testing.T) {
 			gk.setEthereumOrchestratorAddress(ctx, common.HexToAddress("0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), orchAddr)
 		}
 		{ // validate
-			req := &types.UnconfirmedContractCallTxsRequest{
+			req := &types.UnsignedContractCallTxsRequest{
 				Address: signer,
 			}
-			res, err := gk.UnconfirmedContractCallTxs(sdk.WrapSDKContext(ctx), req)
+			res, err := gk.UnsignedContractCallTxs(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, res)
 			require.Len(t, res.Calls, 3)

@@ -1,5 +1,5 @@
 use cosmos_gravity::query::get_latest_transaction_batches;
-use cosmos_gravity::query::get_transaction_batch_confirmations;
+use cosmos_gravity::query::get_transaction_batch_signatures;
 use ethereum_gravity::{
     one_eth_f32, submit_batch::send_eth_transaction_batch, types::EthClient,
     utils::get_tx_batch_nonce,
@@ -81,7 +81,7 @@ async fn get_batches_and_signatures(
     let mut possible_batches = HashMap::new();
     for batch in latest_batches {
         let sigs =
-            get_transaction_batch_confirmations(grpc_client, batch.nonce, batch.token_contract).await;
+            get_transaction_batch_signatures(grpc_client, batch.nonce, batch.token_contract).await;
         debug!("Got sigs {:?}", sigs);
         if let Ok(sigs) = sigs {
             // this checks that the signatures for the batch are actually possible to submit to the chain

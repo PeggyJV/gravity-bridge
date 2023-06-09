@@ -9,7 +9,7 @@ import (
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
-func (k Keeper) GetUnconfirmedContractCallTxs(ctx sdk.Context, val sdk.ValAddress) []*types.ContractCallTx {
+func (k Keeper) GetUnsignedContractCallTxs(ctx sdk.Context, val sdk.ValAddress) []*types.ContractCallTx {
 	var unconfirmed []*types.ContractCallTx
 	k.IterateCompletedOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
 		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)

@@ -186,7 +186,7 @@ func (k Keeper) GetUnslashedOutgoingTxs(ctx sdk.Context, maxHeight uint64) (out 
 	return
 }
 
-func (k Keeper) GetUnconfirmedBatchTxs(ctx sdk.Context, val sdk.ValAddress) []*types.BatchTx {
+func (k Keeper) GetUnsignedBatchTxs(ctx sdk.Context, val sdk.ValAddress) []*types.BatchTx {
 	var unconfirmed []*types.BatchTx
 	k.IterateCompletedOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
 		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)

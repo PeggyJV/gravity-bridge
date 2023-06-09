@@ -44,19 +44,19 @@ lazy_static! {
         labels! {"chain" => "ethereum"}
     ))
     .unwrap();
-    pub static ref UNCONFIRMED_BATCH_FAILURES: IntCounter = register_int_counter!(opts!(
+    pub static ref UNSIGNED_BATCH_FAILURES: IntCounter = register_int_counter!(opts!(
         "unsigned_batch_failures",
         "unsigned batches could not be retrieved",
         labels! {"chain" => "cosmos"}
     ))
     .unwrap();
-    pub static ref UNCONFIRMED_LOGIC_CALL_FAILURES: IntCounter = register_int_counter!(opts!(
+    pub static ref UNSIGNED_LOGIC_CALL_FAILURES: IntCounter = register_int_counter!(opts!(
         "unsigned_logic_call_failures",
         "unsigned logic calls could not be retrieved",
         labels! {"chain" => "cosmos"}
     ))
     .unwrap();
-    pub static ref UNCONFIRMED_VALSET_FAILURES: IntCounter = register_int_counter!(opts!(
+    pub static ref UNSIGNED_VALSET_FAILURES: IntCounter = register_int_counter!(opts!(
         "unsigned_valset_failures",
         "unsigned valsets could not be retrieved",
         labels! {"chain" => "cosmos"}

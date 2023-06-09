@@ -32,7 +32,7 @@ func (k Keeper) signerSetExecuted(ctx sdk.Context, nonce uint64) {
 	k.Complete(ctx, completedSignerSetTx)
 }
 
-func (k Keeper) GetUnconfirmedSignerSetTxs(ctx sdk.Context, val sdk.ValAddress) []*types.SignerSetTx {
+func (k Keeper) GetUnsignedSignerSetTxs(ctx sdk.Context, val sdk.ValAddress) []*types.SignerSetTx {
 	var unconfirmed []*types.SignerSetTx
 	k.IterateCompletedOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
 		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)

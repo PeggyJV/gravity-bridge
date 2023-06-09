@@ -156,7 +156,7 @@ pub struct MsgSendToEthereumResponse {
     #[prost(uint64, tag = "1")]
     pub id: u64,
 }
-/// MsgCancelSendToEthereum allows the sender to cancel its own unbatched
+/// MsgCancelSendToEthereum allows the sender to cancel its own outgoing
 /// SendToEthereum tx and recieve a refund of the tokens and bridge fees. This tx
 /// will only succeed if the SendToEthereum tx hasn't been batched to be
 /// processed and relayed to Ethereum.
@@ -169,6 +169,17 @@ pub struct MsgCancelSendToEthereum {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgCancelSendToEthereumResponse {}
+/// MsgRequestBatchTx requests a batch of transactions with a given coin
+/// denomination to send across the bridge to Ethereum.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MsgRequestBatchTx {
+    #[prost(string, tag = "1")]
+    pub denom: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub signer: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MsgRequestBatchTxResponse {}
 /// MsgSubmitEthereumTxConfirmation submits an ethereum signature for a given
 /// validator
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -410,6 +421,20 @@ pub mod msg_client {
             let path = http::uri::PathAndQuery::from_static("/gravity.v1.Msg/CancelSendToEthereum");
             self.inner.unary(request.into_request(), path, codec).await
         }
+        pub async fn request_batch_tx(
+            &mut self,
+            request: impl tonic::IntoRequest<super::MsgRequestBatchTx>,
+        ) -> Result<tonic::Response<super::MsgRequestBatchTxResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Msg/RequestBatchTx");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
         pub async fn submit_ethereum_tx_confirmation(
             &mut self,
             request: impl tonic::IntoRequest<super::MsgSubmitEthereumTxConfirmation>,
@@ -578,8 +603,6 @@ pub struct Params {
     pub slash_fraction_conflicting_ethereum_signature: ::prost::alloc::vec::Vec<u8>,
     #[prost(uint64, tag = "17")]
     pub unbond_slashing_signer_set_txs_window: u64,
-    #[prost(uint64, tag = "18")]
-    pub event_vote_window: u64,
 }
 /// GenesisState struct
 /// TODO: this need to be audited and potentially simplified using the new
@@ -668,7 +691,7 @@ pub struct SignerSetTxConfirmationsRequest {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SignerSetTxConfirmationsResponse {
     #[prost(message, repeated, tag = "1")]
-    pub confirmations: ::prost::alloc::vec::Vec<SignerSetTxConfirmation>,
+    pub signatures: ::prost::alloc::vec::Vec<SignerSetTxConfirmation>,
 }
 ///  rpc SignerSetTxs
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -716,40 +739,40 @@ pub struct ContractCallTxsResponse {
 // why orchestrator key? hot, signing thing all the time so validator key can be
 // safer
 
-/// rpc UnconfirmedSignerSetTxs
+/// rpc UnsignedSignerSetTxs
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct UnconfirmedSignerSetTxsRequest {
+pub struct UnsignedSignerSetTxsRequest {
     /// NOTE: this is an sdk.AccAddress and can represent either the
     /// orchestrator address or the corresponding validator address
     #[prost(string, tag = "1")]
     pub address: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct UnconfirmedSignerSetTxsResponse {
+pub struct UnsignedSignerSetTxsResponse {
     #[prost(message, repeated, tag = "1")]
     pub signer_sets: ::prost::alloc::vec::Vec<SignerSetTx>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct UnconfirmedBatchTxsRequest {
+pub struct UnsignedBatchTxsRequest {
     /// NOTE: this is an sdk.AccAddress and can represent either the
     /// orchestrator address or the corresponding validator address
     #[prost(string, tag = "1")]
     pub address: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct UnconfirmedBatchTxsResponse {
+pub struct UnsignedBatchTxsResponse {
     /// Note these are returned with the signature empty
     #[prost(message, repeated, tag = "1")]
     pub batches: ::prost::alloc::vec::Vec<BatchTx>,
 }
-///  rpc UnconfirmedContractCallTxs
+///  rpc UnsignedContractCallTxs
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct UnconfirmedContractCallTxsRequest {
+pub struct UnsignedContractCallTxsRequest {
     #[prost(string, tag = "1")]
     pub address: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct UnconfirmedContractCallTxsResponse {
+pub struct UnsignedContractCallTxsResponse {
     #[prost(message, repeated, tag = "1")]
     pub calls: ::prost::alloc::vec::Vec<ContractCallTx>,
 }
@@ -770,7 +793,7 @@ pub struct ContractCallTxConfirmationsRequest {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ContractCallTxConfirmationsResponse {
     #[prost(message, repeated, tag = "1")]
-    pub confirmations: ::prost::alloc::vec::Vec<ContractCallTxConfirmation>,
+    pub signatures: ::prost::alloc::vec::Vec<ContractCallTxConfirmation>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct BatchTxConfirmationsRequest {
@@ -782,7 +805,7 @@ pub struct BatchTxConfirmationsRequest {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct BatchTxConfirmationsResponse {
     #[prost(message, repeated, tag = "1")]
-    pub confirmations: ::prost::alloc::vec::Vec<BatchTxConfirmation>,
+    pub signatures: ::prost::alloc::vec::Vec<BatchTxConfirmation>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct LastSubmittedEthereumEventRequest {
@@ -912,80 +935,6 @@ pub struct LastObservedEthereumHeightRequest {}
 pub struct LastObservedEthereumHeightResponse {
     #[prost(message, optional, tag = "1")]
     pub last_observed_ethereum_height: ::core::option::Option<LatestEthereumBlockHeight>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CompletedBatchTxsRequest {}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CompletedBatchTxsResponse {
-    #[prost(message, repeated, tag = "1")]
-    pub completed_batch_txs: ::prost::alloc::vec::Vec<BatchTx>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CompletedContractCallTxsRequest {}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CompletedContractCallTxsResponse {
-    #[prost(message, repeated, tag = "1")]
-    pub completed_contract_call_txs: ::prost::alloc::vec::Vec<ContractCallTx>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CompletedSignerSetTxsRequest {}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CompletedSignerSetTxsResponse {
-    #[prost(message, repeated, tag = "1")]
-    pub completed_signer_set_txs: ::prost::alloc::vec::Vec<SignerSetTx>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct BatchTxConfirmationsByValidatorRequest {
-    #[prost(string, tag = "1")]
-    pub validator_address: ::prost::alloc::string::String,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct BatchTxConfirmationsByValidatorResponse {
-    #[prost(message, repeated, tag = "1")]
-    pub batch_tx_confirmations: ::prost::alloc::vec::Vec<BatchTxConfirmation>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ContractCallTxConfirmationsByValidatorRequest {
-    #[prost(string, tag = "1")]
-    pub validator_address: ::prost::alloc::string::String,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ContractCallTxConfirmationsByValidatorResponse {
-    #[prost(message, repeated, tag = "2")]
-    pub contract_call_tx_confirmations: ::prost::alloc::vec::Vec<ContractCallTxConfirmation>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct SignerSetTxConfirmationsByValidatorRequest {
-    #[prost(string, tag = "1")]
-    pub validator_address: ::prost::alloc::string::String,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct SignerSetTxConfirmationsByValidatorResponse {
-    #[prost(message, repeated, tag = "3")]
-    pub signer_set_tx_confirmations: ::prost::alloc::vec::Vec<SignerSetTxConfirmation>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct EthereumEventVoteRecordsRequest {
-    #[prost(message, optional, tag = "1")]
-    pub pagination: ::core::option::Option<cosmos_sdk_proto::cosmos::base::query::v1beta1::PageRequest>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct EthereumEventVoteRecordsResponse {
-    #[prost(message, repeated, tag = "1")]
-    pub records: ::prost::alloc::vec::Vec<EthereumEventVoteRecord>,
-    #[prost(message, optional, tag = "2")]
-    pub pagination:
-        ::core::option::Option<cosmos_sdk_proto::cosmos::base::query::v1beta1::PageResponse>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct EthereumEventVotesRequest {
-    #[prost(string, tag = "1")]
-    pub validator_address: ::prost::alloc::string::String,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct EthereumEventVotesResponse {
-    #[prost(message, repeated, tag = "1")]
-    pub events: ::prost::alloc::vec::Vec<::prost_types::Any>,
 }
 #[doc = r" Generated client implementations."]
 pub mod query_client {
@@ -1185,13 +1134,42 @@ pub mod query_client {
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
-        #[doc = " pending outgoing tx queries for orchestrators to figure out which"]
-        #[doc = " confirmations they are missing"]
+        #[doc = " pending ethereum signature queries for orchestrators to figure out which"]
+        #[doc = " signatures they are missing"]
         #[doc = " TODO: can/should we group this into one endpoint?"]
-        pub async fn unconfirmed_signer_set_txs(
+        pub async fn unsigned_signer_set_txs(
             &mut self,
-            request: impl tonic::IntoRequest<super::UnconfirmedSignerSetTxsRequest>,
-        ) -> Result<tonic::Response<super::UnconfirmedSignerSetTxsResponse>, tonic::Status>
+            request: impl tonic::IntoRequest<super::UnsignedSignerSetTxsRequest>,
+        ) -> Result<tonic::Response<super::UnsignedSignerSetTxsResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path =
+                http::uri::PathAndQuery::from_static("/gravity.v1.Query/UnsignedSignerSetTxs");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn unsigned_batch_txs(
+            &mut self,
+            request: impl tonic::IntoRequest<super::UnsignedBatchTxsRequest>,
+        ) -> Result<tonic::Response<super::UnsignedBatchTxsResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/UnsignedBatchTxs");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn unsigned_contract_call_txs(
+            &mut self,
+            request: impl tonic::IntoRequest<super::UnsignedContractCallTxsRequest>,
+        ) -> Result<tonic::Response<super::UnsignedContractCallTxsResponse>, tonic::Status>
         {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
@@ -1201,39 +1179,7 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Query/UnconfirmedSignerSetTxs");
-            self.inner.unary(request.into_request(), path, codec).await
-        }
-        pub async fn unconfirmed_batch_txs(
-            &mut self,
-            request: impl tonic::IntoRequest<super::UnconfirmedBatchTxsRequest>,
-        ) -> Result<tonic::Response<super::UnconfirmedBatchTxsResponse>, tonic::Status> {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Query/UnconfirmedBatchTxs");
-            self.inner.unary(request.into_request(), path, codec).await
-        }
-        pub async fn unconfirmed_contract_call_txs(
-            &mut self,
-            request: impl tonic::IntoRequest<super::UnconfirmedContractCallTxsRequest>,
-        ) -> Result<tonic::Response<super::UnconfirmedContractCallTxsResponse>, tonic::Status>
-        {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/gravity.v1.Query/UnconfirmedContractCallTxs",
-            );
+                http::uri::PathAndQuery::from_static("/gravity.v1.Query/UnsignedContractCallTxs");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn last_submitted_ethereum_event(
@@ -1428,136 +1374,6 @@ pub mod query_client {
             let path = http::uri::PathAndQuery::from_static(
                 "/gravity.v1.Query/LastObservedEthereumHeight",
             );
-            self.inner.unary(request.into_request(), path, codec).await
-        }
-        pub async fn completed_signer_set_txs(
-            &mut self,
-            request: impl tonic::IntoRequest<super::CompletedSignerSetTxsRequest>,
-        ) -> Result<tonic::Response<super::CompletedSignerSetTxsResponse>, tonic::Status> {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Query/CompletedSignerSetTxs");
-            self.inner.unary(request.into_request(), path, codec).await
-        }
-        pub async fn completed_batch_txs(
-            &mut self,
-            request: impl tonic::IntoRequest<super::CompletedBatchTxsRequest>,
-        ) -> Result<tonic::Response<super::CompletedBatchTxsResponse>, tonic::Status> {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/CompletedBatchTxs");
-            self.inner.unary(request.into_request(), path, codec).await
-        }
-        pub async fn completed_contract_call_txs(
-            &mut self,
-            request: impl tonic::IntoRequest<super::CompletedContractCallTxsRequest>,
-        ) -> Result<tonic::Response<super::CompletedContractCallTxsResponse>, tonic::Status>
-        {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Query/CompletedContractCallTxs");
-            self.inner.unary(request.into_request(), path, codec).await
-        }
-        pub async fn batch_tx_confirmations_by_validator(
-            &mut self,
-            request: impl tonic::IntoRequest<super::BatchTxConfirmationsByValidatorRequest>,
-        ) -> Result<tonic::Response<super::BatchTxConfirmationsByValidatorResponse>, tonic::Status>
-        {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/gravity.v1.Query/BatchTxConfirmationsByValidator",
-            );
-            self.inner.unary(request.into_request(), path, codec).await
-        }
-        pub async fn contract_call_tx_confirmations_by_validator(
-            &mut self,
-            request: impl tonic::IntoRequest<super::ContractCallTxConfirmationsByValidatorRequest>,
-        ) -> Result<
-            tonic::Response<super::ContractCallTxConfirmationsByValidatorResponse>,
-            tonic::Status,
-        > {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/gravity.v1.Query/ContractCallTxConfirmationsByValidator",
-            );
-            self.inner.unary(request.into_request(), path, codec).await
-        }
-        pub async fn signer_set_tx_confirmations_by_validator(
-            &mut self,
-            request: impl tonic::IntoRequest<super::SignerSetTxConfirmationsByValidatorRequest>,
-        ) -> Result<
-            tonic::Response<super::SignerSetTxConfirmationsByValidatorResponse>,
-            tonic::Status,
-        > {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/gravity.v1.Query/SignerSetTxConfirmationsByValidator",
-            );
-            self.inner.unary(request.into_request(), path, codec).await
-        }
-        pub async fn ethereum_event_vote_records(
-            &mut self,
-            request: impl tonic::IntoRequest<super::EthereumEventVoteRecordsRequest>,
-        ) -> Result<tonic::Response<super::EthereumEventVoteRecordsResponse>, tonic::Status>
-        {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Query/EthereumEventVoteRecords");
-            self.inner.unary(request.into_request(), path, codec).await
-        }
-        pub async fn ethereum_event_votes(
-            &mut self,
-            request: impl tonic::IntoRequest<super::EthereumEventVotesRequest>,
-        ) -> Result<tonic::Response<super::EthereumEventVotesResponse>, tonic::Status> {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::new(
-                    tonic::Code::Unknown,
-                    format!("Service was not ready: {}", e.into()),
-                )
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/EthereumEventVotes");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }

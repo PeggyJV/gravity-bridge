@@ -14,8 +14,8 @@ use cosmos_gravity::send::send_main_loop;
 use cosmos_gravity::{
     build,
     query::{
-        get_unconfirmed_logic_calls, get_unconfirmed_transaction_batches,
-        get_unconfirmed_valsets,
+        get_oldest_unsigned_logic_call, get_oldest_unsigned_transaction_batch,
+        get_oldest_unsigned_valsets,
     },
 };
 use deep_space::client::ChainStatus;
@@ -303,8 +303,8 @@ pub async fn eth_signer_main_loop(
                     }
                 }
 
-                // sign the last unconfirmed valsets
-                match get_unconfirmed_valsets(&mut grpc_client, our_cosmos_address).await {
+                // sign the last unsigned valsets
+                match get_oldest_unsigned_valsets(&mut grpc_client, our_cosmos_address).await {
                     Ok(valsets) => {
                         if valsets.is_empty() {
                             trace!("No validator sets to sign, node is caught up!")
@@ -329,27 +329,27 @@ pub async fn eth_signer_main_loop(
                         }
                     }
                     Err(e) => {
-                        metrics::UNCONFIRMED_VALSET_FAILURES.inc();
+                        metrics::UNSIGNED_VALSET_FAILURES.inc();
                         error!(
-                            "Failed to get unconfirmed valset, check your Cosmos gRPC {:?}",
+                            "Failed to get unsigned valset, check your Cosmos gRPC {:?}",
                             e
                         );
                     }
                 }
 
-                // sign the last unconfirmed batch, TODO check if we already have signed this
-                match get_unconfirmed_transaction_batches(&mut grpc_client, our_cosmos_address)
+                // sign the last unsigned batch, TODO check if we already have signed this
+                match get_oldest_unsigned_transaction_batch(&mut grpc_client, our_cosmos_address)
                     .await
                 {
-                    Ok(Some(last_unconfirmed_batch)) => {
+                    Ok(Some(last_unsigned_batch)) => {
                         info!(
                             "Sending batch confirm for {}:{} fees {} timeout {}",
-                            last_unconfirmed_batch.token_contract,
-                            last_unconfirmed_batch.nonce,
-                            last_unconfirmed_batch.total_fee.amount,
-                            last_unconfirmed_batch.batch_timeout,
+                            last_unsigned_batch.token_contract,
+                            last_unsigned_batch.nonce,
+                            last_unsigned_batch.total_fee.amount,
+                            last_unsigned_batch.batch_timeout,
                         );
-                        let transaction_batches = vec![last_unconfirmed_batch];
+                        let transaction_batches = vec![last_unsigned_batch];
                         let messages = build::batch_tx_confirmation_messages(
                             &contact,
                             eth_client.clone(),
@@ -363,18 +363,18 @@ pub async fn eth_signer_main_loop(
                             .await
                             .expect("Could not send messages");
                     }
-                    Ok(None) => info!("No unconfirmed batches! Everything good!"),
+                    Ok(None) => info!("No unsigned batches! Everything good!"),
                     Err(e) => {
-                        metrics::UNCONFIRMED_BATCH_FAILURES.inc();
+                        metrics::UNSIGNED_BATCH_FAILURES.inc();
                         error!(
-                            "Failed to get unconfirmed Batches, check your Cosmos gRPC {:?}",
+                            "Failed to get unsigned Batches, check your Cosmos gRPC {:?}",
                             e
                         );
                     }
                 }
 
                 let logic_calls =
-                    get_unconfirmed_logic_calls(&mut grpc_client, our_cosmos_address).await;
+                    get_oldest_unsigned_logic_call(&mut grpc_client, our_cosmos_address).await;
                 if let Ok(logic_calls) = logic_calls {
                     for logic_call in logic_calls {
                         info!(
@@ -397,9 +397,9 @@ pub async fn eth_signer_main_loop(
                             .expect("Could not send messages");
                     }
                 } else if let Err(e) = logic_calls {
-                    metrics::UNCONFIRMED_LOGIC_CALL_FAILURES.inc();
+                    metrics::UNSIGNED_LOGIC_CALL_FAILURES.inc();
                     error!(
-                        "Failed to get unconfirmed Logic Calls, check your Cosmos gRPC {:?}",
+                        "Failed to get unsigned Logic Calls, check your Cosmos gRPC {:?}",
                         e
                     )
                 }

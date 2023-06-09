@@ -1,5 +1,5 @@
 use crate::main_loop::LOOP_SPEED;
-use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_confirmations};
+use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
 use ethereum_gravity::logic_call::LogicCallSkips;
 use ethereum_gravity::one_eth_f32;
 use ethereum_gravity::utils::handle_contract_error;
@@ -57,7 +57,7 @@ pub async fn relay_logic_calls(
             continue;
         }
 
-        let sigs = get_logic_call_confirmations(
+        let sigs = get_logic_call_signatures(
             grpc_client,
             call.invalidation_id.clone(),
             call.invalidation_nonce,
