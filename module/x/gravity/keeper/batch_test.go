@@ -426,6 +426,6 @@ func TestGetUnconfirmedBatchTxs(t *testing.T) {
 		val2,
 	)
 
-	require.Empty(t, gk.GetUnconfirmedBatchTxs(ctx, val1))
-	require.Equal(t, 1, len(gk.GetUnconfirmedBatchTxs(ctx, val2)))
+	require.Empty(t, gk.GetUnsignedBatchTxs(ctx, val1))
+	require.Equal(t, 1, len(gk.GetUnsignedBatchTxs(ctx, val2)))
 }

@@ -136,6 +136,6 @@ func TestGetUnconfirmedContractCallTxs(t *testing.T) {
 		val2,
 	)
 
-	require.Empty(t, gk.GetUnconfirmedContractCallTxs(ctx, val1))
-	require.Equal(t, 1, len(gk.GetUnconfirmedContractCallTxs(ctx, val2)))
+	require.Empty(t, gk.GetUnsignedContractCallTxs(ctx, val1))
+	require.Equal(t, 1, len(gk.GetUnsignedContractCallTxs(ctx, val2)))
 }

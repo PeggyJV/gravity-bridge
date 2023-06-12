@@ -442,27 +442,49 @@ func (k Keeper) LastObservedEthereumHeight(c context.Context, req *types.LastObs
 	return res, nil
 }
 
-func (k Keeper) CompletedOutgoingTxs(c context.Context, req *types.CompletedOutgoingTxsRequest) (*types.CompletedOutgoingTxsResponse, error) {
+func (k Keeper) CompletedBatchTxs(c context.Context, req *types.CompletedBatchTxsRequest) (*types.CompletedBatchTxsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	var batches []*types.BatchTx
-	var contractCalls []*types.ContractCallTx
-	var signerSetCalls []*types.SignerSetTx
-	k.IterateCompletedOutgoingTxs(ctx, func(_ []byte, tx types.OutgoingTx) bool {
-		switch tx := tx.(type) {
-		case *types.BatchTx:
-			batches = append(batches, tx)
-		case *types.ContractCallTx:
-			contractCalls = append(contractCalls, tx)
-		case *types.SignerSetTx:
-			signerSetCalls = append(signerSetCalls, tx)
-		}
+	k.IterateCompletedOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+		batchTx := otx.(*types.BatchTx)
+		batches = append(batches, batchTx)
 		return false
 	})
 
-	res := &types.CompletedOutgoingTxsResponse{
-		CompletedBatchTxs:     batches,
-		CompletedLogicCalls:   contractCalls,
+	res := &types.CompletedBatchTxsResponse{
+		CompletedBatchTxs: batches,
+	}
+	return res, nil
+}
+
+func (k Keeper) CompletedContractCallTxs(c context.Context, req *types.CompletedContractCallTxsRequest) (*types.CompletedContractCallTxsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var contractCalls []*types.ContractCallTx
+	k.IterateCompletedOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+		contractCallTx := otx.(*types.ContractCallTx)
+		contractCalls = append(contractCalls, contractCallTx)
+		return false
+	})
+
+	res := &types.CompletedContractCallTxsResponse{
+		CompletedContractCallTxs: contractCalls,
+	}
+	return res, nil
+}
+
+func (k Keeper) CompletedSignerSetTxs(c context.Context, req *types.CompletedSignerSetTxsRequest) (*types.CompletedSignerSetTxsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var signerSetCalls []*types.SignerSetTx
+	k.IterateCompletedOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+		signerSetTx := otx.(*types.SignerSetTx)
+		signerSetCalls = append(signerSetCalls, signerSetTx)
+		return false
+	})
+
+	res := &types.CompletedSignerSetTxsResponse{
 		CompletedSignerSetTxs: signerSetCalls,
 	}
 	return res, nil
@@ -565,5 +587,34 @@ func (k Keeper) EthereumEventVoteRecords(c context.Context, req *types.EthereumE
 
 	res.Pagination = pageRes
 
+	return res, nil
+}
+
+func (k Keeper) EthereumEventVotes(c context.Context, req *types.EthereumEventVotesRequest) (*types.EthereumEventVotesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	val, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	var events []*cdctypes.Any
+	k.IterateEthereumEventVoteRecords(ctx, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
+		for _, voter := range eventVoteRecord.Votes {
+			voterAddr, err := sdk.ValAddressFromBech32(voter)
+			if err != nil {
+				continue
+			}
+			if voterAddr.Equals(val) {
+				events = append(events, eventVoteRecord.Event)
+				return false
+			}
+		}
+
+		return false
+	})
+
+	res := &types.EthereumEventVotesResponse{
+		Events: events,
+	}
 	return res, nil
 }

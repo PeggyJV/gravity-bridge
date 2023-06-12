@@ -97,6 +97,6 @@ func TestGetUnconfirmedSignerSetTxs(t *testing.T) {
 		val2,
 	)
 
-	require.Empty(t, gk.GetUnconfirmedSignerSetTxs(ctx, val1))
-	require.Equal(t, 1, len(gk.GetUnconfirmedSignerSetTxs(ctx, val2)))
+	require.Empty(t, gk.GetUnsignedSignerSetTxs(ctx, val1))
+	require.Equal(t, 1, len(gk.GetUnsignedSignerSetTxs(ctx, val2)))
 }

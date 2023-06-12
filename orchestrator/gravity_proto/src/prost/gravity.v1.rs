@@ -580,8 +580,6 @@ pub struct Params {
     pub unbond_slashing_signer_set_txs_window: u64,
     #[prost(uint64, tag = "18")]
     pub event_vote_window: u64,
-    #[prost(uint64, tag = "19")]
-    pub confirmed_outgoing_tx_window: u64,
 }
 /// GenesisState struct
 /// TODO: this need to be audited and potentially simplified using the new
@@ -916,14 +914,24 @@ pub struct LastObservedEthereumHeightResponse {
     pub last_observed_ethereum_height: ::core::option::Option<LatestEthereumBlockHeight>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CompletedOutgoingTxsRequest {}
+pub struct CompletedBatchTxsRequest {}
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CompletedOutgoingTxsResponse {
+pub struct CompletedBatchTxsResponse {
     #[prost(message, repeated, tag = "1")]
     pub completed_batch_txs: ::prost::alloc::vec::Vec<BatchTx>,
-    #[prost(message, repeated, tag = "2")]
-    pub completed_logic_calls: ::prost::alloc::vec::Vec<ContractCallTx>,
-    #[prost(message, repeated, tag = "3")]
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CompletedContractCallTxsRequest {}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CompletedContractCallTxsResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub completed_contract_call_txs: ::prost::alloc::vec::Vec<ContractCallTx>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CompletedSignerSetTxsRequest {}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CompletedSignerSetTxsResponse {
+    #[prost(message, repeated, tag = "1")]
     pub completed_signer_set_txs: ::prost::alloc::vec::Vec<SignerSetTx>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -968,6 +976,16 @@ pub struct EthereumEventVoteRecordsResponse {
     #[prost(message, optional, tag = "2")]
     pub pagination:
         ::core::option::Option<cosmos_sdk_proto::cosmos::base::query::v1beta1::PageResponse>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct EthereumEventVotesRequest {
+    #[prost(string, tag = "1")]
+    pub validator_address: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct EthereumEventVotesResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub events: ::prost::alloc::vec::Vec<::prost_types::Any>,
 }
 #[doc = r" Generated client implementations."]
 pub mod query_client {
@@ -1409,10 +1427,10 @@ pub mod query_client {
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
-        pub async fn completed_outgoing_txs(
+        pub async fn completed_signer_set_txs(
             &mut self,
-            request: impl tonic::IntoRequest<super::CompletedOutgoingTxsRequest>,
-        ) -> Result<tonic::Response<super::CompletedOutgoingTxsResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::CompletedSignerSetTxsRequest>,
+        ) -> Result<tonic::Response<super::CompletedSignerSetTxsResponse>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
                     tonic::Code::Unknown,
@@ -1421,7 +1439,37 @@ pub mod query_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path =
-                http::uri::PathAndQuery::from_static("/gravity.v1.Query/CompletedOutgoingTxs");
+                http::uri::PathAndQuery::from_static("/gravity.v1.Query/CompletedSignerSetTxs");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn completed_batch_txs(
+            &mut self,
+            request: impl tonic::IntoRequest<super::CompletedBatchTxsRequest>,
+        ) -> Result<tonic::Response<super::CompletedBatchTxsResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/CompletedBatchTxs");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn completed_contract_call_txs(
+            &mut self,
+            request: impl tonic::IntoRequest<super::CompletedContractCallTxsRequest>,
+        ) -> Result<tonic::Response<super::CompletedContractCallTxsResponse>, tonic::Status>
+        {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path =
+                http::uri::PathAndQuery::from_static("/gravity.v1.Query/CompletedContractCallTxs");
             self.inner.unary(request.into_request(), path, codec).await
         }
         pub async fn batch_tx_confirmations_by_validator(
@@ -1493,6 +1541,20 @@ pub mod query_client {
             let codec = tonic::codec::ProstCodec::default();
             let path =
                 http::uri::PathAndQuery::from_static("/gravity.v1.Query/EthereumEventVoteRecords");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn ethereum_event_votes(
+            &mut self,
+            request: impl tonic::IntoRequest<super::EthereumEventVotesRequest>,
+        ) -> Result<tonic::Response<super::EthereumEventVotesResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/gravity.v1.Query/EthereumEventVotes");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
