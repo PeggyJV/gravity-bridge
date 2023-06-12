@@ -370,7 +370,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 				deadlinePassed := sstx.Height < uint64(validator.UnbondingHeight)+params.UnbondSlashingSignerSetTxsWindow
 				_, signedTx := signatures[validator.GetOperator().String()]
 
-				if validator.IsUnbonding() && eligibleSigner && deadlinePassed && !signedTx {
+				if eligibleSigner && validator.IsUnbonding() && deadlinePassed && !signedTx {
 					k.SlashAndJail(ctx, validator)
 				}
 			}
