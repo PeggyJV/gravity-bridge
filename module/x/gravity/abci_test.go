@@ -239,8 +239,8 @@ func TestBatchAndContractCallSlashingAndPruning(t *testing.T) {
 	// Check txs pruning behavior
 
 	// move from outgoing store to completed
-	gravityKeeper.Complete(ctx, batchExecuted)
-	gravityKeeper.Complete(ctx, contractCallExecuted)
+	gravityKeeper.CompleteOutgoingTx(ctx, batchExecuted)
+	gravityKeeper.CompleteOutgoingTx(ctx, contractCallExecuted)
 
 	require.Nil(t, input.GravityKeeper.GetOutgoingTx(ctx, batchExecuted.GetStoreIndex()))
 	require.NotNil(t, input.GravityKeeper.GetCompletedOutgoingTx(ctx, batchExecuted.GetStoreIndex()))

@@ -276,7 +276,7 @@ func TestKeeper_UnsignedBatchTxs(t *testing.T) {
 				Height:        1000,
 			}
 			gk.SetOutgoingTx(ctx, toComplete)
-			gk.Complete(ctx, toComplete)
+			gk.CompleteOutgoingTx(ctx, toComplete)
 			gk.SetOutgoingTx(ctx, &types.BatchTx{
 				BatchNonce:    1001,
 				Timeout:       1000,

@@ -84,7 +84,7 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 		return false
 	})
 
-	k.Complete(ctx, batchTx)
+	k.CompleteOutgoingTx(ctx, batchTx)
 }
 
 // getBatchFeesByTokenType gets the fees the next batch of a given token type would

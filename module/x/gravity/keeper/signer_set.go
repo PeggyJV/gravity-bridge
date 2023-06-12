@@ -29,7 +29,7 @@ func (k Keeper) signerSetExecuted(ctx sdk.Context, nonce uint64) {
 	})
 
 	k.setLastObservedSignerSetTx(ctx, *completedSignerSetTx)
-	k.Complete(ctx, completedSignerSetTx)
+	k.CompleteOutgoingTx(ctx, completedSignerSetTx)
 }
 
 func (k Keeper) GetUnsignedSignerSetTxs(ctx sdk.Context, val sdk.ValAddress) []*types.SignerSetTx {

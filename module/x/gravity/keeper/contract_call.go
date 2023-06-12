@@ -58,5 +58,5 @@ func (k Keeper) contractCallExecuted(ctx sdk.Context, invalidationScope []byte, 
 		return false
 	})
 
-	k.Complete(ctx, completedCallTx)
+	k.CompleteOutgoingTx(ctx, completedCallTx)
 }

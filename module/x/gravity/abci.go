@@ -282,7 +282,7 @@ func cleanupTimedOutBatchTxs(ctx sdk.Context, k keeper.Keeper) {
 
 		if btx.Timeout < ethereumHeight {
 			// we keep the data around for slashing in case the timeout was due to a lack of signatures.
-			k.SetCompletedOutgoingTx(ctx, btx)
+			k.CompleteOutgoingTx(ctx, btx)
 			k.CancelBatchTx(ctx, btx)
 		}
 
@@ -308,7 +308,7 @@ func cleanupTimedOutContractCallTxs(ctx sdk.Context, k keeper.Keeper) {
 		cctx, _ := otx.(*types.ContractCallTx)
 		if cctx.Timeout < ethereumHeight {
 			// we keep the data around for slashing in case the timeout was due to a lack of signatures
-			k.Complete(ctx, cctx)
+			k.CompleteOutgoingTx(ctx, cctx)
 		}
 		return true
 	})

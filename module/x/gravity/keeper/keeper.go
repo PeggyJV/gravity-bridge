@@ -656,7 +656,7 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 	return newContractCallTx
 }
 
-func (k Keeper) Complete(ctx sdk.Context, otx types.OutgoingTx) {
+func (k Keeper) CompleteOutgoingTx(ctx sdk.Context, otx types.OutgoingTx) {
 	k.SetCompletedOutgoingTx(ctx, otx)
 	k.DeleteOutgoingTx(ctx, otx.GetStoreIndex())
 }
