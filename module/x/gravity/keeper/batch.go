@@ -190,7 +190,7 @@ func (k Keeper) GetUnsignedBatchTxs(ctx sdk.Context, val sdk.ValAddress) []*type
 	var unconfirmed []*types.BatchTx
 	k.IterateCompletedOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
 		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)
-		if len(sig) == 0 { // it's pending
+		if len(sig) == 0 {
 			batch, ok := cotx.(*types.BatchTx)
 			if !ok {
 				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for completed tx %s", cotx))
@@ -201,7 +201,7 @@ func (k Keeper) GetUnsignedBatchTxs(ctx sdk.Context, val sdk.ValAddress) []*type
 	})
 	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
-		if len(sig) == 0 { // it's pending
+		if len(sig) == 0 {
 			batch, ok := otx.(*types.BatchTx)
 			if !ok {
 				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))

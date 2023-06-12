@@ -13,15 +13,6 @@ import (
 func TestSignerSetTxExecuted(t *testing.T) {
 	input := CreateTestEnv(t)
 	ctx := input.Context.WithBlockHeight(100)
-	// storeKey := input.GravityStoreKey
-	// cdc := input.Marshaler
-
-	// latestEthereumBlockHeight := &types.LatestEthereumBlockHeight{
-	// 	CosmosHeight:   100,
-	// 	EthereumHeight: 1000,
-	// }
-
-	// ctx.KVStore(storeKey).Set([]byte{types.LastEthereumBlockHeightKey}, cdc.MustMarshal(latestEthereumBlockHeight))
 
 	input.GravityKeeper.CreateSignerSetTx(
 		ctx,
