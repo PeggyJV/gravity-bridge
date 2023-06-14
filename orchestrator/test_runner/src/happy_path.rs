@@ -9,11 +9,7 @@ use crate::TOTAL_TIMEOUT;
 use clarity::Uint256;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::send::send_to_eth;
-<<<<<<< HEAD
-use cosmos_gravity::{build, query::get_unconfirmed_transaction_batches, send};
-=======
 use cosmos_gravity::{build, query::get_oldest_unsigned_transaction_batch, send};
->>>>>>> parent of fa739d78 (Review items - queries and signature -> confirmation term consistency)
 use deep_space::address::Address as CosmosAddress;
 use deep_space::coin::Coin;
 use deep_space::Contact;
@@ -354,11 +350,7 @@ async fn test_batch(
     let requester_address = requester_cosmos_private_key
         .to_address(&contact.get_prefix())
         .unwrap();
-<<<<<<< HEAD
-    get_unconfirmed_transaction_batches(grpc_client, requester_address)
-=======
     get_oldest_unsigned_transaction_batch(grpc_client, requester_address)
->>>>>>> parent of fa739d78 (Review items - queries and signature -> confirmation term consistency)
         .await
         .expect("Failed to get batch to sign");
 
