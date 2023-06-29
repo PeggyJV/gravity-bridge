@@ -76,7 +76,11 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 	batchTx, _ := otx.(*types.BatchTx)
 	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		// If the iterated batches nonce is lower than the one that was just executed, cancel it
-		btx, _ := otx.(*types.BatchTx)
+		btx, ok := otx.(*types.BatchTx)
+		if !ok {
+			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
+		}
+
 		if (btx.BatchNonce < batchTx.BatchNonce) && (btx.TokenContract == batchTx.TokenContract) {
 			k.DeleteEthereumSignatures(ctx, btx.GetStoreIndex())
 			k.CancelBatchTx(ctx, btx)

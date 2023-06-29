@@ -49,7 +49,11 @@ func (k Keeper) contractCallExecuted(ctx sdk.Context, invalidationScope []byte, 
 	completedCallTx, _ := otx.(*types.ContractCallTx)
 	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
 		// If the iterated contract call's nonce is lower than the one that was just executed, delete it
-		cctx, _ := otx.(*types.ContractCallTx)
+		cctx, ok := otx.(*types.ContractCallTx)
+		if !ok {
+			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call tx for %s", otx))
+		}
+
 		if (cctx.InvalidationNonce < completedCallTx.InvalidationNonce) &&
 			bytes.Equal(cctx.InvalidationScope, completedCallTx.InvalidationScope) {
 			k.DeleteEthereumSignatures(ctx, cctx.GetStoreIndex())
