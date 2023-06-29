@@ -22,12 +22,12 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	createBatchTxs(ctx, k)
 	pruneSignerSetTxs(ctx, k)
 	pruneCompletedOutgoingTxs(ctx, k)
+	pruneEventVoteRecords(ctx, k)
 }
 
 // EndBlocker is called at the end of every block
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	outgoingTxSlashing(ctx, k)
-	pruneEventVoteRecords(ctx, k)
 	eventVoteRecordTally(ctx, k)
 	updateObservedEthereumHeight(ctx, k)
 }
@@ -108,7 +108,7 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 	}
 }
 
-// pruneTxsOutsideSlashingWindow deletes all completed txs and their signatures whos block height is below the last slashed
+// pruneCompletedOutgoingTxs deletes all completed txs and their signatures whos block height is below the last slashed
 // height. This accounts for the corner case where a tx becomes a CompletedOutgoingTx right after its relevant block height
 // has been slashed for, since it's possible for a relayer to submit a tx right before its slashing height.
 func pruneCompletedOutgoingTxs(ctx sdk.Context, k keeper.Keeper) {
