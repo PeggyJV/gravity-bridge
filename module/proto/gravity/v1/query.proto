@@ -85,7 +85,8 @@ service Query {
   // DenomToERC20Params implements a query that allows ERC-20 parameter
   // information to be retrieved by a Cosmos base denomination.
   rpc DenomToERC20Params(DenomToERC20ParamsRequest)
-      returns (DenomToERC20ParamsResponse) {}
+      returns (DenomToERC20ParamsResponse) {
+  }
 
   // Query for info about denoms tracked by gravity
   rpc DenomToERC20(DenomToERC20Request) returns (DenomToERC20Response) {
