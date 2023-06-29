@@ -358,7 +358,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 			_, signedTx := signatures[validator.GetOperator().String()]
 
 			if eligibleSigner && !signedTx {
-				k.SlashAndJail(ctx, validator)
+				k.SlashAndJail(ctx, validator, types.AttributeMissingSignature)
 			}
 		}
 
@@ -371,7 +371,7 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 				_, signedTx := signatures[validator.GetOperator().String()]
 
 				if eligibleSigner && validator.IsUnbonding() && deadlinePassed && !signedTx {
-					k.SlashAndJail(ctx, validator)
+					k.SlashAndJail(ctx, validator, types.AttributeMissingSignerSetSignature)
 				}
 			}
 		}

@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
 // GetValidatorInfo returns the consensus key address, signing info, and whether or not the validator exists, for the purposes of slashing/jailing
@@ -22,7 +21,7 @@ func (k Keeper) GetValidatorSlashingCriteria(ctx sdk.Context, validator stakingt
 }
 
 // SlashAndJail slashes the validator and sets the validator to jailed if they are not already jailed
-func (k Keeper) SlashAndJail(ctx sdk.Context, validator stakingtypes.Validator) {
+func (k Keeper) SlashAndJail(ctx sdk.Context, validator stakingtypes.Validator, reason string) {
 	// Retrieve the validator afresh in case it has been jailed since the first retrieval
 	validator, _ = k.StakingKeeper.GetValidator(ctx, validator.GetOperator())
 	if validator.IsJailed() {
@@ -52,7 +51,7 @@ func (k Keeper) SlashAndJail(ctx sdk.Context, validator stakingtypes.Validator) 
 			slashingtypes.EventTypeSlash,
 			sdk.NewAttribute(slashingtypes.AttributeKeyAddress, consensusKeyAddress.String()),
 			sdk.NewAttribute(slashingtypes.AttributeKeyJailed, consensusKeyAddress.String()),
-			sdk.NewAttribute(slashingtypes.AttributeKeyReason, types.AttributeMissingBridgeBatchSig),
+			sdk.NewAttribute(slashingtypes.AttributeKeyReason, reason),
 			sdk.NewAttribute(slashingtypes.AttributeKeyPower, fmt.Sprintf("%d", power)),
 		),
 	)
