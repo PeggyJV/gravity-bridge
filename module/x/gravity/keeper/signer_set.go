@@ -18,20 +18,6 @@ func (k Keeper) signerSetExecuted(ctx sdk.Context, nonce uint64) {
 	}
 
 	completedSignerSetTx, _ := otx.(*types.SignerSetTx)
-	k.IterateOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(key []byte, otx types.OutgoingTx) bool {
-		// If the iterated contract call's nonce is lower than the one that was just executed, delete it
-		sstx, ok := otx.(*types.SignerSetTx)
-		if !ok {
-			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %s", otx))
-		}
-
-		if sstx.Nonce < completedSignerSetTx.Nonce {
-			k.DeleteEthereumSignatures(ctx, sstx.GetStoreIndex())
-			k.DeleteOutgoingTx(ctx, sstx.GetStoreIndex())
-		}
-		return false
-	})
-
 	k.setLastObservedSignerSetTx(ctx, *completedSignerSetTx)
 	k.CompleteOutgoingTx(ctx, completedSignerSetTx)
 }
