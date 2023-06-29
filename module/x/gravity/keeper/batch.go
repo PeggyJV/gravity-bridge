@@ -159,37 +159,6 @@ func (k Keeper) getLastOutgoingBatchByTokenType(ctx sdk.Context, token common.Ad
 	return lastBatch
 }
 
-// SetLastSlashedOutgoingTxBlockHeight sets the latest slashed Batch block height
-func (k Keeper) SetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context, blockHeight uint64) {
-	ctx.KVStore(k.storeKey).Set([]byte{types.LastSlashedOutgoingTxBlockKey}, sdk.Uint64ToBigEndian(blockHeight))
-}
-
-// GetLastSlashedOutgoingTxBlockHeight returns the latest slashed Batch block
-func (k Keeper) GetLastSlashedOutgoingTxBlockHeight(ctx sdk.Context) uint64 {
-	if bz := ctx.KVStore(k.storeKey).Get([]byte{types.LastSlashedOutgoingTxBlockKey}); bz == nil {
-		return 0
-	} else {
-		return binary.BigEndian.Uint64(bz)
-	}
-}
-
-func (k Keeper) GetUnslashedOutgoingTxs(ctx sdk.Context, maxHeight uint64) (out []types.OutgoingTx) {
-	lastSlashed := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
-	k.iterateOutgoingTxs(ctx, func(key []byte, otx types.OutgoingTx) bool {
-		if (otx.GetCosmosHeight() < maxHeight) && (otx.GetCosmosHeight() > lastSlashed) {
-			out = append(out, otx)
-		}
-		return false
-	})
-	k.IterateCompletedOutgoingTxs(ctx, func(key []byte, cotx types.OutgoingTx) bool {
-		if (cotx.GetCosmosHeight() < maxHeight) && (cotx.GetCosmosHeight() > lastSlashed) {
-			out = append(out, cotx)
-		}
-		return false
-	})
-	return
-}
-
 func (k Keeper) GetUnsignedBatchTxs(ctx sdk.Context, val sdk.ValAddress) []*types.BatchTx {
 	var unconfirmed []*types.BatchTx
 	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
