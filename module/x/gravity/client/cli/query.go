@@ -1041,7 +1041,7 @@ func CmdEthereumEventVoteRecords() *cobra.Command {
 
 func CmdEthereumEventVotes() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "ethereum-event-votes-by-validator",
+		Use:   "ethereum-event-votes-by-validator [validator-address]",
 		Args:  cobra.ExactArgs(1),
 		Short: "query ethereum event votes for a given validator that have not been pruned",
 		RunE: func(cmd *cobra.Command, args []string) error {
