@@ -68,9 +68,6 @@ var (
 	// ParamStoreEventVoteWindow stores the event vote window
 	ParamStoreEventVoteWindow = []byte("EventVoteWindow")
 
-	// ParamStoreTxHistoryWindow stores the tx history window
-	ParamStoreTxHistoryWindow = []byte("TxHistoryWindow")
-
 	//  ParamStoreUnbondSlashingSignerSetTxsWindow stores unbond slashing valset window
 	ParamStoreConfirmedOutgoingTxWindow = []byte("ConfirmedOutgoingTxWindow")
 
@@ -381,13 +378,6 @@ func validateSlashFractionConflictingEthereumSignature(i interface{}) error {
 }
 
 func validateEventVoteWindow(i interface{}) error {
-	if _, ok := i.(uint64); !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	return nil
-}
-
-func validateTxHistoryWindow(i interface{}) error {
 	if _, ok := i.(uint64); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
