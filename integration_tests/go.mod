@@ -160,6 +160,10 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
-replace github.com/peggyjv/gravity-bridge/module/v3 => ../module
-
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
+replace github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.22
+
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+
+replace github.com/peggyjv/gravity-bridge/module/v3 => ../module
