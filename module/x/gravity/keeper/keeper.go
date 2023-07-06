@@ -658,7 +658,10 @@ func (k Keeper) CreateContractCallTx(ctx sdk.Context, invalidationNonce uint64, 
 
 func (k Keeper) CompleteOutgoingTx(ctx sdk.Context, otx types.OutgoingTx) {
 	k.SetCompletedOutgoingTx(ctx, otx)
-	k.DeleteOutgoingTx(ctx, otx.GetStoreIndex())
+
+	if k.GetOutgoingTx(ctx, otx.GetStoreIndex()) != nil {
+		k.DeleteOutgoingTx(ctx, otx.GetStoreIndex())
+	}
 }
 
 // SetCompletedOutgoingTx sets a completed outgoing tx
