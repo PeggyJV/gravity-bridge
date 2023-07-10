@@ -297,7 +297,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 		ctx,
 		input.GravityKeeper.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight+eventVoteWindow+uint64(1),
 	)
-	gravity.EndBlocker(ctx, input.GravityKeeper)
+	gravity.BeginBlocker(ctx, input.GravityKeeper)
 
 	// and attestations pruned
 	a1 = input.GravityKeeper.GetEthereumEventVoteRecord(ctx, myNonce, ethClaim1.Hash())

@@ -33,7 +33,7 @@ func TestSignerSetTxExecuted(t *testing.T) {
 	otx1 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeSignerSetTxKey(1))
 	otx2 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeSignerSetTxKey(2))
 
-	assert.Nil(t, otx1)
+	assert.NotNil(t, otx1)
 	assert.Nil(t, otx2)
 
 	otx2 = input.GravityKeeper.GetCompletedOutgoingTx(ctx, sstx2.GetStoreIndex())
