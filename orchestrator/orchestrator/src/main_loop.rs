@@ -75,7 +75,7 @@ pub async fn orchestrator_main_loop(
     );
 
     let b = eth_oracle_main_loop(
-        cosmos_address.clone(),
+        cosmos_address,
         contact.clone(),
         eth_client.clone(),
         grpc_client.clone(),
@@ -355,7 +355,7 @@ pub async fn run_signer(
                 }
 
                 // sign the last unsigned valsets
-                match get_oldest_unsigned_valsets(&mut grpc_client, cosmos_address.clone()).await {
+                match get_oldest_unsigned_valsets(&mut grpc_client, cosmos_address).await {
                     Ok(valsets) => {
                         if valsets.is_empty() {
                             trace!("No validator sets to sign, node is caught up!")
@@ -388,7 +388,7 @@ pub async fn run_signer(
                 }
 
                 // sign the last unsigned batch, TODO check if we already have signed this
-                match get_oldest_unsigned_transaction_batch(&mut grpc_client, cosmos_address.clone())
+                match get_oldest_unsigned_transaction_batch(&mut grpc_client, cosmos_address)
                     .await
                 {
                     Ok(Some(last_unsigned_batch)) => {
@@ -401,7 +401,7 @@ pub async fn run_signer(
                         );
                         let transaction_batches = vec![last_unsigned_batch];
                         let messages = build::batch_tx_confirmation_messages(
-                            cosmos_address.clone(),
+                            cosmos_address,
                             eth_client.clone(),
                             transaction_batches,
                             gravity_id.clone(),
@@ -423,7 +423,7 @@ pub async fn run_signer(
                 }
 
                 let logic_calls =
-                    get_oldest_unsigned_logic_call(&mut grpc_client, cosmos_address.clone()).await;
+                    get_oldest_unsigned_logic_call(&mut grpc_client, cosmos_address).await;
                 if let Ok(logic_calls) = logic_calls {
                     for logic_call in logic_calls {
                         info!(
