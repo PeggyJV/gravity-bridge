@@ -33,7 +33,7 @@ var (
 	ParamsStoreKeyBridgeContractChainID = []byte("BridgeChainID")
 
 	// ParamsStoreKeySignedSignerSetTxsWindow stores the signed blocks window
-	ParamsStoreKeySignedSignerSetTxsWindow = []byte("SignedSignerSetTxWindow")
+	ParamsStoreKeySignedSignerSetTxsWindow = []byte("SignedSignerSetTxsWindow")
 
 	// ParamsStoreKeyConfirmedOutgoingTxWindow stores the signed blocks window
 	ParamsStoreKeySignedBatchesWindow = []byte("SignedBatchesWindow")
