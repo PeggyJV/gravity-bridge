@@ -352,9 +352,10 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 		signatures := k.GetEthereumSignatures(ctx, otx.GetStoreIndex())
 
 		// Slash bonded validators who didn't sign outgoing txs
+		otxHeight := int64(otx.GetCosmosHeight())
 		for _, validator := range bondedValidators {
 			signingStartHeight, signingInfoExists := k.GetValidatorSlashingCriteria(ctx, validator)
-			eligibleSigner := signingInfoExists && (signingStartHeight < int64(otx.GetCosmosHeight()))
+			eligibleSigner := signingInfoExists && (signingStartHeight < otxHeight)
 			_, signedTx := signatures[validator.GetOperator().String()]
 
 			if eligibleSigner && !signedTx {
@@ -364,9 +365,10 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 
 		// Slash unbonding validators who didn't sign new signer set txs only
 		if sstx, ok := otx.(*types.SignerSetTx); ok {
+			sstxHeight := int64(sstx.Height)
 			for _, validator := range unbondingValidators {
 				signingStartHeight, signingInfoExists := k.GetValidatorSlashingCriteria(ctx, validator)
-				eligibleSigner := signingInfoExists && (signingStartHeight < int64(sstx.Height))
+				eligibleSigner := signingInfoExists && (signingStartHeight < sstxHeight)
 				deadlinePassed := sstx.Height < uint64(validator.UnbondingHeight)+params.UnbondSlashingSignerSetTxsWindow
 				_, signedTx := signatures[validator.GetOperator().String()]
 
