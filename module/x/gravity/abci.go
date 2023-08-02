@@ -137,7 +137,7 @@ func pruneEventVoteRecords(ctx sdk.Context, k keeper.Keeper) {
 			panic(err)
 		}
 
-		if event.GetEthereumHeight() < minEthereumHeight {
+		if event.GetEthereumHeight() < minEthereumHeight && eventVoteRecord.Accepted {
 			k.DeleteEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash())
 		}
 
