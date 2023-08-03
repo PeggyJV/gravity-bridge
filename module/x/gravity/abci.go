@@ -1,11 +1,9 @@
 package gravity
 
 import (
-	"fmt"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/keeper"
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
@@ -328,34 +326,18 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 		return
 	}
 
-	bondedValidators := k.StakingKeeper.GetBondedValidatorsByPower(ctx)
-	blockTime := ctx.BlockTime().Add(k.StakingKeeper.GetParams(ctx).UnbondingTime)
-	blockHeight := ctx.BlockHeight()
-	unbondingValIterator := k.StakingKeeper.ValidatorQueueIterator(ctx, blockTime, blockHeight)
-	defer unbondingValIterator.Close()
-
-	// All unbonding validators
-	var unbondingValidators []stakingtypes.Validator
-	for ; unbondingValIterator.Valid(); unbondingValIterator.Next() {
-		unbondingValAddrs := k.GetUnbondingValidators(unbondingValIterator.Value())
-		for _, valAddr := range unbondingValAddrs.Addresses {
-			addr, err := sdk.ValAddressFromBech32(valAddr)
-			if err != nil {
-				panic(fmt.Sprintf("failed to bech32 decode validator address: %s", err))
-			}
-			validator, _ := k.StakingKeeper.GetValidator(ctx, addr)
-			unbondingValidators = append(unbondingValidators, validator)
-		}
-	}
+	// get signing info for each validator
+	bondedValidators, bondedValidatorSlashingInfos := k.GetBondedValidatorSlashingInfos(ctx)
+	unbondingValidators, unbondingValidatorSlashingInfos := k.GetUnbondingValidatorSlashingInfos(ctx)
 
 	for _, otx := range usotxs {
 		signatures := k.GetEthereumSignatures(ctx, otx.GetStoreIndex())
 
 		// Slash bonded validators who didn't sign outgoing txs
 		otxHeight := int64(otx.GetCosmosHeight())
-		for _, validator := range bondedValidators {
-			signingStartHeight, signingInfoExists := k.GetValidatorSlashingCriteria(ctx, validator)
-			eligibleSigner := signingInfoExists && (signingStartHeight < otxHeight)
+		for i, validator := range bondedValidators {
+			vsi := bondedValidatorSlashingInfos[i]
+			eligibleSigner := vsi.Exists && (vsi.SigningInfo.StartHeight < otxHeight)
 			_, signedTx := signatures[validator.GetOperator().String()]
 
 			if eligibleSigner && !signedTx {
@@ -366,10 +348,10 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 		// Slash unbonding validators who didn't sign new signer set txs only
 		if sstx, ok := otx.(*types.SignerSetTx); ok {
 			sstxHeight := int64(sstx.Height)
-			for _, validator := range unbondingValidators {
-				signingStartHeight, signingInfoExists := k.GetValidatorSlashingCriteria(ctx, validator)
-				eligibleSigner := signingInfoExists && (signingStartHeight < sstxHeight)
-				deadlinePassed := sstx.Height < uint64(validator.UnbondingHeight)+params.UnbondSlashingSignerSetTxsWindow
+			for i, validator := range unbondingValidators {
+				vsi := unbondingValidatorSlashingInfos[i]
+				eligibleSigner := vsi.Exists && (vsi.SigningInfo.StartHeight < sstxHeight)
+				deadlinePassed := sstxHeight < validator.UnbondingHeight+int64(params.UnbondSlashingSignerSetTxsWindow)
 				_, signedTx := signatures[validator.GetOperator().String()]
 
 				if eligibleSigner && validator.IsUnbonding() && deadlinePassed && !signedTx {
