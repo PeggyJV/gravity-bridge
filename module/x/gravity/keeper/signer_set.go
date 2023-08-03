@@ -17,9 +17,12 @@ func (k Keeper) signerSetExecuted(ctx sdk.Context, nonce uint64) {
 		return
 	}
 
-	completedSignerSetTx, _ := otx.(*types.SignerSetTx)
-	k.setLastObservedSignerSetTx(ctx, *completedSignerSetTx)
-	k.CompleteOutgoingTx(ctx, completedSignerSetTx)
+	sstx, _ := otx.(*types.SignerSetTx)
+	k.setLastObservedSignerSetTx(ctx, *sstx)
+
+	// We don't use CompleteOutgoingTx here so that BeginBlocker can handle
+	// pruning of old signer set txs
+	k.SetCompletedOutgoingTx(ctx, sstx)
 }
 
 func (k Keeper) GetUnsignedSignerSetTxs(ctx sdk.Context, val sdk.ValAddress) []*types.SignerSetTx {
