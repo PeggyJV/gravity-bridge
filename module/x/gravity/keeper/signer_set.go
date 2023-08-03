@@ -17,7 +17,11 @@ func (k Keeper) signerSetExecuted(ctx sdk.Context, nonce uint64) {
 		return
 	}
 
-	sstx, _ := otx.(*types.SignerSetTx)
+	sstx, ok := otx.(*types.SignerSetTx)
+	if !ok {
+		panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for outgoing tx %s", otx))
+	}
+
 	k.setLastObservedSignerSetTx(ctx, *sstx)
 
 	// We don't use CompleteOutgoingTx here so that BeginBlocker can handle
