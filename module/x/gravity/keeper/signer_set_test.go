@@ -18,10 +18,6 @@ func TestSignerSetTxExecuted(t *testing.T) {
 		ctx,
 	)
 
-	input.GravityKeeper.CreateSignerSetTx(
-		ctx,
-	)
-
 	sstx := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeSignerSetTxKey(1)).(*types.SignerSetTx)
 
 	assert.NotNil(t, sstx)

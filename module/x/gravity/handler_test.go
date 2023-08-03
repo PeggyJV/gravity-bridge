@@ -209,7 +209,7 @@ func TestMsgSubmitEthreumEventSendToCosmosMultiValidator(t *testing.T) {
 	input := keeper.CreateTestEnv(t)
 	ctx := input.Context
 	params := types.DefaultParams()
-	params.EventVoteWindow = eventVoteWindow
+	params.EthereumEventVoteWindow = eventVoteWindow
 	input.GravityKeeper.SetParams(ctx, *params)
 	input.GravityKeeper.StakingKeeper = keeper.NewStakingKeeperMock(valAddr1, valAddr2, valAddr3)
 	input.GravityKeeper.SetOrchestratorValidatorAddress(ctx, valAddr1, orchestratorAddr1)
