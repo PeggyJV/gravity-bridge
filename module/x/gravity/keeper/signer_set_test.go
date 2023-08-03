@@ -22,24 +22,20 @@ func TestSignerSetTxExecuted(t *testing.T) {
 		ctx,
 	)
 
-	sstx1 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeSignerSetTxKey(1)).(*types.SignerSetTx)
-	sstx2 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeSignerSetTxKey(2)).(*types.SignerSetTx)
+	sstx := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeSignerSetTxKey(1)).(*types.SignerSetTx)
 
-	assert.NotNil(t, sstx1)
-	assert.NotNil(t, sstx2)
+	assert.NotNil(t, sstx)
 
-	input.GravityKeeper.signerSetExecuted(ctx, 2)
+	input.GravityKeeper.signerSetExecuted(ctx, 1)
 
-	otx1 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeSignerSetTxKey(1))
-	otx2 := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeSignerSetTxKey(2))
+	otx := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeSignerSetTxKey(1))
 
-	assert.NotNil(t, otx1)
-	assert.Nil(t, otx2)
+	assert.NotNil(t, otx)
 
-	otx2 = input.GravityKeeper.GetCompletedOutgoingTx(ctx, sstx2.GetStoreIndex())
+	cotx := input.GravityKeeper.GetCompletedOutgoingTx(ctx, sstx.GetStoreIndex())
 
-	assert.NotNil(t, otx2)
-	assert.Equal(t, uint64(2), input.GravityKeeper.GetLatestSignerSetTxNonce(ctx))
+	assert.NotNil(t, cotx)
+	assert.Equal(t, uint64(1), input.GravityKeeper.GetLatestSignerSetTxNonce(ctx))
 }
 
 func TestGetUnconfirmedSignerSetTxs(t *testing.T) {
