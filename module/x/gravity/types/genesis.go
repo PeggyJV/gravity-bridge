@@ -141,7 +141,7 @@ func DefaultParams() *Params {
 		SlashFractionConflictingEthereumSignature: sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		UnbondSlashingSignerSetTxsWindow:          10000,
 		// this is in ethereum blocks. ethereum block time is ~12 seconds, about twice as long as Sommelier
-		EventVoteWindow:           5000,
+		EthereumEventVoteWindow:           5000,
 		ConfirmedOutgoingTxWindow: 10000,
 	}
 }
@@ -193,7 +193,7 @@ func (p Params) ValidateBasic() error {
 	if err := validateUnbondSlashingSignerSetTxsWindow(p.UnbondSlashingSignerSetTxsWindow); err != nil {
 		return sdkerrors.Wrap(err, "unbond slashing signersettx window")
 	}
-	if err := validateEventVoteWindow(p.EventVoteWindow); err != nil {
+	if err := validateEthereumEventVoteWindow(p.EthereumEventVoteWindow); err != nil {
 		return sdkerrors.Wrap(err, "event vote window")
 	}
 	if err := validateConfirmedOutgoingTxWindow(p.ConfirmedOutgoingTxWindow); err != nil {
@@ -227,7 +227,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionEthereumSignature, &p.SlashFractionEthereumSignature, validateSlashFractionEthereumSignature),
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionConflictingEthereumSignature, &p.SlashFractionConflictingEthereumSignature, validateSlashFractionConflictingEthereumSignature),
 		paramtypes.NewParamSetPair(ParamStoreUnbondSlashingSignerSetTxsWindow, &p.UnbondSlashingSignerSetTxsWindow, validateUnbondSlashingSignerSetTxsWindow),
-		paramtypes.NewParamSetPair(ParamStoreEventVoteWindow, &p.EventVoteWindow, validateEventVoteWindow),
+		paramtypes.NewParamSetPair(ParamStoreEventVoteWindow, &p.EthereumEventVoteWindow, validateEthereumEventVoteWindow),
 		paramtypes.NewParamSetPair(ParamStoreConfirmedOutgoingTxWindow, &p.ConfirmedOutgoingTxWindow, validateConfirmedOutgoingTxWindow),
 	}
 }
@@ -377,7 +377,7 @@ func validateSlashFractionConflictingEthereumSignature(i interface{}) error {
 	return nil
 }
 
-func validateEventVoteWindow(i interface{}) error {
+func validateEthereumEventVoteWindow(i interface{}) error {
 	if _, ok := i.(uint64); !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

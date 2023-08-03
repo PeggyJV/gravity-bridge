@@ -20,7 +20,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	createBatchTxs(ctx, k)
 	pruneSignerSetTxs(ctx, k)
 	pruneCompletedOutgoingTxs(ctx, k)
-	pruneEventVoteRecords(ctx, k)
+	pruneEthereumEventVoteRecords(ctx, k)
 }
 
 // EndBlocker is called at the end of every block
@@ -120,10 +120,10 @@ func pruneCompletedOutgoingTxs(ctx sdk.Context, k keeper.Keeper) {
 
 }
 
-// pruneEventVoteRecords deletes all event vote records for events that are oustide of the event vote window
-func pruneEventVoteRecords(ctx sdk.Context, k keeper.Keeper) {
+// pruneEthereumEventVoteRecords deletes all event vote records for events that are oustide of the event vote window
+func pruneEthereumEventVoteRecords(ctx sdk.Context, k keeper.Keeper) {
 	lastEthereumHeight := k.GetLastObservedEthereumBlockHeight(ctx).EthereumHeight
-	window := k.GetParams(ctx).EventVoteWindow
+	window := k.GetParams(ctx).EthereumEventVoteWindow
 	if lastEthereumHeight < window {
 		return
 	}
