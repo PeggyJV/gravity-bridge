@@ -35,8 +35,8 @@ func GetQueryCmd() *cobra.Command {
 		CmdContractCallTxs(),
 		CmdDenomToERC20Params(),
 		CmdERC20ToDenom(),
-		CmdEthereumEventVoteRecords(),
 		CmdEthereumEventVotes(),
+		CmdEthereumEventVotesByValidator(),
 		CmdLastObservedEthereumHeight(),
 		CmdLastSubmittedEthereumEvent(),
 		CmdLatestSignerSetTx(),
@@ -1006,11 +1006,11 @@ func CmdSignerSetTxConfirmationsByValidator() *cobra.Command {
 	return cmd
 }
 
-func CmdEthereumEventVoteRecords() *cobra.Command {
+func CmdEthereumEventVotes() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "ethereum-event-vote-records",
+		Use:   "ethereum-event-votes",
 		Args:  cobra.NoArgs,
-		Short: "query ethereum event vote records that have not been pruned",
+		Short: "query all ethereum event votes that have not been pruned",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
 			if err != nil {
@@ -1039,7 +1039,7 @@ func CmdEthereumEventVoteRecords() *cobra.Command {
 	return cmd
 }
 
-func CmdEthereumEventVotes() *cobra.Command {
+func CmdEthereumEventVotesByValidator() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ethereum-event-votes-by-validator [validator-address]",
 		Args:  cobra.ExactArgs(1),
