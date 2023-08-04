@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"encoding/hex"
+	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -11,17 +12,6 @@ import (
 
 func (k Keeper) GetUnsignedContractCallTxs(ctx sdk.Context, val sdk.ValAddress) []*types.ContractCallTx {
 	var unconfirmed []*types.ContractCallTx
-	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
-		if len(sig) == 0 {
-			call, ok := otx.(*types.ContractCallTx)
-			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %s", otx))
-			}
-			unconfirmed = append(unconfirmed, call)
-		}
-		return false
-	})
 	k.IterateCompletedOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
 		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)
 		if len(sig) == 0 {
@@ -34,7 +24,19 @@ func (k Keeper) GetUnsignedContractCallTxs(ctx sdk.Context, val sdk.ValAddress) 
 		return false
 	})
 
-	return unconfirmed
+	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
+		if len(sig) == 0 {
+			call, ok := otx.(*types.ContractCallTx)
+			if !ok {
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %s", otx))
+			}
+			unconfirmed = append(unconfirmed, call)
+		}
+		return false
+	})
+
+	return orderContractCallsByAddressAndNonceAscending(unconfirmed)
 }
 
 func (k Keeper) contractCallExecuted(ctx sdk.Context, invalidationScope []byte, invalidationNonce uint64) {
@@ -63,4 +65,20 @@ func (k Keeper) contractCallExecuted(ctx sdk.Context, invalidationScope []byte, 
 	})
 
 	k.CompleteOutgoingTx(ctx, completedCallTx)
+}
+
+// orderContractCallsByAddressAndNonceAscending sorts a slice of contract calls by address and nonce in ascending order
+func orderContractCallsByAddressAndNonceAscending(calls []*types.ContractCallTx) []*types.ContractCallTx {
+	sort.SliceStable(calls, func(i, j int) bool {
+		// Compare the addresses first
+		addrComparison := bytes.Compare(calls[i].InvalidationScope, calls[j].InvalidationScope)
+		if addrComparison != 0 {
+			return addrComparison < 0
+		}
+
+		// If the addresses are equal, compare the nonces
+		return calls[i].InvalidationNonce < calls[j].InvalidationNonce
+	})
+
+	return calls
 }
