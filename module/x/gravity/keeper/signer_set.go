@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"sort"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
@@ -31,17 +33,6 @@ func (k Keeper) signerSetExecuted(ctx sdk.Context, nonce uint64) {
 
 func (k Keeper) GetUnsignedSignerSetTxs(ctx sdk.Context, val sdk.ValAddress) []*types.SignerSetTx {
 	var unconfirmed []*types.SignerSetTx
-	k.IterateOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
-		if len(sig) == 0 {
-			signerSet, ok := otx.(*types.SignerSetTx)
-			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %s", otx))
-			}
-			unconfirmed = append(unconfirmed, signerSet)
-		}
-		return false
-	})
 	k.IterateCompletedOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
 		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)
 		if len(sig) == 0 {
@@ -53,6 +44,26 @@ func (k Keeper) GetUnsignedSignerSetTxs(ctx sdk.Context, val sdk.ValAddress) []*
 		}
 		return false
 	})
+	k.IterateOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
+		if len(sig) == 0 {
+			signerSet, ok := otx.(*types.SignerSetTx)
+			if !ok {
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %s", otx))
+			}
+			unconfirmed = append(unconfirmed, signerSet)
+		}
+		return false
+	})
 
-	return unconfirmed
+	return orderSignerSetsByNonceAscending(unconfirmed)
+}
+
+// orderSignerSetsByNonceAscending orders the batches by their BatchNonce in ascending order
+func orderSignerSetsByNonceAscending(txs []*types.SignerSetTx) []*types.SignerSetTx {
+	sort.Slice(txs, func(i, j int) bool {
+		return txs[i].Nonce < txs[j].Nonce
+	})
+
+	return txs
 }

@@ -32,7 +32,8 @@ pub async fn get_oldest_unsigned_valsets(
             address: address.to_string(),
         })
         .await?;
-    let valsets = response.into_inner().signer_sets;
+    let mut valsets = response.into_inner().signer_sets;
+    valsets.sort_by(|a, b| a.nonce.cmp(&b.nonce));
     // convert from proto valset type to rust valset type
     let valsets = valsets.iter().map(|v| v.clone().into()).collect();
     Ok(valsets)
