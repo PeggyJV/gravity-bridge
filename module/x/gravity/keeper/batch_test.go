@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -390,11 +391,13 @@ func TestGetUnconfirmedBatchTxs(t *testing.T) {
 	val2, err := sdk.ValAddressFromBech32(vals[1].OperatorAddress)
 	require.NoError(t, err)
 
-	address := common.HexToAddress("0x2a24af0501a534fca004ee1bd667b783f205a546")
-	maxElements := 100
+	blockheight := uint64(ctx.BlockHeight())
 	sig := []byte("dummysig")
-	gk.CreateBatchTx(ctx, address, maxElements)
 	gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+		BatchNonce: 1,
+		Height:     uint64(ctx.BlockHeight()),
+	})
+	gk.SetOutgoingTx(ctx, &types.BatchTx{
 		BatchNonce: 2,
 		Height:     uint64(ctx.BlockHeight()),
 	})
@@ -428,4 +431,48 @@ func TestGetUnconfirmedBatchTxs(t *testing.T) {
 
 	require.Empty(t, gk.GetUnsignedBatchTxs(ctx, val1))
 	require.Equal(t, 1, len(gk.GetUnsignedBatchTxs(ctx, val2)))
+
+	// Confirm ordering
+	val3, err := sdk.ValAddressFromBech32(vals[2].OperatorAddress)
+	require.NoError(t, err)
+
+	addressA := "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+	addressB := "0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+	gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+		TokenContract: addressB,
+		BatchNonce:    3,
+		Height:        blockheight,
+	})
+	gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+		TokenContract: addressA,
+		BatchNonce:    4,
+		Height:        blockheight,
+	})
+	gk.SetOutgoingTx(ctx, &types.BatchTx{
+		TokenContract: addressB,
+		BatchNonce:    5,
+		Height:        blockheight,
+	})
+	gk.SetOutgoingTx(ctx, &types.BatchTx{
+		TokenContract: addressA,
+		BatchNonce:    6,
+		Height:        blockheight,
+	})
+	gk.SetOutgoingTx(ctx, &types.BatchTx{
+		TokenContract: addressB,
+		BatchNonce:    7,
+		Height:        blockheight,
+	})
+
+	unconfirmed := gk.GetUnsignedBatchTxs(ctx, val3)
+	fmt.Printf("%v", unconfirmed)
+	require.Equal(t, 7, len(unconfirmed))
+	require.True(t,
+		unconfirmed[0].BatchNonce < unconfirmed[1].BatchNonce &&
+			unconfirmed[1].BatchNonce < unconfirmed[2].BatchNonce &&
+			unconfirmed[2].BatchNonce < unconfirmed[3].BatchNonce &&
+			unconfirmed[3].BatchNonce < unconfirmed[4].BatchNonce,
+		unconfirmed[4].BatchNonce < unconfirmed[5].BatchNonce,
+		unconfirmed[5].BatchNonce < unconfirmed[6].BatchNonce,
+	)
 }

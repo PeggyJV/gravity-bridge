@@ -77,7 +77,9 @@ pub async fn get_oldest_unsigned_transaction_batch(
             address: address.to_string(),
         })
         .await?;
-    let batches = extract_valid_batches(request.into_inner().batches);
+    let mut batches = extract_valid_batches(request.into_inner().batches);
+    batches.sort_by(|a, b| a.nonce.cmp(&b.nonce));
+
     let batch = batches.get(0);
     match batch {
         Some(batch) => Ok(Some(batch.clone())),

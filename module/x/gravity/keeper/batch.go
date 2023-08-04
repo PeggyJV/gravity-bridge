@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/binary"
 	"fmt"
+	"sort"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -159,19 +160,9 @@ func (k Keeper) getLastOutgoingBatchByTokenType(ctx sdk.Context, token common.Ad
 	return lastBatch
 }
 
+// GetUnsignedBatchTxs returns all batches for which the specified validator has not submitted confirmations in ascending nonce order
 func (k Keeper) GetUnsignedBatchTxs(ctx sdk.Context, val sdk.ValAddress) []*types.BatchTx {
 	var unconfirmed []*types.BatchTx
-	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
-		if len(sig) == 0 {
-			batch, ok := otx.(*types.BatchTx)
-			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
-			}
-			unconfirmed = append(unconfirmed, batch)
-		}
-		return false
-	})
 	k.IterateCompletedOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
 		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)
 		if len(sig) == 0 {
@@ -183,8 +174,19 @@ func (k Keeper) GetUnsignedBatchTxs(ctx sdk.Context, val sdk.ValAddress) []*type
 		}
 		return false
 	})
+	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
+		if len(sig) == 0 {
+			batch, ok := otx.(*types.BatchTx)
+			if !ok {
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
+			}
+			unconfirmed = append(unconfirmed, batch)
+		}
+		return false
+	})
 
-	return unconfirmed
+	return orderBatchesByNonceAscending(unconfirmed)
 }
 
 func (k Keeper) incrementLastOutgoingBatchNonce(ctx sdk.Context) uint64 {
@@ -198,4 +200,13 @@ func (k Keeper) incrementLastOutgoingBatchNonce(ctx sdk.Context) uint64 {
 	bz = sdk.Uint64ToBigEndian(newId)
 	store.Set([]byte{types.LastOutgoingBatchNonceKey}, bz)
 	return newId
+}
+
+// orderBatchesByNonceAscending orders the batches by their BatchNonce in ascending order
+func orderBatchesByNonceAscending(batches []*types.BatchTx) []*types.BatchTx {
+	sort.Slice(batches, func(i, j int) bool {
+		return batches[i].BatchNonce < batches[j].BatchNonce
+	})
+
+	return batches
 }

@@ -96,9 +96,9 @@ func pruneSignerSetTxs(ctx sdk.Context, k keeper.Keeper) {
 	currentBlock := uint64(ctx.BlockHeight())
 	tooEarly := currentBlock < params.SignedSignerSetTxsWindow
 	if lastObserved != nil && !tooEarly {
-		earliestToPrune := currentBlock - params.SignedSignerSetTxsWindow
+		earliestToKeep := currentBlock - params.SignedSignerSetTxsWindow
 		for _, set := range k.GetSignerSetTxs(ctx) {
-			if set.Nonce < lastObserved.Nonce && set.Height < earliestToPrune {
+			if set.Nonce < lastObserved.Nonce && set.Height < earliestToKeep {
 				k.DeleteEthereumSignatures(ctx, set.GetStoreIndex())
 				k.DeleteOutgoingTx(ctx, set.GetStoreIndex())
 			}
