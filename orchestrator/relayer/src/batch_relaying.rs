@@ -107,10 +107,10 @@ async fn get_batches_and_signatures(
             );
         }
     }
-    // reverse the list so that it is oldest first, we want to submit
-    // older batches so that we don't invalidate newer batches
+    // sort the batches by nonce in ascending order, we want to submit
+    // older batches first so that we don't invalidate newer batches
     possible_batches.par_iter_mut().for_each(|(_key, value)| {
-        value.reverse();
+        value.sort_by(|a, b| a.batch.nonce.cmp(&b.batch.nonce));
     });
     possible_batches
 }
