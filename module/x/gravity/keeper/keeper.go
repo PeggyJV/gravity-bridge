@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
@@ -466,14 +465,6 @@ func (k Keeper) getDelegateKeys(ctx sdk.Context) (out []*types.MsgDelegateKeys) 
 	})
 
 	return out
-}
-
-// GetUnbondingvalidators returns UnbondingValidators.
-// Adding here in gravity keeper as cdc is available inside endblocker.
-func (k Keeper) GetUnbondingValidators(unbondingVals []byte) stakingtypes.ValAddresses {
-	unbondingValidators := stakingtypes.ValAddresses{}
-	k.cdc.MustUnmarshal(unbondingVals, &unbondingValidators)
-	return unbondingValidators
 }
 
 // This gets the timeout height in Ethereum blocks for expiring old batches and contract calls.
