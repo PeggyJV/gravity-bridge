@@ -199,15 +199,8 @@ pub async fn get_oldest_unsigned_logic_call(
         })
         .await?;
     let mut calls = request.into_inner().calls;
-    // sort by scope then nonce ascending
-    calls.sort_by(|a, b| {
-        let scope_cmp = a.invalidation_scope.cmp(&b.invalidation_scope);
-        if scope_cmp == Ordering::Equal {
-            a.invalidation_nonce.cmp(&b.invalidation_nonce)
-        } else {
-            scope_cmp
-        }
-    });
+    // sort by nonce ascending
+    calls.sort_by(|a, b| a.invalidation_nonce.cmp(&b.invalidation_nonce));
     let mut out = Vec::new();
     for call in calls {
         out.push(LogicCall::from_proto(call)?)
