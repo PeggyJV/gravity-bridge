@@ -140,8 +140,9 @@ func DefaultParams() *Params {
 		SlashFractionEthereumSignature:            sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		SlashFractionConflictingEthereumSignature: sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		UnbondSlashingSignerSetTxsWindow:          10000,
-		// this is in ethereum blocks. ethereum block time is ~12 seconds, about twice as long as Sommelier
-		EthereumEventVoteWindow:           5000,
+
+		// EthereumEventWindow's units are ethereum blocks. Ethereum block time is ~12 seconds, about twice as long as Sommelier.
+		EthereumEventVoteWindow:   5000,
 		ConfirmedOutgoingTxWindow: 10000,
 	}
 }
