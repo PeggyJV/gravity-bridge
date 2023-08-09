@@ -98,7 +98,10 @@ pub async fn get_latest_transaction_batches(
     let request = client
         .batch_txs(BatchTxsRequest { pagination: None })
         .await?;
-    Ok(extract_valid_batches(request.into_inner().batches))
+    let mut batches = request.into_inner().batches;
+    batches.sort_by(|a, b| a.batch_nonce.cmp(&b.batch_nonce));
+
+    Ok(extract_valid_batches(batches))
 }
 
 // If we can't serialize a batch from a proto, but it was committed to the chain,
