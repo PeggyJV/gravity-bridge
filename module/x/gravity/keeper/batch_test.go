@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -465,14 +464,13 @@ func TestGetUnconfirmedBatchTxs(t *testing.T) {
 	})
 
 	unconfirmed := gk.GetUnsignedBatchTxs(ctx, val3)
-	fmt.Printf("%v", unconfirmed)
-	require.Equal(t, 7, len(unconfirmed))
-	require.True(t,
-		unconfirmed[0].BatchNonce < unconfirmed[1].BatchNonce &&
-			unconfirmed[1].BatchNonce < unconfirmed[2].BatchNonce &&
-			unconfirmed[2].BatchNonce < unconfirmed[3].BatchNonce &&
-			unconfirmed[3].BatchNonce < unconfirmed[4].BatchNonce,
-		unconfirmed[4].BatchNonce < unconfirmed[5].BatchNonce,
-		unconfirmed[5].BatchNonce < unconfirmed[6].BatchNonce,
-	)
+
+	require.EqualValues(t, 7, len(unconfirmed))
+	require.EqualValues(t, unconfirmed[0].BatchNonce, 1)
+	require.EqualValues(t, unconfirmed[1].BatchNonce, 2)
+	require.EqualValues(t, unconfirmed[2].BatchNonce, 3)
+	require.EqualValues(t, unconfirmed[3].BatchNonce, 4)
+	require.EqualValues(t, unconfirmed[4].BatchNonce, 5)
+	require.EqualValues(t, unconfirmed[5].BatchNonce, 6)
+	require.EqualValues(t, unconfirmed[6].BatchNonce, 7)
 }
