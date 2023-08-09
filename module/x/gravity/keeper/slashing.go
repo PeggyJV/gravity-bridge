@@ -9,20 +9,20 @@ import (
 )
 
 type ValidatorSlashingInfo struct {
-    Validator   stakingtypes.Validator
-    Exists bool
-    SigningInfo  slashingtypes.ValidatorSigningInfo
-    ConsAddress  sdk.ConsAddress
+	Validator   stakingtypes.Validator
+	Exists      bool
+	SigningInfo slashingtypes.ValidatorSigningInfo
+	ConsAddress sdk.ConsAddress
 }
 
-// GetUnbondingValidatorSlashingInfos returns the information needed for slashing for each unbonding validator 
+// GetUnbondingValidatorSlashingInfos returns the information needed for slashing for each unbonding validator
 func (k Keeper) GetUnbondingValidatorSlashingInfos(ctx sdk.Context) ([]stakingtypes.Validator, []ValidatorSlashingInfo) {
 	blockTime := ctx.BlockTime().Add(k.StakingKeeper.GetParams(ctx).UnbondingTime)
 	blockHeight := ctx.BlockHeight()
 
-    var unbondingValInfos []ValidatorSlashingInfo	
-    var unbondingValidators []stakingtypes.Validator
-    unbondingValIterator := k.StakingKeeper.ValidatorQueueIterator(ctx, blockTime, blockHeight)
+	var unbondingValInfos []ValidatorSlashingInfo
+	var unbondingValidators []stakingtypes.Validator
+	unbondingValIterator := k.StakingKeeper.ValidatorQueueIterator(ctx, blockTime, blockHeight)
 	defer unbondingValIterator.Close()
 	for ; unbondingValIterator.Valid(); unbondingValIterator.Next() {
 		unbondingValidatorsAddr := k.GetUnbondingValidators(unbondingValIterator.Value()).Addresses
@@ -33,23 +33,23 @@ func (k Keeper) GetUnbondingValidatorSlashingInfos(ctx sdk.Context) ([]stakingty
 			}
 
 			validator, _ := k.StakingKeeper.GetValidator(ctx, addr)
-            unbondingValidators = append(unbondingValidators, validator)
+			unbondingValidators = append(unbondingValidators, validator)
 			unbondingValInfos = append(unbondingValInfos, k.GetValidatorSlashingInfo(ctx, validator))
 		}
 	}
 
-    return unbondingValidators, unbondingValInfos
+	return unbondingValidators, unbondingValInfos
 }
 
 // GetBondedValidatorSlashingInfos returns the information needed for slashing for each bonded validator
 func (k Keeper) GetBondedValidatorSlashingInfos(ctx sdk.Context) ([]stakingtypes.Validator, []ValidatorSlashingInfo) {
-    var bondedValInfos []ValidatorSlashingInfo
-    bondedValidators := k.StakingKeeper.GetBondedValidatorsByPower(ctx)
-    for _, validator := range bondedValidators {
-        bondedValInfos = append(bondedValInfos, k.GetValidatorSlashingInfo(ctx, validator))
-    }
+	var bondedValInfos []ValidatorSlashingInfo
+	bondedValidators := k.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	for _, validator := range bondedValidators {
+		bondedValInfos = append(bondedValInfos, k.GetValidatorSlashingInfo(ctx, validator))
+	}
 
-    return bondedValidators, bondedValInfos
+	return bondedValidators, bondedValInfos
 }
 
 // GetValidatorInfo returns the consensus key address, signing info, and whether or not the validator exists, for the purposes of slashing/jailing
