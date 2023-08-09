@@ -346,12 +346,11 @@ func outgoingTxSlashing(ctx sdk.Context, k keeper.Keeper) {
 		}
 
 		// Slash unbonding validators who didn't sign new signer set txs only
-		if sstx, ok := otx.(*types.SignerSetTx); ok {
-			sstxHeight := int64(sstx.Height)
+		if _, ok := otx.(*types.SignerSetTx); ok {
 			for i, validator := range unbondingValidators {
 				vsi := unbondingValidatorSlashingInfos[i]
-				eligibleSigner := vsi.Exists && (vsi.SigningInfo.StartHeight < sstxHeight)
-				deadlinePassed := sstxHeight < validator.UnbondingHeight+int64(params.UnbondSlashingSignerSetTxsWindow)
+				eligibleSigner := vsi.Exists && (vsi.SigningInfo.StartHeight < otxHeight)
+				deadlinePassed := otxHeight < validator.UnbondingHeight+int64(params.UnbondSlashingSignerSetTxsWindow)
 				_, signedTx := signatures[validator.GetOperator().String()]
 
 				if eligibleSigner && validator.IsUnbonding() && deadlinePassed && !signedTx {
