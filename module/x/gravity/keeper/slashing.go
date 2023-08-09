@@ -25,8 +25,9 @@ func (k Keeper) GetUnbondingValidatorSlashingInfos(ctx sdk.Context) ([]stakingty
 	unbondingValIterator := k.StakingKeeper.ValidatorQueueIterator(ctx, blockTime, blockHeight)
 	defer unbondingValIterator.Close()
 	for ; unbondingValIterator.Valid(); unbondingValIterator.Next() {
-		unbondingValidatorsAddr := k.GetUnbondingValidators(unbondingValIterator.Value()).Addresses
-		for _, valAddr := range unbondingValidatorsAddr {
+		unbondingValidatorsAddr := stakingtypes.ValAddresses{}
+		k.cdc.MustUnmarshal(unbondingValIterator.Value(), &unbondingValidatorsAddr)
+		for _, valAddr := range unbondingValidatorsAddr.Addresses {
 			addr, err := sdk.ValAddressFromBech32(valAddr)
 			if err != nil {
 				panic(fmt.Sprintf("failed to bech32 decode validator address: %s", err))
