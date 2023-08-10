@@ -132,8 +132,6 @@ func (k Keeper) BatchTxs(c context.Context, req *types.BatchTxsRequest) (*types.
 		return nil, err
 	}
 
-	batches = orderBatchesByNonceAscending(batches)
-
 	return &types.BatchTxsResponse{Batches: batches, Pagination: pageRes}, nil
 }
 
