@@ -31,5 +31,8 @@ const (
 	AttributeKeyContractCallFees              = "contract_call_fees"
 	AttributeKeyContractCallAddress           = "contract_call_address"
 	AttributeKeyEthTxTimeout                  = "eth_tx_timeout"
-	AttributeMissingBridgeBatchSig            = "missing_bridge_batch_signature"
+
+	// slashing reasons
+	AttributeMissingSignerSetSignature = "missing_signer_set_signature"
+	AttributeMissingSignature          = "missing_signature"
 )

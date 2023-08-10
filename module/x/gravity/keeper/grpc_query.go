@@ -203,67 +203,37 @@ func (k Keeper) ContractCallTxConfirmations(c context.Context, req *types.Contra
 	return &types.ContractCallTxConfirmationsResponse{Signatures: out}, nil
 }
 
+// UnsignedSignerSetTxs returns all signer set txs that have not been signed by the given validator
 func (k Keeper) UnsignedSignerSetTxs(c context.Context, req *types.UnsignedSignerSetTxsRequest) (*types.UnsignedSignerSetTxsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	val, err := k.getSignerValidator(ctx, req.Address)
 	if err != nil {
 		return nil, err
 	}
-	var signerSets []*types.SignerSetTx
-	k.IterateOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
-		if len(sig) == 0 { // it's pending
-			signerSet, ok := otx.(*types.SignerSetTx)
-			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %s", otx))
-			}
-			signerSets = append(signerSets, signerSet)
-		}
-		return false
-	})
-	return &types.UnsignedSignerSetTxsResponse{SignerSets: signerSets}, nil
+
+	return &types.UnsignedSignerSetTxsResponse{SignerSets: k.GetUnsignedSignerSetTxs(ctx, val)}, nil
 }
 
+// UnsignedBatchTxs returns all batch txs that have not been signed by the given validator
 func (k Keeper) UnsignedBatchTxs(c context.Context, req *types.UnsignedBatchTxsRequest) (*types.UnsignedBatchTxsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	val, err := k.getSignerValidator(ctx, req.Address)
 	if err != nil {
 		return nil, err
 	}
-	var batches []*types.BatchTx
-	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
-		if len(sig) == 0 { // it's pending
-			batch, ok := otx.(*types.BatchTx)
-			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
-			}
-			batches = append(batches, batch)
-		}
-		return false
-	})
-	return &types.UnsignedBatchTxsResponse{Batches: batches}, nil
+
+	return &types.UnsignedBatchTxsResponse{Batches: k.GetUnsignedBatchTxs(ctx, val)}, nil
 }
 
+// UnsignedContractCallTxs returns all contract call txs that have not been signed by the given validator
 func (k Keeper) UnsignedContractCallTxs(c context.Context, req *types.UnsignedContractCallTxsRequest) (*types.UnsignedContractCallTxsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	val, err := k.getSignerValidator(ctx, req.Address)
 	if err != nil {
 		return nil, err
 	}
-	var calls []*types.ContractCallTx
-	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
-		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
-		if len(sig) == 0 { // it's pending
-			call, ok := otx.(*types.ContractCallTx)
-			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %s", otx))
-			}
-			calls = append(calls, call)
-		}
-		return false
-	})
-	return &types.UnsignedContractCallTxsResponse{Calls: calls}, nil
+
+	return &types.UnsignedContractCallTxsResponse{Calls: k.GetUnsignedContractCallTxs(ctx, val)}, nil
 }
 
 func (k Keeper) LastSubmittedEthereumEvent(c context.Context, req *types.LastSubmittedEthereumEventRequest) (*types.LastSubmittedEthereumEventResponse, error) {
@@ -469,5 +439,182 @@ func (k Keeper) LastObservedEthereumHeight(c context.Context, req *types.LastObs
 		LastObservedEthereumHeight: &lastObservedEthereumHeight,
 	}
 
+	return res, nil
+}
+
+func (k Keeper) CompletedBatchTxs(c context.Context, req *types.CompletedBatchTxsRequest) (*types.CompletedBatchTxsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var batches []*types.BatchTx
+	k.IterateCompletedOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+		batchTx := otx.(*types.BatchTx)
+		batches = append(batches, batchTx)
+		return false
+	})
+
+	res := &types.CompletedBatchTxsResponse{
+		CompletedBatchTxs: batches,
+	}
+	return res, nil
+}
+
+func (k Keeper) CompletedContractCallTxs(c context.Context, req *types.CompletedContractCallTxsRequest) (*types.CompletedContractCallTxsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var contractCalls []*types.ContractCallTx
+	k.IterateCompletedOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+		contractCallTx := otx.(*types.ContractCallTx)
+		contractCalls = append(contractCalls, contractCallTx)
+		return false
+	})
+
+	res := &types.CompletedContractCallTxsResponse{
+		CompletedContractCallTxs: contractCalls,
+	}
+	return res, nil
+}
+
+func (k Keeper) CompletedSignerSetTxs(c context.Context, req *types.CompletedSignerSetTxsRequest) (*types.CompletedSignerSetTxsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var signerSetCalls []*types.SignerSetTx
+	k.IterateCompletedOutgoingTxsByType(ctx, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
+		signerSetTx := otx.(*types.SignerSetTx)
+		signerSetCalls = append(signerSetCalls, signerSetTx)
+		return false
+	})
+
+	res := &types.CompletedSignerSetTxsResponse{
+		CompletedSignerSetTxs: signerSetCalls,
+	}
+	return res, nil
+}
+
+func (k Keeper) BatchTxConfirmationsByValidator(c context.Context, req *types.BatchTxConfirmationsByValidatorRequest) (*types.BatchTxConfirmationsByValidatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	var confirms []*types.BatchTxConfirmation
+	k.IterateBatchTxEthereumSignatures(ctx, func(contractAddress common.Address, nonce uint64, val sdk.ValAddress, sig []byte) bool {
+		if !val.Equals(valAddr) {
+			return false
+		}
+
+		confirms = append(confirms, &types.BatchTxConfirmation{
+			TokenContract:  contractAddress.Hex(),
+			BatchNonce:     nonce,
+			EthereumSigner: k.GetValidatorEthereumAddress(ctx, val).Hex(),
+			Signature:      sig,
+		})
+		return false
+	})
+
+	res := &types.BatchTxConfirmationsByValidatorResponse{
+		BatchTxConfirmations: confirms,
+	}
+	return res, nil
+}
+
+func (k Keeper) ContractCallTxConfirmationsByValidator(c context.Context, req *types.ContractCallTxConfirmationsByValidatorRequest) (*types.ContractCallTxConfirmationsByValidatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	var confirms []*types.ContractCallTxConfirmation
+	k.IterateContractCallTxEthereumSignatures(ctx, func(invalidationScope []byte, invalidationNonce uint64, val sdk.ValAddress, sig []byte) bool {
+		if !val.Equals(valAddr) {
+			return false
+		}
+
+		confirms = append(confirms, &types.ContractCallTxConfirmation{
+			InvalidationScope: invalidationScope,
+			InvalidationNonce: invalidationNonce,
+			EthereumSigner:    k.GetValidatorEthereumAddress(ctx, val).Hex(),
+			Signature:         sig,
+		})
+		return false
+	})
+
+	res := &types.ContractCallTxConfirmationsByValidatorResponse{
+		ContractCallTxConfirmations: confirms,
+	}
+	return res, nil
+}
+
+func (k Keeper) SignerSetTxConfirmationsByValidator(c context.Context, req *types.SignerSetTxConfirmationsByValidatorRequest) (*types.SignerSetTxConfirmationsByValidatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	var confirms []*types.SignerSetTxConfirmation
+	k.IterateSignerSetTxEthereumSignatures(ctx, func(nonce uint64, val sdk.ValAddress, sig []byte) bool {
+		if !val.Equals(valAddr) {
+			return false
+		}
+
+		confirms = append(confirms, &types.SignerSetTxConfirmation{
+			SignerSetNonce: nonce,
+			EthereumSigner: k.GetValidatorEthereumAddress(ctx, val).Hex(),
+			Signature:      sig,
+		})
+		return false
+	})
+
+	res := &types.SignerSetTxConfirmationsByValidatorResponse{
+		SignerSetTxConfirmations: confirms,
+	}
+	return res, nil
+}
+
+func (k Keeper) EthereumEventVoteRecords(c context.Context, req *types.EthereumEventVoteRecordsRequest) (*types.EthereumEventVoteRecordsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	res := &types.EthereumEventVoteRecordsResponse{}
+	pageRes, err := k.PaginateEthereumEventVoteRecords(ctx, req.Pagination, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
+		res.Records = append(res.Records, eventVoteRecord)
+
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res.Pagination = pageRes
+
+	return res, nil
+}
+
+func (k Keeper) EthereumEventVotes(c context.Context, req *types.EthereumEventVotesRequest) (*types.EthereumEventVotesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	val, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	var events []*cdctypes.Any
+	k.IterateEthereumEventVoteRecords(ctx, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
+		for _, voter := range eventVoteRecord.Votes {
+			voterAddr, err := sdk.ValAddressFromBech32(voter)
+			if err != nil {
+				continue
+			}
+			if voterAddr.Equals(val) {
+				events = append(events, eventVoteRecord.Event)
+				return false
+			}
+		}
+
+		return false
+	})
+
+	res := &types.EthereumEventVotesResponse{
+		Events: events,
+	}
 	return res, nil
 }

@@ -344,7 +344,10 @@ func (s *IntegrationTestSuite) initGenesis() {
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
 	gravityGenState.Params.GravityId = "gravitytest"
 	gravityGenState.Params.BridgeEthereumAddress = gravityContract.String()
-	gravityGenState.Params.SignedBatchesWindow = 35
+	gravityGenState.Params.ConfirmedOutgoingTxWindow = 100
+	gravityGenState.Params.TargetEthTxTimeout = 3600000
+	gravityGenState.Params.AverageBlockTime = 1000
+	gravityGenState.Params.AverageEthereumBlockTime = 1000
 
 	bz, err = cdc.MarshalJSON(&gravityGenState)
 	s.Require().NoError(err)
@@ -693,7 +696,7 @@ msg_batch_size = 5
 				return strings.Contains(containerLogsBuf.String(), match)
 			},
 			3*time.Minute,
-			20*time.Second,
+			1*time.Second,
 			"orchestrator %s not healthy",
 			resource.Container.ID,
 		)

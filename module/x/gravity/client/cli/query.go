@@ -23,18 +23,27 @@ func GetQueryCmd() *cobra.Command {
 	gravityQueryCmd.AddCommand(
 		CmdBatchTx(),
 		CmdBatchTxConfirmations(),
+		CmdBatchTxConfirmationsByValidator(),
 		CmdBatchTxFees(),
 		CmdBatchTxs(),
+		CmdCompletedBatchTxs(),
+		CmdCompletedContractCallTxs(),
+		CmdCompletedSignerSetTxs(),
 		CmdContractCallTx(),
 		CmdContractCallTxConfirmations(),
+		CmdContractCallTxConfirmationsByValidator(),
 		CmdContractCallTxs(),
 		CmdDenomToERC20Params(),
 		CmdERC20ToDenom(),
+		CmdEthereumEventVotes(),
+		CmdEthereumEventVotesByValidator(),
+		CmdLastObservedEthereumHeight(),
 		CmdLastSubmittedEthereumEvent(),
 		CmdLatestSignerSetTx(),
 		CmdParams(),
 		CmdSignerSetTx(),
 		CmdSignerSetTxConfirmations(),
+		CmdSignerSetTxConfirmationsByValidator(),
 		CmdSignerSetTxs(),
 		CmdUnsignedBatchTxs(),
 		CmdUnsignedContractCallTxs(),
@@ -45,7 +54,6 @@ func GetQueryCmd() *cobra.Command {
 		CmdDelegateKeysByEthereumSigner(),
 		CmdDelegateKeysByOrchestrator(),
 		CmdDelegateKeys(),
-		CmdLastObservedEthereumHeight(),
 	)
 
 	return gravityQueryCmd
@@ -342,7 +350,7 @@ func CmdBatchTxConfirmations() *cobra.Command {
 func CmdContractCallTxConfirmations() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "contract-call-tx-ethereum-signatures [invalidation-scope] [invalidation-nonce]",
-		Args:  cobra.MinimumNArgs(2),
+		Args:  cobra.ExactArgs(2),
 		Short: "query signatures for a given contract call transaction identified by invalidation nonce and invalidation scope",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
@@ -818,6 +826,239 @@ func CmdLastObservedEthereumHeight() *cobra.Command {
 			}
 
 			res, err := queryClient.LastObservedEthereumHeight(cmd.Context(), &types.LastObservedEthereumHeightRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdCompletedBatchTxs() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "completed-batch-txs",
+		Args:  cobra.NoArgs,
+		Short: "query completed batch transactions that have not been pruned",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.CompletedBatchTxs(cmd.Context(), &types.CompletedBatchTxsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdCompletedContractCallTxs() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "completed-contract-call-txs",
+		Args:  cobra.NoArgs,
+		Short: "query completed contract call transactions that have not been pruned",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.CompletedContractCallTxs(cmd.Context(), &types.CompletedContractCallTxsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdCompletedSignerSetTxs() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "completed-signer-set-txs",
+		Args:  cobra.NoArgs,
+		Short: "query completed signer set transactions that have not been pruned",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.CompletedSignerSetTxs(cmd.Context(), &types.CompletedSignerSetTxsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdBatchTxConfirmationsByValidator() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "batch-tx-ethereum-signatures-by-validator [validator-address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "query batch tx signatures submitted by a given validator",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
+			if err != nil {
+				return err
+			}
+
+			val, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.BatchTxConfirmationsByValidator(cmd.Context(), &types.BatchTxConfirmationsByValidatorRequest{
+				ValidatorAddress: val.String(),
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdContractCallTxConfirmationsByValidator() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "contract-call-tx-ethereum-signatures-by-validator [validator-address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "query contract call tx signatures submitted by a given validator",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
+			if err != nil {
+				return err
+			}
+
+			val, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.ContractCallTxConfirmationsByValidator(cmd.Context(), &types.ContractCallTxConfirmationsByValidatorRequest{
+				ValidatorAddress: val.String(),
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdSignerSetTxConfirmationsByValidator() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "signer-set-tx-ethereum-signatures-by-validator [validator-address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "query signer set tx signatures submitted by a given validator",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
+			if err != nil {
+				return err
+			}
+
+			val, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.SignerSetTxConfirmationsByValidator(cmd.Context(), &types.SignerSetTxConfirmationsByValidatorRequest{
+				ValidatorAddress: val.String(),
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func CmdEthereumEventVotes() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "ethereum-event-votes",
+		Args:  cobra.NoArgs,
+		Short: "query all ethereum event votes that have not been pruned",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.EthereumEventVoteRecords(cmd.Context(), &types.EthereumEventVoteRecordsRequest{
+				Pagination: pageReq,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "all ethereum event vote records")
+	return cmd
+}
+
+func CmdEthereumEventVotesByValidator() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "ethereum-event-votes-by-validator [validator-address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "query ethereum event votes for a given validator that have not been pruned",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, queryClient, err := newContextAndQueryClient(cmd)
+			if err != nil {
+				return err
+			}
+
+			val, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.EthereumEventVotes(cmd.Context(), &types.EthereumEventVotesRequest{
+				ValidatorAddress: val.String(),
+			})
+
 			if err != nil {
 				return err
 			}

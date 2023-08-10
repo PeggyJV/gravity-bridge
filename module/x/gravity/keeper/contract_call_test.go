@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestContractCallTxExecuted(t *testing.T) {
@@ -77,4 +78,64 @@ func TestContractCallTxExecuted(t *testing.T) {
 
 	assert.Nil(t, otx1)
 	assert.Nil(t, otx2)
+}
+
+func TestGetUnconfirmedContractCallTxs(t *testing.T) {
+	input, ctx := SetupFiveValChain(t)
+	gk := input.GravityKeeper
+	vals := input.StakingKeeper.GetAllValidators(ctx)
+	val1, err := sdk.ValAddressFromBech32(vals[0].OperatorAddress)
+	require.NoError(t, err)
+	val2, err := sdk.ValAddressFromBech32(vals[1].OperatorAddress)
+	require.NoError(t, err)
+
+	scope := []byte("test")
+	address := common.HexToAddress("0x2a24af0501a534fca004ee1bd667b783f205a546")
+	payload := []byte("payload")
+	tokens := []types.ERC20Token{}
+	fees := []types.ERC20Token{}
+	sig := []byte("dummysig")
+	gk.CreateContractCallTx(ctx, 1, scope, address, payload, tokens, fees)
+	gk.SetCompletedOutgoingTx(ctx, &types.ContractCallTx{
+		InvalidationNonce: 2,
+		InvalidationScope: scope,
+		Address:           address.Hex(),
+		Payload:           payload,
+		Tokens:            tokens,
+		Fees:              fees,
+		Height:            uint64(ctx.BlockHeight()),
+	})
+
+	// val1 signs both
+	// val2 signs one
+	gk.SetEthereumSignature(
+		ctx,
+		&types.ContractCallTxConfirmation{
+			InvalidationNonce: 1,
+			InvalidationScope: scope,
+			Signature:         sig,
+		},
+		val1,
+	)
+	gk.SetEthereumSignature(
+		ctx,
+		&types.ContractCallTxConfirmation{
+			InvalidationNonce: 2,
+			InvalidationScope: scope,
+			Signature:         sig,
+		},
+		val1,
+	)
+	gk.SetEthereumSignature(
+		ctx,
+		&types.ContractCallTxConfirmation{
+			InvalidationNonce: 2,
+			InvalidationScope: scope,
+			Signature:         sig,
+		},
+		val2,
+	)
+
+	require.Empty(t, gk.GetUnsignedContractCallTxs(ctx, val1))
+	require.Equal(t, 1, len(gk.GetUnsignedContractCallTxs(ctx, val2)))
 }

@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
@@ -161,21 +162,42 @@ func TestSignerSetTxSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testi
 	// check if tokens shouldn't be slashed for val2.
 }
 
-func TestBatchSlashing(t *testing.T) {
+// TestBatchAndContractCallSlashingAndPruning tests that slashing and pruning are working properly for the
+// batch and contract call implementations of OutgoingTx. It also implicitly tests that two slashes against
+// a validator do not result in a second jail call, which would cause panic and chain halt.
+func TestTxSlashingAndPruning(t *testing.T) {
 	input, ctx := keeper.SetupFiveValChain(t)
 	gravityKeeper := input.GravityKeeper
 	params := gravityKeeper.GetParams(ctx)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + int64(params.ConfirmedOutgoingTxWindow) + 2)
 
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + int64(params.SignedBatchesWindow) + 2)
-
-	// First store a batch
-	batch := &types.BatchTx{
+	batchExecuted := &types.BatchTx{
 		BatchNonce:    1,
 		Transactions:  []*types.SendToEthereum{},
 		TokenContract: keeper.TokenContractAddrs[0],
-		Height:        uint64(ctx.BlockHeight() - int64(params.SignedBatchesWindow+1)),
+		Height:        uint64(ctx.BlockHeight() - int64(params.ConfirmedOutgoingTxWindow+1)),
 	}
-	gravityKeeper.SetOutgoingTx(ctx, batch)
+	batchNotExecuted := &types.BatchTx{
+		BatchNonce:    2,
+		Transactions:  []*types.SendToEthereum{},
+		TokenContract: keeper.TokenContractAddrs[0],
+		Height:        uint64(ctx.BlockHeight() - int64(params.ConfirmedOutgoingTxWindow)),
+	}
+	contractCallExecuted := &types.ContractCallTx{
+		InvalidationNonce: 1,
+		InvalidationScope: []byte("test"),
+		Height:            uint64(ctx.BlockHeight() - int64(params.ConfirmedOutgoingTxWindow+1)),
+	}
+	contractCallNotExecuted := &types.ContractCallTx{
+		InvalidationNonce: 2,
+		InvalidationScope: []byte("test"),
+		Height:            uint64(ctx.BlockHeight() - int64(params.ConfirmedOutgoingTxWindow)),
+	}
+
+	gravityKeeper.SetOutgoingTx(ctx, batchExecuted)
+	gravityKeeper.SetOutgoingTx(ctx, batchNotExecuted)
+	gravityKeeper.SetOutgoingTx(ctx, contractCallExecuted)
+	gravityKeeper.SetOutgoingTx(ctx, contractCallNotExecuted)
 
 	for i, val := range keeper.ValAddrs {
 		if i == 0 {
@@ -186,18 +208,29 @@ func TestBatchSlashing(t *testing.T) {
 			// don't sign with 2nd validator. set val bond height > batch block height
 			validator := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[i])
 			valConsAddr, _ := validator.GetConsAddr()
-			valSigningInfo := slashingtypes.ValidatorSigningInfo{StartHeight: int64(batch.Height + 1)}
+			valSigningInfo := slashingtypes.ValidatorSigningInfo{StartHeight: int64(batchExecuted.Height + 1)}
 			input.SlashingKeeper.SetValidatorSigningInfo(ctx, valConsAddr, valSigningInfo)
 			continue
 		}
 		gravityKeeper.SetEthereumSignature(ctx, &types.BatchTxConfirmation{
-			BatchNonce:     batch.BatchNonce,
+			BatchNonce:     batchExecuted.BatchNonce,
 			TokenContract:  keeper.TokenContractAddrs[0],
 			EthereumSigner: keeper.EthAddrs[i].String(),
 			Signature:      []byte("dummysig"),
 		}, val)
+		gravityKeeper.SetEthereumSignature(ctx, &types.ContractCallTxConfirmation{
+			InvalidationNonce: 1,
+			InvalidationScope: []byte("test"),
+			EthereumSigner:    keeper.EthAddrs[i].String(),
+			Signature:         []byte("dummysig"),
+		}, val)
 	}
 
+	// validator 3 is unbonding and doesn't sign the a signer set tx.
+	validator3 := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[2])
+	input.StakingKeeper.InsertUnbondingValidatorQueue(ctx, validator3.(stakingtypes.Validator))
+
+	gravity.BeginBlocker(ctx, gravityKeeper)
 	gravity.EndBlocker(ctx, gravityKeeper)
 
 	// ensure that the  validator is jailed and slashed
@@ -206,8 +239,85 @@ func TestBatchSlashing(t *testing.T) {
 	// ensure that the 2nd  validator is not jailed and slashed
 	require.False(t, input.StakingKeeper.Validator(ctx, keeper.ValAddrs[1]).IsJailed())
 
-	// Ensure that the last slashed signer set tx nonce is set properly
-	require.Equal(t, input.GravityKeeper.GetLastSlashedOutgoingTxBlockHeight(ctx), batch.Height)
+	// Ensure that the last slashed ougoing tx block height is set properly
+	require.Equal(t, gravityKeeper.GetLastSlashedOutgoingTxBlockHeight(ctx), batchExecuted.Height)
+
+	// Check txs pruning behavior
+
+	// move from outgoing store to completed
+	gravityKeeper.CompleteOutgoingTx(ctx, batchExecuted)
+	gravityKeeper.CompleteOutgoingTx(ctx, contractCallExecuted)
+
+	require.Nil(t, gravityKeeper.GetOutgoingTx(ctx, batchExecuted.GetStoreIndex()))
+	require.NotNil(t, gravityKeeper.GetCompletedOutgoingTx(ctx, batchExecuted.GetStoreIndex()))
+	require.NotEmpty(t, gravityKeeper.GetEthereumSignatures(ctx, batchExecuted.GetStoreIndex()))
+
+	require.Nil(t, gravityKeeper.GetOutgoingTx(ctx, contractCallExecuted.GetStoreIndex()))
+	require.NotNil(t, gravityKeeper.GetCompletedOutgoingTx(ctx, contractCallExecuted.GetStoreIndex()))
+	require.NotEmpty(t, gravityKeeper.GetEthereumSignatures(ctx, contractCallExecuted.GetStoreIndex()))
+
+	// run pruning
+	gravity.BeginBlocker(ctx, gravityKeeper)
+
+	require.Nil(t, gravityKeeper.GetCompletedOutgoingTx(ctx, batchExecuted.GetStoreIndex()))
+	require.Empty(t, gravityKeeper.GetEthereumSignatures(ctx, batchExecuted.GetStoreIndex()))
+	require.NotNil(t, gravityKeeper.GetOutgoingTx(ctx, batchNotExecuted.GetStoreIndex()))
+
+	require.Nil(t, gravityKeeper.GetCompletedOutgoingTx(ctx, contractCallExecuted.GetStoreIndex()))
+	require.Empty(t, gravityKeeper.GetEthereumSignatures(ctx, contractCallExecuted.GetStoreIndex()))
+	require.NotNil(t, gravityKeeper.GetOutgoingTx(ctx, contractCallNotExecuted.GetStoreIndex()))
+
+	// validator 3 should not have be slashed for not signing contract calls and batches because
+	// it is unbonding
+	require.False(t, input.StakingKeeper.Validator(ctx, keeper.ValAddrs[2]).IsJailed())
+
+	signerSetNotExecuted := &types.SignerSetTx{
+		Nonce:  1,
+		Height: uint64(ctx.BlockHeight() - int64(params.UnbondSlashingSignerSetTxsWindow+1)),
+	}
+	signerSetExecuted := &types.SignerSetTx{
+		Nonce:  2,
+		Height: uint64(ctx.BlockHeight() - int64(params.UnbondSlashingSignerSetTxsWindow)),
+	}
+
+	// The second one executes
+	gravityKeeper.SetOutgoingTx(ctx, signerSetExecuted)
+	gravityKeeper.SetOutgoingTx(ctx, signerSetNotExecuted)
+	gravityKeeper.SignerSetExecuted(ctx, signerSetExecuted.GetNonce())
+	require.EqualValues(t, 2, gravityKeeper.GetLatestSignerSetTxNonce(ctx))
+
+	// The first is not pruned by the executed handler
+	require.NotNil(t, gravityKeeper.GetOutgoingTx(ctx, signerSetNotExecuted.GetStoreIndex()))
+	require.Nil(t, gravityKeeper.GetCompletedOutgoingTx(ctx, signerSetNotExecuted.GetStoreIndex()))
+	require.NotNil(t, gravityKeeper.GetCompletedOutgoingTx(ctx, signerSetExecuted.GetStoreIndex()))
+
+	gravity.BeginBlocker(ctx, gravityKeeper)
+	gravity.EndBlocker(ctx, gravityKeeper)
+
+	// unexecuted signer set should be pruned, executed should be completed, original outgoing tx
+	// not pruned.
+	require.Nil(t, gravityKeeper.GetOutgoingTx(ctx, signerSetNotExecuted.GetStoreIndex()))
+	require.NotNil(t, gravityKeeper.GetOutgoingTx(ctx, signerSetExecuted.GetStoreIndex()))
+	require.NotNil(t, gravityKeeper.GetCompletedOutgoingTx(ctx, signerSetExecuted.GetStoreIndex()))
+
+	// validator 3 shouldn't be jailed yet
+	require.False(t, input.StakingKeeper.Validator(ctx, keeper.ValAddrs[2]).IsJailed())
+
+	// setting validator 3 to unbonding should have triggered a new signer set in begin blocker
+	require.EqualValues(t, 3, gravityKeeper.GetLatestSignerSetTxNonce(ctx))
+	gravityKeeper.SignerSetExecuted(ctx, 3)
+
+	// with another round of begin/end blockers, signer set 2 should be pruned, but not it's completed otx.
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	gravity.BeginBlocker(ctx, gravityKeeper)
+	gravity.EndBlocker(ctx, gravityKeeper)
+
+	require.Nil(t, gravityKeeper.GetOutgoingTx(ctx, signerSetExecuted.GetStoreIndex()))
+	require.NotNil(t, gravityKeeper.GetCompletedOutgoingTx(ctx, signerSetExecuted.GetStoreIndex()))
+	require.EqualValues(t, 3, gravityKeeper.GetLatestSignerSetTxNonce(ctx))
+
+	// validator 3 should be slashed for not signing the signer set txs
+	require.True(t, input.StakingKeeper.Validator(ctx, keeper.ValAddrs[2]).IsJailed())
 }
 
 func TestSignerSetTxEmission(t *testing.T) {

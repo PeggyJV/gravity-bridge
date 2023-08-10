@@ -3,8 +3,10 @@ package gravity.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
 import "gravity/v1/genesis.proto";
 import "gravity/v1/gravity.proto";
 import "gravity/v1/msgs.proto";
@@ -16,36 +18,26 @@ service Query {
 
   // Module parameters query
   rpc Params(ParamsRequest) returns (ParamsResponse) {
-    // option (google.api.http).get = "/gravity/v1/params";
   }
 
   // get info on individual outgoing data
   rpc SignerSetTx(SignerSetTxRequest) returns (SignerSetTxResponse) {
-    // option (google.api.http).get = "/gravity/v1/signer_set";
   }
   rpc LatestSignerSetTx(LatestSignerSetTxRequest)
       returns (SignerSetTxResponse) {
-    // option (google.api.http).get = "/gravity/v1/signer_set/latest";
   }
   rpc BatchTx(BatchTxRequest) returns (BatchTxResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/batch_txs/{token_contract}/{nonce}";
   }
   rpc ContractCallTx(ContractCallTxRequest) returns (ContractCallTxResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/contract_call_txs/{invalidation_id}/{invalidation_nonce}";
   }
 
   // get collections of outgoing traffic from the bridge
   rpc SignerSetTxs(SignerSetTxsRequest) returns (SignerSetTxsResponse) {
-    // option (google.api.http).get = "/gravity/v1/signer_sets";
   }
   rpc BatchTxs(BatchTxsRequest) returns (BatchTxsResponse) {
-    // option (google.api.http).get = "/gravity/v1/batch/batch_txs";
   }
   rpc ContractCallTxs(ContractCallTxsRequest)
       returns (ContractCallTxsResponse) {
-    // option (google.api.http).get = "/gravity/v1/batch/contract_call_txs";
   }
 
   // ethereum signature queries so validators can construct valid etherum
@@ -54,18 +46,12 @@ service Query {
   // TODO: can/should we group these into one endpoint?
   rpc SignerSetTxConfirmations(SignerSetTxConfirmationsRequest)
       returns (SignerSetTxConfirmationsResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/signer_sets/ethereum_signatures";
   }
   rpc BatchTxConfirmations(BatchTxConfirmationsRequest)
       returns (BatchTxConfirmationsResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/batch_txs/ethereum_signatures";
   }
   rpc ContractCallTxConfirmations(ContractCallTxConfirmationsRequest)
       returns (ContractCallTxConfirmationsResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/logic_calls/ethereum_signatures";
   }
 
   // ^^^^^^^^^^^^ seem okay for now ^^^^^^
@@ -75,84 +61,93 @@ service Query {
   // TODO: can/should we group this into one endpoint?
   rpc UnsignedSignerSetTxs(UnsignedSignerSetTxsRequest)
       returns (UnsignedSignerSetTxsResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/SignerSetTxs/{address}/pending";
   }
   rpc UnsignedBatchTxs(UnsignedBatchTxsRequest)
       returns (UnsignedBatchTxsResponse) {
-    // option (google.api.http).get = "/gravity/v1/batches/{address}/pending";
   }
   rpc UnsignedContractCallTxs(UnsignedContractCallTxsRequest)
       returns (UnsignedContractCallTxsResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/ContractCallTxs/{address}/pending";
   }
 
   rpc LastSubmittedEthereumEvent(LastSubmittedEthereumEventRequest)
       returns (LastSubmittedEthereumEventResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/oracle/event_nonce/{address}";
   }
 
   // Queries the fees for all pending batches, results are returned in sdk.Coin
   // (fee_amount_int)(contract_address) style
   rpc BatchTxFees(BatchTxFeesRequest) returns (BatchTxFeesResponse) {
-    // option (google.api.http).get = "/gravity/v1/batches/fees";
   }
 
   // Query for info about denoms tracked by gravity
   rpc ERC20ToDenom(ERC20ToDenomRequest) returns (ERC20ToDenomResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/cosmos_originated/erc20_to_denom";
   }
 
   // DenomToERC20Params implements a query that allows ERC-20 parameter
   // information to be retrieved by a Cosmos base denomination.
   rpc DenomToERC20Params(DenomToERC20ParamsRequest)
-      returns (DenomToERC20ParamsResponse) {}
+      returns (DenomToERC20ParamsResponse) {
+  }
 
   // Query for info about denoms tracked by gravity
   rpc DenomToERC20(DenomToERC20Request) returns (DenomToERC20Response) {
-    // option (google.api.http).get =
-    // "/gravity/v1/cosmos_originated/denom_to_erc20";
   }
   // Query for batch send to ethereums
   rpc BatchedSendToEthereums(BatchedSendToEthereumsRequest)
       returns (BatchedSendToEthereumsResponse) {
-    // option (google.api.http).get = "/gravity/v1/query_batched_send_to_eth";
   }
   // Query for unbatched send to ethereums
   rpc UnbatchedSendToEthereums(UnbatchedSendToEthereumsRequest)
       returns (UnbatchedSendToEthereumsResponse) {
-    // option (google.api.http).get = "/gravity/v1/query_unbatched_send_to_eth";
   }
 
   // delegate keys
   rpc DelegateKeysByValidator(DelegateKeysByValidatorRequest)
       returns (DelegateKeysByValidatorResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/delegate_keys/validator/{validator}";
   }
   rpc DelegateKeysByEthereumSigner(DelegateKeysByEthereumSignerRequest)
       returns (DelegateKeysByEthereumSignerResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/delegate_keys/ethereum/{ethereum_signer}";
   }
   rpc DelegateKeysByOrchestrator(DelegateKeysByOrchestratorRequest)
       returns (DelegateKeysByOrchestratorResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/delegate_keys/orchestrator/{orchestrator}";
   }
 
   rpc DelegateKeys(DelegateKeysRequest) returns (DelegateKeysResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/delegate_keys";
   }
 
   rpc LastObservedEthereumHeight(LastObservedEthereumHeightRequest)
       returns (LastObservedEthereumHeightResponse) {
-    // option (google.api.http).get =
-    // "/gravity/v1/last_observed_ethereum_height"
+  }
+
+  rpc CompletedSignerSetTxs(CompletedSignerSetTxsRequest)
+      returns (CompletedSignerSetTxsResponse) {
+  }
+
+  rpc CompletedBatchTxs(CompletedBatchTxsRequest)
+      returns (CompletedBatchTxsResponse) {
+  }
+
+  rpc CompletedContractCallTxs(CompletedContractCallTxsRequest)
+      returns (CompletedContractCallTxsResponse) {
+  }
+
+  rpc BatchTxConfirmationsByValidator(BatchTxConfirmationsByValidatorRequest)
+      returns (BatchTxConfirmationsByValidatorResponse) {
+  }
+
+  rpc ContractCallTxConfirmationsByValidator(ContractCallTxConfirmationsByValidatorRequest)
+      returns (ContractCallTxConfirmationsByValidatorResponse) {
+  }
+
+  rpc SignerSetTxConfirmationsByValidator(SignerSetTxConfirmationsByValidatorRequest)
+      returns (SignerSetTxConfirmationsByValidatorResponse) {
+  }
+
+  rpc EthereumEventVoteRecords(EthereumEventVoteRecordsRequest)
+      returns (EthereumEventVoteRecordsResponse) {
+  }
+
+  rpc EthereumEventVotes(EthereumEventVotesRequest)
+      returns (EthereumEventVotesResponse) {
   }
 }
 
@@ -330,4 +325,61 @@ message UnbatchedSendToEthereumsResponse {
 message LastObservedEthereumHeightRequest {}
 message LastObservedEthereumHeightResponse {
   LatestEthereumBlockHeight last_observed_ethereum_height = 1;
+}
+
+message CompletedBatchTxsRequest {}
+message CompletedBatchTxsResponse {
+  repeated BatchTx completed_batch_txs = 1;
+}
+
+message CompletedContractCallTxsRequest {}
+message CompletedContractCallTxsResponse {
+  repeated ContractCallTx completed_contract_call_txs = 1;
+}
+
+message CompletedSignerSetTxsRequest {}
+message CompletedSignerSetTxsResponse {
+  repeated SignerSetTx completed_signer_set_txs = 1;
+}
+
+message BatchTxConfirmationsByValidatorRequest {
+  string validator_address = 1;
+}
+
+message BatchTxConfirmationsByValidatorResponse {
+  repeated BatchTxConfirmation batch_tx_confirmations = 1;
+}
+
+message ContractCallTxConfirmationsByValidatorRequest {
+  string validator_address = 1;
+}
+
+message ContractCallTxConfirmationsByValidatorResponse {
+  repeated ContractCallTxConfirmation contract_call_tx_confirmations = 2;
+}
+
+message SignerSetTxConfirmationsByValidatorRequest {
+  string validator_address = 1;
+}
+
+message SignerSetTxConfirmationsByValidatorResponse {
+  repeated SignerSetTxConfirmation signer_set_tx_confirmations = 3;
+}
+
+message EthereumEventVoteRecordsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message EthereumEventVoteRecordsResponse {
+  repeated EthereumEventVoteRecord records = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message EthereumEventVotesRequest {
+  string validator_address = 1;
+}
+
+message EthereumEventVotesResponse {
+  repeated google.protobuf.Any events = 1
+      [ (cosmos_proto.accepts_interface) = "EthereumEvent" ];
 }

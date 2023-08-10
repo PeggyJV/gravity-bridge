@@ -281,7 +281,7 @@ jobs:
       - name: build go test binary
         run: cd integration_tests && go test -c
       - name: Run all up ci test
-        run: ./integration_tests/integration_tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m Test${{ matrix.test_type }}
+        run: ./integration_tests/integration-tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m Test${{ matrix.test_type }}
         env:
           E2E_SKIP_CLEANUP: true
           ARCHIVE_NODE_URL: https://eth-mainnet.alchemyapi.io/v2/${{ secrets.ALCHEMY_ID }}

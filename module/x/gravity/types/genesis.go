@@ -65,6 +65,12 @@ var (
 	//  ParamStoreUnbondSlashingSignerSetTxsWindow stores unbond slashing valset window
 	ParamStoreUnbondSlashingSignerSetTxsWindow = []byte("UnbondSlashingSignerSetTxsWindow")
 
+	// ParamStoreEventVoteWindow stores the event vote window
+	ParamStoreEventVoteWindow = []byte("EventVoteWindow")
+
+	//  ParamStoreUnbondSlashingSignerSetTxsWindow stores unbond slashing valset window
+	ParamStoreConfirmedOutgoingTxWindow = []byte("ConfirmedOutgoingTxWindow")
+
 	// Ensure that params implements the proper interface
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -134,6 +140,10 @@ func DefaultParams() *Params {
 		SlashFractionEthereumSignature:            sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		SlashFractionConflictingEthereumSignature: sdk.NewDec(1).Quo(sdk.NewDec(1000)),
 		UnbondSlashingSignerSetTxsWindow:          10000,
+
+		// EthereumEventWindow's units are ethereum blocks. Ethereum block time is ~12 seconds, about twice as long as Sommelier.
+		EthereumEventVoteWindow:   5000,
+		ConfirmedOutgoingTxWindow: 10000,
 	}
 }
 
@@ -184,6 +194,12 @@ func (p Params) ValidateBasic() error {
 	if err := validateUnbondSlashingSignerSetTxsWindow(p.UnbondSlashingSignerSetTxsWindow); err != nil {
 		return sdkerrors.Wrap(err, "unbond slashing signersettx window")
 	}
+	if err := validateEthereumEventVoteWindow(p.EthereumEventVoteWindow); err != nil {
+		return sdkerrors.Wrap(err, "event vote window")
+	}
+	if err := validateConfirmedOutgoingTxWindow(p.ConfirmedOutgoingTxWindow); err != nil {
+		return sdkerrors.Wrap(err, "confirmed outgoing tx window")
+	}
 
 	return nil
 }
@@ -212,6 +228,8 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionEthereumSignature, &p.SlashFractionEthereumSignature, validateSlashFractionEthereumSignature),
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionConflictingEthereumSignature, &p.SlashFractionConflictingEthereumSignature, validateSlashFractionConflictingEthereumSignature),
 		paramtypes.NewParamSetPair(ParamStoreUnbondSlashingSignerSetTxsWindow, &p.UnbondSlashingSignerSetTxsWindow, validateUnbondSlashingSignerSetTxsWindow),
+		paramtypes.NewParamSetPair(ParamStoreEventVoteWindow, &p.EthereumEventVoteWindow, validateEthereumEventVoteWindow),
+		paramtypes.NewParamSetPair(ParamStoreConfirmedOutgoingTxWindow, &p.ConfirmedOutgoingTxWindow, validateConfirmedOutgoingTxWindow),
 	}
 }
 
@@ -360,6 +378,13 @@ func validateSlashFractionConflictingEthereumSignature(i interface{}) error {
 	return nil
 }
 
+func validateEthereumEventVoteWindow(i interface{}) error {
+	if _, ok := i.(uint64); !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
 func strToFixByteArray(s string) ([32]byte, error) {
 	var out [32]byte
 	if len([]byte(s)) > 32 {
@@ -375,4 +400,12 @@ func byteArrayToFixByteArray(b []byte) (out [32]byte, err error) {
 	}
 	copy(out[:], b)
 	return out, nil
+}
+
+func validateConfirmedOutgoingTxWindow(i interface{}) error {
+	// TODO: do we want to set some bounds on this value?
+	if _, ok := i.(uint64); !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
 }

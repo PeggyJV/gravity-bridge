@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -80,7 +81,7 @@ func TestAttestationIterator(t *testing.T) {
 	input.GravityKeeper.setEthereumEventVoteRecord(ctx, dep2.EventNonce, dep2.Hash(), att2)
 
 	var atts []*types.EthereumEventVoteRecord
-	input.GravityKeeper.iterateEthereumEventVoteRecords(ctx, func(_ []byte, att *types.EthereumEventVoteRecord) bool {
+	input.GravityKeeper.IterateEthereumEventVoteRecords(ctx, func(_ []byte, att *types.EthereumEventVoteRecord) bool {
 		atts = append(atts, att)
 		return false
 	})
@@ -235,7 +236,7 @@ func TestLastSlashedValsetNonce(t *testing.T) {
 	//  lastSlashedValsetNonce should be zero initially.
 	lastSlashedValsetNonce := k.GetLastSlashedOutgoingTxBlockHeight(ctx)
 	assert.Equal(t, uint64(0), lastSlashedValsetNonce)
-	unslashedValsets := k.GetUnSlashedOutgoingTxs(ctx, uint64(12))
+	unslashedValsets := k.GetUnslashedOutgoingTxs(ctx, uint64(12))
 	assert.Equal(t, 9, len(unslashedValsets))
 
 	// check if last Slashed Valset nonce is set properly or not
@@ -244,19 +245,19 @@ func TestLastSlashedValsetNonce(t *testing.T) {
 	assert.Equal(t, uint64(3), lastSlashedValsetNonce)
 
 	// when maxHeight < lastSlashedValsetNonce, len(unslashedValsets) should be zero
-	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, uint64(2))
+	unslashedValsets = k.GetUnslashedOutgoingTxs(ctx, uint64(2))
 	assert.Equal(t, 0, len(unslashedValsets))
 
 	// when maxHeight == lastSlashedValsetNonce, len(unslashedValsets) should be zero
-	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, uint64(3))
+	unslashedValsets = k.GetUnslashedOutgoingTxs(ctx, uint64(3))
 	assert.Equal(t, 0, len(unslashedValsets))
 
 	// when maxHeight > lastSlashedValsetNonce && maxHeight <= latestValsetNonce
-	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, uint64(6))
+	unslashedValsets = k.GetUnslashedOutgoingTxs(ctx, uint64(6))
 	assert.Equal(t, 2, len(unslashedValsets))
 
 	// when maxHeight > latestValsetNonce
-	unslashedValsets = k.GetUnSlashedOutgoingTxs(ctx, uint64(15))
+	unslashedValsets = k.GetUnslashedOutgoingTxs(ctx, uint64(15))
 	assert.Equal(t, 6, len(unslashedValsets))
 }
 
@@ -666,6 +667,118 @@ func TestKeeper_Migration(t *testing.T) {
 		require.Len(t, got, 0)
 	}
 
+}
+
+func TestEthereumSignatureIterators(t *testing.T) {
+	input := CreateTestEnv(t)
+	ctx := input.Context
+	k := input.GravityKeeper
+
+	// add some signatures to the store
+	valAddr, err := sdk.ValAddressFromBech32("cosmosvaloper1jpz0ahls2chajf78nkqczdwwuqcu97w6z3plt4")
+	require.NoError(t, err)
+	signer := common.HexToAddress("0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+	k.setValidatorEthereumAddress(ctx, valAddr, signer)
+	b1 := &types.BatchTxConfirmation{
+		TokenContract:  "0x1111111111111111111111111111111111111111",
+		BatchNonce:     1,
+		EthereumSigner: signer.Hex(),
+		Signature:      []byte("batch-signature-1"),
+	}
+	b2 := &types.BatchTxConfirmation{
+		TokenContract:  "0x2222222222222222222222222222222222222222",
+		BatchNonce:     2,
+		EthereumSigner: signer.Hex(),
+		Signature:      []byte("batch-signature-2"),
+	}
+	k.SetEthereumSignature(ctx, b1, valAddr)
+	k.SetEthereumSignature(ctx, b2, valAddr)
+
+	iterationCount := 0
+	var batchSigs []*types.BatchTxConfirmation
+	k.IterateBatchTxEthereumSignatures(ctx, func(contractAddr common.Address, nonce uint64, val sdk.ValAddress, sig []byte) bool {
+		iterationCount++
+		batchSigs = append(batchSigs, &types.BatchTxConfirmation{
+			TokenContract:  contractAddr.Hex(),
+			BatchNonce:     nonce,
+			EthereumSigner: k.GetValidatorEthereumAddress(ctx, valAddr).Hex(),
+			Signature:      sig,
+		})
+		return false
+	})
+
+	require.Len(t, batchSigs, 2)
+	require.Equal(t, iterationCount, len(batchSigs))
+	require.Equal(t, batchSigs[0], b1)
+	require.Equal(t, batchSigs[1], b2)
+
+	// ContractCallTxConfirmations
+
+	scope := crypto.Keccak256Hash([]byte("test-scope")).Bytes()
+	cc1 := &types.ContractCallTxConfirmation{
+		InvalidationScope: scope,
+		InvalidationNonce: 1,
+		EthereumSigner:    signer.Hex(),
+		Signature:         []byte("contract-call-signature-1"),
+	}
+	cc2 := &types.ContractCallTxConfirmation{
+		InvalidationScope: scope,
+		InvalidationNonce: 2,
+		EthereumSigner:    signer.Hex(),
+		Signature:         []byte("contract-call-signature-2"),
+	}
+	k.SetEthereumSignature(ctx, cc1, valAddr)
+	k.SetEthereumSignature(ctx, cc2, valAddr)
+
+	iterationCount = 0
+	var ccSigs []*types.ContractCallTxConfirmation
+	k.IterateContractCallTxEthereumSignatures(ctx, func(invalidationScope []byte, invalidationNonce uint64, val sdk.ValAddress, sig []byte) bool {
+		iterationCount++
+		ccSigs = append(ccSigs, &types.ContractCallTxConfirmation{
+			InvalidationScope: invalidationScope,
+			InvalidationNonce: invalidationNonce,
+			EthereumSigner:    k.GetValidatorEthereumAddress(ctx, valAddr).Hex(),
+			Signature:         sig,
+		})
+		return false
+	})
+
+	require.Len(t, ccSigs, 2)
+	require.Equal(t, iterationCount, len(ccSigs))
+	require.Equal(t, ccSigs[0], cc1)
+	require.Equal(t, ccSigs[1], cc2)
+
+	// SignerSetTxConfirmations
+
+	ss1 := &types.SignerSetTxConfirmation{
+		SignerSetNonce: 1,
+		EthereumSigner: signer.Hex(),
+		Signature:      []byte("signer-set-signature-1"),
+	}
+	ss2 := &types.SignerSetTxConfirmation{
+		SignerSetNonce: 2,
+		EthereumSigner: signer.Hex(),
+		Signature:      []byte("signer-set-signature-2"),
+	}
+	k.SetEthereumSignature(ctx, ss1, valAddr)
+	k.SetEthereumSignature(ctx, ss2, valAddr)
+
+	iterationCount = 0
+	var ssSigs []*types.SignerSetTxConfirmation
+	k.IterateSignerSetTxEthereumSignatures(ctx, func(nonce uint64, val sdk.ValAddress, sig []byte) bool {
+		iterationCount++
+		ssSigs = append(ssSigs, &types.SignerSetTxConfirmation{
+			SignerSetNonce: nonce,
+			EthereumSigner: k.GetValidatorEthereumAddress(ctx, valAddr).Hex(),
+			Signature:      sig,
+		})
+		return false
+	})
+
+	require.Len(t, ssSigs, 2)
+	require.Equal(t, iterationCount, len(ssSigs))
+	require.Equal(t, ssSigs[0], ss1)
+	require.Equal(t, ssSigs[1], ss2)
 }
 
 // TODO(levi) review/ensure coverage for:
