@@ -35,7 +35,7 @@ var (
 	// ParamsStoreKeySignedSignerSetTxsWindow stores the signed blocks window
 	ParamsStoreKeySignedSignerSetTxsWindow = []byte("SignedSignerSetTxWindow")
 
-	// ParamsStoreKeyConfirmedOutgoingTxWindow stores the signed blocks window
+	// ParamsStoreKeySignedBatchesWindow stores the signed blocks window
 	ParamsStoreKeySignedBatchesWindow = []byte("SignedBatchesWindow")
 
 	// ParamsStoreKeyEthereumSignaturesWindow stores the signed blocks window
