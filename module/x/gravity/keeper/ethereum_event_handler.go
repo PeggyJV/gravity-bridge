@@ -74,7 +74,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 		return nil
 
 	case *types.SignerSetTxExecutedEvent:
-		k.signerSetExecuted(ctx, event.GetEventNonce())
+		k.SignerSetExecuted(ctx, event.GetEventNonce())
 		k.AfterSignerSetExecutedEvent(ctx, *event)
 		return nil
 

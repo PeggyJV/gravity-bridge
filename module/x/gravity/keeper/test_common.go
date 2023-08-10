@@ -187,7 +187,7 @@ var (
 		BridgeChainId:                             11,
 		ConfirmedOutgoingTxWindow:                 10,
 		SignedSignerSetTxsWindow:                  10,
-		UnbondSlashingSignerSetTxsWindow:          15,
+		UnbondSlashingSignerSetTxsWindow:          10,
 		EthereumSignaturesWindow:                  10,
 		TargetEthTxTimeout:                        60001,
 		AverageBlockTime:                          5000,

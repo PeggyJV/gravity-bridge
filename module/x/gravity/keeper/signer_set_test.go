@@ -22,7 +22,7 @@ func TestSignerSetTxExecuted(t *testing.T) {
 
 	assert.NotNil(t, sstx)
 
-	input.GravityKeeper.signerSetExecuted(ctx, 1)
+	input.GravityKeeper.SignerSetExecuted(ctx, 1)
 
 	otx := input.GravityKeeper.GetOutgoingTx(ctx, types.MakeSignerSetTxKey(1))
 

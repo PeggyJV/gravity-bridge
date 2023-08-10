@@ -11,7 +11,7 @@ import (
 // TODO here we should check the contents of the validator set against
 // the store, if they differ we should take some action to indicate to the
 // user that bridge highjacking has occurred
-func (k Keeper) signerSetExecuted(ctx sdk.Context, nonce uint64) {
+func (k Keeper) SignerSetExecuted(ctx sdk.Context, nonce uint64) {
 	otx := k.GetOutgoingTx(ctx, types.MakeSignerSetTxKey(nonce))
 	if otx == nil {
 		k.Logger(ctx).Error("Failed to clean signer sets",
