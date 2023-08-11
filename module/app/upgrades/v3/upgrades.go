@@ -1,0 +1,20 @@
+package v3
+
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+)
+
+func CreateUpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	bankKeeper bankkeeper.Keeper,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx.Logger().Info("v3 upgrade: entering handler")
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}

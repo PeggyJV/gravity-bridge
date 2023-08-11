@@ -82,6 +82,7 @@ import (
 	"github.com/gorilla/mux"
 	gravityparams "github.com/peggyjv/gravity-bridge/module/v3/app/params"
 	v2 "github.com/peggyjv/gravity-bridge/module/v3/app/upgrades/v2"
+	v3 "github.com/peggyjv/gravity-bridge/module/v3/app/upgrades/v3"
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity"
 	gravityclient "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/client"
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/keeper"
@@ -835,6 +836,15 @@ func (app *Gravity) setupUpgradeHandlers() {
 	app.upgradeKeeper.SetUpgradeHandler(
 		v2.UpgradeName,
 		v2.CreateUpgradeHandler(
+			app.mm,
+			app.configurator,
+			app.bankKeeper,
+		),
+	)
+
+	app.upgradeKeeper.SetUpgradeHandler(
+		v3.UpgradeName,
+		v3.CreateUpgradeHandler(
 			app.mm,
 			app.configurator,
 			app.bankKeeper,

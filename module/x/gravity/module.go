@@ -137,6 +137,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/gravity from version 1 to 2: %v", err))
 	}
+	
+    // The 2-to-3 migration is a no-op because there are no required store migration steps
+    cfg.RegisterMigration(types.ModuleName, 2, func (ctx sdk.Context) error {
+        return nil
+    })
 }
 
 // InitGenesis initializes the genesis state for this module and implements app module.
