@@ -12,12 +12,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	ModuleName = "gravity"
+)
+
 func TestStoreMigration(t *testing.T) {
-	gravityKey := storetypes.NewKVStoreKey(v2.ModuleName)
+	gravityKey := storetypes.NewKVStoreKey(ModuleName)
 	tGravityKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(gravityKey, tGravityKey)
 	aminoCodec := codec.NewLegacyAmino()
-	paramstore := paramtypes.NewSubspace(nil, aminoCodec, gravityKey, tGravityKey, v2.ModuleName)
+	paramstore := paramtypes.NewSubspace(nil, aminoCodec, gravityKey, tGravityKey, ModuleName)
 
 	// Check no params
 	require.False(t, paramstore.Has(ctx, types.ParamStoreConfirmedOutgoingTxWindow))
