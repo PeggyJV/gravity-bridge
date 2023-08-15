@@ -847,7 +847,6 @@ func (app *Gravity) setupUpgradeHandlers() {
 		v3.CreateUpgradeHandler(
 			app.mm,
 			app.configurator,
-			app.bankKeeper,
 		),
 	)
 }
