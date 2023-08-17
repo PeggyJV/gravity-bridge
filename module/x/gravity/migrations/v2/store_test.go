@@ -28,7 +28,7 @@ func TestStoreMigration(t *testing.T) {
 	require.False(t, paramstore.Has(ctx, types.ParamStoreEventVoteWindow))
 
 	// Run migrations.
-	err := v2.MigrateParamStore(ctx, paramstore)
+	err := v2.MigrateParamStore(ctx, &paramstore)
 	require.NoError(t, err)
 
 	// Make sure the new params are set.
