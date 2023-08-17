@@ -6,13 +6,12 @@ import (
 	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
 )
 
-func MigrateParamStore(ctx sdktypes.Context, subspace *paramstypes.Subspace) error {
-	if subspace.HasKeyTable() {
+func MigrateParamStore(ctx sdktypes.Context, subspace paramstypes.Subspace) error {
+	// Don't want to overwrite values if they were set in an upgrade handler
+	if !subspace.Has(ctx, types.ParamStoreConfirmedOutgoingTxWindow) {
 		subspace.Set(ctx, types.ParamStoreConfirmedOutgoingTxWindow, types.DefaultParams().ConfirmedOutgoingTxWindow)
-		subspace.Set(ctx, types.ParamStoreEventVoteWindow, types.DefaultParams().EthereumEventVoteWindow)
-	} else {
-		subspace.WithKeyTable(types.ParamKeyTable())
-		subspace.Set(ctx, types.ParamStoreConfirmedOutgoingTxWindow, types.DefaultParams().ConfirmedOutgoingTxWindow)
+	}
+	if !subspace.Has(ctx, types.ParamStoreEventVoteWindow) {
 		subspace.Set(ctx, types.ParamStoreEventVoteWindow, types.DefaultParams().EthereumEventVoteWindow)
 	}
 
