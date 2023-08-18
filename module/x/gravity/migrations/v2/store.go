@@ -11,8 +11,8 @@ func MigrateParamStore(ctx sdktypes.Context, subspace paramstypes.Subspace) erro
 	if !subspace.Has(ctx, types.ParamStoreConfirmedOutgoingTxWindow) {
 		subspace.Set(ctx, types.ParamStoreConfirmedOutgoingTxWindow, types.DefaultParams().ConfirmedOutgoingTxWindow)
 	}
-	if !subspace.Has(ctx, types.ParamStoreEventVoteWindow) {
-		subspace.Set(ctx, types.ParamStoreEventVoteWindow, types.DefaultParams().EthereumEventVoteWindow)
+	if !subspace.Has(ctx, types.ParamStoreEthereumEventVoteWindow) {
+		subspace.Set(ctx, types.ParamStoreEthereumEventVoteWindow, types.DefaultParams().EthereumEventVoteWindow)
 	}
 
 	return nil
