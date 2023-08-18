@@ -8,7 +8,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.22
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.1
 	github.com/ory/dockertest/v3 v3.10.0
-	github.com/peggyjv/gravity-bridge/module/v3 v3.0.0
+	github.com/peggyjv/gravity-bridge/module/v4 v4.0.0
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.34.22
@@ -166,4 +166,4 @@ replace github.com/tendermint/tendermint => github.com/informalsystems/tendermin
 
 replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 
-replace github.com/peggyjv/gravity-bridge/module/v3 => ../module
+replace github.com/peggyjv/gravity-bridge/module/v4 => ../module

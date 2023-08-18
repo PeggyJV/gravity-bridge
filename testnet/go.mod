@@ -8,7 +8,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/ethereum/go-ethereum v1.10.22
 	github.com/ory/dockertest/v3 v3.6.5
-	github.com/peggyjv/gravity-bridge/module/v3 v3.0.0-20230420190248-79b4b232781d
+	github.com/peggyjv/gravity-bridge/module/v4 v3.0.0-20230420190248-79b4b232781d
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.34.22
 )

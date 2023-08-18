@@ -7,8 +7,8 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	v2 "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/migrations/v2"
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
+	v2 "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/migrations/v2"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 	"github.com/stretchr/testify/require"
 )
 

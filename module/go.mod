@@ -1,4 +1,4 @@
-module github.com/peggyjv/gravity-bridge/module/v3
+module github.com/peggyjv/gravity-bridge/module/v4
 
 go 1.18
 

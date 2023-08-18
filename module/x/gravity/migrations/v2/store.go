@@ -3,7 +3,7 @@ package v2
 import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
 
 func MigrateParamStore(ctx sdktypes.Context, subspace paramstypes.Subspace) error {

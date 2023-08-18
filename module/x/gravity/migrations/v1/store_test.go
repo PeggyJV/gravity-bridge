@@ -5,9 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	v1 "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/migrations/v1"
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/migrations/v1/keeper"
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/migrations/v1/types"
+	v1 "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/migrations/v1"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/migrations/v1/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/migrations/v1/types"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -21,9 +21,9 @@ import (
 	sdkTx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/peggyjv/gravity-bridge/module/v3/app"
-	"github.com/peggyjv/gravity-bridge/module/v3/app/params"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v4/app"
+	"github.com/peggyjv/gravity-bridge/module/v4/app/params"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
