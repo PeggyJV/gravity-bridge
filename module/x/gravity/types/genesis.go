@@ -65,8 +65,8 @@ var (
 	//  ParamStoreUnbondSlashingSignerSetTxsWindow stores unbond slashing valset window
 	ParamStoreUnbondSlashingSignerSetTxsWindow = []byte("UnbondSlashingSignerSetTxsWindow")
 
-	// ParamStoreEventVoteWindow stores the event vote window
-	ParamStoreEventVoteWindow = []byte("EventVoteWindow")
+	// ParamStoreEthereumEventVoteWindow stores the event vote window
+	ParamStoreEthereumEventVoteWindow = []byte("EthereumEventVoteWindow")
 
 	//  ParamStoreUnbondSlashingSignerSetTxsWindow stores unbond slashing valset window
 	ParamStoreConfirmedOutgoingTxWindow = []byte("ConfirmedOutgoingTxWindow")
@@ -228,7 +228,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionEthereumSignature, &p.SlashFractionEthereumSignature, validateSlashFractionEthereumSignature),
 		paramtypes.NewParamSetPair(ParamsStoreSlashFractionConflictingEthereumSignature, &p.SlashFractionConflictingEthereumSignature, validateSlashFractionConflictingEthereumSignature),
 		paramtypes.NewParamSetPair(ParamStoreUnbondSlashingSignerSetTxsWindow, &p.UnbondSlashingSignerSetTxsWindow, validateUnbondSlashingSignerSetTxsWindow),
-		paramtypes.NewParamSetPair(ParamStoreEventVoteWindow, &p.EthereumEventVoteWindow, validateEthereumEventVoteWindow),
+		paramtypes.NewParamSetPair(ParamStoreEthereumEventVoteWindow, &p.EthereumEventVoteWindow, validateEthereumEventVoteWindow),
 		paramtypes.NewParamSetPair(ParamStoreConfirmedOutgoingTxWindow, &p.ConfirmedOutgoingTxWindow, validateConfirmedOutgoingTxWindow),
 	}
 }
