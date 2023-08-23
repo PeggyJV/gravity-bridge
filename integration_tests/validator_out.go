@@ -30,7 +30,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 
 		// send from val 0 on eth to val 1 on cosmos
 		s.T().Logf("sending to cosmos")
-		err = s.sendToCosmos(s.chain.validators[1].keyInfo.GetAddress(), sdk.NewInt(200))
+		err = s.sendToCosmos(s.chain.validators[1].address(), sdk.NewInt(200))
 		s.Require().NoError(err, "error sending test denom to cosmos")
 
 		var gravityDenom string
@@ -38,13 +38,13 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			val := s.chain.validators[0]
 			kb, err := val.keyring()
 			s.Require().NoError(err)
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", val.keyInfo.GetAddress())
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", val.address())
 			s.Require().NoError(err)
 
 			bankQueryClient := banktypes.NewQueryClient(clientCtx)
 			res, err := bankQueryClient.AllBalances(context.Background(),
 				&banktypes.QueryAllBalancesRequest{
-					Address: s.chain.validators[1].keyInfo.GetAddress().String(),
+					Address: s.chain.validators[1].address().String(),
 				})
 			if err != nil {
 				return false
@@ -75,7 +75,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 
 		s.T().Logf("submitting SendToEthereum")
 		sendToEthereumMsg := types.NewMsgSendToEthereum(
-			s.chain.validators[1].keyInfo.GetAddress(),
+			s.chain.validators[1].address(),
 			s.chain.validators[1].ethereumKey.address,
 			sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(100)},
 			sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(1)},
@@ -88,7 +88,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			val := s.chain.validators[1]
 			keyring, err := val.keyring()
 			s.Require().NoError(err)
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", val.keyInfo.GetAddress())
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", val.address())
 			s.Require().NoError(err)
 
 			response, err := s.chain.sendMsgs(*clientCtx, sendToEthereumMsg)
@@ -111,7 +111,7 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			keyRing, err := s.chain.validators[3].keyring()
 			s.Require().NoError(err)
 
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyRing, "val", s.chain.validators[3].keyInfo.GetAddress())
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyRing, "val", s.chain.validators[3].address())
 			s.Require().NoError(err)
 			queryClient := types.NewQueryClient(clientCtx)
 			res, err := queryClient.BatchTxConfirmations(context.Background(), &types.BatchTxConfirmationsRequest{BatchNonce: 1, TokenContract: testERC20contract.String()})
@@ -125,32 +125,32 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			keyring, err := orchKey.keyring()
 			s.Require().NoError(err)
 
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", s.chain.validators[3].keyInfo.GetAddress())
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", s.chain.validators[3].address())
 			s.Require().NoError(err)
 			newQ := stakingtypes.NewQueryClient(clientCtx)
 
-			val0, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[0].keyInfo.GetAddress()).String()})
+			val0, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[0].address()).String()})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
 			s.Require().False(val0.GetValidator().IsJailed())
 
-			val1, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[1].keyInfo.GetAddress()).String()})
+			val1, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[1].address()).String()})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
 			s.Require().False(val1.GetValidator().IsJailed())
 
-			val2, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[2].keyInfo.GetAddress()).String()})
+			val2, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[2].address()).String()})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
 			s.Require().False(val2.GetValidator().IsJailed())
 
-			val3, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[3].keyInfo.GetAddress()).String()})
+			val3, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[3].address()).String()})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
