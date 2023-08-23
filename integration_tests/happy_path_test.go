@@ -29,36 +29,36 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		for _, val := range s.chain.validators {
 			kb, err := val.keyring()
 			s.Require().NoError(err)
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", val.keyInfo.GetAddress())
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", val.address())
 			s.Require().NoError(err)
 
 			queryClient := banktypes.NewQueryClient(clientCtx)
 			res, err := queryClient.AllBalances(context.Background(),
 				&banktypes.QueryAllBalancesRequest{
-					Address: s.chain.validators[1].keyInfo.GetAddress().String(),
+					Address: s.chain.validators[1].address().String(),
 				})
 			s.Require().NoError(err)
-			s.T().Logf("balances for %s: %s", val.keyInfo.GetAddress().String(), res.Balances)
+			s.T().Logf("balances for %s: %s", val.address().String(), res.Balances)
 		}
 
 		// send from val 0 on eth to val 1 on cosmos
 		s.T().Logf("sending to cosmos")
-		err = s.sendToCosmos(s.chain.validators[1].keyInfo.GetAddress(), sdk.NewInt(200))
+		err = s.sendToCosmos(s.chain.validators[1].address(), sdk.NewInt(200))
 		s.Require().NoError(err, "error sending test denom to cosmos")
 
 		for _, val := range s.chain.validators {
 			kb, err := val.keyring()
 			s.Require().NoError(err)
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", val.keyInfo.GetAddress())
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", val.address())
 			s.Require().NoError(err)
 
 			queryClient := banktypes.NewQueryClient(clientCtx)
 			res, err := queryClient.AllBalances(context.Background(),
 				&banktypes.QueryAllBalancesRequest{
-					Address: s.chain.validators[1].keyInfo.GetAddress().String(),
+					Address: s.chain.validators[1].address().String(),
 				})
 			s.Require().NoError(err)
-			s.T().Logf("balances for %s: %s", val.keyInfo.GetAddress().String(), res.Balances)
+			s.T().Logf("balances for %s: %s", val.address().String(), res.Balances)
 		}
 
 		var gravityDenom string
@@ -66,13 +66,13 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			val := s.chain.validators[0]
 			kb, err := val.keyring()
 			s.Require().NoError(err)
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", val.keyInfo.GetAddress())
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", val.address())
 			s.Require().NoError(err)
 
 			bankQueryClient := banktypes.NewQueryClient(clientCtx)
 			res, err := bankQueryClient.AllBalances(context.Background(),
 				&banktypes.QueryAllBalancesRequest{
-					Address: s.chain.validators[1].keyInfo.GetAddress().String(),
+					Address: s.chain.validators[1].address().String(),
 				})
 			if err != nil {
 				return false
@@ -103,7 +103,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 		s.T().Logf("sending to ethereum")
 		sendToEthereumMsg := types.NewMsgSendToEthereum(
-			s.chain.validators[1].keyInfo.GetAddress(),
+			s.chain.validators[1].address(),
 			s.chain.validators[1].ethereumKey.address,
 			sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(100)},
 			sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(1)},
@@ -113,7 +113,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			val := s.chain.validators[1]
 			keyring, err := val.keyring()
 			s.Require().NoError(err)
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", val.keyInfo.GetAddress())
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", val.address())
 			s.Require().NoError(err)
 
 			response, err := s.chain.sendMsgs(*clientCtx, sendToEthereumMsg)
@@ -124,7 +124,8 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			if response.Code != 0 {
 				if response.Code != 32 {
 					s.T().Log(response)
-				}
+				} 
+
 				return false
 			}
 			return true
@@ -132,12 +133,12 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 		s.T().Logf("funding community pool")
 		orch := s.chain.orchestrators[0]
-		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", orch.keyring, "orch", orch.keyInfo.GetAddress())
+		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", orch.keyring, "orch", orch.address())
 		s.Require().NoError(err)
 
 		fundCommunityPoolMsg := distrtypes.NewMsgFundCommunityPool(
 			sdk.NewCoins(sdk.NewCoin(testDenom, sdk.NewInt(1000000000))),
-			orch.keyInfo.GetAddress(),
+			orch.address(),
 		)
 
 		s.Require().Eventuallyf(func() bool {
@@ -200,7 +201,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 		s.T().Logf("create governance proposal to fund an ethereum address")
 		orch = s.chain.orchestrators[0]
-		clientCtx, err = s.chain.clientContext("tcp://localhost:26657", orch.keyring, "orch", orch.keyInfo.GetAddress())
+		clientCtx, err = s.chain.clientContext("tcp://localhost:26657", orch.keyring, "orch", orch.address())
 		s.Require().NoError(err)
 
 		sendAmount := int64(900000000)
@@ -220,7 +221,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 					Amount: sdk.NewInt(2),
 				},
 			},
-			orch.keyInfo.GetAddress(),
+			orch.address(),
 		)
 		s.Require().NoError(err, "unable to create governance proposal")
 
@@ -241,10 +242,10 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		for _, val := range s.chain.validators {
 			kr, err := val.keyring()
 			s.Require().NoError(err)
-			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kr, "val", val.keyInfo.GetAddress())
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kr, "val", val.address())
 			s.Require().NoError(err)
 
-			voteMsg := govtypesv1beta1.NewMsgVote(val.keyInfo.GetAddress(), 1, govtypesv1beta1.OptionYes)
+			voteMsg := govtypesv1beta1.NewMsgVote(val.address(), 1, govtypesv1beta1.OptionYes)
 			voteResponse, err := s.chain.sendMsgs(*clientCtx, voteMsg)
 			s.Require().NoError(err)
 			s.Require().Zero(voteResponse.Code, "vote error: %s", voteResponse.RawLog)
