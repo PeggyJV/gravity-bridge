@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -81,6 +82,7 @@ import (
 	ibcporttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
+	"github.com/gorilla/mux"
 	gravityparams "github.com/peggyjv/gravity-bridge/module/v4/app/params"
 	v2 "github.com/peggyjv/gravity-bridge/module/v4/app/upgrades/v2"
 	v3 "github.com/peggyjv/gravity-bridge/module/v4/app/upgrades/v3"
@@ -88,6 +90,7 @@ import (
 	gravityclient "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/client"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/keeper"
 	gravitytypes "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
+	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
@@ -746,8 +749,30 @@ func (app *Gravity) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
 
-// RegisterAPIRoutes implements the Application.RegisterAPIRoutes method.
-func (app *Gravity) RegisterAPIRoutes(*api.Server, config.APIConfig) {}
+// API server.
+func (app *Gravity) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
+	clientCtx := apiSvr.ClientCtx
+
+	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// TODO: build the custom gravity swagger files and add here?
+	if apiConfig.Swagger {
+		RegisterSwaggerAPI(clientCtx, apiSvr.Router)
+	}
+}
+
+// RegisterSwaggerAPI registers swagger route with API Server
+// TODO: build the custom gravity swagger files and add here?
+func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
+	statikFS, err := fs.New()
+	if err != nil {
+		panic(err)
+	}
+
+	staticServer := http.FileServer(statikFS)
+	rtr.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticServer))
+}
 
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *Gravity) RegisterTxService(clientCtx client.Context) {
