@@ -113,17 +113,17 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	// coins aren't being fraudlently minted etc...
 }
 
-// Route implements app module
+// DEPRECATED Route implements app module
 func (am AppModule) Route() sdk.Route {
 	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
-// QuerierRoute implements app module
+// DEPRECATED QuerierRoute implements app module
 func (am AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// LegacyQuerierHandler returns the distribution module sdk.Querier.
+// DEPRECATED LegacyQuerierHandler returns the distribution module sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return nil
 }

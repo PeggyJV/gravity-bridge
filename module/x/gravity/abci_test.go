@@ -37,9 +37,7 @@ func TestSignerSetTxCreationUponUnbonding(t *testing.T) {
 
 	input.Context = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	// begin unbonding
-	sh := staking.NewHandler(input.StakingKeeper)
-	undelegateMsg := keeper.NewTestMsgUnDelegateValidator(keeper.ValAddrs[0], keeper.StakingAmount)
-	sh(input.Context, undelegateMsg)
+	input.StakingKeeper.Undelegate(input.Context, sdk.AccAddress(keeper.ValAddrs[0]), keeper.ValAddrs[0], sdk.NewDec(keeper.StakingAmount.Int64()))
 
 	// Run the staking endblocker to ensure signer set tx is set in state
 	staking.EndBlocker(input.Context, input.StakingKeeper)
@@ -132,11 +130,8 @@ func TestSignerSetTxSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testi
 	// Validator-1  Unbond slash window is not expired. if not attested, slash
 	// Validator-2  Unbond slash window is not expired. if attested, don't slash
 	input.Context = ctx.WithBlockHeight(valUnbondingHeight)
-	sh := staking.NewHandler(input.StakingKeeper)
-	undelegateMsg1 := keeper.NewTestMsgUnDelegateValidator(keeper.ValAddrs[0], keeper.StakingAmount)
-	sh(input.Context, undelegateMsg1)
-	undelegateMsg2 := keeper.NewTestMsgUnDelegateValidator(keeper.ValAddrs[1], keeper.StakingAmount)
-	sh(input.Context, undelegateMsg2)
+	input.StakingKeeper.Undelegate(input.Context, sdk.AccAddress(keeper.ValAddrs[0]), keeper.ValAddrs[0], sdk.NewDec(keeper.StakingAmount.Int64()))
+	input.StakingKeeper.Undelegate(input.Context, sdk.AccAddress(keeper.ValAddrs[1]), keeper.ValAddrs[1], sdk.NewDec(keeper.StakingAmount.Int64()))
 
 	for i, val := range keeper.ValAddrs {
 		if i == 0 {
@@ -153,12 +148,12 @@ func TestSignerSetTxSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testi
 	// Assertions
 	val1 := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[0])
 	require.True(t, val1.IsJailed())
-	fmt.Println("val1  tokens", val1.GetTokens().ToDec())
+	fmt.Println("val1  tokens", val1.GetTokens())
 	// check if tokens are slashed for val1.
 
 	val2 := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[1])
 	require.True(t, val2.IsJailed())
-	fmt.Println("val2  tokens", val2.GetTokens().ToDec())
+	fmt.Println("val2  tokens", val2.GetTokens())
 	// check if tokens shouldn't be slashed for val2.
 }
 

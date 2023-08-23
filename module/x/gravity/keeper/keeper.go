@@ -9,9 +9,11 @@ import (
 	"strconv"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -25,14 +27,14 @@ import (
 // Keeper maintains the link to storage and exposes getter/setter methods for the various parts of the state machine
 type Keeper struct {
 	StakingKeeper          types.StakingKeeper
-	storeKey               sdk.StoreKey
+	storeKey               storetypes.StoreKey
 	paramSpace             paramtypes.Subspace
 	cdc                    codec.Codec
 	accountKeeper          types.AccountKeeper
 	bankKeeper             types.BankKeeper
 	SlashingKeeper         types.SlashingKeeper
 	DistributionKeeper     types.DistributionKeeper
-	PowerReduction         sdk.Int
+	PowerReduction         sdkmath.Int
 	hooks                  types.GravityHooks
 	ReceiverModuleAccounts map[string]string
 	SenderModuleAccounts   map[string]string
@@ -41,14 +43,14 @@ type Keeper struct {
 // NewKeeper returns a new instance of the gravity keeper
 func NewKeeper(
 	cdc codec.Codec,
-	storeKey sdk.StoreKey,
+	storeKey storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
 	accKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper,
 	bankKeeper types.BankKeeper,
 	slashingKeeper types.SlashingKeeper,
 	distributionKeeper types.DistributionKeeper,
-	powerReduction sdk.Int,
+	powerReduction sdkmath.Int,
 	receiverModuleAccounts map[string]string,
 	senderModuleAccounts map[string]string,
 ) Keeper {

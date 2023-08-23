@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
@@ -212,7 +212,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			BridgeFee:   sdk.NewCoin(testDenom, sdk.NewInt(1000000)),
 		}
 
-		proposalMsg, err := govtypes.NewMsgSubmitProposal(
+		proposalMsg, err := govtypesv1beta1.NewMsgSubmitProposal(
 			&proposal,
 			sdk.Coins{
 				{
@@ -230,12 +230,12 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		s.Require().Zero(submitProposalResponse.Code, "raw log: %s", submitProposalResponse.RawLog)
 
 		s.T().Log("check proposal was submitted correctly")
-		govQueryClient := govtypes.NewQueryClient(clientCtx)
-		proposalsQueryResponse, err := govQueryClient.Proposals(context.Background(), &govtypes.QueryProposalsRequest{})
+		govQueryClient := govtypesv1beta1.NewQueryClient(clientCtx)
+		proposalsQueryResponse, err := govQueryClient.Proposals(context.Background(), &govtypesv1beta1.QueryProposalsRequest{})
 		s.Require().NoError(err)
 		s.Require().NotEmpty(proposalsQueryResponse.Proposals)
 		s.Require().Equal(uint64(1), proposalsQueryResponse.Proposals[0].ProposalId, "not proposal id 1")
-		s.Require().Equal(govtypes.StatusVotingPeriod, proposalsQueryResponse.Proposals[0].Status, "proposal not in voting period")
+		s.Require().Equal(govtypesv1beta1.StatusVotingPeriod, proposalsQueryResponse.Proposals[0].Status, "proposal not in voting period")
 
 		s.T().Log("vote for community spend proposal")
 		for _, val := range s.chain.validators {
@@ -244,7 +244,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kr, "val", val.keyInfo.GetAddress())
 			s.Require().NoError(err)
 
-			voteMsg := govtypes.NewMsgVote(val.keyInfo.GetAddress(), 1, govtypes.OptionYes)
+			voteMsg := govtypesv1beta1.NewMsgVote(val.keyInfo.GetAddress(), 1, govtypesv1beta1.OptionYes)
 			voteResponse, err := s.chain.sendMsgs(*clientCtx, voteMsg)
 			s.Require().NoError(err)
 			s.Require().Zero(voteResponse.Code, "vote error: %s", voteResponse.RawLog)
@@ -252,9 +252,9 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 
 		s.T().Log("wait for community spend proposal to be approved")
 		s.Require().Eventuallyf(func() bool {
-			proposalQueryResponse, err := govQueryClient.Proposal(context.Background(), &govtypes.QueryProposalRequest{ProposalId: 1})
+			proposalQueryResponse, err := govQueryClient.Proposal(context.Background(), &govtypesv1beta1.QueryProposalRequest{ProposalId: 1})
 			s.Require().NoError(err)
-			return govtypes.StatusPassed == proposalQueryResponse.Proposal.Status
+			return govtypesv1beta1.StatusPassed == proposalQueryResponse.Proposal.Status
 		}, time.Second*30, time.Second*5, "proposal was never accepted")
 
 		s.T().Logf("initial balance of %s of token %s is %v", s.chain.validators[2].ethereumKey.address, erc20Contract.Hex(), initialBalance)
