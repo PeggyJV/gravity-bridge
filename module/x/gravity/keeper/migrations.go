@@ -25,3 +25,10 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 	return v2.MigrateParamStore(ctx, m.keeper.paramSpace)
 }
+
+// Migrate3to4 migrates from consensus version 3 to 4.
+func (m Migrator) Migrate3to4(ctx sdk.Context) error {
+	ctx.Logger().Info("v3 to v4 migration is a no-op")
+
+	return nil
+}

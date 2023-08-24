@@ -86,6 +86,7 @@ import (
 	gravityparams "github.com/peggyjv/gravity-bridge/module/v4/app/params"
 	v2 "github.com/peggyjv/gravity-bridge/module/v4/app/upgrades/v2"
 	v3 "github.com/peggyjv/gravity-bridge/module/v4/app/upgrades/v3"
+	v4 "github.com/peggyjv/gravity-bridge/module/v4/app/upgrades/v4"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity"
 	gravityclient "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/client"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/keeper"
@@ -853,6 +854,14 @@ func (app *Gravity) setupUpgradeHandlers() {
 	app.upgradeKeeper.SetUpgradeHandler(
 		v3.UpgradeName,
 		v3.CreateUpgradeHandler(
+			app.mm,
+			app.configurator,
+		),
+	)
+
+	app.upgradeKeeper.SetUpgradeHandler(
+		v4.UpgradeName,
+		v4.CreateUpgradeHandler(
 			app.mm,
 			app.configurator,
 		),
