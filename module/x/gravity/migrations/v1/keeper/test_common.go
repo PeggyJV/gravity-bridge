@@ -581,7 +581,7 @@ func (s *StakingKeeperMock) ValidatorQueueIterator(ctx sdk.Context, endTime time
 
 // Slash staisfies the interface
 func (s *StakingKeeperMock) Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) sdkmath.Int {
-    return sdkmath.NewInt(0)
+	return sdkmath.NewInt(0)
 }
 
 // Jail staisfies the interface

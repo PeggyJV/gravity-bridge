@@ -210,4 +210,3 @@ func orderBatchesByNonceAscending(batches []*types.BatchTx) []*types.BatchTx {
 
 	return batches
 }
- 

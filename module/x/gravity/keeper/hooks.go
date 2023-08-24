@@ -23,8 +23,8 @@ func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, 
 	// if multiple validators starts unbonding at same block.
 
 	h.k.setLastUnbondingBlockHeight(ctx, uint64(ctx.BlockHeight()))
-    
-    return nil
+
+	return nil
 }
 
 func (h Hooks) BeforeDelegationCreated(_ sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {

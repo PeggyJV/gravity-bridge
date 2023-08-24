@@ -19,13 +19,13 @@ var _ govtypes.Content = &CommunityPoolEthereumSpendProposal{}
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeCommunityPoolEthereumSpend)
-    // The RegisterProposalTypeCodec function was mysteriously removed by in 0.46.0 even though
-    // the claim was that the old API would be preserved in .../x/gov/types/v1beta1 so we have
-    // to interact with the codec directly.
-    //
-    // The PR that removed it: https://github.com/cosmos/cosmos-sdk/pull/11240
-    // This PR was later reverted, bu RegisterProposalTypeCodec was still left out. Not sure if
-    // thsi was intentional or not.
+	// The RegisterProposalTypeCodec function was mysteriously removed by in 0.46.0 even though
+	// the claim was that the old API would be preserved in .../x/gov/types/v1beta1 so we have
+	// to interact with the codec directly.
+	//
+	// The PR that removed it: https://github.com/cosmos/cosmos-sdk/pull/11240
+	// This PR was later reverted, bu RegisterProposalTypeCodec was still left out. Not sure if
+	// thsi was intentional or not.
 	govtypes.ModuleCdc.RegisterConcrete(&CommunityPoolEthereumSpendProposal{}, "gravity/CommunityPoolEthereumSpendProposal", nil)
 }
 

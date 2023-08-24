@@ -124,7 +124,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			if response.Code != 0 {
 				if response.Code != 32 {
 					s.T().Log(response)
-				} 
+				}
 
 				return false
 			}

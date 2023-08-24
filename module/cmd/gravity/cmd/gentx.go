@@ -145,12 +145,12 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 			}
 
 			// validate validator account in genesis
-            addr, err := key.GetAddress()
-            if err != nil {
-                return errors.Wrap(err, "failed to get address")
-            }
+			addr, err := key.GetAddress()
+			if err != nil {
+				return errors.Wrap(err, "failed to get address")
+			}
 
-			if err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, addr,  coins, cdc); err != nil {
+			if err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, addr, coins, cdc); err != nil {
 				return errors.Wrap(err, "failed to validate validator account in genesis")
 			}
 
@@ -197,7 +197,7 @@ $ %s gentx my-key-name 1000000stake 0x033030FEeBd93E3178487c35A9c8cA80874353C9 c
 			}
 
 			msgs := []sdk.Msg{msg, delegateGravityMsg}
-            clientCtx = clientCtx.WithGenerateOnly(true)
+			clientCtx = clientCtx.WithGenerateOnly(true)
 
 			if key.GetType() == keyring.TypeOffline || key.GetType() == keyring.TypeMulti {
 				cmd.PrintErrln("Offline key passed in. Use `tx sign` command to sign.")
