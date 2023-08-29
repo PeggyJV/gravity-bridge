@@ -261,8 +261,14 @@ func SetupFiveValChain(t *testing.T) (TestInput, sdk.Context) {
 		input.AccountKeeper.SetAccount(input.Context, acc)
 
 		// Create a validator for that account using some of the tokens in the account
-		// and the staking handler
-		sh.CreateValidator(ValAddrs[i], AccPubKeys[i], StakingAmount, true)
+		// and the staking handler. Give the 5th validator a smaller stake so we can
+		// test unbonding hooks.
+		if i == 4 {
+			amt := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
+			sh.CreateValidator(ValAddrs[i], AccPubKeys[i], amt, true)
+		} else {
+			sh.CreateValidator(ValAddrs[i], AccPubKeys[i], StakingAmount, true)
+		}
 	}
 
 	// Run the staking endblocker to ensure valset is correct in state

@@ -15,14 +15,40 @@ var _ stakingtypes.StakingHooks = Hooks{}
 // Hooks Create new gravity hooks
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
-func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, valAddress sdk.ValAddress) error {
 
-	// When Validator starts Unbonding, Persist the block height in the store
-	// Later in endblocker, check if there is at least one validator who started unbonding and create a valset request.
-	// The reason for creating valset requests in endblock is to create only one valset request per block,
+	// When Validator starts Unbonding, Persist the block height in the store if their power is greater
+	// than 1% of the total power.
+	// Later in endblocker, check if this persisted block height is the current one and create a signer set tx if it is.
+	// The reason for creating signer set txs in endblock is to create only one valset request per block,
 	// if multiple validators starts unbonding at same block.
 
-	h.k.setLastUnbondingBlockHeight(ctx, uint64(ctx.BlockHeight()))
+	lastUnbondingBlockHeight := h.k.GetLastUnbondingBlockHeight(ctx)
+	if lastUnbondingBlockHeight == uint64(ctx.BlockHeight()) {
+		return nil
+	}
+
+	latestSignerSet := h.k.GetLatestSignerSetTx(ctx)
+	ethAddress := h.k.GetValidatorEthereumAddress(ctx, valAddress).Hex()
+	power := uint64(0)
+	totalPower := uint64(0)
+	for _, s := range latestSignerSet.Signers {
+		if s.EthereumAddress == ethAddress {
+			power = s.Power
+			break
+		}
+
+		totalPower += s.Power
+	}
+
+	if totalPower == 0 {
+		return nil
+	}
+
+	proportion := float64(power) / float64(totalPower)
+	if proportion > 0.01 {
+		h.k.setLastUnbondingBlockHeight(ctx, uint64(ctx.BlockHeight()))
+	}
 
 	return nil
 }

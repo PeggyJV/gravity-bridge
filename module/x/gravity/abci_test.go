@@ -35,15 +35,57 @@ func TestSignerSetTxCreationUponUnbonding(t *testing.T) {
 	gravityKeeper := input.GravityKeeper
 	gravityKeeper.CreateSignerSetTx(ctx)
 
-	input.Context = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	// begin unbonding
-	input.StakingKeeper.Undelegate(input.Context, sdk.AccAddress(keeper.ValAddrs[0]), keeper.ValAddrs[0], sdk.NewDec(keeper.StakingAmount.Int64()))
+	input.Context = input.Context.WithBlockHeight(input.Context.BlockHeight() + 1)
+
+	smallValAddr := keeper.ValAddrs[4]
+	smallVal, _ := input.StakingKeeper.GetValidator(input.Context, smallValAddr)
+	unbondAmount := sdk.NewDec(smallVal.GetBondedTokens().Int64())
+	_, err := input.StakingKeeper.Undelegate(
+		input.Context,
+		sdk.AccAddress(smallValAddr),
+		smallValAddr,
+		unbondAmount,
+	)
+	require.NoError(t, err)
 
 	// Run the staking endblocker to ensure signer set tx is set in state
 	staking.EndBlocker(input.Context, input.StakingKeeper)
-	gravity.BeginBlocker(input.Context, gravityKeeper)
 
-	require.EqualValues(t, 2, gravityKeeper.GetLatestSignerSetTxNonce(ctx))
+	// power diff should be less than 5%
+	latestSignerSetTx := input.GravityKeeper.GetLatestSignerSetTx(input.Context)
+	powerDiff := types.EthereumSigners(input.GravityKeeper.CurrentSignerSet(input.Context)).PowerDiff(latestSignerSetTx.Signers)
+	require.Less(t, powerDiff, 0.05)
+
+	// last unbonding height should be the current block
+	lastUnbondingHeight := input.GravityKeeper.GetLastUnbondingBlockHeight(input.Context)
+	require.Equal(t, uint64(input.Context.BlockHeight()), lastUnbondingHeight)
+
+	// should create a new signer set
+	gravity.BeginBlocker(input.Context, gravityKeeper)
+	require.EqualValues(t, 2, gravityKeeper.GetLatestSignerSetTxNonce(input.Context))
+
+	// create signer set due to >5% power diff
+
+	input.Context = input.Context.WithBlockHeight(input.Context.BlockHeight() + 1)
+
+	undelegateAmount := sdk.NewDec(keeper.StakingAmount.Quo(sdk.NewInt(3)).Int64())
+	_, err = input.StakingKeeper.Undelegate(
+		input.Context,
+		sdk.AccAddress(keeper.ValAddrs[0]),
+		keeper.ValAddrs[0],
+		undelegateAmount,
+	)
+	require.NoError(t, err)
+
+	staking.EndBlocker(input.Context, input.StakingKeeper)
+
+	// last unbonding height should not be the current block
+	lastUnbondingHeight = input.GravityKeeper.GetLastUnbondingBlockHeight(input.Context)
+	require.NotEqual(t, uint64(input.Context.BlockHeight()), lastUnbondingHeight)
+
+	// signer set was created
+	gravity.BeginBlocker(input.Context, gravityKeeper)
+	require.EqualValues(t, 3, gravityKeeper.GetLatestSignerSetTxNonce(input.Context))
 }
 
 func TestSignerSetTxSlashing_SignerSetTxCreated_Before_ValidatorBonded(t *testing.T) {

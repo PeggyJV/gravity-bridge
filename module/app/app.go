@@ -363,12 +363,25 @@ func NewGravityApp(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
+	app.gravityKeeper = keeper.NewKeeper(
+		appCodec,
+		keys[gravitytypes.StoreKey],
+		app.GetSubspace(gravitytypes.ModuleName),
+		app.accountKeeper,
+		stakingKeeper,
+		app.bankKeeper,
+		app.slashingKeeper,
+		app.distrKeeper,
+		sdk.DefaultPowerReduction,
+		app.ModuleAccountAddressesToNames([]string{}),
+		app.ModuleAccountAddressesToNames([]string{distrtypes.ModuleName}),
+	)
+
 	app.stakingKeeper = *stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
 			app.distrKeeper.Hooks(),
 			app.slashingKeeper.Hooks(),
-			//app.gravityKeeper.Hooks(), TODO(bolten): this hook is broken, do not set it, to be fixed
-			// (Collin) is this still true?
+			app.gravityKeeper.Hooks(),
 		),
 	)
 
@@ -400,20 +413,6 @@ func NewGravityApp(
 		app.slashingKeeper,
 	)
 	app.evidenceKeeper = *evidenceKeeper
-
-	app.gravityKeeper = keeper.NewKeeper(
-		appCodec,
-		keys[gravitytypes.StoreKey],
-		app.GetSubspace(gravitytypes.ModuleName),
-		app.accountKeeper,
-		stakingKeeper,
-		app.bankKeeper,
-		app.slashingKeeper,
-		app.distrKeeper,
-		sdk.DefaultPowerReduction,
-		app.ModuleAccountAddressesToNames([]string{}),
-		app.ModuleAccountAddressesToNames([]string{distrtypes.ModuleName}),
-	)
 
 	govRouter := govtypesv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler).
