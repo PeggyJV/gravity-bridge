@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/peggyjv/gravity-bridge/module/v4/app"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -31,7 +32,8 @@ func TestKeyGen(t *testing.T) {
 		WithHomeDir("/foo/bar").
 		WithChainID("test-chain").
 		WithKeyringDir("/foo/bar").
-		WithInput(input)
+		WithInput(input).
+		WithCodec(app.MakeEncodingConfig().Marshaler)
 
 	// generate key from binary
 	keyCmd := keys.AddKeyCommand()
@@ -44,7 +46,7 @@ func TestKeyGen(t *testing.T) {
 		"orch",
 	})
 	keyCmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		return 	client.SetCmdClientContextHandler(initClientCtx, keyCmd)
+		return client.SetCmdClientContextHandler(initClientCtx, keyCmd)
 	}
 	keyCmd.SetIn(input)
 
@@ -62,7 +64,7 @@ func TestKeyGen(t *testing.T) {
 	require.NoError(t, err)
 
 	// generate a memory key directly
-	kb, err := keyring.New("testnet", keyring.BackendMemory, "", nil)
+	kb, err := keyring.New("testnet", keyring.BackendMemory, "", nil, initClientCtx.Codec)
 	if err != nil {
 		return
 	}
@@ -76,5 +78,8 @@ func TestKeyGen(t *testing.T) {
 	account, err := kb.NewAccount("", mnemonic, "", "m/44'/118'/0'/0/0", algo)
 	require.NoError(t, err)
 
-	require.Equal(t, account.GetAddress().String(), key.Address)
+	addr, err := account.GetAddress()
+	require.NoError(t, err)
+
+	require.Equal(t, addr.String(), key.Address)
 }

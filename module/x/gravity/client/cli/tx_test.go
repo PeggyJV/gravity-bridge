@@ -22,7 +22,7 @@ func TestParseCommunityPoolEthereumSpendProposal(t *testing.T) {
 }
 `)
 
-	proposal, err := ParseCommunityPoolEthereumSpendProposal(encodingConfig.Marshaler, okJSON.Name())
+	proposal, err := ParseCommunityPoolEthereumSpendProposal(encodingConfig.Codec, okJSON.Name())
 	require.NoError(t, err)
 
 	require.Equal(t, "Community Pool Ethereum Spend", proposal.Title)

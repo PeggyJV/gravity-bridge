@@ -22,6 +22,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,11 +30,12 @@ import (
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	tmconfig "github.com/tendermint/tendermint/config"
@@ -142,14 +144,14 @@ func (s *IntegrationTestSuite) initNodes(nodeCount int) {
 	val0ConfigDir := s.chain.validators[0].configDir()
 	for _, val := range s.chain.validators {
 		s.Require().NoError(
-			addGenesisAccount(val0ConfigDir, "", initBalanceStr, val.keyInfo.GetAddress()),
+			addGenesisAccount(val0ConfigDir, "", initBalanceStr, val.address()),
 		)
 	}
 
 	// add orchestrator accounts to genesis file
 	for _, orch := range s.chain.orchestrators {
 		s.Require().NoError(
-			addGenesisAccount(val0ConfigDir, "", initBalanceStr, orch.keyInfo.GetAddress()),
+			addGenesisAccount(val0ConfigDir, "", initBalanceStr, orch.address()),
 		)
 	}
 
@@ -171,14 +173,14 @@ func (s *IntegrationTestSuite) initNodesWithMnemonics(mnemonics ...string) {
 	val0ConfigDir := s.chain.validators[0].configDir()
 	for _, val := range s.chain.validators {
 		s.Require().NoError(
-			addGenesisAccount(val0ConfigDir, "", initBalanceStr, val.keyInfo.GetAddress()),
+			addGenesisAccount(val0ConfigDir, "", initBalanceStr, val.address()),
 		)
 	}
 
 	// add orchestrator accounts to genesis file
 	for _, orch := range s.chain.orchestrators {
 		s.Require().NoError(
-			addGenesisAccount(val0ConfigDir, "", initBalanceStr, orch.keyInfo.GetAddress()),
+			addGenesisAccount(val0ConfigDir, "", initBalanceStr, orch.address()),
 		)
 	}
 
@@ -278,7 +280,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	s.Require().NoError(err)
 	appGenState[banktypes.ModuleName] = bz
 
-	var govGenState govtypes.GenesisState
+	var govGenState govtypesv1beta1.GenesisState
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState))
 
 	// set short voting period to allow gov proposals in tests
@@ -321,7 +323,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 		createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
 		s.Require().NoError(err)
 
-		delKeysMsg := val.buildDelegateKeysMsg()
+		delKeysMsg, err := val.buildDelegateKeysMsg()
 		s.Require().NoError(err)
 
 		signedTx, err := val.signMsg(createValmsg, delKeysMsg)
@@ -738,11 +740,11 @@ func (s *IntegrationTestSuite) approveERC20() error {
 	return s.SendEthTransaction(&s.chain.validators[0].ethereumKey, testERC20contract, PackApproveERC20(gravityContract))
 }
 
-func (s *IntegrationTestSuite) sendToCosmos(destination sdk.AccAddress, amount sdk.Int) error {
+func (s *IntegrationTestSuite) sendToCosmos(destination sdk.AccAddress, amount sdkmath.Int) error {
 	return s.SendEthTransaction(&s.chain.validators[0].ethereumKey, gravityContract, PackSendToCosmos(testERC20contract, destination, amount))
 }
 
-func (s *IntegrationTestSuite) getEthTokenBalanceOf(account common.Address, erc20contract common.Address) (*sdk.Int, error) {
+func (s *IntegrationTestSuite) getEthTokenBalanceOf(account common.Address, erc20contract common.Address) (*sdkmath.Int, error) {
 	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
 	if err != nil {
 		return nil, err
@@ -765,7 +767,7 @@ func (s *IntegrationTestSuite) getEthTokenBalanceOf(account common.Address, erc2
 	return &balance, err
 }
 
-func (s *IntegrationTestSuite) getERC20AllowanceOf(owner common.Address, spender common.Address) (*sdk.Int, error) {
+func (s *IntegrationTestSuite) getERC20AllowanceOf(owner common.Address, spender common.Address) (*sdkmath.Int, error) {
 	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
 	if err != nil {
 		return nil, err
@@ -838,7 +840,7 @@ func (s *IntegrationTestSuite) SendEthTransaction(ethereumKey *ethereumKey, toAd
 	return nil
 }
 
-func (s *IntegrationTestSuite) getLastValsetNonce(erc20contract common.Address) (*sdk.Int, error) {
+func (s *IntegrationTestSuite) getLastValsetNonce(erc20contract common.Address) (*sdkmath.Int, error) {
 	ethClient, err := ethclient.Dial(fmt.Sprintf("http://%s", s.ethResource.GetHostPort("8545/tcp")))
 	if err != nil {
 		return nil, err

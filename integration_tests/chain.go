@@ -2,7 +2,6 @@ package integration_tests
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,9 +20,9 @@ import (
 	sdkTx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/peggyjv/gravity-bridge/module/v3/app"
-	"github.com/peggyjv/gravity-bridge/module/v3/app/params"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v4/app"
+	"github.com/peggyjv/gravity-bridge/module/v4/app/params"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
@@ -73,7 +72,7 @@ func newChain() (*chain, error) {
 		}
 	}
 
-	tmpDir, err := ioutil.TempDir(dir, "gravity-bridge-e2e-testnet")
+	tmpDir, err := os.MkdirTemp(dir, "gravity-bridge-e2e-testnet")
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +166,7 @@ func (c *chain) createAndInitOrchestratorsWithMnemonics(mnemonics []string) erro
 			return err
 		}
 
-		orchestrator.keyInfo = *info
+		orchestrator.keyRecord = *info
 		orchestrator.mnemonic = mnemonics[i]
 		orchestrator.keyring = kb
 
@@ -249,7 +248,6 @@ func (c *chain) sendMsgs(clientCtx client.Context, msgs ...sdk.Msg) (*sdk.TxResp
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
 	fromAddr := clientCtx.GetFromAddress()
-	fromName := clientCtx.GetFromName()
 
 	if err := txf.AccountRetriever().EnsureExists(clientCtx, fromAddr); err != nil {
 		return nil, err
@@ -271,29 +269,24 @@ func (c *chain) sendMsgs(clientCtx client.Context, msgs ...sdk.Msg) (*sdk.TxResp
 		}
 	}
 
-	txf.WithFees("246913560testgb")
+	txf = txf.WithFees("246913560testgb")
 
-	txb, err := tx.BuildUnsignedTx(txf, msgs...)
+	err := tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msgs...)
 	if err != nil {
 		return nil, err
 	}
 
-	txb.SetFeeAmount(sdk.Coins{{Denom: "testgb", Amount: sdk.NewInt(246913560)}})
-
-	err = tx.Sign(txf, fromName, txb, false)
+	resBytes := []byte{}
+	_, err = clientCtx.Input.Read(resBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	txBytes, err := clientCtx.TxConfig.TxEncoder()(txb.GetTx())
+	var res sdk.TxResponse
+	err = cdc.Unmarshal(resBytes, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := clientCtx.BroadcastTx(txBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
+	return &res, nil
 }

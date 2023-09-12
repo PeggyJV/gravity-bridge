@@ -7,18 +7,18 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	gravity "github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
+	gravity "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
 
 // call stress_test for a range of nonce values
 
-/// Write test_valset_update test to get latest nonce value
+// / Write test_valset_update test to get latest nonce value
 func (s *IntegrationTestSuite) TestValsetStressUpdate() {
 	s.Run("Bring up chain, and test the valset update", func() {
 		orchKey := s.chain.orchestrators[1]
 		keyring := orchKey.keyring
 
-		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", keyring, "orch", orchKey.keyInfo.GetAddress())
+		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", keyring, "orch", orchKey.address())
 		s.Require().NoError(err)
 
 		startingNonce, err := s.getLastValsetNonce(gravityContract)
@@ -27,8 +27,8 @@ func (s *IntegrationTestSuite) TestValsetStressUpdate() {
 		bondTokens := sdk.TokensFromConsensusPower(50000, sdk.DefaultPowerReduction)
 		bondCoin := sdk.NewCoin("testgb", bondTokens)
 
-		delegator := s.chain.orchestrators[1].keyInfo.GetAddress()
-		val := sdk.ValAddress(s.chain.validators[3].keyInfo.GetAddress())
+		delegator := s.chain.orchestrators[1].address()
+		val := sdk.ValAddress(s.chain.validators[3].address())
 
 		// Delegate about 5% of the total staking power.
 		s.Require().Eventuallyf(func() bool {

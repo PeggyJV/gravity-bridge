@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
 
 // ParseCommunityPoolEthereumSpendProposal reads and parses a CommunityPoolEthereumSpendProposalForCLI from a file.

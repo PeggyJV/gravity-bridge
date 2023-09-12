@@ -3,13 +3,13 @@ package integration_tests
 // package imports
 import (
 	"context"
-	"time"
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
 
 // We have 4 validators running so this totals to 100 tx's
@@ -22,13 +22,13 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 		fmt.Println("StressTestTransaction starting")
 
 		// Approve spend & verify funds
-		for _, validator := range s.chain.validators {			
+		for _, validator := range s.chain.validators {
 			err := s.SendEthTransaction(&validator.ethereumKey, testERC20contract, PackApproveERC20(gravityContract))
 			s.Require().NoError(err, "error approving spend")
 
 			balance, err := s.getEthTokenBalanceOf(common.HexToAddress(validator.ethereumKey.address), testERC20contract)
 			s.Require().NoError(err, "error getting balance")
-			s.Require().Equal(sdk.NewUint(10000).BigInt(), balance.BigInt(), "balance was %s, expected 10000", balance.String())	
+			s.Require().Equal(sdk.NewUint(10000).BigInt(), balance.BigInt(), "balance was %s, expected 10000", balance.String())
 		}
 
 		sendAmt := sdk.NewInt(cosmos_sent_amt)
@@ -37,9 +37,9 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 			s.T().Logf("sending %d tx's to cosmos for validator %d ..", transactions_per_validator, i+1)
 
 			for j := 0; j < int(transactions_per_validator); j++ {
-				s.Require().NoError(s.SendEthTransaction(&validator.ethereumKey, gravityContract, PackSendToCosmos(testERC20contract, s.chain.validators[len(s.chain.validators)-1-i].keyInfo.GetAddress(), sendAmt)))
+				s.Require().NoError(s.SendEthTransaction(&validator.ethereumKey, gravityContract, PackSendToCosmos(testERC20contract, s.chain.validators[len(s.chain.validators)-1-i].address(), sendAmt)))
 			}
-			
+
 			s.T().Logf("%d Tx sent.", transactions_per_validator)
 		}
 
@@ -50,13 +50,13 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 
 				kb, err := validator.keyring()
 				s.Require().NoError(err)
-				clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", validator.keyInfo.GetAddress())
+				clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &kb, "val", validator.address())
 				s.Require().NoError(err)
 
 				bankQueryClient := banktypes.NewQueryClient(clientCtx)
 				res, err := bankQueryClient.AllBalances(context.Background(),
 					&banktypes.QueryAllBalancesRequest{
-						Address: validator.keyInfo.GetAddress().String(),
+						Address: validator.address().String(),
 					})
 				if err != nil {
 					s.T().Logf("error: %s", err)
@@ -76,8 +76,8 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 				gravityDenom = denomRes.Denom
 
 				for _, coin := range res.Balances {
-					if coin.Denom == gravityDenom && coin.Amount.Equal(sdk.NewInt(cosmos_sent_amt * transactions_per_validator)) {
-						s.T().Logf("Expected funds recieved for validator %d, balance: %v", i + 1, coin)
+					if coin.Denom == gravityDenom && coin.Amount.Equal(sdk.NewInt(cosmos_sent_amt*transactions_per_validator)) {
+						s.T().Logf("Expected funds recieved for validator %d, balance: %v", i+1, coin)
 						return true
 					}
 				}
@@ -94,7 +94,7 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 				s.T().Logf("sending %d tx's to ethereum for validator %d ..", transactions_per_validator, i+1)
 
 				sendToEthereumMsg := types.NewMsgSendToEthereum(
-					validator.keyInfo.GetAddress(),
+					validator.address(),
 					s.chain.validators[len(s.chain.validators)-1-i].ethereumKey.address,
 					sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(eth_sent_amt)},
 					sdk.Coin{Denom: gravityDenom, Amount: sdk.NewInt(1)},
@@ -102,7 +102,7 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 
 				keyring, err := validator.keyring()
 				s.Require().NoError(err)
-				clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", validator.keyInfo.GetAddress())
+				clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", validator.address())
 				s.Require().NoError(err)
 
 				for j := 0; j < int(transactions_per_validator); j++ {
@@ -135,7 +135,7 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 					s.T().Logf("funds not received yet, dest balance: %s", balance.String())
 					return false
 				}
-				
+
 				s.T().Logf("Funds recieved for validator %d, current balance: %v", i+1, balance.String())
 				return true
 			}, time.Second*180, time.Second*10, "balance never found")

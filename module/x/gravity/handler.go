@@ -3,10 +3,10 @@ package gravity
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
 
 // NewHandler returns a handler for "Gravity" type messages.

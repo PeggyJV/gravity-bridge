@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -14,6 +15,7 @@ import (
 	ccrypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -32,8 +34,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
@@ -54,7 +59,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/migrations/v1/types"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/migrations/v1/types"
 )
 
 var (
@@ -68,7 +73,9 @@ var (
 		mint.AppModuleBasic{},
 		distribution.AppModuleBasic{},
 		gov.NewAppModuleBasic(
-			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
+			[]govclient.ProposalHandler{
+				paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.LegacyCancelProposalHandler,
+			},
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -211,7 +218,7 @@ type TestInput struct {
 	Context         sdk.Context
 	Marshaler       codec.Codec
 	LegacyAmino     *codec.LegacyAmino
-	GravityStoreKey *sdk.KVStoreKey
+	GravityStoreKey *storetypes.KVStoreKey
 }
 
 func (input TestInput) AddBalanceToBank(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
@@ -236,15 +243,15 @@ func CreateTestEnv(t *testing.T) TestInput {
 	// Initialize memory database and mount stores on it
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(gravityKey, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyBank, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyDistro, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
-	ms.MountStoreWithDB(keyGov, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(gravityKey, storetypes.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyAcc, storetypes.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyParams, storetypes.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyStaking, storetypes.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyBank, storetypes.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyDistro, storetypes.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyParams, storetypes.StoreTypeTransient, db)
+	ms.MountStoreWithDB(keyGov, storetypes.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keySlashing, storetypes.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -282,6 +289,7 @@ func CreateTestEnv(t *testing.T) TestInput {
 		getSubspace(paramsKeeper, authtypes.ModuleName),
 		authtypes.ProtoBaseAccount, // prototype
 		maccPerms,
+		"gravity",
 	)
 
 	blockedAddr := make(map[string]bool, len(maccPerms))
@@ -301,7 +309,7 @@ func CreateTestEnv(t *testing.T) TestInput {
 	stakingKeeper := stakingkeeper.NewKeeper(marshaler, keyStaking, accountKeeper, bankKeeper, getSubspace(paramsKeeper, stakingtypes.ModuleName))
 	stakingKeeper.SetParams(ctx, TestingStakeParams)
 
-	distKeeper := distrkeeper.NewKeeper(marshaler, keyDistro, getSubspace(paramsKeeper, distrtypes.ModuleName), accountKeeper, bankKeeper, stakingKeeper, authtypes.FeeCollectorName, nil)
+	distKeeper := distrkeeper.NewKeeper(marshaler, keyDistro, getSubspace(paramsKeeper, distrtypes.ModuleName), accountKeeper, bankKeeper, stakingKeeper, authtypes.FeeCollectorName)
 	distKeeper.SetParams(ctx, distrtypes.DefaultParams())
 
 	// set genesis items required for distribution
@@ -328,25 +336,21 @@ func CreateTestEnv(t *testing.T) TestInput {
 	moduleAcct := accountKeeper.GetAccount(ctx, stakeAddr)
 	require.NotNil(t, moduleAcct)
 
-	router := baseapp.NewRouter()
-	router.AddRoute(bank.AppModule{}.Route())
-	router.AddRoute(staking.AppModule{}.Route())
-	router.AddRoute(distribution.AppModule{}.Route())
-
 	// Load default wasm config
 
-	govRouter := govtypes.NewRouter().
+	router := baseapp.NewMsgServiceRouter()
+	govRouter := govtypesv1beta1.NewRouter().
 		AddRoute(paramsproposal.RouterKey, params.NewParamChangeProposalHandler(paramsKeeper)).
-		AddRoute(govtypes.RouterKey, govtypes.ProposalHandler)
+		AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler)
 
 	govKeeper := govkeeper.NewKeeper(
-		marshaler, keyGov, getSubspace(paramsKeeper, govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable()), accountKeeper, bankKeeper, stakingKeeper, govRouter,
+		marshaler, keyGov, getSubspace(paramsKeeper, govtypes.ModuleName).WithKeyTable(govtypesv1.ParamKeyTable()), accountKeeper, bankKeeper, stakingKeeper, govRouter, router, govtypes.DefaultConfig(),
 	)
 
-	govKeeper.SetProposalID(ctx, govtypes.DefaultStartingProposalID)
-	govKeeper.SetDepositParams(ctx, govtypes.DefaultDepositParams())
-	govKeeper.SetVotingParams(ctx, govtypes.DefaultVotingParams())
-	govKeeper.SetTallyParams(ctx, govtypes.DefaultTallyParams())
+	govKeeper.SetProposalID(ctx, govtypesv1beta1.DefaultStartingProposalID)
+	govKeeper.SetDepositParams(ctx, govtypesv1.DefaultDepositParams())
+	govKeeper.SetVotingParams(ctx, govtypesv1.DefaultVotingParams())
+	govKeeper.SetTallyParams(ctx, govtypesv1.DefaultTallyParams())
 
 	slashingKeeper := slashingkeeper.NewKeeper(
 		marshaler,
@@ -499,7 +503,7 @@ func (s *StakingKeeperMock) GetLastValidatorPower(ctx sdk.Context, operator sdk.
 }
 
 // GetLastTotalPower implements the interface for staking keeper required by gravity
-func (s *StakingKeeperMock) GetLastTotalPower(ctx sdk.Context) (power sdk.Int) {
+func (s *StakingKeeperMock) GetLastTotalPower(ctx sdk.Context) (power sdkmath.Int) {
 	var total int64
 	for _, v := range s.ValidatorPower {
 		total += v
@@ -576,7 +580,9 @@ func (s *StakingKeeperMock) ValidatorQueueIterator(ctx sdk.Context, endTime time
 }
 
 // Slash staisfies the interface
-func (s *StakingKeeperMock) Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) {}
+func (s *StakingKeeperMock) Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) sdkmath.Int {
+	return sdkmath.NewInt(0)
+}
 
 // Jail staisfies the interface
 func (s *StakingKeeperMock) Jail(sdk.Context, sdk.ConsAddress) {}
@@ -585,7 +591,7 @@ func (s *StakingKeeperMock) Jail(sdk.Context, sdk.ConsAddress) {}
 type AlwaysPanicStakingMock struct{}
 
 // GetLastTotalPower implements the interface for staking keeper required by gravity
-func (s AlwaysPanicStakingMock) GetLastTotalPower(ctx sdk.Context) (power sdk.Int) {
+func (s AlwaysPanicStakingMock) GetLastTotalPower(ctx sdk.Context) (power sdkmath.Int) {
 	panic("unexpected call")
 }
 
@@ -634,7 +640,7 @@ func (s AlwaysPanicStakingMock) Jail(sdk.Context, sdk.ConsAddress) {
 	panic("unexpected call")
 }
 
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey ccrypto.PubKey, amt sdk.Int) *stakingtypes.MsgCreateValidator {
+func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey ccrypto.PubKey, amt sdkmath.Int) *stakingtypes.MsgCreateValidator {
 	commission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	out, err := stakingtypes.NewMsgCreateValidator(
 		address, pubKey, sdk.NewCoin("stake", amt),
@@ -646,7 +652,7 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey ccrypto.PubKey, am
 	return out
 }
 
-func NewTestMsgUnDelegateValidator(address sdk.ValAddress, amt sdk.Int) *stakingtypes.MsgUndelegate {
+func NewTestMsgUnDelegateValidator(address sdk.ValAddress, amt sdkmath.Int) *stakingtypes.MsgUndelegate {
 	msg := stakingtypes.NewMsgUndelegate(sdk.AccAddress(address), address, sdk.NewCoin("stake", amt))
 	return msg
 }

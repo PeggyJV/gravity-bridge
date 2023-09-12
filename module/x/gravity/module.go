@@ -18,9 +18,9 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/client/cli"
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/client/cli"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
 
 // type check to ensure the interface is properly implemented
@@ -104,7 +104,7 @@ func (AppModule) Name() string {
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 {
-	return 3
+	return 4
 }
 
 // RegisterInvariants implements app module
@@ -113,17 +113,17 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	// coins aren't being fraudlently minted etc...
 }
 
-// Route implements app module
+// DEPRECATED Route implements app module
 func (am AppModule) Route() sdk.Route {
 	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
-// QuerierRoute implements app module
+// DEPRECATED QuerierRoute implements app module
 func (am AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// LegacyQuerierHandler returns the distribution module sdk.Querier.
+// DEPRECATED LegacyQuerierHandler returns the distribution module sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
@@ -140,6 +140,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/gravity from version 2 to 3: %v", err))
+	}
+
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/gravity from version 3 to 4: %v", err))
 	}
 }
 

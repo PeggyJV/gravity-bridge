@@ -1,18 +1,18 @@
 package app
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"math/rand"
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"io"
+	"io/ioutil"
+	"math/rand"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -114,7 +114,7 @@ func AppStateRandomizedFn(
 		Rand:         r,
 		GenState:     genesisState,
 		Accounts:     accs,
-		InitialStake: initialStake,
+		InitialStake: sdkmath.NewInt(initialStake),
 		NumBonded:    numInitiallyBonded,
 		GenTimestamp: genesisTimestamp,
 	}

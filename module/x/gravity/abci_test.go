@@ -12,9 +12,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity"
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/v3/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
 
 func TestSignerSetTxCreationIfNotAvailable(t *testing.T) {
@@ -35,17 +35,57 @@ func TestSignerSetTxCreationUponUnbonding(t *testing.T) {
 	gravityKeeper := input.GravityKeeper
 	gravityKeeper.CreateSignerSetTx(ctx)
 
-	input.Context = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	// begin unbonding
-	sh := staking.NewHandler(input.StakingKeeper)
-	undelegateMsg := keeper.NewTestMsgUnDelegateValidator(keeper.ValAddrs[0], keeper.StakingAmount)
-	sh(input.Context, undelegateMsg)
+	input.Context = input.Context.WithBlockHeight(input.Context.BlockHeight() + 1)
+
+	smallValAddr := keeper.ValAddrs[4]
+	smallVal, _ := input.StakingKeeper.GetValidator(input.Context, smallValAddr)
+	unbondAmount := sdk.NewDec(smallVal.GetBondedTokens().Int64())
+	_, err := input.StakingKeeper.Undelegate(
+		input.Context,
+		sdk.AccAddress(smallValAddr),
+		smallValAddr,
+		unbondAmount,
+	)
+	require.NoError(t, err)
 
 	// Run the staking endblocker to ensure signer set tx is set in state
 	staking.EndBlocker(input.Context, input.StakingKeeper)
-	gravity.BeginBlocker(input.Context, gravityKeeper)
 
-	require.EqualValues(t, 2, gravityKeeper.GetLatestSignerSetTxNonce(ctx))
+	// power diff should be less than 5%
+	latestSignerSetTx := input.GravityKeeper.GetLatestSignerSetTx(input.Context)
+	powerDiff := types.EthereumSigners(input.GravityKeeper.CurrentSignerSet(input.Context)).PowerDiff(latestSignerSetTx.Signers)
+	require.Less(t, powerDiff, 0.05)
+
+	// last unbonding height should be the current block
+	lastUnbondingHeight := input.GravityKeeper.GetLastUnbondingBlockHeight(input.Context)
+	require.Equal(t, uint64(input.Context.BlockHeight()), lastUnbondingHeight)
+
+	// should create a new signer set
+	gravity.BeginBlocker(input.Context, gravityKeeper)
+	require.EqualValues(t, 2, gravityKeeper.GetLatestSignerSetTxNonce(input.Context))
+
+	// create signer set due to >5% power diff
+
+	input.Context = input.Context.WithBlockHeight(input.Context.BlockHeight() + 1)
+
+	undelegateAmount := sdk.NewDec(keeper.StakingAmount.Quo(sdk.NewInt(3)).Int64())
+	_, err = input.StakingKeeper.Undelegate(
+		input.Context,
+		sdk.AccAddress(keeper.ValAddrs[0]),
+		keeper.ValAddrs[0],
+		undelegateAmount,
+	)
+	require.NoError(t, err)
+
+	staking.EndBlocker(input.Context, input.StakingKeeper)
+
+	// last unbonding height should not be the current block
+	lastUnbondingHeight = input.GravityKeeper.GetLastUnbondingBlockHeight(input.Context)
+	require.NotEqual(t, uint64(input.Context.BlockHeight()), lastUnbondingHeight)
+
+	// signer set was created
+	gravity.BeginBlocker(input.Context, gravityKeeper)
+	require.EqualValues(t, 3, gravityKeeper.GetLatestSignerSetTxNonce(input.Context))
 }
 
 func TestSignerSetTxSlashing_SignerSetTxCreated_Before_ValidatorBonded(t *testing.T) {
@@ -132,11 +172,8 @@ func TestSignerSetTxSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testi
 	// Validator-1  Unbond slash window is not expired. if not attested, slash
 	// Validator-2  Unbond slash window is not expired. if attested, don't slash
 	input.Context = ctx.WithBlockHeight(valUnbondingHeight)
-	sh := staking.NewHandler(input.StakingKeeper)
-	undelegateMsg1 := keeper.NewTestMsgUnDelegateValidator(keeper.ValAddrs[0], keeper.StakingAmount)
-	sh(input.Context, undelegateMsg1)
-	undelegateMsg2 := keeper.NewTestMsgUnDelegateValidator(keeper.ValAddrs[1], keeper.StakingAmount)
-	sh(input.Context, undelegateMsg2)
+	input.StakingKeeper.Undelegate(input.Context, sdk.AccAddress(keeper.ValAddrs[0]), keeper.ValAddrs[0], sdk.NewDec(keeper.StakingAmount.Int64()))
+	input.StakingKeeper.Undelegate(input.Context, sdk.AccAddress(keeper.ValAddrs[1]), keeper.ValAddrs[1], sdk.NewDec(keeper.StakingAmount.Int64()))
 
 	for i, val := range keeper.ValAddrs {
 		if i == 0 {
@@ -153,12 +190,12 @@ func TestSignerSetTxSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testi
 	// Assertions
 	val1 := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[0])
 	require.True(t, val1.IsJailed())
-	fmt.Println("val1  tokens", val1.GetTokens().ToDec())
+	fmt.Println("val1  tokens", val1.GetTokens())
 	// check if tokens are slashed for val1.
 
 	val2 := input.StakingKeeper.Validator(ctx, keeper.ValAddrs[1])
 	require.True(t, val2.IsJailed())
-	fmt.Println("val2  tokens", val2.GetTokens().ToDec())
+	fmt.Println("val2  tokens", val2.GetTokens())
 	// check if tokens shouldn't be slashed for val2.
 }
 
