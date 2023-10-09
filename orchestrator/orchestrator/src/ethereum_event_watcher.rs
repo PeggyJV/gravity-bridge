@@ -5,9 +5,8 @@ use crate::get_with_retry::get_block_number_with_retry;
 use crate::get_with_retry::get_chain_id_with_retry;
 use crate::metrics;
 use cosmos_gravity::build;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::query::get_last_event_nonce;
-use deep_space::{Contact, Msg};
+use deep_space::{Address as CosmosAddress, Contact, Msg};
 use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -29,18 +28,17 @@ use tonic::transport::Channel;
 
 #[allow(clippy::too_many_arguments)]
 pub async fn check_for_events(
+    cosmos_address: CosmosAddress,
     eth_client: EthClient,
     contact: &Contact,
     grpc_client: &mut GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
-    cosmos_key: CosmosPrivateKey,
     starting_block: U64,
     blocks_to_search: U64,
     block_delay: U64,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) -> Result<U64, GravityError> {
     let prefix = contact.get_prefix();
-    let our_cosmos_address = cosmos_key.to_address(&prefix).unwrap();
     let latest_block = get_block_number_with_retry(eth_client.clone()).await;
     let latest_block = latest_block - block_delay;
 
@@ -110,7 +108,7 @@ pub async fn check_for_events(
     // block, so we also need this routine so make sure we don't send in the first event in this hypothetical
     // multi event block again. In theory we only send all events for every block and that will pass of fail
     // atomicly but lets not take that risk.
-    let last_event_nonce = get_last_event_nonce(grpc_client, our_cosmos_address).await?;
+    let last_event_nonce = get_last_event_nonce(grpc_client, cosmos_address).await?;
     metrics::set_cosmos_last_event_nonce(last_event_nonce);
 
     let erc20_deployed_events: Vec<Erc20DeployedEvent> =
@@ -182,8 +180,7 @@ pub async fn check_for_events(
         || !valset_updated_events.is_empty()
     {
         let messages = build::ethereum_event_messages(
-            contact,
-            cosmos_key,
+            cosmos_address,
             send_to_cosmos_events.to_owned(),
             transaction_batch_events.to_owned(),
             erc20_deployed_events.to_owned(),
@@ -229,7 +226,7 @@ pub async fn check_for_events(
         // TODO(bolten): we are only waiting one block, is it possible if we are sending multiple
         // events via the sender, they could be received over the block boundary and thus our new
         // event nonce does not reflect full processing of the above events?
-        let new_event_nonce = get_last_event_nonce(grpc_client, our_cosmos_address).await?;
+        let new_event_nonce = get_last_event_nonce(grpc_client, cosmos_address).await?;
         if new_event_nonce == last_event_nonce {
             return Err(GravityError::InvalidBridgeStateError(
                 format!("Claims did not process, trying to update but still on {}, trying again in a moment", last_event_nonce),

@@ -14,8 +14,10 @@ use gravity_proto::gravity as proto;
 use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::format_eth_address;
 use prost::Message;
+use tokio::sync::Mutex;
 use std::cmp;
 use std::collections::HashSet;
+use std::sync::Arc;
 use std::{result::Result, time::Duration};
 
 use crate::crypto::PrivateKey as CosmosPrivateKey;
@@ -67,7 +69,7 @@ pub async fn update_gravity_delegate_addresses(
     };
     let msg = Msg::new("/gravity.v1.MsgDelegateKeys", msg);
 
-    send_messages(contact, cosmos_key, gas_price, vec![msg], gas_adjustment).await
+    send_messages(contact.to_owned(), cosmos_key, gas_price, vec![msg], gas_adjustment).await
 }
 
 /// Sends tokens from Cosmos to Ethereum. These tokens will not be sent immediately instead
@@ -78,7 +80,7 @@ pub async fn send_to_eth(
     amount: Coin,
     bridge_fee: Coin,
     gas_price: (f64, String),
-    contact: &Contact,
+    contact: Contact,
     gas_adjustment: f64,
 ) -> Result<TxResponse, GravityError> {
     if amount.denom != bridge_fee.denom {
@@ -90,7 +92,7 @@ pub async fn send_to_eth(
         )));
     }
 
-    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
+    let cosmos_address = cosmos_key.to_address(&contact.get_prefix())?;
 
     let msg = proto::MsgSendToEthereum {
         sender: cosmos_address.to_string(),
@@ -103,13 +105,13 @@ pub async fn send_to_eth(
 }
 
 pub async fn send_messages(
-    contact: &Contact,
+    contact: Contact,
     cosmos_key: CosmosPrivateKey,
     gas_price: (f64, String),
     messages: Vec<Msg>,
     gas_adjustment: f64,
 ) -> Result<TxResponse, GravityError> {
-    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
+    let cosmos_address = cosmos_key.to_address(&contact.get_prefix())?;
 
     let fee_amount = Coin {
         denom: gas_price.1.clone(),
@@ -149,19 +151,19 @@ pub async fn send_messages(
     Ok(contact.wait_for_tx(response, TIMEOUT).await?)
 }
 
-pub async fn send_main_loop(
-    contact: &Contact,
+pub async fn run_sender(
+    contact: Contact,
     cosmos_key: CosmosPrivateKey,
     gas_price: (f64, String),
-    mut rx: tokio::sync::mpsc::Receiver<Vec<Msg>>,
+    rx: Arc<Mutex<tokio::sync::mpsc::Receiver<Vec<Msg>>>>,
     gas_adjustment: f64,
     msg_batch_size: usize,
 ) {
-    while let Some(messages) = rx.recv().await {
+    while let Some(messages) = rx.lock().await.recv().await {
         for msg_chunk in messages.chunks(msg_batch_size) {
             let batch = msg_chunk.to_vec();
             match send_messages(
-                contact,
+                contact.clone(),
                 cosmos_key,
                 gas_price.to_owned(),
                 msg_chunk.to_vec(),
@@ -180,7 +182,7 @@ pub async fn send_main_loop(
                     for msg in batch {
                         let msg_vec = vec![msg];
                         match send_messages(
-                            contact,
+                            contact.clone(),
                             cosmos_key,
                             gas_price.to_owned(),
                             msg_vec.clone(),
@@ -194,6 +196,35 @@ pub async fn send_main_loop(
                     }
                 }
             }
+        }
+    }
+}
+
+/// manages the cosmos message sender task. `run_sender` should never return, but in case there are system-caused
+/// panics, we want to make sure we attempt to restart it. if this function ever returns, the receiver will be dropped
+/// and all tasks containing senders will panic.
+pub async fn send_main_loop(
+    contact: Contact,
+    cosmos_key: CosmosPrivateKey,
+    gas_price: (f64, String),
+    rx: tokio::sync::mpsc::Receiver<Vec<Msg>>,
+    gas_adjustment: f64,
+    msg_batch_size: usize,
+) {
+    let rx = Arc::new(Mutex::new(rx));
+    loop {
+        info!("starting cosmos sender");
+        if let Err(err) = tokio::task::spawn(
+            run_sender(
+                contact.clone(),
+                cosmos_key,
+                gas_price.to_owned(),
+                rx.clone(),
+                gas_adjustment,
+                msg_batch_size,
+            )
+        ).await {
+            error!("cosmos sender failed with: {err:?}");
         }
     }
 }

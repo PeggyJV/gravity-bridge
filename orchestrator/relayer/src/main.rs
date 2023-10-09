@@ -4,6 +4,7 @@ use crate::main_loop::relayer_main_loop;
 use crate::main_loop::LOOP_SPEED;
 use docopt::Docopt;
 use env_logger::Env;
+use ethereum_gravity::utils::get_gravity_id;
 use ethers::prelude::*;
 use ethers::signers::LocalWallet as EthWallet;
 use ethers::types::Address as EthAddress;
@@ -92,7 +93,7 @@ async fn main() {
     let eth_client =
         SignerMiddleware::new(provider, ethereum_wallet.clone().with_chain_id(chain_id));
     let eth_client = Arc::new(eth_client);
-
+    let gravity_id = get_gravity_id(gravity_contract_address, eth_client.clone()).await.expect("failed to get Gravity ID. check your ethereum node connection");
     let public_eth_key = eth_client.address();
     info!("Starting Gravity Relayer");
     info!("Ethereum Address: {}", format_eth_address(public_eth_key));
@@ -106,6 +107,7 @@ async fn main() {
     check_for_eth(public_eth_key, eth_client.clone()).await;
 
     relayer_main_loop(
+        gravity_id,
         eth_client,
         connections.grpc.unwrap(),
         gravity_contract_address,

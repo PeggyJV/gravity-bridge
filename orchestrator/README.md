@@ -51,10 +51,6 @@ This is to build the relayer logic (i.e. cosmos to ethereum) as a seperate binar
 
 Supporting bash scripts for this library
 
-### test_runner/
-
-A binary which runs tests against a cosmos chain
-
 
 ## CLI
 
@@ -67,7 +63,6 @@ client deploy-erc20-representation --cosmos-grpc=<url> --cosmos-prefix=<prefix> 
 orchestrator --cosmos-phrase=<key> --ethereum-key=<key> --cosmos-grpc=<url> --address-prefix=<prefix> --ethereum-rpc=<url> --fees=<denom> --contract-address=<addr>
 register-delegate-key --validator-phrase=<key> --address-prefix=<prefix> [--cosmos-phrase=<key>] [--ethereum-key=<key>] --cosmos-grpc=<url> --fees=<denom>
 relayer --ethereum-key=<key> --cosmos-grpc=<url> --address-prefix=<prefix> --ethereum-rpc=<url> --contract-address=<addr> --cosmos-grpc=<gurl>
-test_runner 
 ```
 
 ## PROPOSED
@@ -105,7 +100,7 @@ gorc
       update [name] [new-name]
       list
       show [name]
-    cosmos 
+    cosmos
       add [name]
       import [name] [mnemnoic]
       delete [name]
@@ -117,7 +112,7 @@ gorc
 ```json
 [gravity]
 	contract = "0x6b175474e89094c44da98b954eedeac495271d0f"
-	
+
 [ethereum]
 key = "testkey"
 rpc = "http://localhost:8545"

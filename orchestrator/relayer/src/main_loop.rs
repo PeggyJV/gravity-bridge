@@ -2,7 +2,7 @@ use crate::{
     batch_relaying::relay_batches, find_latest_valset::find_latest_valset,
     logic_call_relaying::relay_logic_calls, valset_relaying::relay_valsets,
 };
-use ethereum_gravity::{logic_call::LogicCallSkips, types::EthClient, utils::get_gravity_id};
+use ethereum_gravity::{logic_call::LogicCallSkips, types::EthClient};
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use std::time::Duration;
@@ -11,10 +11,36 @@ use tonic::transport::Channel;
 pub const LOOP_SPEED: Duration = Duration::from_secs(17);
 pub const PENDING_TX_TIMEOUT: Duration = Duration::from_secs(120);
 
-/// This function contains the orchestrator primary loop, it is broken out of the main loop so that
-/// it can be called in the test runner for easier orchestration of multi-node tests
 #[allow(unused_variables)]
 pub async fn relayer_main_loop(
+    gravity_id: String,
+    eth_client: EthClient,
+    grpc_client: GravityQueryClient<Channel>,
+    gravity_contract_address: EthAddress,
+    eth_gas_price_multiplier: f32,
+    eth_gas_multiplier: f32,
+) {
+    loop {
+        info!("starting relayer");
+        if let Err(err) = tokio::task::spawn(
+            run_relayer(
+                gravity_id.clone(),
+                eth_client.clone(),
+                grpc_client.clone(),
+                gravity_contract_address,
+                eth_gas_price_multiplier,
+                eth_gas_multiplier,
+            )
+        )
+        .await {
+            error!("relayer failed with: {err:?}");
+        }
+    }
+}
+
+#[allow(unused_variables)]
+pub async fn run_relayer(
+    gravity_id: String,
     eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
@@ -22,12 +48,6 @@ pub async fn relayer_main_loop(
     eth_gas_multiplier: f32,
 ) {
     let mut grpc_client = grpc_client;
-    let gravity_id = get_gravity_id(gravity_contract_address, eth_client.clone()).await;
-    if gravity_id.is_err() {
-        error!("Failed to get GravityID, check your Eth node");
-        return;
-    }
-    let gravity_id = gravity_id.unwrap();
     let mut logic_call_skips = LogicCallSkips::new();
 
     loop {

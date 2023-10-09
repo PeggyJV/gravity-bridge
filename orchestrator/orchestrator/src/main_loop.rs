@@ -20,15 +20,14 @@ use cosmos_gravity::{
 };
 use deep_space::client::ChainStatus;
 use deep_space::error::CosmosGrpcError;
-use deep_space::{Contact, Msg};
+use deep_space::{Address as CosmosAddress, Contact, Msg};
 use ethereum_gravity::types::EthClient;
 use ethereum_gravity::utils::get_gravity_id;
 use ethers::{prelude::*, types::Address as EthAddress};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
+use gravity_utils::error::GravityError;
 use gravity_utils::ethereum::bytes_to_hex_str;
 use relayer::main_loop::relayer_main_loop;
-use std::convert::TryInto;
-use std::process::exit;
 use std::{net, time::Duration};
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
@@ -59,31 +58,36 @@ pub async fn orchestrator_main_loop(
     blocks_to_search: u64,
     gas_adjustment: f64,
     relayer_opt_out: bool,
-    cosmos_msg_batch_size: u32,
-) {
-    let (tx, rx) = tokio::sync::mpsc::channel(1);
+    cosmos_msg_batch_size: usize,
+) -> Result<(), GravityError> {
+    let cosmos_address = cosmos_key.to_address(&contact.get_prefix())?;
+    let block_delay = get_block_delay(eth_client.clone()).await?;
+    let gravity_id = get_gravity_id(gravity_contract_address, eth_client.clone()).await?;
+    let (tx, rx) = tokio::sync::mpsc::channel(10);
 
     let a = send_main_loop(
-        &contact,
+        contact.clone(),
         cosmos_key,
         gas_price,
         rx,
         gas_adjustment,
-        cosmos_msg_batch_size.try_into().unwrap(),
+        cosmos_msg_batch_size,
     );
 
     let b = eth_oracle_main_loop(
-        cosmos_key,
+        cosmos_address,
         contact.clone(),
         eth_client.clone(),
         grpc_client.clone(),
         gravity_contract_address,
         blocks_to_search,
+        block_delay,
         tx.clone(),
     );
 
     let c = eth_signer_main_loop(
-        cosmos_key,
+        cosmos_address,
+        gravity_id.clone(),
         contact.clone(),
         eth_client.clone(),
         grpc_client.clone(),
@@ -95,6 +99,7 @@ pub async fn orchestrator_main_loop(
 
     if !relayer_opt_out {
         let e = relayer_main_loop(
+            gravity_id,
             eth_client.clone(),
             grpc_client.clone(),
             gravity_contract_address,
@@ -105,6 +110,8 @@ pub async fn orchestrator_main_loop(
     } else {
         futures::future::join4(a, b, c, d).await;
     }
+
+    Ok(())
 }
 
 // the amount of time to wait when encountering error conditions
@@ -113,32 +120,54 @@ const DELAY: Duration = Duration::from_secs(5);
 // the number of loop iterations to wait between sending height update messages
 const HEIGHT_UPDATE_INTERVAL: u32 = 50;
 
-/// This function is responsible for making sure that Ethereum events are retrieved from the Ethereum blockchain
-/// and ferried over to Cosmos where they will be used to issue tokens or process batches.
+/// manages the ethereum oracle thread. `run_oracle` should never return, but in case there are system-caused
+/// panics, we want to make sure we attempt to restart it.
 #[allow(unused_variables)]
 pub async fn eth_oracle_main_loop(
-    cosmos_key: CosmosPrivateKey,
+    cosmos_address: CosmosAddress,
     contact: Contact,
     eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
     gravity_contract_address: EthAddress,
     blocks_to_search: u64,
+    block_delay: U64,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
-    let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let block_delay = match get_block_delay(eth_client.clone()).await {
-        Ok(block_delay) => block_delay,
-        Err(e) => {
-            error!(
-                "Error encountered when retrieving block delay, cannot continue: {}",
-                e
-            );
-            exit(1);
+    loop {
+        info!("starting oracle");
+        if let Err(err) = tokio::task::spawn(
+            run_oracle(
+                cosmos_address,
+                contact.clone(),
+                eth_client.clone(),
+                grpc_client.clone(),
+                gravity_contract_address,
+                blocks_to_search,
+                block_delay,
+                msg_sender.clone(),
+            )
+        ).await {
+            error!("oracle failed with: {err:?}");
         }
-    };
+    }
+}
+
+/// This function is responsible for making sure that Ethereum events are retrieved from the Ethereum blockchain
+/// and ferried over to Cosmos where they will be used to issue tokens or process batches.
+#[allow(unused_variables)]
+pub async fn run_oracle(
+    cosmos_address: CosmosAddress,
+    contact: Contact,
+    eth_client: EthClient,
+    grpc_client: GravityQueryClient<Channel>,
+    gravity_contract_address: EthAddress,
+    blocks_to_search: u64,
+    block_delay: U64,
+    msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
+) {
     let mut last_checked_block = get_last_checked_block(
         grpc_client.clone(),
-        our_cosmos_address,
+        cosmos_address,
         gravity_contract_address,
         eth_client.clone(),
         blocks_to_search,
@@ -168,8 +197,7 @@ pub async fn eth_oracle_main_loop(
                         // more confidence we are attesting to a height that has not been re-orged
                         if loop_count % HEIGHT_UPDATE_INTERVAL == 0 {
                             let messages = build::ethereum_vote_height_messages(
-                                &contact,
-                                cosmos_key,
+                                cosmos_address,
                                 latest_eth_block - block_delay,
                             )
                             .await;
@@ -208,11 +236,11 @@ pub async fn eth_oracle_main_loop(
 
                 // Relays events from Ethereum -> Cosmos
                 match check_for_events(
+                    cosmos_address,
                     eth_client.clone(),
                     &contact,
                     &mut grpc_client,
                     gravity_contract_address,
-                    cosmos_key,
                     last_checked_block,
                     blocks_to_search.into(),
                     block_delay,
@@ -240,28 +268,51 @@ pub async fn eth_oracle_main_loop(
     }
 }
 
-/// The eth_signer simply signs off on any batches or validator sets provided by the validator
-/// since these are provided directly by a trusted Cosmsos node they can simply be assumed to be
-/// valid and signed off on.
+/// manages the ethereum signer task. `run_signer` should never return, but in case there are system-caused
+/// panics, we want to make sure we attempt to restart it.
 #[allow(unused_variables)]
 pub async fn eth_signer_main_loop(
-    cosmos_key: CosmosPrivateKey,
+    cosmos_address: CosmosAddress,
+    gravity_id: String,
     contact: Contact,
     eth_client: EthClient,
     grpc_client: GravityQueryClient<Channel>,
     contract_address: EthAddress,
     msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
 ) {
-    let our_cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-    let mut grpc_client = grpc_client;
-
-    let gravity_id = get_gravity_id(contract_address, eth_client.clone()).await;
-    if gravity_id.is_err() {
-        error!("Failed to get GravityID, check your Eth node");
-        return;
+    loop {
+        info!("starting ethereum signer");
+        if let Err(err) = tokio::task::spawn(
+            run_signer(
+                cosmos_address,
+                gravity_id.clone(),
+                contact.clone(),
+                eth_client.clone(),
+                grpc_client.clone(),
+                contract_address,
+                msg_sender.clone(),
+            )
+        )
+        .await {
+            error!("eth signer failed with {err:?}");
+        }
     }
-    let gravity_id = gravity_id.unwrap();
+}
 
+/// simply signs off on any batches or validator sets provided by the validator since these are
+/// provided directly by a trusted Cosmsos node they can simply be assumed to be valid and signed
+/// off on.
+#[allow(unused_variables)]
+pub async fn run_signer(
+    cosmos_address: CosmosAddress,
+    gravity_id: String,
+    contact: Contact,
+    eth_client: EthClient,
+    grpc_client: GravityQueryClient<Channel>,
+    contract_address: EthAddress,
+    msg_sender: tokio::sync::mpsc::Sender<Vec<Msg>>,
+) {
+    let mut grpc_client = grpc_client;
     loop {
         let (async_resp, _) = tokio::join!(
             async {
@@ -304,7 +355,7 @@ pub async fn eth_signer_main_loop(
                 }
 
                 // sign the last unsigned valsets
-                match get_oldest_unsigned_valsets(&mut grpc_client, our_cosmos_address).await {
+                match get_oldest_unsigned_valsets(&mut grpc_client, cosmos_address).await {
                     Ok(valsets) => {
                         if valsets.is_empty() {
                             trace!("No validator sets to sign, node is caught up!")
@@ -315,10 +366,9 @@ pub async fn eth_signer_main_loop(
                                 valsets[0].nonce
                             );
                             let messages = build::signer_set_tx_confirmation_messages(
-                                &contact,
+                                cosmos_address,
                                 eth_client.clone(),
                                 valsets,
-                                cosmos_key,
                                 gravity_id.clone(),
                             )
                             .await;
@@ -338,7 +388,7 @@ pub async fn eth_signer_main_loop(
                 }
 
                 // sign the last unsigned batch, TODO check if we already have signed this
-                match get_oldest_unsigned_transaction_batch(&mut grpc_client, our_cosmos_address)
+                match get_oldest_unsigned_transaction_batch(&mut grpc_client, cosmos_address)
                     .await
                 {
                     Ok(Some(last_unsigned_batch)) => {
@@ -351,10 +401,9 @@ pub async fn eth_signer_main_loop(
                         );
                         let transaction_batches = vec![last_unsigned_batch];
                         let messages = build::batch_tx_confirmation_messages(
-                            &contact,
+                            cosmos_address,
                             eth_client.clone(),
                             transaction_batches,
-                            cosmos_key,
                             gravity_id.clone(),
                         )
                         .await;
@@ -374,7 +423,7 @@ pub async fn eth_signer_main_loop(
                 }
 
                 let logic_calls =
-                    get_oldest_unsigned_logic_call(&mut grpc_client, our_cosmos_address).await;
+                    get_oldest_unsigned_logic_call(&mut grpc_client, cosmos_address).await;
                 if let Ok(logic_calls) = logic_calls {
                     for logic_call in logic_calls {
                         info!(
@@ -384,10 +433,9 @@ pub async fn eth_signer_main_loop(
                         );
                         let logic_calls = vec![logic_call];
                         let messages = build::contract_call_tx_confirmation_messages(
-                            &contact,
+                            cosmos_address,
                             eth_client.clone(),
                             logic_calls,
-                            cosmos_key,
                             gravity_id.clone(),
                         )
                         .await;
@@ -407,15 +455,4 @@ pub async fn eth_signer_main_loop(
             delay_for(ETH_SIGNER_LOOP_SPEED)
         );
     }
-}
-
-pub async fn check_for_eth(orchestrator_address: EthAddress, eth_client: EthClient) {
-    let balance = eth_client
-        .get_balance(orchestrator_address, None)
-        .await
-        .unwrap();
-    if balance == 0u8.into() {
-        warn!("You don't have any Ethereum! You will need to send some to {} for this program to work. Dust will do for basic operations, more info about average relaying costs will be presented as the program runs", orchestrator_address);
-    }
-    metrics::set_ethereum_bal(balance);
 }

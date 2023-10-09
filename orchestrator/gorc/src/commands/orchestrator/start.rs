@@ -114,7 +114,11 @@ impl Runnable for StartCommand {
                 self.orchestrator_only,
                 config.cosmos.msg_batch_size,
             )
-            .await;
+            .await
+            .unwrap_or_else(|e| {
+                error!("orchestrator exited with error: {}", e);
+                std::process::exit(1);
+            });
         })
         .unwrap_or_else(|e| {
             status_err!("executor exited with error: {}", e);

@@ -1,5 +1,4 @@
-use deep_space::Contact;
-use deep_space::Msg;
+use deep_space::{Address as CosmosAddress, Msg};
 use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::utils::keccak256;
@@ -14,20 +13,16 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::BTreeMap;
 
-use crate::crypto::PrivateKey as CosmosPrivateKey;
-
 lazy_static! {
     static ref DENOM_REGEX: Regex = Regex::new("^[a-zA-Z][a-zA-Z0-9/-]{2,127}$").unwrap();
 }
 
 pub async fn signer_set_tx_confirmation_messages(
-    contact: &Contact,
+    cosmos_address: CosmosAddress,
     eth_client: EthClient,
     valsets: Vec<Valset>,
-    cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Vec<Msg> {
-    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let ethereum_address = eth_client.address();
 
     let mut msgs = Vec::new();
@@ -52,13 +47,11 @@ pub async fn signer_set_tx_confirmation_messages(
 }
 
 pub async fn batch_tx_confirmation_messages(
-    contact: &Contact,
+    cosmos_address: CosmosAddress,
     eth_client: EthClient,
     batches: Vec<TransactionBatch>,
-    cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Vec<Msg> {
-    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let ethereum_address = eth_client.address();
 
     let mut msgs = Vec::new();
@@ -84,13 +77,11 @@ pub async fn batch_tx_confirmation_messages(
 }
 
 pub async fn contract_call_tx_confirmation_messages(
-    contact: &Contact,
+    cosmos_address: CosmosAddress,
     eth_client: EthClient,
     logic_calls: Vec<LogicCall>,
-    cosmos_key: CosmosPrivateKey,
     gravity_id: String,
 ) -> Vec<Msg> {
-    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
     let ethereum_address = eth_client.address();
 
     let mut msgs = Vec::new();
@@ -117,12 +108,9 @@ pub async fn contract_call_tx_confirmation_messages(
 }
 
 pub async fn ethereum_vote_height_messages(
-    contact: &Contact,
-    cosmos_key: CosmosPrivateKey,
+    cosmos_address: CosmosAddress,
     ethereum_height: U64,
 ) -> Vec<Msg> {
-    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-
     let msg = proto::MsgEthereumHeightVote {
         ethereum_height: ethereum_height.as_u64(),
         signer: cosmos_address.to_string(),
@@ -136,16 +124,13 @@ pub async fn ethereum_vote_height_messages(
 }
 
 pub fn ethereum_event_messages(
-    contact: &Contact,
-    cosmos_key: CosmosPrivateKey,
+    cosmos_address: CosmosAddress,
     deposits: Vec<SendToCosmosEvent>,
     batches: Vec<TransactionBatchExecutedEvent>,
     erc20_deploys: Vec<Erc20DeployedEvent>,
     logic_calls: Vec<LogicCallExecutedEvent>,
     valsets: Vec<ValsetUpdatedEvent>,
 ) -> Vec<Msg> {
-    let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-
     // This sorts oracle messages by event nonce before submitting them. It's not a pretty implementation because
     // we're missing an intermediary layer of abstraction. We could implement 'EventTrait' and then implement sort
     // for it, but then when we go to transform 'EventTrait' objects into GravityMsg enum values we'll have all sorts
