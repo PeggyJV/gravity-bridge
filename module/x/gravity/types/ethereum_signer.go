@@ -2,7 +2,10 @@ package types
 
 import (
 	"crypto/ecdsa"
+	"fmt"
+	"math/big"
 
+	"cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -21,6 +24,21 @@ func NewEthereumSignature(hash []byte, privateKey *ecdsa.PrivateKey) ([]byte, er
 	return crypto.Sign(protectedHash.Bytes(), privateKey)
 }
 
+// decodeSignature was duplicated from go-ethereum with slight modifications
+func decodeSignature(sig []byte) (r, s *big.Int, v byte) {
+	if len(sig) != crypto.SignatureLength {
+		panic(fmt.Sprintf("wrong size for signature: got %d, want %d", len(sig), crypto.SignatureLength))
+	}
+	r = new(big.Int).SetBytes(sig[:32])
+	s = new(big.Int).SetBytes(sig[32:64])
+	if sig[64] == 27 || sig[64] == 28 {
+		v = sig[64] - 27
+	} else {
+		v = sig[64]
+	}
+	return r, s, v
+}
+
 // ValidateEthereumSignature takes a message, an associated signature and public key and
 // returns an error if the signature isn't valid
 func ValidateEthereumSignature(hash []byte, signature []byte, ethAddress common.Address) error {
@@ -28,12 +46,17 @@ func ValidateEthereumSignature(hash []byte, signature []byte, ethAddress common.
 	/// signature to public key: invalid signature length: invalid
 	/// signature not matching: invalid: invalid
 	if len(signature) < 65 {
-		return sdkerrors.Wrapf(ErrInvalid, "signature too short signature %x", signature)
+		return errors.Wrapf(ErrInvalid, "signature too short signature %x", signature)
 	}
 
 	// Copy to avoid mutating signature slice by accident
 	var sigCopy = make([]byte, len(signature))
 	copy(sigCopy, signature)
+
+	r, s, v := decodeSignature(sigCopy)
+	if !crypto.ValidateSignatureValues(v, r, s, true) {
+		return errors.Wrap(ErrInvalid, "Signature values failed validation")
+	}
 
 	// To verify signature
 	// - use crypto.SigToPub to get the public key
