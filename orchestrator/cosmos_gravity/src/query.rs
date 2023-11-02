@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 use clarity::Signature;
 use deep_space::address::Address;
 use ethers::types::Address as EthAddress;
