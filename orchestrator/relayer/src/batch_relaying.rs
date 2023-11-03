@@ -10,7 +10,6 @@ use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_utils::ethereum::downcast_to_f32;
 use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
 use gravity_utils::types::{BatchConfirmResponse, TransactionBatch, Valset};
-use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::time::Duration;
 use tonic::transport::Channel;

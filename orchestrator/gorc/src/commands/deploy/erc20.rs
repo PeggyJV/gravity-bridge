@@ -20,7 +20,7 @@ pub struct Erc20 {
     #[clap(short, long)]
     ethereum_key: String,
 
-    #[clap(short, long, default_value_t = 1.0)]
+    #[clap(short, long)]
     gas_multiplier: f64,
 }
 

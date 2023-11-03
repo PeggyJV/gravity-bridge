@@ -15,20 +15,14 @@ cosmos_gravity = {path = "../cosmos_gravity"}
 gravity_abi = { path = "../gravity_abi" }
 gravity_utils = {path = "../gravity_utils"}
 gravity_proto = {path = "../gravity_proto/"}
-orchestrator = {path = "../orchestrator/"}
 
 deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
 serde_derive = "1.0"
 clarity = "0.4.11"
-docopt = "1"
 ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
 serde = "1.0"
-actix = "0.12"
-actix-web = {version = "3", features=["openssl"]}
-actix-rt = "2.5"
 lazy_static = "1"
 url = "2"
-web30 = "0.15.4"
 log = "0.4"
 env_logger = "0.8"
 tokio = "1.4.0"
@@ -38,4 +32,4 @@ futures = "0.3.18"
 hex = "0.4.3"
 
 [features]
-ethermint = ["cosmos_gravity/ethermint", "orchestrator/ethermint"]
+ethermint = ["cosmos_gravity/ethermint"]

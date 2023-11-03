@@ -1,5 +1,4 @@
-use std::cmp::Ordering;
-
+use clarity::Signature;
 use deep_space::address::Address;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
@@ -66,6 +65,13 @@ pub async fn get_all_valset_confirms(
     let confirms = request.into_inner().signatures;
     let mut parsed_confirms = Vec::new();
     for item in confirms {
+        if let Err(e) = Signature::from_bytes(&item.signature)?.error_check() {
+            warn!("ignoring valset confirmation with invalid signature from {}", item.ethereum_signer);
+            debug!("reason given for invalid signature: {e:?}");
+
+            continue;
+        }
+
         parsed_confirms.push(ValsetConfirmResponse::from_proto(item)?)
     }
     Ok(parsed_confirms)
@@ -132,6 +138,13 @@ pub async fn get_transaction_batch_signatures(
     let batch_confirms = request.into_inner().signatures;
     let mut out = Vec::new();
     for confirm in batch_confirms {
+        if let Err(e) = Signature::from_bytes(&confirm.signature)?.error_check() {
+            warn!("ignoring batch confirmation with invalid signature from {}", confirm.ethereum_signer);
+            debug!("reason given for invalid signature: {e:?}");
+
+            continue;
+        }
+
         out.push(BatchConfirmResponse::from_proto(confirm)?)
     }
     Ok(out)
@@ -187,6 +200,13 @@ pub async fn get_logic_call_signatures(
     let call_confirms = request.into_inner().signatures;
     let mut out = Vec::new();
     for confirm in call_confirms {
+        if let Err(e) = Signature::from_bytes(&confirm.signature)?.error_check() {
+            warn!("ignoring logic call confirmation with invalid signature from {}", confirm.ethereum_signer);
+            debug!("reason given for invalid signature: {e:?}");
+
+            continue;
+        }
+
         out.push(LogicCallConfirmResponse::from_proto(confirm)?)
     }
     Ok(out)
