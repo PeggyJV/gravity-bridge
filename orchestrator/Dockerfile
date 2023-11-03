@@ -1,6 +1,6 @@
 # Reference: https://www.lpalmieri.com/posts/fast-rust-docker-builds/
 
-FROM rust:1.63 as cargo-chef-rust
+FROM rust:1.68 as cargo-chef-rust
 RUN cargo install cargo-chef --version 0.1.51
 
 FROM cargo-chef-rust as planner

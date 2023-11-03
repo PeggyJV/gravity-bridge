@@ -2,7 +2,7 @@
 # Also, the name was changed from orchestrator to gravity_bridge.
 [package]
 name = "gravity_bridge"
-version = "2.0.4"
+version = "2.0.5"
 authors = ["PeggyJV"]
 license = "Apache-2.0"
 edition = "2018"
@@ -28,18 +28,17 @@ members = [
 	"gravity_abi",
 ]
 
+[workspace.dependencies]
+clarity = "0.4.16"
+
 [dependencies]
 orchestrator = { path = "./orchestrator" }
 cosmos_gravity = { path = "./cosmos_gravity" }
 ethereum_gravity = { path = "./ethereum_gravity" }
 gravity_utils = { path = "./gravity_utils" }
-gravity_proto_build = { path = "./gravity_proto_build" }
-test_runner = { path = "./test_runner" }
 gravity_proto = { path = "./gravity_proto" }
-register_delegate_keys = { path = "./register_delegate_keys" }
 gorc = { path = "./gorc" }
 relayer = { path = "./relayer" }
-gravity_abi_build = { path = "./gravity_abi_build" }
 gravity_abi = { path = "./gravity_abi" }
 
 [features]
@@ -48,5 +47,4 @@ ethermint = [
     "cosmos_gravity/ethermint",
     "relayer/ethermint",
     "gorc/ethermint",
-    "register_delegate_keys/ethermint",
 ]

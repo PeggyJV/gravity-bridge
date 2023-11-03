@@ -1,6 +1,6 @@
 [package]
 name = "register_delegate_keys"
-version = "2.0.0"
+version = "2.0.5"
 authors = ["Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
 
@@ -17,9 +17,8 @@ gravity_proto = {path = "../gravity_proto/"}
 
 deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
 ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
-contact = "0.4"
 serde_derive = "1.0"
-clarity = "0.4.11"
+clarity.workspace = true
 docopt = "1"
 serde = "1.0"
 actix-rt = "2.5"
