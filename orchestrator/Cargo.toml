@@ -2,7 +2,7 @@
 # Also, the name was changed from orchestrator to gravity_bridge.
 [package]
 name = "gravity_bridge"
-version = "2.0.4"
+version = "2.0.5"
 authors = ["PeggyJV"]
 license = "Apache-2.0"
 edition = "2018"

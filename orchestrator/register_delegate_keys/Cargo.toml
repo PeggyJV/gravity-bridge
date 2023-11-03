@@ -1,6 +1,6 @@
 [package]
 name = "register_delegate_keys"
-version = "2.0.0"
+version = "2.0.5"
 authors = ["Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
 

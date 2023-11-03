@@ -1269,7 +1269,7 @@ dependencies = [
 
 [[package]]
 name = "cosmos_gravity"
-version = "2.0.4"
+version = "2.0.5"
 dependencies = [
  "actix",
  "bytes 1.1.0",
@@ -1672,7 +1672,7 @@ dependencies = [
 
 [[package]]
 name = "ethereum_gravity"
-version = "0.1.0"
+version = "2.0.5"
 dependencies = [
  "deep_space",
  "ethers",
@@ -2169,7 +2169,7 @@ checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 
 [[package]]
 name = "gorc"
-version = "2.0.4"
+version = "2.0.5"
 dependencies = [
  "abscissa_core",
  "abscissa_tokio",
@@ -2224,7 +2224,7 @@ dependencies = [
 
 [[package]]
 name = "gravity_bridge"
-version = "2.0.4"
+version = "2.0.5"
 dependencies = [
  "cosmos_gravity",
  "ethereum_gravity",
@@ -2262,7 +2262,7 @@ dependencies = [
 
 [[package]]
 name = "gravity_utils"
-version = "0.1.0"
+version = "2.0.5"
 dependencies = [
  "actix",
  "clarity",
@@ -3141,7 +3141,7 @@ dependencies = [
 
 [[package]]
 name = "orchestrator"
-version = "2.0.4"
+version = "2.0.5"
 dependencies = [
  "actix-rt 2.5.0",
  "axum",
@@ -3721,7 +3721,7 @@ checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
 
 [[package]]
 name = "register_delegate_keys"
-version = "2.0.0"
+version = "2.0.5"
 dependencies = [
  "actix-rt 2.5.0",
  "clarity",
@@ -3745,7 +3745,7 @@ dependencies = [
 
 [[package]]
 name = "relayer"
-version = "2.0.0"
+version = "2.0.5"
 dependencies = [
  "actix",
  "actix-rt 2.5.0",
