@@ -5,7 +5,7 @@ use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
 use gravity_utils::error::GravityError;
-use gravity_utils::ethereum::{downcast_to_u64, vec_u8_to_fixed_32, hex_str_to_bytes};
+use gravity_utils::ethereum::{downcast_to_u64, hex_str_to_bytes, vec_u8_to_fixed_32};
 use gravity_utils::types::{decode_gravity_error, GravityContractError};
 use std::result::Result;
 
@@ -199,15 +199,23 @@ pub fn handle_contract_error(gravity_error: GravityError) -> bool {
     if gravity_contract_error.is_some() {
         match gravity_contract_error.unwrap() {
             GravityContractError::InvalidLogicCallNonce(nonce_error) => {
-                info!("LogicCall already processed, skipping until observed on chain: {}", nonce_error.message());
+                info!(
+                    "LogicCall already processed, skipping until observed on chain: {}",
+                    nonce_error.message()
+                );
                 return true;
             }
             GravityContractError::LogicCallTimedOut(timeout_error) => {
-                info!("LogicCall is timed out, will be skipped until timeout on chain: {}", timeout_error.message());
+                info!(
+                    "LogicCall is timed out, will be skipped until timeout on chain: {}",
+                    timeout_error.message()
+                );
                 return true;
             }
             // TODO(bolten): implement other cases if necessary
-            _ => { error!("Unspecified gravity contract error: {}", error_string) }
+            _ => {
+                error!("Unspecified gravity contract error: {}", error_string)
+            }
         }
     } else {
         error!("Non-gravity contract error: {}", error_string);
@@ -220,48 +228,47 @@ pub fn handle_contract_error(gravity_error: GravityError) -> bool {
 // results in this nightmare
 pub fn extract_gravity_contract_error(gravity_error: GravityError) -> Option<GravityContractError> {
     match gravity_error {
-        GravityError::EthersContractError(ce) => {
-            match ce {
-                ethers::contract::ContractError::MiddlewareError(me) => {
-                    match me {
-                        ethers::middleware::signer::SignerMiddlewareError::MiddlewareError(sme) => {
-                            match sme {
-                                ethers::providers::ProviderError::JsonRpcClientError(jrpce) => {
-                                    if jrpce.is::<ethers::providers::HttpClientError>() {
-                                        let httpe = *jrpce.downcast::<ethers::providers::HttpClientError>().unwrap();
-                                        match httpe {
-                                            ethers::providers::HttpClientError::JsonRpcError(jre) => {
-                                                if jre.code == 3 && jre.data.is_some() {
-                                                    let data = jre.data.unwrap();
-                                                    if data.is_string() {
-                                                        let data_bytes = hex_str_to_bytes(data.as_str().unwrap());
-                                                        if data_bytes.is_ok() {
-                                                            decode_gravity_error(data_bytes.unwrap())
-                                                        } else {
-                                                            None
-                                                        }
-                                                    } else {
-                                                        None
-                                                    }
+        GravityError::EthersContractError(ce) => match ce {
+            ethers::contract::ContractError::MiddlewareError(me) => match me {
+                ethers::middleware::signer::SignerMiddlewareError::MiddlewareError(sme) => {
+                    match sme {
+                        ethers::providers::ProviderError::JsonRpcClientError(jrpce) => {
+                            if jrpce.is::<ethers::providers::HttpClientError>() {
+                                let httpe = *jrpce
+                                    .downcast::<ethers::providers::HttpClientError>()
+                                    .unwrap();
+                                match httpe {
+                                    ethers::providers::HttpClientError::JsonRpcError(jre) => {
+                                        if jre.code == 3 && jre.data.is_some() {
+                                            let data = jre.data.unwrap();
+                                            if data.is_string() {
+                                                let data_bytes =
+                                                    hex_str_to_bytes(data.as_str().unwrap());
+                                                if data_bytes.is_ok() {
+                                                    decode_gravity_error(data_bytes.unwrap())
                                                 } else {
                                                     None
                                                 }
+                                            } else {
+                                                None
                                             }
-                                            _ => None
+                                        } else {
+                                            None
                                         }
-                                    } else {
-                                        None
                                     }
+                                    _ => None,
                                 }
-                                _ => None
+                            } else {
+                                None
                             }
                         }
-                        _ => None
+                        _ => None,
                     }
                 }
-                _ => None
-            }
-        }
-        _ => None
+                _ => None,
+            },
+            _ => None,
+        },
+        _ => None,
     }
 }
