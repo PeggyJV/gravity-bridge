@@ -12,7 +12,6 @@ gravity_proto = { path = "../gravity_proto/" }
 cosmos-sdk-proto = "0.6.3"
 deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
 ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
-web30 = "0.15"
 clarity = "0.4.11"
 lazy_static = "1.4.0"
 num256 = "0.3"
@@ -25,9 +24,6 @@ num-bigint = "0.4"
 log = "0.4"
 url = "2"
 sha3 = "0.9"
-tiny-bip39 = "0.8.0"
-bitcoin = { version = "=0.27", features = ["use-serde"] }
-hdpath = { version = "0.6.0", features = ["with-bitcoin"] }
 rustc-hex = "2.1.0"
 
 [dev_dependencies]
