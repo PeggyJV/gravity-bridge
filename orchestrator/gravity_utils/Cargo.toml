@@ -12,7 +12,7 @@ gravity_proto = { path = "../gravity_proto/" }
 cosmos-sdk-proto = "0.6.3"
 deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
 ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
-clarity = "0.4.11"
+clarity.workspace = true
 lazy_static = "1.4.0"
 num256 = "0.3"
 serde_derive = "1.0"

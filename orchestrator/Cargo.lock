@@ -1102,9 +1102,9 @@ dependencies = [
 
 [[package]]
 name = "clarity"
-version = "0.4.12"
+version = "0.4.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef8749bcae70d65c0705636ee675020490f35e05cf4ec2d4b78455aeca2194f7"
+checksum = "309ac0ae526b740d40038944bf41c3679acb212657154e1f6bb678704cba37da"
 dependencies = [
  "lazy_static",
  "num-bigint 0.4.0",

@@ -18,7 +18,7 @@ gravity_proto = {path = "../gravity_proto/"}
 
 deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
 serde_derive = "1.0"
-clarity = "0.4.11"
+clarity.workspace = true
 ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
 serde = "1.0"
 actix = "0.12"

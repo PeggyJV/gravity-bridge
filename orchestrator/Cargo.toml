@@ -28,6 +28,9 @@ members = [
 	"gravity_abi",
 ]
 
+[workspace.dependencies]
+clarity = "0.4.16"
+
 [dependencies]
 orchestrator = { path = "./orchestrator" }
 cosmos_gravity = { path = "./cosmos_gravity" }
