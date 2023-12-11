@@ -200,8 +200,6 @@ replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210
 // use cometbft
 replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.28
 
-replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-
 // replace broken goleveldb
 replace github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
