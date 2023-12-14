@@ -1893,7 +1893,7 @@ checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "gorc"
-version = "2.0.4"
+version = "4.0.0"
 dependencies = [
  "abscissa_core",
  "abscissa_tokio",
@@ -1947,7 +1947,7 @@ dependencies = [
 
 [[package]]
 name = "gravity_bridge"
-version = "2.0.4"
+version = "4.0.0"
 dependencies = [
  "cosmos_gravity",
  "ethereum_gravity",
@@ -2800,7 +2800,7 @@ dependencies = [
 
 [[package]]
 name = "orchestrator"
-version = "2.0.4"
+version = "4.0.0"
 dependencies = [
  "axum",
  "clarity",
@@ -3402,7 +3402,7 @@ dependencies = [
 
 [[package]]
 name = "relayer"
-version = "2.0.0"
+version = "4.0.0"
 dependencies = [
  "actix",
  "clarity",
