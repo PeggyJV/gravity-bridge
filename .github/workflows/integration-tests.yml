@@ -16,6 +16,9 @@ env:
 
 jobs:
   rust-build:
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout branch
