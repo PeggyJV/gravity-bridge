@@ -96,7 +96,8 @@ func TestGetUnconfirmedContractCallTxs(t *testing.T) {
 	fees := []types.ERC20Token{}
 	sig := []byte("dummysig")
 	gk.CreateContractCallTx(ctx, 1, scope, address, payload, tokens, fees)
-	gk.SetCompletedOutgoingTx(ctx, &types.ContractCallTx{
+	//gk.SetCompletedOutgoingTx(ctx, &types.ContractCallTx{
+	gk.SetOutgoingTx(ctx, &types.ContractCallTx{
 		InvalidationNonce: 2,
 		InvalidationScope: scope,
 		Address:           address.Hex(),

@@ -392,7 +392,8 @@ func TestGetUnconfirmedBatchTxs(t *testing.T) {
 
 	blockheight := uint64(ctx.BlockHeight())
 	sig := []byte("dummysig")
-	gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+	//gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+    gk.SetOutgoingTx(ctx, &types.BatchTx{
 		BatchNonce: 1,
 		Height:     uint64(ctx.BlockHeight()),
 	})
@@ -437,12 +438,14 @@ func TestGetUnconfirmedBatchTxs(t *testing.T) {
 
 	addressA := "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 	addressB := "0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
-	gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+	//gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+	gk.SetOutgoingTx(ctx, &types.BatchTx{
 		TokenContract: addressB,
 		BatchNonce:    3,
 		Height:        blockheight,
 	})
-	gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+	//gk.SetCompletedOutgoingTx(ctx, &types.BatchTx{
+	gk.SetOutgoingTx(ctx, &types.BatchTx{
 		TokenContract: addressA,
 		BatchNonce:    4,
 		Height:        blockheight,
