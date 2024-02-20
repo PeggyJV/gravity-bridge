@@ -12,6 +12,18 @@ import (
 
 func (k Keeper) GetUnsignedContractCallTxs(ctx sdk.Context, val sdk.ValAddress) []*types.ContractCallTx {
 	var unconfirmed []*types.ContractCallTx
+	k.IterateCompletedOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
+		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)
+		if len(sig) == 0 {
+			call, ok := cotx.(*types.ContractCallTx)
+			if !ok {
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for completed tx %s", cotx))
+			}
+			unconfirmed = append(unconfirmed, call)
+		}
+		return false
+	})
+
 	k.IterateOutgoingTxsByType(ctx, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 {

@@ -163,6 +163,17 @@ func (k Keeper) getLastOutgoingBatchByTokenType(ctx sdk.Context, token common.Ad
 // GetUnsignedBatchTxs returns all batches for which the specified validator has not submitted confirmations in ascending nonce order
 func (k Keeper) GetUnsignedBatchTxs(ctx sdk.Context, val sdk.ValAddress) []*types.BatchTx {
 	var unconfirmed []*types.BatchTx
+	k.IterateCompletedOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, cotx types.OutgoingTx) bool {
+		sig := k.getEthereumSignature(ctx, cotx.GetStoreIndex(), val)
+		if len(sig) == 0 {
+			batch, ok := cotx.(*types.BatchTx)
+			if !ok {
+				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for completed tx %s", cotx))
+			}
+			unconfirmed = append(unconfirmed, batch)
+		}
+		return false
+	})
 	k.IterateOutgoingTxsByType(ctx, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) bool {
 		sig := k.getEthereumSignature(ctx, otx.GetStoreIndex(), val)
 		if len(sig) == 0 {
