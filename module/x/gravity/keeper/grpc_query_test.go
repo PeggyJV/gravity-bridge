@@ -300,9 +300,7 @@ func TestKeeper_UnsignedBatchTxs(t *testing.T) {
 			res, err := gk.UnsignedBatchTxs(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, res)
-			//require.Len(t, res.Batches, 3)
-            // Test broken by completed tx workaround to SubmitEthereumTxComfiration bug
-			require.Len(t, res.Batches, 1)
+			require.Len(t, res.Batches, 3)
 		}
 	})
 }
@@ -346,9 +344,7 @@ func TestKeeper_UnsignedContractCallTxs(t *testing.T) {
 			res, err := gk.UnsignedContractCallTxs(sdk.WrapSDKContext(ctx), req)
 			require.NoError(t, err)
 			require.NotNil(t, res)
-			//require.Len(t, res.Calls, 3)
-            // Test broken by completed tx workaround to SubmitEthereumTxComfiration bug
-			require.Len(t, res.Calls, 2)
+			require.Len(t, res.Calls, 3)
 		}
 	})
 }

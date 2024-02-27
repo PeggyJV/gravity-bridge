@@ -117,13 +117,16 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	otx := k.GetOutgoingTx(ctx, confirmation.GetStoreIndex())
-	if otx == nil {
-		k.Logger(ctx).Error(
-			"no outgoing tx",
-			"store index", fmt.Sprintf("%x", confirmation.GetStoreIndex()),
-		)
-		return nil, sdkerrors.Wrap(types.ErrInvalid, "couldn't find outgoing tx")
+	var otx types.OutgoingTx
+	if otx = k.GetOutgoingTx(ctx, confirmation.GetStoreIndex()); otx == nil {
+		if otx = k.GetCompletedOutgoingTx(ctx, confirmation.GetStoreIndex()); otx == nil {
+			k.Logger(ctx).Error(
+				"no outgoing tx",
+				"store index", fmt.Sprintf("%x", confirmation.GetStoreIndex()),
+			)
+
+			return nil, sdkerrors.Wrap(types.ErrInvalid, "couldn't find outgoing tx")
+		}
 	}
 
 	gravityID := k.getGravityID(ctx)
