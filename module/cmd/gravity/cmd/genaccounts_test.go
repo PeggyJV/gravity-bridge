@@ -7,10 +7,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	"github.com/cometbft/cometbft/libs/log"
 
+	tmjson "github.com/cometbft/cometbft/libs/json"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -19,8 +21,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
-	tmjson "github.com/cometbft/cometbft/libs/json"
-	tmtypes "github.com/cometbft/cometbft/types"
 )
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
