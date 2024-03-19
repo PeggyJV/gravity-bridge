@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/client/cli"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/keeper"

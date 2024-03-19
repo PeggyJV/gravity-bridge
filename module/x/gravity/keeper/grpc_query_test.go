@@ -8,7 +8,7 @@ import (
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/migrations/v1/keeper"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/bytes"
+	"github.com/cometbft/cometbft/libs/bytes"
 )
 
 func TestKeeper_Params(t *testing.T) {

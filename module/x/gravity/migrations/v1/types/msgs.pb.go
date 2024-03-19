@@ -13,7 +13,7 @@ import (
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/regen-network/cosmos-proto"
-	github_com_tendermint_tendermint_libs_bytes "github.com/tendermint/tendermint/libs/bytes"
+	github_com_tendermint_tendermint_libs_bytes "github.com/cometbft/cometbft/libs/bytes"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -1004,7 +1004,7 @@ func (m *BatchExecutedEvent) GetBatchNonce() uint64 {
 // investigate?
 type ContractCallExecutedEvent struct {
 	EventNonce        uint64                                               `protobuf:"varint,1,opt,name=event_nonce,json=eventNonce,proto3" json:"event_nonce,omitempty"`
-	InvalidationScope github_com_tendermint_tendermint_libs_bytes.HexBytes `protobuf:"bytes,2,opt,name=invalidation_scope,json=invalidationScope,proto3,casttype=github.com/tendermint/tendermint/libs/bytes.HexBytes" json:"invalidation_scope,omitempty"`
+	InvalidationScope github_com_tendermint_tendermint_libs_bytes.HexBytes `protobuf:"bytes,2,opt,name=invalidation_scope,json=invalidationScope,proto3,casttype=github.com/cometbft/cometbft/libs/bytes.HexBytes" json:"invalidation_scope,omitempty"`
 	InvalidationNonce uint64                                               `protobuf:"varint,3,opt,name=invalidation_nonce,json=invalidationNonce,proto3" json:"invalidation_nonce,omitempty"`
 	EthereumHeight    uint64                                               `protobuf:"varint,4,opt,name=ethereum_height,json=ethereumHeight,proto3" json:"ethereum_height,omitempty"`
 }

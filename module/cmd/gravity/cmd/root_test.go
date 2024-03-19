@@ -14,7 +14,7 @@ import (
 	"github.com/peggyjv/gravity-bridge/module/v4/app"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/cometbft/cometbft/libs/cli"
 )
 
 type KeyOutput struct {
