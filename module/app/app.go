@@ -14,6 +14,7 @@ import (
 	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -161,7 +162,7 @@ var (
 	}
 
 	// verify app interface at compile time
-	_ runtime.App             = (*Gravity)(nil)
+	_ runtime.AppI            = (*Gravity)(nil)
 	_ servertypes.Application = (*Gravity)(nil)
 )
 
@@ -755,6 +756,11 @@ func (app *Gravity) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICo
 	if apiConfig.Swagger {
 		RegisterSwaggerAPI(clientCtx, apiSvr.Router)
 	}
+}
+
+// RegisterNodeService registers the node gRPC Query service.
+func (app *Gravity) RegisterNodeService(clientCtx client.Context) {
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

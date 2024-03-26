@@ -39,7 +39,6 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -408,7 +407,6 @@ func CreateTestEnv(t *testing.T) TestInput {
 	)
 
 	govKeeper.SetProposalID(ctx, govtypesv1beta1.DefaultStartingProposalID)
-	govKeeper.SetDepositParams(ctx, govtypesv1.DefaultDepositParams())
 
 	slashingKeeper := slashingkeeper.NewKeeper(
 		marshaler,
@@ -432,7 +430,7 @@ func CreateTestEnv(t *testing.T) TestInput {
 		senderModuleAccounts,
 	)
 
-	stakingKeeper = *stakingKeeper.SetHooks(
+	stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
 			distKeeper.Hooks(),
 			slashingKeeper.Hooks(),
@@ -446,10 +444,10 @@ func CreateTestEnv(t *testing.T) TestInput {
 		GravityKeeper:   k,
 		AccountKeeper:   accountKeeper,
 		BankKeeper:      bankKeeper,
-		StakingKeeper:   stakingKeeper,
+		StakingKeeper:   *stakingKeeper,
 		SlashingKeeper:  slashingKeeper,
 		DistKeeper:      distKeeper,
-		GovKeeper:       govKeeper,
+		GovKeeper:       *govKeeper,
 		Context:         ctx,
 		Marshaler:       marshaler,
 		LegacyAmino:     cdc,
