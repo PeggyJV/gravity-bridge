@@ -3,12 +3,12 @@ package keeper
 import (
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/bytes"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/migrations/v1/keeper"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 	"github.com/stretchr/testify/require"
-	"github.com/cometbft/cometbft/libs/bytes"
 )
 
 func TestKeeper_Params(t *testing.T) {

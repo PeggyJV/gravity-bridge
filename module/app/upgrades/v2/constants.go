@@ -1,3 +1,5 @@
+//go:build exclude
+
 package v2
 
 // UgradeName defines the on-chain upgrade name for the Gravity v2 upgrade

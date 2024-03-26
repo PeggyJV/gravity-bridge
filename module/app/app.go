@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	ccodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -86,9 +87,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	"github.com/gorilla/mux"
 	gravityparams "github.com/peggyjv/gravity-bridge/module/v4/app/params"
-	v2 "github.com/peggyjv/gravity-bridge/module/v4/app/upgrades/v2"
-	v3 "github.com/peggyjv/gravity-bridge/module/v4/app/upgrades/v3"
-	v4 "github.com/peggyjv/gravity-bridge/module/v4/app/upgrades/v4"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity"
 	gravityclient "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/client"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/keeper"
@@ -163,7 +161,7 @@ var (
 	}
 
 	// verify app interface at compile time
-	_ simapp.App              = (*Gravity)(nil)
+	_ runtime.App             = (*Gravity)(nil)
 	_ servertypes.Application = (*Gravity)(nil)
 )
 
@@ -647,7 +645,7 @@ func (app *Gravity) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 
 // InitChainer application update at chain initialization
 func (app *Gravity) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	var genesisState simapp.GenesisState
+	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
@@ -838,28 +836,5 @@ func (app *Gravity) setupUpgradeStoreLoaders() {
 }
 
 func (app *Gravity) setupUpgradeHandlers() {
-	app.upgradeKeeper.SetUpgradeHandler(
-		v2.UpgradeName,
-		v2.CreateUpgradeHandler(
-			app.mm,
-			app.configurator,
-			app.bankKeeper,
-		),
-	)
 
-	app.upgradeKeeper.SetUpgradeHandler(
-		v3.UpgradeName,
-		v3.CreateUpgradeHandler(
-			app.mm,
-			app.configurator,
-		),
-	)
-
-	app.upgradeKeeper.SetUpgradeHandler(
-		v4.UpgradeName,
-		v4.CreateUpgradeHandler(
-			app.mm,
-			app.configurator,
-		),
-	)
 }

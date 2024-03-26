@@ -6,6 +6,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -45,7 +46,6 @@ import (
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	paramsproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -57,7 +57,6 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
@@ -243,7 +242,7 @@ func SetupFiveValChain(t *testing.T) (TestInput, sdk.Context) {
 	// Set the params for our modules
 	input.StakingKeeper.SetParams(input.Context, TestingStakeParams)
 
-	sh := testutil.NewHelper(t, input.Context, input.StakingKeeper)
+	sh := testutil.NewHelper(t, input.Context, &input.StakingKeeper)
 	sh.Denom = TestingStakeParams.BondDenom
 	for i := range []int{0, 1, 2, 3, 4} {
 
@@ -271,7 +270,7 @@ func SetupFiveValChain(t *testing.T) (TestInput, sdk.Context) {
 	}
 
 	// Run the staking endblocker to ensure valset is correct in state
-	staking.EndBlocker(input.Context, input.StakingKeeper)
+	staking.EndBlocker(input.Context, &input.StakingKeeper)
 
 	// Register eth addresses for each validator
 	for i, addr := range ValAddrs {
@@ -344,11 +343,11 @@ func CreateTestEnv(t *testing.T) TestInput {
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		marshaler,
-		keyAcc, // target store
-		getSubspace(paramsKeeper, authtypes.ModuleName),
+		keyAcc,                     // target store
 		authtypes.ProtoBaseAccount, // prototype
 		maccPerms,
 		"gravity",
+		govtypes.ModuleName,
 	)
 
 	blockedAddr := make(map[string]bool, len(maccPerms))
@@ -360,15 +359,15 @@ func CreateTestEnv(t *testing.T) TestInput {
 		marshaler,
 		keyBank,
 		accountKeeper,
-		getSubspace(paramsKeeper, banktypes.ModuleName),
 		blockedAddr,
+		govtypes.ModuleName,
 	)
 	bankKeeper.SetParams(ctx, banktypes.Params{DefaultSendEnabled: true})
 
-	stakingKeeper := stakingkeeper.NewKeeper(marshaler, keyStaking, accountKeeper, bankKeeper, getSubspace(paramsKeeper, stakingtypes.ModuleName))
+	stakingKeeper := stakingkeeper.NewKeeper(marshaler, keyStaking, accountKeeper, bankKeeper, govtypes.ModuleName)
 	stakingKeeper.SetParams(ctx, TestingStakeParams)
 
-	distKeeper := distrkeeper.NewKeeper(marshaler, keyDistro, getSubspace(paramsKeeper, distrtypes.ModuleName), accountKeeper, bankKeeper, stakingKeeper, authtypes.FeeCollectorName)
+	distKeeper := distrkeeper.NewKeeper(marshaler, keyDistro, accountKeeper, bankKeeper, stakingKeeper, authtypes.FeeCollectorName, govtypes.ModuleName)
 	distKeeper.SetParams(ctx, distrtypes.DefaultParams())
 
 	// set genesis items required for distribution
@@ -404,24 +403,19 @@ func CreateTestEnv(t *testing.T) TestInput {
 	// Load default wasm config
 
 	router := baseapp.NewMsgServiceRouter()
-	govRouter := govtypesv1beta1.NewRouter().
-		AddRoute(paramsproposal.RouterKey, params.NewParamChangeProposalHandler(paramsKeeper)).
-		AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler)
-
 	govKeeper := govkeeper.NewKeeper(
-		marshaler, keyGov, getSubspace(paramsKeeper, govtypes.ModuleName).WithKeyTable(govtypesv1.ParamKeyTable()), accountKeeper, bankKeeper, stakingKeeper, govRouter, router, govtypes.DefaultConfig(),
+		marshaler, keyGov, accountKeeper, bankKeeper, stakingKeeper, router, govtypes.DefaultConfig(), govtypes.ModuleName,
 	)
 
 	govKeeper.SetProposalID(ctx, govtypesv1beta1.DefaultStartingProposalID)
 	govKeeper.SetDepositParams(ctx, govtypesv1.DefaultDepositParams())
-	govKeeper.SetVotingParams(ctx, govtypesv1.DefaultVotingParams())
-	govKeeper.SetTallyParams(ctx, govtypesv1.DefaultTallyParams())
 
 	slashingKeeper := slashingkeeper.NewKeeper(
 		marshaler,
+		cdc,
 		keySlashing,
-		&stakingKeeper,
-		getSubspace(paramsKeeper, slashingtypes.ModuleName).WithKeyTable(slashingtypes.ParamKeyTable()),
+		stakingKeeper,
+		govtypes.ModuleName,
 	)
 
 	k := NewKeeper(

@@ -76,6 +76,9 @@ func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAd
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	return nil
 }
+func (h Hooks) AfterUnbondingInitiated(ctx sdk.Context, _ uint64) error {
+	return nil
+}
 
 var _ types.GravityHooks = Keeper{}
 
