@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"cosmossdk.io/errors"
+	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
@@ -42,6 +43,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -94,7 +96,6 @@ import (
 	gravitytypes "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
-	dbm "github.com/tendermint/tm-db"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -193,21 +194,22 @@ type Gravity struct {
 	memKeys map[string]*storetypes.MemoryStoreKey
 
 	// keepers
-	accountKeeper    authkeeper.AccountKeeper
-	bankKeeper       bankkeeper.Keeper
-	capabilityKeeper *capabilitykeeper.Keeper
-	stakingKeeper    stakingkeeper.Keeper
-	slashingKeeper   slashingkeeper.Keeper
-	mintKeeper       mintkeeper.Keeper
-	distrKeeper      distrkeeper.Keeper
-	govKeeper        govkeeper.Keeper
-	crisisKeeper     crisiskeeper.Keeper
-	upgradeKeeper    upgradekeeper.Keeper
-	paramsKeeper     paramskeeper.Keeper
-	ibcKeeper        *ibckeeper.Keeper
-	evidenceKeeper   evidencekeeper.Keeper
-	transferKeeper   ibctransferkeeper.Keeper
-	gravityKeeper    keeper.Keeper
+	accountKeeper         authkeeper.AccountKeeper
+	bankKeeper            bankkeeper.Keeper
+	capabilityKeeper      *capabilitykeeper.Keeper
+	stakingKeeper         stakingkeeper.Keeper
+	slashingKeeper        slashingkeeper.Keeper
+	mintKeeper            mintkeeper.Keeper
+	distrKeeper           distrkeeper.Keeper
+	govKeeper             govkeeper.Keeper
+	consensusParamsKeeper *consensusparamkeeper.Keeper
+	crisisKeeper          crisiskeeper.Keeper
+	upgradeKeeper         upgradekeeper.Keeper
+	paramsKeeper          paramskeeper.Keeper
+	ibcKeeper             *ibckeeper.Keeper
+	evidenceKeeper        evidencekeeper.Keeper
+	transferKeeper        ibctransferkeeper.Keeper
+	gravityKeeper         keeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -276,7 +278,7 @@ func NewGravityApp(
 	}
 
 	app.paramsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tKeys[paramstypes.TStoreKey])
-	bApp.SetParamStore(app.paramsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
+	bApp.SetParamStore(app.consensusParamsKeeper)
 
 	app.capabilityKeeper = capabilitykeeper.NewKeeper(
 		appCodec,
@@ -291,72 +293,75 @@ func NewGravityApp(
 	// `ScopeToModule`.
 	app.capabilityKeeper.Seal()
 
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+
 	app.accountKeeper = authkeeper.NewAccountKeeper(
 		appCodec,
-		keys[authtypes.StoreKey],
-		app.GetSubspace(authtypes.ModuleName),
+		app.keys[authtypes.StoreKey],
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		gravityparams.Bech32PrefixAccAddr,
+		authority,
 	)
-
 	app.bankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
-		keys[banktypes.StoreKey],
+		app.keys[banktypes.StoreKey],
 		app.accountKeeper,
-		app.GetSubspace(banktypes.ModuleName),
 		app.BlockedAddrs(),
+		authority,
 	)
-
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
-		keys[stakingtypes.StoreKey],
+		app.keys[stakingtypes.StoreKey],
 		app.accountKeeper,
 		app.bankKeeper,
-		app.GetSubspace(stakingtypes.ModuleName),
+		authority,
 	)
 
 	app.mintKeeper = mintkeeper.NewKeeper(
 		appCodec,
-		keys[minttypes.StoreKey],
-		app.GetSubspace(minttypes.ModuleName),
-		&stakingKeeper,
+		app.keys[minttypes.StoreKey],
+		stakingKeeper,
 		app.accountKeeper,
 		app.bankKeeper,
 		authtypes.FeeCollectorName,
+		authority,
 	)
 
 	app.distrKeeper = distrkeeper.NewKeeper(
 		appCodec,
 		keys[distrtypes.StoreKey],
-		app.GetSubspace(distrtypes.ModuleName),
 		app.accountKeeper,
 		app.bankKeeper,
-		&stakingKeeper,
+		stakingKeeper,
 		authtypes.FeeCollectorName,
+		authority,
 	)
 
 	app.slashingKeeper = slashingkeeper.NewKeeper(
 		appCodec,
+		legacyAmino,
 		keys[slashingtypes.StoreKey],
-		&stakingKeeper,
-		app.GetSubspace(slashingtypes.ModuleName),
+		stakingKeeper,
+		authority,
 	)
 
-	app.crisisKeeper = crisiskeeper.NewKeeper(
-		app.GetSubspace(crisistypes.ModuleName),
+	app.crisisKeeper = *crisiskeeper.NewKeeper(
+		appCodec,
+		app.keys[crisistypes.StoreKey],
 		invCheckPeriod,
 		app.bankKeeper,
 		authtypes.FeeCollectorName,
+		authority,
 	)
 
-	app.upgradeKeeper = upgradekeeper.NewKeeper(
+	app.upgradeKeeper = *upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
 		keys[upgradetypes.StoreKey],
 		appCodec,
 		homePath,
 		app.BaseApp,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority,
 	)
 
 	app.gravityKeeper = keeper.NewKeeper(
@@ -373,7 +378,7 @@ func NewGravityApp(
 		app.ModuleAccountAddressesToNames([]string{distrtypes.ModuleName}),
 	)
 
-	app.stakingKeeper = *stakingKeeper.SetHooks(
+	stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
 			app.distrKeeper.Hooks(),
 			app.slashingKeeper.Hooks(),
@@ -405,7 +410,7 @@ func NewGravityApp(
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		appCodec,
 		keys[evidencetypes.StoreKey],
-		&stakingKeeper,
+		stakingKeeper,
 		app.slashingKeeper,
 	)
 	app.evidenceKeeper = *evidenceKeeper
@@ -413,23 +418,22 @@ func NewGravityApp(
 	govRouter := govtypesv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler).
 		AddRoute(paramsproposal.RouterKey, params.NewParamChangeProposalHandler(app.paramsKeeper)).
-		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.distrKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.upgradeKeeper)).
+		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(&app.upgradeKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.ibcKeeper.ClientKeeper)).
 		AddRoute(gravitytypes.RouterKey, gravity.NewCommunityPoolEthereumSpendProposalHandler(app.gravityKeeper))
 
 	// Are defaults ok here?
 	govConfig := govtypes.DefaultConfig()
-	app.govKeeper = govkeeper.NewKeeper(
+	app.govKeeper = *govkeeper.NewKeeper(
 		appCodec,
 		keys[govtypes.StoreKey],
-		app.GetSubspace(govtypes.ModuleName),
 		app.accountKeeper,
 		app.bankKeeper,
-		&stakingKeeper,
-		govRouter,
+		stakingKeeper,
+		// TODO: This does not include our custom module proposal handlers anymore since the govRouter parameter was removed from this constructor
 		app.MsgServiceRouter(),
 		govConfig,
+		authority,
 	)
 
 	app.setupUpgradeStoreLoaders()
