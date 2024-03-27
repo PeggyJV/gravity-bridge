@@ -86,7 +86,7 @@ import (
 	ibcclient "github.com/cosmos/ibc-go/v7/modules/core/02-client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	ibcporttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
-	ibchost "github.com/cosmos/ibc-go/v7/modules/core/24-host"
+	icaexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	"github.com/gorilla/mux"
 	gravityparams "github.com/peggyjv/gravity-bridge/module/v4/app/params"
@@ -259,7 +259,7 @@ func NewGravityApp(
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
+		govtypes.StoreKey, paramstypes.StoreKey, icaexported.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		gravitytypes.StoreKey,
 	)
@@ -285,7 +285,7 @@ func NewGravityApp(
 		keys[capabilitytypes.StoreKey],
 		memKeys[capabilitytypes.MemStoreKey],
 	)
-	scopedIBCKeeper := app.capabilityKeeper.ScopeToModule(ibchost.ModuleName)
+	scopedIBCKeeper := app.capabilityKeeper.ScopeToModule(icaexported.ModuleName)
 	scopedTransferKeeper := app.capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 
 	// Applications that wish to enforce statically created ScopedKeepers should
@@ -388,8 +388,8 @@ func NewGravityApp(
 
 	app.ibcKeeper = ibckeeper.NewKeeper(
 		appCodec,
-		keys[ibchost.StoreKey],
-		app.GetSubspace(ibchost.ModuleName),
+		keys[icaexported.StoreKey],
+		app.GetSubspace(icaexported.ModuleName),
 		app.stakingKeeper,
 		app.upgradeKeeper,
 		scopedIBCKeeper,
@@ -528,7 +528,7 @@ func NewGravityApp(
 		govtypes.ModuleName,
 		crisistypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		ibchost.ModuleName,
+		icaexported.ModuleName,
 		genutiltypes.ModuleName,
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
@@ -539,7 +539,7 @@ func NewGravityApp(
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		ibchost.ModuleName,
+		icaexported.ModuleName,
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
@@ -563,7 +563,7 @@ func NewGravityApp(
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
-		ibchost.ModuleName,
+		icaexported.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		paramstypes.ModuleName,
@@ -574,25 +574,65 @@ func NewGravityApp(
 	)
 
 	app.mm.RegisterInvariants(&app.crisisKeeper)
-	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
+	// app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 
 	app.setupUpgradeHandlers()
 
-	app.sm = module.NewSimulationManager(
-		auth.NewAppModule(appCodec, app.accountKeeper, authsims.RandomGenesisAccounts),
-		bank.NewAppModule(appCodec, app.bankKeeper, app.accountKeeper),
-		capability.NewAppModule(appCodec, *app.capabilityKeeper),
-		gov.NewAppModule(appCodec, app.govKeeper, app.accountKeeper, app.bankKeeper),
-		mint.NewAppModule(appCodec, app.mintKeeper, app.accountKeeper, nil),
-		staking.NewAppModule(appCodec, app.stakingKeeper, app.accountKeeper, app.bankKeeper),
-		distr.NewAppModule(appCodec, app.distrKeeper, app.accountKeeper, app.bankKeeper, app.stakingKeeper),
-		slashing.NewAppModule(appCodec, app.slashingKeeper, app.accountKeeper, app.bankKeeper, app.stakingKeeper),
-		params.NewAppModule(app.paramsKeeper),
+	app.sm = module.NewSimulationManager(     
+		auth.NewAppModule(appCodec, app.accountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),	
+		bank.NewAppModule(
+			appCodec,
+			app.bankKeeper,
+			app.accountKeeper,
+			app.GetSubspace(banktypes.ModuleName),
+		),
+		capability.NewAppModule(
+			appCodec,
+			*app.capabilityKeeper,
+			false,
+		),	
+		gov.NewAppModule(
+			appCodec,
+			&app.govKeeper,
+			app.accountKeeper,
+			app.bankKeeper,
+			app.GetSubspace(govtypes.ModuleName),
+		),
+		mint.NewAppModule(
+			appCodec,
+			app.mintKeeper,
+			app.accountKeeper,
+			nil,
+			app.GetSubspace(minttypes.ModuleName),
+		),
+		slashing.NewAppModule(
+			appCodec,
+			app.slashingKeeper,
+			app.accountKeeper,
+			app.bankKeeper,
+			app.stakingKeeper,
+			app.GetSubspace(slashingtypes.ModuleName),
+		),
+		distr.NewAppModule(
+			appCodec,
+			app.distrKeeper,
+			app.accountKeeper,
+			app.bankKeeper,
+			app.stakingKeeper,
+			app.GetSubspace(distrtypes.ModuleName),
+		),
+		staking.NewAppModule(appCodec,
+			&app.stakingKeeper,
+			app.accountKeeper,
+			app.bankKeeper,
+			app.GetSubspace(stakingtypes.ModuleName),
+		),
 		evidence.NewAppModule(app.evidenceKeeper),
 		ibc.NewAppModule(app.ibcKeeper),
-		transferModule,
+		params.NewAppModule(app.paramsKeeper),
+		transferModule,	
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -817,7 +857,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(gravitytypes.ModuleName)
-	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(icaexported.ModuleName)
 
 	return paramsKeeper
 }
