@@ -9,6 +9,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 
 option go_package = "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types";
+option (gogoproto.messagename_all) = true;
 
 // Msg defines the state transitions possible within gravity
 service Msg {
@@ -68,7 +69,7 @@ message MsgSubmitEthereumTxConfirmation {
 
   // TODO: can we make this take an array?
   google.protobuf.Any confirmation = 1
-      [ (cosmos_proto.accepts_interface) = "EthereumTxConfirmation" ];
+      [ (cosmos_proto.accepts_interface) = "gravity.v1.EthereumTxConfirmation" ];
   string signer = 2;
 }
 
@@ -104,7 +105,7 @@ message MsgSubmitEthereumEvent {
   option (gogoproto.goproto_getters) = false;
 
   google.protobuf.Any event = 1
-      [ (cosmos_proto.accepts_interface) = "EthereumEvent" ];
+      [ (cosmos_proto.accepts_interface) = "gravity.v1.EthereumEvent" ];
   string signer = 2;
 }
 

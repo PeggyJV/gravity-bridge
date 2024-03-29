@@ -1,8 +1,6 @@
 module github.com/peggyjv/gravity-bridge/integration-tests
 
-go 1.21
-
-toolchain go1.22.1
+go 1.19
 
 require (
 	cosmossdk.io/errors v1.0.1
@@ -194,7 +192,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.19.0 // indirect
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	golang.org/x/crypto v0.16.0 // indirect
-	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb // indirect
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/oauth2 v0.13.0 // indirect
@@ -221,9 +218,12 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
+replace github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.10
+
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 
 // replace broken goleveldb
 replace github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
 replace github.com/peggyjv/gravity-bridge/module/v4 => ../module
+

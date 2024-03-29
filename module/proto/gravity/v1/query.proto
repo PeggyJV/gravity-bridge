@@ -12,6 +12,7 @@ import "gravity/v1/gravity.proto";
 import "gravity/v1/msgs.proto";
 
 option go_package = "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types";
+option (gogoproto.messagename_all) = true;
 
 // Query defines the gRPC querier service
 service Query {
@@ -343,5 +344,5 @@ message EthereumEventVotesRequest { string validator_address = 1; }
 
 message EthereumEventVotesResponse {
   repeated google.protobuf.Any events = 1
-      [ (cosmos_proto.accepts_interface) = "gravity.types.EthereumEvent" ];
+      [ (cosmos_proto.accepts_interface) = "gravity.v1.EthereumEvent" ];
 }
