@@ -343,5 +343,5 @@ message EthereumEventVotesRequest { string validator_address = 1; }
 
 message EthereumEventVotesResponse {
   repeated google.protobuf.Any events = 1
-      [ (cosmos_proto.accepts_interface) = "EthereumEvent" ];
+      [ (cosmos_proto.accepts_interface) = "gravity.types.EthereumEvent" ];
 }

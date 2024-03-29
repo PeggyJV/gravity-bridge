@@ -3,7 +3,7 @@ package types
 import (
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // EthereumTxConfirmation represents one validtors signature for a given

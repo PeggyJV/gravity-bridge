@@ -310,7 +310,7 @@ func NewGravityApp(
 		app.BlockedAddrs(),
 		authority,
 	)
-	stakingKeeper := stakingkeeper.NewKeeper(
+	app.stakingKeeper = *stakingkeeper.NewKeeper(
 		appCodec,
 		app.keys[stakingtypes.StoreKey],
 		app.accountKeeper,
@@ -321,7 +321,7 @@ func NewGravityApp(
 	app.mintKeeper = mintkeeper.NewKeeper(
 		appCodec,
 		app.keys[minttypes.StoreKey],
-		stakingKeeper,
+		app.stakingKeeper,
 		app.accountKeeper,
 		app.bankKeeper,
 		authtypes.FeeCollectorName,
@@ -333,7 +333,7 @@ func NewGravityApp(
 		keys[distrtypes.StoreKey],
 		app.accountKeeper,
 		app.bankKeeper,
-		stakingKeeper,
+		app.stakingKeeper,
 		authtypes.FeeCollectorName,
 		authority,
 	)
@@ -342,7 +342,7 @@ func NewGravityApp(
 		appCodec,
 		legacyAmino,
 		keys[slashingtypes.StoreKey],
-		stakingKeeper,
+		app.stakingKeeper,
 		authority,
 	)
 
@@ -369,7 +369,7 @@ func NewGravityApp(
 		keys[gravitytypes.StoreKey],
 		app.GetSubspace(gravitytypes.ModuleName),
 		app.accountKeeper,
-		stakingKeeper,
+		app.stakingKeeper,
 		app.bankKeeper,
 		app.slashingKeeper,
 		app.distrKeeper,
@@ -378,7 +378,7 @@ func NewGravityApp(
 		app.ModuleAccountAddressesToNames([]string{distrtypes.ModuleName}),
 	)
 
-	stakingKeeper.SetHooks(
+	app.stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
 			app.distrKeeper.Hooks(),
 			app.slashingKeeper.Hooks(),
@@ -410,7 +410,7 @@ func NewGravityApp(
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		appCodec,
 		keys[evidencetypes.StoreKey],
-		stakingKeeper,
+		app.stakingKeeper,
 		app.slashingKeeper,
 	)
 	app.evidenceKeeper = *evidenceKeeper
@@ -429,7 +429,7 @@ func NewGravityApp(
 		keys[govtypes.StoreKey],
 		app.accountKeeper,
 		app.bankKeeper,
-		stakingKeeper,
+		app.stakingKeeper,
 		// TODO: This does not include our custom module proposal handlers anymore since the govRouter parameter was removed from this constructor
 		app.MsgServiceRouter(),
 		govConfig,
@@ -727,6 +727,10 @@ func (app *Gravity) ModuleAccountAddressesToNames(moduleAccounts []string) map[s
 	}
 
 	return modAccNames
+}
+
+func (app *Gravity) ModuleNames() []string {
+    return app.mm.ModuleNames()
 }
 
 // BlockedAddrs returns all the app's module account addresses that are not

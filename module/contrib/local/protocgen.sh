@@ -14,7 +14,7 @@ xpath=$(head -n 1 go.mod | sed 's/^module //')
 cp -r $xpath/* ./
 
 echo "cleaning up..."
-go mod tidy
 rm -rf github.com
+go mod tidy
 
 echo "done"
