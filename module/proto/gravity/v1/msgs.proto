@@ -1,8 +1,10 @@
 syntax = "proto3";
 package gravity.v1;
 
+import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 import "gravity/v1/gravity.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -13,6 +15,8 @@ option (gogoproto.messagename_all) = true;
 
 // Msg defines the state transitions possible within gravity
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+  
   rpc SendToEthereum(MsgSendToEthereum) returns (MsgSendToEthereumResponse) {
     // option (google.api.http).post = "/gravity/v1/send_to_ethereum";
   }
@@ -41,6 +45,9 @@ service Msg {
 // Ethereum. The SendToEthereum will be stored and then included in a batch and
 // then submitted to Ethereum.
 message MsgSendToEthereum {
+  option (cosmos.msg.v1.signer) = "sender";
+  option (amino.name)           = "gravity/MsgSendToEthereum";
+
   string sender = 1;
   string ethereum_recipient = 2;
   cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
@@ -56,6 +63,9 @@ message MsgSendToEthereumResponse { uint64 id = 1; }
 // will only succeed if the SendToEthereum tx hasn't been batched to be
 // processed and relayed to Ethereum.
 message MsgCancelSendToEthereum {
+  option (cosmos.msg.v1.signer) = "sender";
+  option (amino.name)           = "gravity/MsgCancelSendToEthereum";
+
   uint64 id = 1;
   string sender = 2;
 }
@@ -66,6 +76,8 @@ message MsgCancelSendToEthereumResponse {}
 // validator
 message MsgSubmitEthereumTxConfirmation {
   option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer) = "signer";
+  option (amino.name)           = "gravity/MsgSubmitEthereumTxConfirmation";
 
   // TODO: can we make this take an array?
   google.protobuf.Any confirmation = 1
@@ -103,6 +115,8 @@ message MsgSubmitEthereumTxConfirmationResponse {}
 // MsgSubmitEthereumEvent
 message MsgSubmitEthereumEvent {
   option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer) = "signer";
+  option (amino.name)           = "gravity/MsgSubmitEthereumEvent";
 
   google.protobuf.Any event = 1
       [ (cosmos_proto.accepts_interface) = "gravity.v1.EthereumEvent" ];
@@ -115,6 +129,9 @@ message MsgSubmitEthereumEventResponse {}
 // to a given orchestrator address. This key is then used as an optional
 // authentication method for attesting events from Ethereum.
 message MsgDelegateKeys {
+  option (cosmos.msg.v1.signer) = "validator_address";  
+  option (amino.name)           = "gravity/MsgDelegateKeys";
+
   string validator_address = 1;
   string orchestrator_address = 2;
   string ethereum_address = 3;
@@ -134,6 +151,9 @@ message DelegateKeysSignMsg {
 // Periodic update of latest observed Ethereum and Cosmos heights from the
 // orchestrator
 message MsgEthereumHeightVote {
+  option (cosmos.msg.v1.signer) = "signer";
+  option (amino.name)           = "gravity/MsgEthereumHeightVote";
+
   uint64 ethereum_height = 1;
   string signer = 2;
 }
