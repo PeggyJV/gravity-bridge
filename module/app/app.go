@@ -580,8 +580,8 @@ func NewGravityApp(
 
 	app.setupUpgradeHandlers()
 
-	app.sm = module.NewSimulationManager(     
-		auth.NewAppModule(appCodec, app.accountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),	
+	app.sm = module.NewSimulationManager(
+		auth.NewAppModule(appCodec, app.accountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 		bank.NewAppModule(
 			appCodec,
 			app.bankKeeper,
@@ -592,7 +592,7 @@ func NewGravityApp(
 			appCodec,
 			*app.capabilityKeeper,
 			false,
-		),	
+		),
 		gov.NewAppModule(
 			appCodec,
 			&app.govKeeper,
@@ -632,7 +632,7 @@ func NewGravityApp(
 		evidence.NewAppModule(app.evidenceKeeper),
 		ibc.NewAppModule(app.ibcKeeper),
 		params.NewAppModule(app.paramsKeeper),
-		transferModule,	
+		transferModule,
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -730,7 +730,7 @@ func (app *Gravity) ModuleAccountAddressesToNames(moduleAccounts []string) map[s
 }
 
 func (app *Gravity) ModuleNames() []string {
-    return app.mm.ModuleNames()
+	return app.mm.ModuleNames()
 }
 
 // BlockedAddrs returns all the app's module account addresses that are not

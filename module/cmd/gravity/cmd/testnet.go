@@ -41,7 +41,7 @@ var (
 	flagOutputDir         = "output-dir"
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagStartingIPAddress = "starting-ip-address"
-    flagKeyAlgorithm     = "key-algorithm"
+	flagKeyAlgorithm      = "key-algorithm"
 )
 
 // get cmd to initialize all files for tendermint testnet and application

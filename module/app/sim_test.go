@@ -125,7 +125,7 @@ func TestAppImportExport(t *testing.T) {
 
 	fmt.Printf("exporting genesis...\n")
 
-    // Exports all modules
+	// Exports all modules
 	appState, err := app.ExportAppStateAndValidators(false, []string{}, app.mm.ModuleNames())
 	require.NoError(t, err)
 

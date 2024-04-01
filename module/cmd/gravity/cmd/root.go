@@ -228,7 +228,7 @@ func (a appCreator) appExport(
 	forZeroHeight bool,
 	jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions,
-    modulesToExport []string,
+	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 
 	var gravity *app.Gravity

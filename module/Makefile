@@ -80,6 +80,10 @@ lint:
 ###                           Protobuf                                    ###
 ###############################################################################
 
+protoVer=0.13.1
+protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
+
 proto-all: proto-format proto-lint proto-gen
 
 proto-format:
@@ -93,7 +97,7 @@ proto-gen:
 	@echo "Generating Protobuf files"
 	# todo: figure out why this old method was failing
 	# $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen:v0.1 sh ./contrib/local/protocgen.sh
-	@sh ./contrib/local/protocgen.sh
+	@$(protoImage) sh ./contrib/local/protocgen.sh
 
 proto-lint:
 	@$(DOCKER_BUF) lint --error-format=json
