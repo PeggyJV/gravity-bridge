@@ -43,7 +43,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	"github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -122,6 +124,7 @@ var (
 		genutil.AppModuleBasic{},
 		bank.AppModuleBasic{},
 		capability.AppModuleBasic{},
+        consensus.AppModuleBasic{},
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
@@ -202,7 +205,7 @@ type Gravity struct {
 	mintKeeper            mintkeeper.Keeper
 	distrKeeper           distrkeeper.Keeper
 	govKeeper             govkeeper.Keeper
-	consensusParamsKeeper *consensusparamkeeper.Keeper
+	consensusParamsKeeper consensusparamkeeper.Keeper
 	crisisKeeper          crisiskeeper.Keeper
 	upgradeKeeper         upgradekeeper.Keeper
 	paramsKeeper          paramskeeper.Keeper
@@ -260,8 +263,8 @@ func NewGravityApp(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, icaexported.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		gravitytypes.StoreKey,
+		evidencetypes.StoreKey, ibctransfertypes.StoreKey, consensusparamtypes.StoreKey, capabilitytypes.StoreKey,
+		gravitytypes.StoreKey, crisistypes.StoreKey,
 	)
 	tKeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -278,7 +281,12 @@ func NewGravityApp(
 	}
 
 	app.paramsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tKeys[paramstypes.TStoreKey])
-	bApp.SetParamStore(app.consensusParamsKeeper)
+
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+    
+    // set the BaseApp's parameter store
+	app.consensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authority)
+	bApp.SetParamStore(&app.consensusParamsKeeper)
 
 	app.capabilityKeeper = capabilitykeeper.NewKeeper(
 		appCodec,
@@ -292,8 +300,6 @@ func NewGravityApp(
 	// call `Seal` after creating their scoped modules in the app via
 	// `ScopeToModule`.
 	app.capabilityKeeper.Seal()
-
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
 	app.accountKeeper = authkeeper.NewAccountKeeper(
 		appCodec,
@@ -532,6 +538,7 @@ func NewGravityApp(
 		genutiltypes.ModuleName,
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
+        consensusparamtypes.ModuleName,
 		gravitytypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
@@ -551,6 +558,7 @@ func NewGravityApp(
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
+        consensusparamtypes.ModuleName,
 		gravitytypes.ModuleName,
 	)
 	app.mm.SetOrderInitGenesis(
@@ -574,7 +582,6 @@ func NewGravityApp(
 	)
 
 	app.mm.RegisterInvariants(&app.crisisKeeper)
-	// app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 
@@ -803,6 +810,12 @@ func (app *Gravity) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICo
 
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// Register node gRPC service for grpc-gateway.
+	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+    
+    // Register new tendermint queries routes from grpc-gateway.
+	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// TODO: build the custom gravity swagger files and add here?
 	if apiConfig.Swagger {

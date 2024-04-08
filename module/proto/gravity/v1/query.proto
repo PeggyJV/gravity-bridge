@@ -18,17 +18,28 @@ option (gogoproto.messagename_all) = true;
 service Query {
 
   // Module parameters query
-  rpc Params(ParamsRequest) returns (ParamsResponse) {}
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
+    option (google.api.http).get = "/gravity/v1/params";
+  }
 
   // get info on individual outgoing data
-  rpc SignerSetTx(SignerSetTxRequest) returns (SignerSetTxResponse) {}
-  rpc LatestSignerSetTx(LatestSignerSetTxRequest)
-      returns (SignerSetTxResponse) {}
-  rpc BatchTx(BatchTxRequest) returns (BatchTxResponse) {}
-  rpc ContractCallTx(ContractCallTxRequest) returns (ContractCallTxResponse) {}
+  rpc SignerSetTx(SignerSetTxRequest) returns (SignerSetTxResponse) {
+    option (google.api.http).get = "/gravity/v1/signer_set_txs/{signer_set_nonce}";
+  }
+  rpc LatestSignerSetTx(LatestSignerSetTxRequest) returns (SignerSetTxResponse) {
+    option (google.api.http).get = "/gravity/v1/signer_set_txs/latest";
+  }
+  rpc BatchTx(BatchTxRequest) returns (BatchTxResponse) {
+    option (google.api.http).get = "/gravity/v1/batch_txs/{token_contract}/{batch_nonce}"; 
+  }
+  rpc ContractCallTx(ContractCallTxRequest) returns (ContractCallTxResponse) {
+    option (google.api.http).get = "/gravity/v1/contract_call_txs/{invalidation_scope}/{invalidation_nonce}";
+    }
 
   // get collections of outgoing traffic from the bridge
-  rpc SignerSetTxs(SignerSetTxsRequest) returns (SignerSetTxsResponse) {}
+  rpc SignerSetTxs(SignerSetTxsRequest) returns (SignerSetTxsResponse) {
+    option (google.api.http).get = "/gravity/v1/signer_set_txs";
+      }
   rpc BatchTxs(BatchTxsRequest) returns (BatchTxsResponse) {}
   rpc ContractCallTxs(ContractCallTxsRequest)
       returns (ContractCallTxsResponse) {}
