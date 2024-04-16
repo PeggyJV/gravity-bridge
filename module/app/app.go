@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/errors"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -21,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	ccodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -124,7 +127,7 @@ var (
 		genutil.AppModuleBasic{},
 		bank.AppModuleBasic{},
 		capability.AppModuleBasic{},
-        consensus.AppModuleBasic{},
+		consensus.AppModuleBasic{},
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
@@ -283,8 +286,8 @@ func NewGravityApp(
 	app.paramsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tKeys[paramstypes.TStoreKey])
 
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-    
-    // set the BaseApp's parameter store
+
+	// set the BaseApp's parameter store
 	app.consensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authority)
 	bApp.SetParamStore(&app.consensusParamsKeeper)
 
@@ -538,7 +541,7 @@ func NewGravityApp(
 		genutiltypes.ModuleName,
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
-        consensusparamtypes.ModuleName,
+		consensusparamtypes.ModuleName,
 		gravitytypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
@@ -558,7 +561,7 @@ func NewGravityApp(
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
-        consensusparamtypes.ModuleName,
+		consensusparamtypes.ModuleName,
 		gravitytypes.ModuleName,
 	)
 	app.mm.SetOrderInitGenesis(
@@ -584,7 +587,6 @@ func NewGravityApp(
 	app.mm.RegisterInvariants(&app.crisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
-
 	app.setupUpgradeHandlers()
 
 	app.sm = module.NewSimulationManager(
@@ -640,6 +642,10 @@ func NewGravityApp(
 		ibc.NewAppModule(app.ibcKeeper),
 		params.NewAppModule(app.paramsKeeper),
 		transferModule,
+		gravity.NewAppModule(
+			app.gravityKeeper,
+			app.bankKeeper,
+		),
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -647,6 +653,13 @@ func NewGravityApp(
 	app.MountKVStores(keys)
 	app.MountTransientStores(tKeys)
 	app.MountMemoryStores(memKeys)
+
+	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
+	reflectionSvc, err := runtimeservices.NewReflectionService()
+	if err != nil {
+		panic(err)
+	}
+	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
@@ -813,8 +826,8 @@ func (app *Gravity) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICo
 
 	// Register node gRPC service for grpc-gateway.
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
-    
-    // Register new tendermint queries routes from grpc-gateway.
+
+	// Register new tendermint queries routes from grpc-gateway.
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// TODO: build the custom gravity swagger files and add here?

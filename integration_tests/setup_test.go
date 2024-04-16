@@ -385,7 +385,7 @@ func (s *IntegrationTestSuite) initValidatorConfigs() {
 		valConfig.P2P.AddrBookStrict = false
 		valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", val.instanceName(), 26656)
 		valConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
-        valConfig.RPC.GRPCListenAddress = "tcp://0.0.0.0:9090"
+		valConfig.RPC.GRPCListenAddress = "tcp://0.0.0.0:9090"
 		valConfig.StateSync.Enable = false
 		valConfig.LogLevel = "info"
 
