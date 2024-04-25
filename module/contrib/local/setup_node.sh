@@ -1,11 +1,6 @@
 #!/bin/bash
 set -eu
 
-# This doesn't do any check for a clean environment or try to overwrite
-# existing files. If you want to start fresh, remove ~/.gravity (or 
-# wherever the dir is if you use a different path than home) before running
-# this script. 
-
 gravity init --chain-id=testing local
 
 # Create delegate keys

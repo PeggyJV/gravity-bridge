@@ -1,1 +1,1 @@
-keystore = "~/.gravity/config"
+keystore = "/tmp/keystore"
