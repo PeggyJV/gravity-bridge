@@ -445,6 +445,8 @@ func NewGravityApp(
 		authority,
 	)
 
+	app.govKeeper.SetLegacyRouter(govRouter)
+
 	app.setupUpgradeStoreLoaders()
 
 	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
