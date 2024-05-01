@@ -4,11 +4,12 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/stretchr/testify/require"
 )
 
 func TestParseCommunityPoolEthereumSpendProposal(t *testing.T) {
-	encodingConfig := params.MakeTestEncodingConfig()
+	encodingConfig := moduletestutil.MakeTestEncodingConfig()
 
 	okJSON := testutil.WriteToNewTempFile(t, `
 {

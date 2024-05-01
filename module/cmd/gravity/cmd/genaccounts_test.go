@@ -18,6 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
@@ -61,7 +63,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 			require.NoError(t, err)
 
-			appCodec := simapp.MakeTestEncodingConfig().Codec
+			appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}).Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 

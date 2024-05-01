@@ -6,7 +6,6 @@ import (
 	"github.com/cometbft/cometbft/libs/bytes"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/migrations/v1/keeper"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 	"github.com/stretchr/testify/require"
 )
@@ -220,7 +219,7 @@ func TestKeeper_UnsignedSignerSetTxs(t *testing.T) {
 	t.Run("read after there's something in state", func(t *testing.T) {
 		env, ctx := SetupFiveValChain(t)
 		gk := env.GravityKeeper
-		orchAddr := keeper.AccAddrs[0]
+		orchAddr := AccAddrs[0]
 		signer := orchAddr.String()
 		valAddr, err := sdk.ValAddressFromBech32(env.StakingKeeper.GetValidators(ctx, 5)[0].OperatorAddress)
 		require.NoError(t, err)
@@ -257,7 +256,7 @@ func TestKeeper_UnsignedBatchTxs(t *testing.T) {
 	t.Run("read after there's something in state", func(t *testing.T) {
 		env, ctx := SetupFiveValChain(t)
 		gk := env.GravityKeeper
-		orchAddr := keeper.AccAddrs[0]
+		orchAddr := AccAddrs[0]
 		signer := orchAddr.String()
 		valAddr, err := sdk.ValAddressFromBech32(env.StakingKeeper.GetValidators(ctx, 5)[0].OperatorAddress)
 		require.NoError(t, err)
@@ -309,7 +308,7 @@ func TestKeeper_UnsignedContractCallTxs(t *testing.T) {
 	t.Run("read after there's something in state", func(t *testing.T) {
 		env, ctx := SetupFiveValChain(t)
 		gk := env.GravityKeeper
-		orchAddr := keeper.AccAddrs[0]
+		orchAddr := AccAddrs[0]
 		signer := orchAddr.String()
 		valAddr, err := sdk.ValAddressFromBech32(env.StakingKeeper.GetValidators(ctx, 5)[0].OperatorAddress)
 		require.NoError(t, err)
