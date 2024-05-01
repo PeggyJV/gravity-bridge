@@ -8,4 +8,8 @@ deps:
 breaking:
   use:
     - FILE
+lint:
+  ignore:
+    - gravity/v1/query.proto
+    - gravity/v1/msgs.proto
 
