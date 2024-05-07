@@ -156,12 +156,16 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			return true
 		}, 105*time.Second, 10*time.Second, "unable to fund community pool")
 
-		distrQueryClient := distrtypes.NewQueryClient(clientCtx)
-		poolRes, err := distrQueryClient.CommunityPool(context.Background(),
-			&distrtypes.QueryCommunityPoolRequest{},
-		)
-		s.Require().NoError(err, "error retrieving community pool")
-		s.Require().True(poolRes.Pool.AmountOf(testDenom).GT(sdk.NewDec(1000000000)))
+		s.Require().Eventuallyf(func() bool {
+			distrQueryClient := distrtypes.NewQueryClient(clientCtx)
+			poolRes, err := distrQueryClient.CommunityPool(context.Background(),
+				&distrtypes.QueryCommunityPoolRequest{},
+			)
+			s.Require().NoError(err, "error retrieving community pool")
+			s.Require().Greater(poolRes.Pool.AmountOf(testDenom).BigInt().Int64(), sdk.NewDec(1000000000).BigInt().Int64())
+
+			return true
+		}, 20*time.Second, 2*time.Second, "community pool balance not high enough")
 
 		s.T().Logf("deploying testgb as an ERC20")
 		gbQueryClient := types.NewQueryClient(clientCtx)
@@ -204,7 +208,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		clientCtx, err = s.chain.clientContext("tcp://localhost:26657", orch.keyring, "orch", orch.address())
 		s.Require().NoError(err)
 
-		sendAmount := int64(900000000)
+		sendAmount := int64(900)
 		proposal := types.CommunityPoolEthereumSpendProposal{
 			Title:       "community pool spend ethereum",
 			Description: "community pool spend ethereum",
@@ -230,13 +234,18 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		s.Require().NoError(err)
 		s.Require().Zero(submitProposalResponse.Code, "raw log: %s", submitProposalResponse.RawLog)
 
-		s.T().Log("check proposal was submitted correctly")
 		govQueryClient := govtypesv1beta1.NewQueryClient(clientCtx)
-		proposalsQueryResponse, err := govQueryClient.Proposals(context.Background(), &govtypesv1beta1.QueryProposalsRequest{})
-		s.Require().NoError(err)
-		s.Require().NotEmpty(proposalsQueryResponse.Proposals)
-		s.Require().Equal(uint64(1), proposalsQueryResponse.Proposals[0].ProposalId, "not proposal id 1")
-		s.Require().Equal(govtypesv1beta1.StatusVotingPeriod, proposalsQueryResponse.Proposals[0].Status, "proposal not in voting period")
+
+		s.Require().Eventually(func() bool {
+			s.T().Log("check proposal was submitted correctly")
+			govQueryClient = govtypesv1beta1.NewQueryClient(clientCtx)
+			proposalsQueryResponse, err := govQueryClient.Proposals(context.Background(), &govtypesv1beta1.QueryProposalsRequest{})
+			s.Require().NoError(err)
+			s.Require().NotEmpty(proposalsQueryResponse.Proposals)
+			s.Require().Equal(uint64(1), proposalsQueryResponse.Proposals[0].ProposalId, "not proposal id 1")
+			s.Require().Equal(govtypesv1beta1.StatusVotingPeriod, proposalsQueryResponse.Proposals[0].Status, "proposal not in voting period")
+			return true
+		}, 20*time.Second, 2*time.Second, "proposal not submitted correctly")
 
 		s.T().Log("vote for community spend proposal")
 		for _, val := range s.chain.validators {

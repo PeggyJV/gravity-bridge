@@ -579,7 +579,9 @@ pub struct Params {
     #[prost(uint64, tag = "17")]
     pub unbond_slashing_signer_set_txs_window: u64,
     #[prost(uint64, tag = "18")]
-    pub event_vote_window: u64,
+    pub ethereum_event_vote_window: u64,
+    #[prost(uint64, tag = "19")]
+    pub confirmed_outgoing_tx_window: u64,
 }
 /// GenesisState struct
 /// TODO: this need to be audited and potentially simplified using the new

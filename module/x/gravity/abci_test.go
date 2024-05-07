@@ -49,7 +49,7 @@ func TestSignerSetTxCreationUponUnbonding(t *testing.T) {
 	require.NoError(t, err)
 
 	// Run the staking endblocker to ensure signer set tx is set in state
-	staking.EndBlocker(input.Context, input.StakingKeeper)
+	staking.EndBlocker(input.Context, &input.StakingKeeper)
 
 	// power diff should be less than 5%
 	latestSignerSetTx := input.GravityKeeper.GetLatestSignerSetTx(input.Context)
@@ -77,7 +77,7 @@ func TestSignerSetTxCreationUponUnbonding(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	staking.EndBlocker(input.Context, input.StakingKeeper)
+	staking.EndBlocker(input.Context, &input.StakingKeeper)
 
 	// last unbonding height should not be the current block
 	lastUnbondingHeight = input.GravityKeeper.GetLastUnbondingBlockHeight(input.Context)
@@ -182,7 +182,7 @@ func TestSignerSetTxSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testi
 		}
 		gravityKeeper.SetEthereumSignature(ctx, &types.SignerSetTxConfirmation{vs.Nonce, keeper.EthAddrs[i].Hex(), []byte("dummySig")}, val)
 	}
-	staking.EndBlocker(input.Context, input.StakingKeeper)
+	staking.EndBlocker(input.Context, &input.StakingKeeper)
 
 	ctx = ctx.WithBlockHeight(currentBlockHeight)
 	gravity.EndBlocker(ctx, gravityKeeper)

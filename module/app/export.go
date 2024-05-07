@@ -4,18 +4,18 @@ import (
 	"encoding/json"
 	"log"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
 // file.
 func (app *Gravity) ExportAppStateAndValidators(
-	forZeroHeight bool, jailWhiteList []string,
+	forZeroHeight bool, jailWhiteList []string, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
@@ -26,13 +26,13 @@ func (app *Gravity) ExportAppStateAndValidators(
 		app.prepForZeroHeightGenesis(ctx, jailWhiteList)
 	}
 
-	genState := app.mm.ExportGenesis(ctx, app.appCodec)
+	genState := app.mm.ExportGenesisForModules(ctx, app.appCodec, modulesToExport)
 	appState, err := json.MarshalIndent(genState, "", "  ")
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}
 
-	validators, err := staking.WriteValidators(ctx, app.stakingKeeper)
+	validators, err := staking.WriteValidators(ctx, &app.stakingKeeper)
 	return servertypes.ExportedApp{
 		AppState:        appState,
 		Validators:      validators,

@@ -6,6 +6,9 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,6 +21,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -26,9 +30,9 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
+	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -37,28 +41,26 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	paramsproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
+	ibctransfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	gethcommon "github.com/ethereum/go-ethereum/common"
+	gravityclient "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/client"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
@@ -75,7 +77,7 @@ var (
 		distribution.AppModuleBasic{},
 		gov.NewAppModuleBasic(
 			[]govclient.ProposalHandler{
-				paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.LegacyCancelProposalHandler,
+				paramsclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.LegacyCancelProposalHandler,
 			},
 		),
 		params.AppModuleBasic{},
@@ -244,7 +246,7 @@ func SetupFiveValChain(t *testing.T) (TestInput, sdk.Context) {
 	// Set the params for our modules
 	input.StakingKeeper.SetParams(input.Context, TestingStakeParams)
 
-	sh := teststaking.NewHelper(t, input.Context, input.StakingKeeper)
+	sh := testutil.NewHelper(t, input.Context, &input.StakingKeeper)
 	sh.Denom = TestingStakeParams.BondDenom
 	for i := range []int{0, 1, 2, 3, 4} {
 
@@ -272,7 +274,7 @@ func SetupFiveValChain(t *testing.T) (TestInput, sdk.Context) {
 	}
 
 	// Run the staking endblocker to ensure valset is correct in state
-	staking.EndBlocker(input.Context, input.StakingKeeper)
+	staking.EndBlocker(input.Context, &input.StakingKeeper)
 
 	// Register eth addresses for each validator
 	for i, addr := range ValAddrs {
@@ -343,13 +345,15 @@ func CreateTestEnv(t *testing.T) TestInput {
 		types.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	}
 
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		marshaler,
-		keyAcc, // target store
-		getSubspace(paramsKeeper, authtypes.ModuleName),
+		keyAcc,                     // target store
 		authtypes.ProtoBaseAccount, // prototype
 		maccPerms,
 		"gravity",
+		authority,
 	)
 
 	blockedAddr := make(map[string]bool, len(maccPerms))
@@ -361,15 +365,15 @@ func CreateTestEnv(t *testing.T) TestInput {
 		marshaler,
 		keyBank,
 		accountKeeper,
-		getSubspace(paramsKeeper, banktypes.ModuleName),
 		blockedAddr,
+		authority,
 	)
 	bankKeeper.SetParams(ctx, banktypes.Params{DefaultSendEnabled: true})
 
-	stakingKeeper := stakingkeeper.NewKeeper(marshaler, keyStaking, accountKeeper, bankKeeper, getSubspace(paramsKeeper, stakingtypes.ModuleName))
+	stakingKeeper := stakingkeeper.NewKeeper(marshaler, keyStaking, accountKeeper, bankKeeper, authority)
 	stakingKeeper.SetParams(ctx, TestingStakeParams)
 
-	distKeeper := distrkeeper.NewKeeper(marshaler, keyDistro, getSubspace(paramsKeeper, distrtypes.ModuleName), accountKeeper, bankKeeper, stakingKeeper, authtypes.FeeCollectorName)
+	distKeeper := distrkeeper.NewKeeper(marshaler, keyDistro, accountKeeper, bankKeeper, stakingKeeper, authtypes.FeeCollectorName, authority)
 	distKeeper.SetParams(ctx, distrtypes.DefaultParams())
 
 	// set genesis items required for distribution
@@ -405,24 +409,18 @@ func CreateTestEnv(t *testing.T) TestInput {
 	// Load default wasm config
 
 	router := baseapp.NewMsgServiceRouter()
-	govRouter := govtypesv1beta1.NewRouter().
-		AddRoute(paramsproposal.RouterKey, params.NewParamChangeProposalHandler(paramsKeeper)).
-		AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler)
-
 	govKeeper := govkeeper.NewKeeper(
-		marshaler, keyGov, getSubspace(paramsKeeper, govtypes.ModuleName).WithKeyTable(govtypesv1.ParamKeyTable()), accountKeeper, bankKeeper, stakingKeeper, govRouter, router, govtypes.DefaultConfig(),
+		marshaler, keyGov, accountKeeper, bankKeeper, stakingKeeper, router, govtypes.DefaultConfig(), authority,
 	)
 
 	govKeeper.SetProposalID(ctx, govtypesv1beta1.DefaultStartingProposalID)
-	govKeeper.SetDepositParams(ctx, govtypesv1.DefaultDepositParams())
-	govKeeper.SetVotingParams(ctx, govtypesv1.DefaultVotingParams())
-	govKeeper.SetTallyParams(ctx, govtypesv1.DefaultTallyParams())
 
 	slashingKeeper := slashingkeeper.NewKeeper(
 		marshaler,
+		cdc,
 		keySlashing,
-		&stakingKeeper,
-		getSubspace(paramsKeeper, slashingtypes.ModuleName).WithKeyTable(slashingtypes.ParamKeyTable()),
+		stakingKeeper,
+		authority,
 	)
 
 	k := NewKeeper(
@@ -439,7 +437,7 @@ func CreateTestEnv(t *testing.T) TestInput {
 		senderModuleAccounts,
 	)
 
-	stakingKeeper = *stakingKeeper.SetHooks(
+	stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
 			distKeeper.Hooks(),
 			slashingKeeper.Hooks(),
@@ -453,10 +451,10 @@ func CreateTestEnv(t *testing.T) TestInput {
 		GravityKeeper:   k,
 		AccountKeeper:   accountKeeper,
 		BankKeeper:      bankKeeper,
-		StakingKeeper:   stakingKeeper,
+		StakingKeeper:   *stakingKeeper,
 		SlashingKeeper:  slashingKeeper,
 		DistKeeper:      distKeeper,
-		GovKeeper:       govKeeper,
+		GovKeeper:       *govKeeper,
 		Context:         ctx,
 		Marshaler:       marshaler,
 		LegacyAmino:     cdc,
@@ -482,6 +480,35 @@ func MakeTestCodec() *codec.LegacyAmino {
 	params.AppModuleBasic{}.RegisterLegacyAminoCodec(cdc)
 	//types.RegisterCodec(cdc)
 	return cdc
+}
+
+func MakeTestEncodingConfig() moduletestutil.TestEncodingConfig {
+	return moduletestutil.MakeTestEncodingConfig(
+		auth.AppModuleBasic{},
+		genutil.AppModuleBasic{},
+		bank.AppModuleBasic{},
+		capability.AppModuleBasic{},
+		consensus.AppModuleBasic{},
+		staking.AppModuleBasic{},
+		mint.AppModuleBasic{},
+		distribution.AppModuleBasic{},
+		gov.NewAppModuleBasic(
+			[]govclient.ProposalHandler{
+				paramsclient.ProposalHandler,
+				upgradeclient.LegacyProposalHandler,
+				upgradeclient.LegacyCancelProposalHandler,
+				gravityclient.ProposalHandler,
+			},
+		),
+		//params.AppModuleBasic{},
+		crisis.AppModuleBasic{},
+		slashing.AppModuleBasic{},
+		ibc.AppModuleBasic{},
+		upgrade.AppModuleBasic{},
+		evidence.AppModuleBasic{},
+		ibctransfer.AppModuleBasic{},
+		vesting.AppModuleBasic{},
+	)
 }
 
 // MakeTestMarshaler creates a proto codec for use in testing

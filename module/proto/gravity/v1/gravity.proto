@@ -7,13 +7,14 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
 option go_package = "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types";
+option (gogoproto.messagename_all) = true;
 
 // EthereumEventVoteRecord is an event that is pending of confirmation by 2/3 of
 // the signer set. The event is then attested and executed in the state machine
 // once the required threshold is met.
 message EthereumEventVoteRecord {
   google.protobuf.Any event = 1
-      [ (cosmos_proto.accepts_interface) = "EthereumEvent" ];
+      [ (cosmos_proto.accepts_interface) = "gravity.v1.EthereumEvent" ];
   repeated string votes = 2;
   bool accepted = 3;
 }

@@ -10,6 +10,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmos "github.com/cometbft/cometbft/libs/os"
+	"github.com/cometbft/cometbft/p2p"
+	"github.com/cometbft/cometbft/privval"
 	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -26,10 +30,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/peggyjv/gravity-bridge/module/v4/app"
 	gravitytypes "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
-	tmcfg "github.com/tendermint/tendermint/config"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	"github.com/tendermint/tendermint/p2p"
-	"github.com/tendermint/tendermint/privval"
 )
 
 type validator struct {

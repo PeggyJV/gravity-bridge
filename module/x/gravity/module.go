@@ -1,14 +1,15 @@
 package gravity
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/client/cli"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/keeper"
@@ -72,7 +72,11 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the distribution module.
 // also implements app modeul basic
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {}
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
+}
 
 // RegisterInterfaces implements app bmodule basic
 func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
@@ -113,38 +117,15 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	// coins aren't being fraudlently minted etc...
 }
 
-// DEPRECATED Route implements app module
-func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
-}
-
 // DEPRECATED QuerierRoute implements app module
 func (am AppModule) QuerierRoute() string {
 	return types.QuerierRoute
-}
-
-// DEPRECATED LegacyQuerierHandler returns the distribution module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return nil
 }
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-
-	m := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/gravity from version 1 to 2: %v", err))
-	}
-
-	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/gravity from version 2 to 3: %v", err))
-	}
-
-	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/gravity from version 3 to 4: %v", err))
-	}
 }
 
 // InitGenesis initializes the genesis state for this module and implements app module.
@@ -185,12 +166,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents returns all the distribution content functions used to
 // simulate governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	// TODO: implement gravity simulation stuffs
-	return nil
-}
-
-// RandomizedParams creates randomized distribution param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	// TODO: implement gravity simulation stuffs
 	return nil
 }
