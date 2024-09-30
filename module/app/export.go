@@ -70,10 +70,7 @@ func (app *Gravity) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []st
 
 	// withdraw all validator commission
 	app.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-		_, err := app.distrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
-		if err != nil {
-			log.Fatal(err)
-		}
+		_, _ = app.distrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
 		return false
 	})
 
