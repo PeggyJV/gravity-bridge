@@ -13,6 +13,7 @@ env:
   CARGO_TERM_COLOR: always
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  ORCHESTRATOR_ARTIFACT_NAME: orchestrator-orchestrator
   ORCHESTRATOR_ARTIFACT: orchestrator_orchestrator
   UPLOAD_DIR: /tmp/uploaded_artifacts
   DOWNLOAD_DIR: /tmp/downloaded_artifacts
@@ -59,7 +60,7 @@ jobs:
       - name: Make Orchestrator artifact available to other jobs
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.IMAGE_NAME }}
+          name: ${{ env.ORCHESTRATOR_ARTIFACT_NAME }}
           path: ${{ env.UPLOAD_DIR }}/${{ env.ORCHESTRATOR_ARTIFACT }}
           retention-days: 1 
       - name: Move Docker cache
@@ -283,7 +284,7 @@ jobs:
       - name: Get orchestrator artifact
         uses: actions/download-artifact@v3
         with:
-          name: ${{ env.IMAGE_NAME }}
+          name: ${{ env.ORCHESTRATOR_ARTIFACT_NAME }}
           path: ${{ env.DOWNLOAD_DIR }}
       - name: Load orchestrator image
         run: docker load --input ${{ env.DOWNLOAD_DIR }}/${{ env.ORCHESTRATOR_ARTIFACT }}
