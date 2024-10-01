@@ -20,11 +20,11 @@ jobs:
         id: rust-cache
         with:
           path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            orchestrator/target/
+            ~/.cargo/bin
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            orchestrator/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('orchestrator/Cargo.lock') }}
       - name: Run Orchestrator unit tests
         run: cd orchestrator && cargo test --all --verbose
