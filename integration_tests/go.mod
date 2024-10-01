@@ -1,4 +1,4 @@
-module github.com/peggyjv/gravity-bridge/integration_tests
+module github.com/peggyjv/gravity-bridge/integration-tests
 
 go 1.22
 
