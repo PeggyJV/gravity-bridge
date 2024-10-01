@@ -13,6 +13,9 @@ env:
   CARGO_TERM_COLOR: always
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  ORCHESTRATOR_ARTIFACT: orchestrator_orchestrator
+  UPLOAD_DIR: /tmp/uploaded_artifacts
+  DOWNLOAD_DIR: /tmp/downloaded_artifacts
 
 jobs:
   rust-build:
@@ -35,29 +38,29 @@ jobs:
           key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-multi-buildx
-      - name: Container service login
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Docker metadata
+      - name: labels
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-orchestrator
-      - name: Build and push Docker image
+          images: ${{ env.IMAGE_NAME }}
+      - name: Make upload dir
+        run: mkdir -p ${{ env.UPLOAD_DIR }}
+      - name: build
         uses: docker/build-push-action@v2
         with:
-          context: ./orchestrator
-          builder: ${{ steps.buildx.outputs.name }}
-          file: orchestrator/Dockerfile
-          push: true
-          platforms: linux/amd64, linux/arm64/v8
+          file: Dockerfile
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          builder: ${{ steps.buildx.outputs.name }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+          outputs: type=docker,dest=${{ env.UPLOAD_DIR }}/${{ env.ORCHESTRATOR_ARTIFACT }}
+      - name: Make Orchestrator artifact available to other jobs
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.IMAGE_NAME }}
+          path: ${{ env.UPLOAD_DIR }}/${{ env.ORCHESTRATOR_ARTIFACT }}
+          retention-days: 1 
       - name: Move Docker cache
         run: |
           rm -rf /tmp/.buildx-cache
@@ -274,8 +277,15 @@ jobs:
         run: docker pull ${{ steps.meta-gravity.outputs.tags }}
       - name: rename gravity image
         run: docker tag ${{ steps.meta-gravity.outputs.tags }} gravity:prebuilt
-      - name: pull orchestrator image
-        run: docker pull ${{ steps.meta-orchestrator.outputs.tags }}
+      - name: Make download dir
+        run: mkdir -p ${{ env.DOWNLOAD_DIR }}
+      - name: Get orchestrator artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.IMAGE_NAME }}
+          path: ${{ env.DOWNLOAD_DIR }}
+      - name: Load orchestrator image
+        run: docker load --input ${{ env.DOWNLOAD_DIR }}/${{ env.ORCHESTRATOR_ARTIFACT }}
       - name: rename orchestrator image
         run: docker tag ${{ steps.meta-orchestrator.outputs.tags }} orchestrator:prebuilt
       - name: pull hardhat image
