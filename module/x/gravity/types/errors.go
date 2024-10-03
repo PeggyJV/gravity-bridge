@@ -14,4 +14,6 @@ var (
 	ErrInvalidEthereumProposalAmount    = sdkerrors.Register(ModuleName, 9, "invalid community pool Ethereum spend proposal amount")
 	ErrInvalidEthereumProposalBridgeFee = sdkerrors.Register(ModuleName, 10, "invalid community pool Ethereum spend proposal bridge fee")
 	ErrEthereumProposalDenomMismatch    = sdkerrors.Register(ModuleName, 11, "community pool Ethereum spend proposal amount and bridge fee denom mismatch")
+	ErrInvalidValidatorAddress          = sdkerrors.Register(ModuleName, 12, "invalid validator address")
+	ErrInvalidOrchestratorAddress       = sdkerrors.Register(ModuleName, 13, "invalid orchestrator address")
 )

@@ -474,3 +474,103 @@ func TestGetUnconfirmedBatchTxs(t *testing.T) {
 	require.EqualValues(t, unconfirmed[5].BatchNonce, 6)
 	require.EqualValues(t, unconfirmed[6].BatchNonce, 7)
 }
+
+func TestCancelBatchTx(t *testing.T) {
+	input := CreateTestEnv(t)
+	ctx := input.Context
+	var (
+		now                 = time.Now().UTC()
+		mySender, _         = sdk.AccAddressFromBech32("cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn")
+		myReceiver          = common.HexToAddress("0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7")
+		myTokenContractAddr = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5") // Pickle
+		allVouchers         = sdk.NewCoins(
+			types.NewERC20Token(99999, myTokenContractAddr).GravityCoin(),
+		)
+	)
+
+	// mint some voucher first
+	require.NoError(t, input.BankKeeper.MintCoins(ctx, types.ModuleName, allVouchers))
+	// set senders balance
+	input.AccountKeeper.NewAccountWithAddress(ctx, mySender)
+	require.NoError(t, fundAccount(ctx, input.BankKeeper, mySender, allVouchers))
+
+	// add some TX to the pool
+	input.AddSendToEthTxsToPool(t, ctx, myTokenContractAddr, mySender, myReceiver, 2, 3, 2, 1)
+
+	// when
+	ctx = ctx.WithBlockTime(now)
+
+	// tx batch size is 2, so that some of them stay behind
+	firstBatch := input.GravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
+
+	// ensure the batch was created
+	require.NotNil(t, firstBatch)
+	require.Equal(t, uint64(1), firstBatch.BatchNonce)
+	require.Len(t, firstBatch.Transactions, 2)
+
+	// verify the batch exists in the store
+	gotBatch := input.GravityKeeper.GetOutgoingTx(ctx, firstBatch.GetStoreIndex())
+	require.NotNil(t, gotBatch)
+
+	// cancel the batch
+	input.GravityKeeper.CancelBatchTx(ctx, firstBatch)
+
+	// verify the batch no longer exists in the store
+	gotBatch = input.GravityKeeper.GetOutgoingTx(ctx, firstBatch.GetStoreIndex())
+	require.Nil(t, gotBatch)
+
+	// verify that the transactions are back in the pool
+	var gotUnbatchedTx []*types.SendToEthereum
+	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
+		gotUnbatchedTx = append(gotUnbatchedTx, tx)
+		return false
+	})
+	require.Len(t, gotUnbatchedTx, 4) // All 4 original transactions should be back in the pool
+
+	// Create a new batch for testing partial signing
+	secondBatch := input.GravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
+	require.NotNil(t, secondBatch)
+
+	// Add a partial signature to the batch
+	val1 := sdk.ValAddress([]byte("validator1"))
+	input.GravityKeeper.SetEthereumSignature(ctx, &types.BatchTxConfirmation{
+		TokenContract: secondBatch.TokenContract,
+		BatchNonce:    secondBatch.BatchNonce,
+		Signature:     []byte("partial_sig"),
+	}, val1)
+
+	// Cancel the partially signed batch
+	input.GravityKeeper.CancelBatchTx(ctx, secondBatch)
+
+	// Verify the batch is removed and transactions are back in the pool
+	gotBatch = input.GravityKeeper.GetOutgoingTx(ctx, secondBatch.GetStoreIndex())
+	require.Nil(t, gotBatch)
+
+	gotUnbatchedTx = []*types.SendToEthereum{}
+	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
+		gotUnbatchedTx = append(gotUnbatchedTx, tx)
+		return false
+	})
+	require.Len(t, gotUnbatchedTx, 4) // All 4 transactions should be back in the pool
+
+	// Create a new batch and mark it as completed
+	thirdBatch := input.GravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
+	input.GravityKeeper.CompleteOutgoingTx(ctx, thirdBatch)
+
+	// Try to cancel the completed batch
+	input.GravityKeeper.CancelBatchTx(ctx, thirdBatch)
+
+	// CompletedOutgoingTx should still exist
+	gotBatch = input.GravityKeeper.GetOutgoingTx(ctx, thirdBatch.GetStoreIndex())
+	require.Nil(t, gotBatch)
+	gotBatch = input.GravityKeeper.GetCompletedOutgoingTx(ctx, thirdBatch.GetStoreIndex())
+	require.NotNil(t, gotBatch)
+
+	// Verify that no transactions were added back to the pool
+	gotUnbatchedTx = []*types.SendToEthereum{}
+	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
+		gotUnbatchedTx = append(gotUnbatchedTx, tx)
+		return false
+	})
+	require.Len(t, gotUnbatchedTx, 2) // Only the 2 transactions from the second batch should be in the pool
+}

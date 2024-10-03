@@ -125,6 +125,11 @@ func (k Keeper) GetBatchFeesByTokenType(ctx sdk.Context, tokenContractAddr commo
 
 // CancelBatchTx releases all TX in the batch and deletes the batch
 func (k Keeper) CancelBatchTx(ctx sdk.Context, batch *types.BatchTx) {
+	// If it's not in the store, it's already been completed, so we don't need to cancel it
+	if k.GetOutgoingTx(ctx, batch.GetStoreIndex()) == nil {
+		return
+	}
+
 	// free transactions from batch and reindex them
 	for _, tx := range batch.Transactions {
 		k.setUnbatchedSendToEthereum(ctx, tx)

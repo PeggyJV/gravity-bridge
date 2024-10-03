@@ -32,12 +32,12 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(types.ErrInvalidValidatorAddress, err.Error())
 	}
 
 	orchAddr, err := sdk.AccAddressFromBech32(msg.OrchestratorAddress)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(types.ErrInvalidOrchestratorAddress, err.Error())
 	}
 
 	ethAddr := common.HexToAddress(msg.EthereumAddress)

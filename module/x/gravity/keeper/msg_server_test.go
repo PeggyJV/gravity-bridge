@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -14,6 +15,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
+)
+
+var (
+	nonexistentOrcAddr, _ = sdk.AccAddressFromBech32("cosmos13txzft28sfwqlg38vkkparzaxyzewhws5ucqhe")
 )
 
 func TestMsgServer_SubmitEthereumSignature(t *testing.T) {
@@ -73,6 +78,69 @@ func TestMsgServer_SubmitEthereumSignature(t *testing.T) {
 
 	_, err = msgServer.SubmitEthereumTxConfirmation(sdk.WrapSDKContext(ctx), msg)
 	require.NoError(t, err)
+
+	// Test error scenarios for SubmitEthereumTxConfirmation
+
+	t.Run("Invalid confirmation type", func(t *testing.T) {
+		invalidConfirmation := &types1.Any{
+			TypeUrl: "invalid-type",
+			Value:   []byte("invalid confirmation"),
+		}
+		msg := &types.MsgSubmitEthereumTxConfirmation{
+			Confirmation: invalidConfirmation,
+			Signer:       orcAddr1.String(),
+		}
+
+		_, err = msgServer.SubmitEthereumTxConfirmation(sdk.WrapSDKContext(ctx), msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed unpacking protobuf message from Any")
+	})
+
+	t.Run("Non-existent validator", func(t *testing.T) {
+		msg := &types.MsgSubmitEthereumTxConfirmation{
+			Confirmation: confirmation,
+			Signer:       nonexistentOrcAddr.String(),
+		}
+
+		_, err = msgServer.SubmitEthereumTxConfirmation(sdk.WrapSDKContext(ctx), msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "not orchestrator or validator")
+	})
+
+	t.Run("Invalid Ethereum signature", func(t *testing.T) {
+		invalidSignature, _ := types.NewEthereumSignature(checkpoint, ethPrivKey)
+		invalidSignature[0] ^= 0xFF // Flip some bits to make it invalid
+
+		invalidConfirmation := &types.SignerSetTxConfirmation{
+			SignerSetNonce: signerSetTx.Nonce,
+			EthereumSigner: ethAddr1.Hex(),
+			Signature:      invalidSignature,
+		}
+
+		packedInvalidConfirmation, _ := types.PackConfirmation(invalidConfirmation)
+
+		msg := &types.MsgSubmitEthereumTxConfirmation{
+			Confirmation: packedInvalidConfirmation,
+			Signer:       orcAddr1.String(),
+		}
+
+		_, err = msgServer.SubmitEthereumTxConfirmation(sdk.WrapSDKContext(ctx), msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "signature verification failed")
+	})
+
+	t.Run("Duplicate confirmation", func(t *testing.T) {
+		// First submission should succeed
+		msg := &types.MsgSubmitEthereumTxConfirmation{
+			Confirmation: confirmation,
+			Signer:       orcAddr1.String(),
+		}
+
+		// Second submission of the same confirmation should fail
+		_, err = msgServer.SubmitEthereumTxConfirmation(sdk.WrapSDKContext(ctx), msg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "signature duplicate: invalid")
+	})
 }
 
 func TestMsgServer_SendToEthereum(t *testing.T) {
@@ -211,6 +279,39 @@ func TestMsgServer_CancelSendToEthereum(t *testing.T) {
 
 	_, err = msgServer.CancelSendToEthereum(sdk.WrapSDKContext(ctx), cancelMsg)
 	require.NoError(t, err)
+
+	// Test error cases for CancelSendToEthereum
+
+	t.Run("Invalid ID", func(t *testing.T) {
+		// Test case: Invalid ID
+		invalidIDMsg := &types.MsgCancelSendToEthereum{
+			Id:     999999, // Non-existent ID
+			Sender: orcAddr1.String(),
+		}
+		_, err = msgServer.CancelSendToEthereum(sdk.WrapSDKContext(ctx), invalidIDMsg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "not found")
+	})
+
+	t.Run("Sender is not the original sender", func(t *testing.T) {
+		// Create a new send to ethereum message
+		msg := &types.MsgSendToEthereum{
+			Sender:            orcAddr1.String(),
+			EthereumRecipient: ethAddr1.String(),
+			Amount:            amount,
+			BridgeFee:         fee,
+		}
+		response, err = msgServer.SendToEthereum(sdk.WrapSDKContext(ctx), msg)
+		require.NoError(t, err)
+
+		wrongSenderMsg := &types.MsgCancelSendToEthereum{
+			Id:     response.Id,
+			Sender: orcAddr2.String(), // Different sender
+		}
+		_, err = msgServer.CancelSendToEthereum(sdk.WrapSDKContext(ctx), wrongSenderMsg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "can't cancel a message you didn't send")
+	})
 }
 
 func TestMsgServer_SubmitEthereumEvent(t *testing.T) {
@@ -266,6 +367,43 @@ func TestMsgServer_SubmitEthereumEvent(t *testing.T) {
 
 	_, err = msgServer.SubmitEthereumEvent(sdk.WrapSDKContext(ctx), msg)
 	require.NoError(t, err)
+
+	// Test error cases for SubmitEthereumEvent
+	t.Run("Invalid signer address", func(t *testing.T) {
+		invalidMsg := &types.MsgSubmitEthereumEvent{
+			Event:  event,
+			Signer: "invalid_address",
+		}
+		_, err := msgServer.SubmitEthereumEvent(sdk.WrapSDKContext(ctx), invalidMsg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "signer address: invalid")
+	})
+
+	t.Run("Non-existent signer", func(t *testing.T) {
+		invalidMsg := &types.MsgSubmitEthereumEvent{
+			Event:  event,
+			Signer: nonexistentOrcAddr.String(), // Using a different orchestrator address
+		}
+		res, err := msgServer.SubmitEthereumEvent(sdk.WrapSDKContext(ctx), invalidMsg)
+		require.Nil(t, res)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "not orchestrator or validator")
+	})
+
+	t.Run("Non-contiguous event nonce", func(t *testing.T) {
+		invalidEvent, err := types.PackEvent(&types.ContractCallExecutedEvent{
+			EventNonce: 10,
+		})
+		require.NoError(t, err)
+
+		invalidMsg := &types.MsgSubmitEthereumEvent{
+			Event:  invalidEvent,
+			Signer: orcAddr1.String(),
+		}
+		_, err = msgServer.SubmitEthereumEvent(sdk.WrapSDKContext(ctx), invalidMsg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "non contiguous event nonce")
+	})
 }
 
 func TestMsgServer_SetDelegateKeys(t *testing.T) {
@@ -277,6 +415,7 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 		ctx         = env.Context
 		gk          = env.GravityKeeper
 		orcAddr1, _ = sdk.AccAddressFromBech32("cosmos1dg55rtevlfxh46w88yjpdd08sqhh5cc3xhkcej")
+		orcAddr2, _ = sdk.AccAddressFromBech32("cosmos164knshrzuuurf05qxf3q5ewpfnwzl4gj4m4dfy")
 		valAddr1    = sdk.ValAddress(orcAddr1)
 		ethAddr1    = crypto.PubkeyToAddress(ethPrivKey.PublicKey)
 	)
@@ -311,6 +450,82 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 
 	_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), msg)
 	require.NoError(t, err)
+
+	// Test error cases for SetDelegateKeys
+	t.Run("Invalid validator address", func(t *testing.T) {
+		invalidMsg := &types.MsgDelegateKeys{
+			ValidatorAddress:    "invalid_address",
+			OrchestratorAddress: orcAddr1.String(),
+			EthereumAddress:     ethAddr1.String(),
+			EthSignature:        sig,
+		}
+		_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), invalidMsg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid validator address")
+	})
+
+	t.Run("Invalid orchestrator address", func(t *testing.T) {
+		invalidMsg := &types.MsgDelegateKeys{
+			ValidatorAddress:    valAddr1.String(),
+			OrchestratorAddress: "invalid_address",
+			EthereumAddress:     ethAddr1.String(),
+			EthSignature:        sig,
+		}
+		_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), invalidMsg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid orchestrator address")
+	})
+
+	t.Run("Ethereum address already in use", func(t *testing.T) {
+
+		invalidMsg := &types.MsgDelegateKeys{
+			ValidatorAddress:    valAddr1.String(),
+			OrchestratorAddress: orcAddr1.String(),
+			EthereumAddress:     ethAddr1.String(),
+			EthSignature:        sig,
+		}
+		_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), invalidMsg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), fmt.Sprintf("ethereum address %s in use", ethAddr1))
+	})
+
+	t.Run("Orchestrator address already in use", func(t *testing.T) {
+		invalidMsg := &types.MsgDelegateKeys{
+			ValidatorAddress:    valAddr1.String(),
+			OrchestratorAddress: orcAddr1.String(),
+			EthereumAddress:     "anything",
+			EthSignature:        sig,
+		}
+		_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), invalidMsg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), fmt.Sprintf("orchestrator address %s in use", orcAddr1))
+	})
+
+	t.Run("Invalid ethereum signature", func(t *testing.T) {
+		invalidSig := []byte("invalid_signature")
+		invalidMsg := &types.MsgDelegateKeys{
+			ValidatorAddress:    valAddr1.String(),
+			OrchestratorAddress: orcAddr2.String(),
+			EthereumAddress:     "anything",
+			EthSignature:        invalidSig,
+		}
+		_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), invalidMsg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to validate delegate keys signature for Ethereum address")
+	})
+
+	t.Run("Validator not found", func(t *testing.T) {
+		nonExistentValAddr := sdk.ValAddress(bytes.Repeat([]byte{1}, 20))
+		invalidMsg := &types.MsgDelegateKeys{
+			ValidatorAddress:    nonExistentValAddr.String(),
+			OrchestratorAddress: orcAddr1.String(),
+			EthereumAddress:     ethAddr1.String(),
+			EthSignature:        sig,
+		}
+		_, err = msgServer.SetDelegateKeys(sdk.WrapSDKContext(ctx), invalidMsg)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "validator does not exist")
+	})
 }
 
 func TestMsgServer_SubmitEthereumHeightVote(t *testing.T) {
