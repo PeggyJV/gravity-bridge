@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
 	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 
@@ -32,7 +31,7 @@ func TestMsgServer_SubmitEthereumSignature(t *testing.T) {
 
 		orcAddr1, _ = sdk.AccAddressFromBech32("cosmos1dg55rtevlfxh46w88yjpdd08sqhh5cc3xhkcej")
 		valAddr1    = sdk.ValAddress(orcAddr1)
-		ethAddr1    = crypto.PubkeyToAddress(ethPrivKey.PublicKey)
+		ethAddr1    = ethCrypto.PubkeyToAddress(ethPrivKey.PublicKey)
 
 		orcAddr2, _ = sdk.AccAddressFromBech32("cosmos164knshrzuuurf05qxf3q5ewpfnwzl4gj4m4dfy")
 		valAddr2    = sdk.ValAddress(orcAddr2)
@@ -154,7 +153,7 @@ func TestMsgServer_SendToEthereum(t *testing.T) {
 
 		orcAddr1, _ = sdk.AccAddressFromBech32("cosmos1dg55rtevlfxh46w88yjpdd08sqhh5cc3xhkcej")
 		valAddr1    = sdk.ValAddress(orcAddr1)
-		ethAddr1    = crypto.PubkeyToAddress(ethPrivKey.PublicKey)
+		ethAddr1    = ethCrypto.PubkeyToAddress(ethPrivKey.PublicKey)
 
 		orcAddr2, _ = sdk.AccAddressFromBech32("cosmos164knshrzuuurf05qxf3q5ewpfnwzl4gj4m4dfy")
 		valAddr2    = sdk.ValAddress(orcAddr2)
@@ -219,7 +218,7 @@ func TestMsgServer_CancelSendToEthereum(t *testing.T) {
 
 		orcAddr1, _ = sdk.AccAddressFromBech32("cosmos1dg55rtevlfxh46w88yjpdd08sqhh5cc3xhkcej")
 		valAddr1    = sdk.ValAddress(orcAddr1)
-		ethAddr1    = crypto.PubkeyToAddress(ethPrivKey.PublicKey)
+		ethAddr1    = ethCrypto.PubkeyToAddress(ethPrivKey.PublicKey)
 
 		orcAddr2, _ = sdk.AccAddressFromBech32("cosmos164knshrzuuurf05qxf3q5ewpfnwzl4gj4m4dfy")
 		valAddr2    = sdk.ValAddress(orcAddr2)
@@ -325,7 +324,7 @@ func TestMsgServer_SubmitEthereumEvent(t *testing.T) {
 
 		orcAddr1, _ = sdk.AccAddressFromBech32("cosmos1dg55rtevlfxh46w88yjpdd08sqhh5cc3xhkcej")
 		valAddr1    = sdk.ValAddress(orcAddr1)
-		ethAddr1    = crypto.PubkeyToAddress(ethPrivKey.PublicKey)
+		ethAddr1    = ethCrypto.PubkeyToAddress(ethPrivKey.PublicKey)
 
 		orcAddr2, _ = sdk.AccAddressFromBech32("cosmos164knshrzuuurf05qxf3q5ewpfnwzl4gj4m4dfy")
 		valAddr2    = sdk.ValAddress(orcAddr2)
@@ -417,7 +416,7 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 		orcAddr1, _ = sdk.AccAddressFromBech32("cosmos1dg55rtevlfxh46w88yjpdd08sqhh5cc3xhkcej")
 		orcAddr2, _ = sdk.AccAddressFromBech32("cosmos164knshrzuuurf05qxf3q5ewpfnwzl4gj4m4dfy")
 		valAddr1    = sdk.ValAddress(orcAddr1)
-		ethAddr1    = crypto.PubkeyToAddress(ethPrivKey.PublicKey)
+		ethAddr1    = ethCrypto.PubkeyToAddress(ethPrivKey.PublicKey)
 	)
 
 	// setup for getSignerValidator
@@ -436,7 +435,7 @@ func TestMsgServer_SetDelegateKeys(t *testing.T) {
 		Nonce:            0,
 	}
 	signMsgBz := env.Marshaler.MustMarshal(&ethMsg)
-	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
+	hash := ethCrypto.Keccak256Hash(signMsgBz).Bytes()
 
 	sig, err := types.NewEthereumSignature(hash, ethPrivKey)
 	require.NoError(t, err)
@@ -576,18 +575,18 @@ func TestEthVerify(t *testing.T) {
 	privKeyBz, err := hexutil.Decode(privKeyHexStr)
 	require.NoError(t, err)
 
-	privKey, err := crypto.ToECDSA(privKeyBz)
+	privKey, err := ethCrypto.ToECDSA(privKeyBz)
 	require.NoError(t, err)
 	require.NotNil(t, privKey)
 
-	require.True(t, bytes.Equal(privKeyBz, crypto.FromECDSA(privKey)))
-	require.Equal(t, privKeyHexStr, hexutil.Encode(crypto.FromECDSA(privKey)))
+	require.True(t, bytes.Equal(privKeyBz, ethCrypto.FromECDSA(privKey)))
+	require.Equal(t, privKeyHexStr, hexutil.Encode(ethCrypto.FromECDSA(privKey)))
 
 	publicKey := privKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	require.True(t, ok)
 
-	address := crypto.PubkeyToAddress(*publicKeyECDSA)
+	address := ethCrypto.PubkeyToAddress(*publicKeyECDSA)
 	require.Equal(t, addrHexStr, address.Hex())
 
 	// ==========================================================================
@@ -604,7 +603,7 @@ func TestEthVerify(t *testing.T) {
 	require.NoError(t, err)
 
 	fmt.Println("MESSAGE BYTES TO SIGN:", hexutil.Encode(signMsgBz))
-	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
+	hash := ethCrypto.Keccak256Hash(signMsgBz).Bytes()
 
 	sig, err := types.NewEthereumSignature(hash, privKey)
 	sig[64] += 27 // change the V value

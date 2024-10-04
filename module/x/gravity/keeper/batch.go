@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strconv"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
@@ -79,7 +79,7 @@ func (k Keeper) batchTxExecuted(ctx sdk.Context, tokenContract common.Address, n
 		// If the iterated batches nonce is lower than the one that was just executed, cancel it
 		btx, ok := otx.(*types.BatchTx)
 		if !ok {
-			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
+			panic(errors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
 		}
 
 		if (btx.BatchNonce < batchTx.BatchNonce) && (btx.TokenContract == batchTx.TokenContract) {
@@ -173,7 +173,7 @@ func (k Keeper) GetUnsignedBatchTxs(ctx sdk.Context, val sdk.ValAddress) []*type
 		if len(sig) == 0 {
 			batch, ok := cotx.(*types.BatchTx)
 			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for completed tx %s", cotx))
+				panic(errors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for completed tx %s", cotx))
 			}
 			unconfirmed = append(unconfirmed, batch)
 		}
@@ -184,7 +184,7 @@ func (k Keeper) GetUnsignedBatchTxs(ctx sdk.Context, val sdk.ValAddress) []*type
 		if len(sig) == 0 {
 			batch, ok := otx.(*types.BatchTx)
 			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
+				panic(errors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
 			}
 			unconfirmed = append(unconfirmed, batch)
 		}

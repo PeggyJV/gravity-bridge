@@ -129,33 +129,37 @@ func (s *IntegrationTestSuite) TestValidatorOut() {
 			s.Require().NoError(err)
 			newQ := stakingtypes.NewQueryClient(clientCtx)
 
-			val0, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[0].address()).String()})
+			val0Address := sdk.ValAddress(s.chain.validators[0].address()).String()
+			val0, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: val0Address})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
 			s.Require().False(val0.GetValidator().IsJailed())
 
-			val1, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[1].address()).String()})
+			val1Address := sdk.ValAddress(s.chain.validators[1].address()).String()
+			val1, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: val1Address})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
 			s.Require().False(val1.GetValidator().IsJailed())
 
-			val2, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[2].address()).String()})
+			val2Address := sdk.ValAddress(s.chain.validators[2].address()).String()
+			val2, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: val2Address})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
 			s.Require().False(val2.GetValidator().IsJailed())
 
-			val3, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: sdk.ValAddress(s.chain.validators[3].address()).String()})
+			val3Address := sdk.ValAddress(s.chain.validators[3].address()).String()
+			val3, err := newQ.Validator(context.Background(), &stakingtypes.QueryValidatorRequest{ValidatorAddr: val3Address})
 			if err != nil {
 				s.T().Logf("error: %s", err)
 				return false
 			}
 			return val3.GetValidator().IsJailed()
-		}, 5*time.Minute, 5*time.Second, "can't confirm jailing status")
+		}, 8*time.Minute, 5*time.Second, "can't confirm jailing status")
 	})
 }

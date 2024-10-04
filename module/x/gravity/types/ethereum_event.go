@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"cosmossdk.io/errors"
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -115,16 +116,16 @@ func (stce *SendToCosmosEvent) Validate() error {
 		return fmt.Errorf("event nonce cannot be 0")
 	}
 	if !common.IsHexAddress(stce.TokenContract) {
-		return sdkerrors.Wrap(ErrInvalid, "ethereum contract address")
+		return errors.Wrap(ErrInvalid, "ethereum contract address")
 	}
 	if stce.Amount.IsNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "amount must be positive")
+		return errors.Wrap(sdkerrors.ErrInvalidCoins, "amount must be positive")
 	}
 	if !common.IsHexAddress(stce.EthereumSender) {
-		return sdkerrors.Wrap(ErrInvalid, "ethereum sender")
+		return errors.Wrap(ErrInvalid, "ethereum sender")
 	}
 	if _, err := sdk.AccAddressFromBech32(stce.CosmosReceiver); err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, stce.CosmosReceiver)
+		return errors.Wrap(sdkerrors.ErrInvalidAddress, stce.CosmosReceiver)
 	}
 	return nil
 }
@@ -134,7 +135,7 @@ func (bee *BatchExecutedEvent) Validate() error {
 		return fmt.Errorf("event nonce cannot be 0")
 	}
 	if !common.IsHexAddress(bee.TokenContract) {
-		return sdkerrors.Wrap(ErrInvalid, "ethereum contract address")
+		return errors.Wrap(ErrInvalid, "ethereum contract address")
 	}
 	return nil
 }
@@ -151,7 +152,7 @@ func (e20de *ERC20DeployedEvent) Validate() error {
 		return fmt.Errorf("event nonce cannot be 0")
 	}
 	if !common.IsHexAddress(e20de.TokenContract) {
-		return sdkerrors.Wrap(ErrInvalid, "ethereum contract address")
+		return errors.Wrap(ErrInvalid, "ethereum contract address")
 	}
 	if err := sdk.ValidateDenom(e20de.CosmosDenom); err != nil {
 		return err

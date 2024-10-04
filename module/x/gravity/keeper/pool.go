@@ -4,11 +4,11 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"cosmossdk.io/errors"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
@@ -81,7 +81,7 @@ func (k Keeper) cancelSendToEthereum(ctx sdk.Context, id uint64, s string) error
 	}
 	if send == nil {
 		// NOTE: this case will also be hit if the transaction is in a batch
-		return sdkerrors.Wrap(types.ErrInvalid, "id not found in send to ethereum pool")
+		return errors.Wrap(types.ErrInvalid, "id not found in send to ethereum pool")
 	}
 
 	if sender.String() != send.Sender {
@@ -95,12 +95,12 @@ func (k Keeper) cancelSendToEthereum(ctx sdk.Context, id uint64, s string) error
 	// If it is not cosmos-originated the coins are minted
 	if !isCosmosOriginated {
 		if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coinsToRefund); err != nil {
-			return sdkerrors.Wrapf(err, "mint vouchers coins: %s", coinsToRefund)
+			return errors.Wrapf(err, "mint vouchers coins: %s", coinsToRefund)
 		}
 	}
 
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, coinsToRefund); err != nil {
-		return sdkerrors.Wrap(err, "sending coins from module account")
+		return errors.Wrap(err, "sending coins from module account")
 	}
 
 	k.deleteUnbatchedSendToEthereum(ctx, send.Id, send.Erc20Fee)

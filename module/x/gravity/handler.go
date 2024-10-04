@@ -1,6 +1,7 @@
 package gravity
 
 import (
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -42,7 +43,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
+			return nil, errors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 		}
 	}
 }
@@ -53,7 +54,7 @@ func NewCommunityPoolEthereumSpendProposalHandler(k keeper.Keeper) govtypes.Hand
 		case *types.CommunityPoolEthereumSpendProposal:
 			return k.HandleCommunityPoolEthereumSpendProposal(ctx, c)
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized gravity proposal content type: %T", c)
+			return errors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized gravity proposal content type: %T", c)
 		}
 	}
 }

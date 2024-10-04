@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"sort"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
 
@@ -17,7 +17,7 @@ func (k Keeper) GetUnsignedContractCallTxs(ctx sdk.Context, val sdk.ValAddress) 
 		if len(sig) == 0 {
 			call, ok := cotx.(*types.ContractCallTx)
 			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for completed tx %s", cotx))
+				panic(errors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for completed tx %s", cotx))
 			}
 			unconfirmed = append(unconfirmed, call)
 		}
@@ -29,7 +29,7 @@ func (k Keeper) GetUnsignedContractCallTxs(ctx sdk.Context, val sdk.ValAddress) 
 		if len(sig) == 0 {
 			call, ok := otx.(*types.ContractCallTx)
 			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %s", otx))
+				panic(errors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %s", otx))
 			}
 			unconfirmed = append(unconfirmed, call)
 		}
@@ -53,7 +53,7 @@ func (k Keeper) contractCallExecuted(ctx sdk.Context, invalidationScope []byte, 
 		// If the iterated contract call's nonce is lower than the one that was just executed, delete it
 		cctx, ok := otx.(*types.ContractCallTx)
 		if !ok {
-			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call tx for %s", otx))
+			panic(errors.Wrapf(types.ErrInvalid, "couldn't cast to contract call tx for %s", otx))
 		}
 
 		if (cctx.InvalidationNonce < completedCallTx.InvalidationNonce) &&

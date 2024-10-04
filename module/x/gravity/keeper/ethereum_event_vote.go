@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
@@ -25,7 +25,7 @@ func (k Keeper) recordEventVote(
 	lastEventNonce := k.getLastEventNonceByValidator(ctx, val)
 	expectedNonce := lastEventNonce + 1
 	if event.GetEventNonce() != expectedNonce {
-		return nil, sdkerrors.Wrapf(types.ErrInvalid,
+		return nil, errors.Wrapf(types.ErrInvalid,
 			"non contiguous event nonce expected %v observed %v for validator %v",
 			expectedNonce,
 			event.GetEventNonce(),

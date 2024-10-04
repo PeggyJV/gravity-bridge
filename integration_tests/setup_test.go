@@ -64,7 +64,6 @@ var (
 	stakeAmountCoin   = sdk.NewCoin(testDenom, stakeAmount)
 	gravityContract   = common.HexToAddress("0x04C89607413713Ec9775E14b954286519d836FEf")
 	testERC20contract = common.HexToAddress("0x4C4a2f8c81640e47606d3fd77B353E87Ba015584")
-	testERC20Denom    = fmt.Sprintf("gravity%s", testERC20contract.Hex())
 )
 
 type IntegrationTestSuite struct {
@@ -347,7 +346,7 @@ func (s *IntegrationTestSuite) initGenesis() {
 	s.Require().NoError(cdc.UnmarshalJSON(appGenState[gravitytypes.ModuleName], &gravityGenState))
 	gravityGenState.Params.GravityId = "gravitytest"
 	gravityGenState.Params.BridgeEthereumAddress = gravityContract.String()
-	gravityGenState.Params.ConfirmedOutgoingTxWindow = 1000000
+	gravityGenState.Params.ConfirmedOutgoingTxWindow = 300
 	gravityGenState.Params.TargetEthTxTimeout = 3600000
 	gravityGenState.Params.AverageBlockTime = 1000
 	gravityGenState.Params.AverageEthereumBlockTime = 1000

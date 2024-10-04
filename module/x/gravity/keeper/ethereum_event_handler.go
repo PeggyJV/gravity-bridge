@@ -3,8 +3,8 @@ package keeper
 import (
 	"math/big"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 
@@ -15,7 +15,7 @@ func (k Keeper) DetectMaliciousSupply(ctx sdk.Context, denom string, amount sdk.
 	currentSupply := k.bankKeeper.GetSupply(ctx, denom)
 	newSupply := new(big.Int).Add(currentSupply.Amount.BigInt(), amount.BigInt())
 	if newSupply.BitLen() > 256 {
-		return sdkerrors.Wrapf(types.ErrSupplyOverflow, "malicious supply of %s detected", denom)
+		return errors.Wrapf(types.ErrSupplyOverflow, "malicious supply of %s detected", denom)
 	}
 
 	return nil
@@ -37,7 +37,7 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 
 			// if it is not cosmos originated, mint the coins (aka vouchers)
 			if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coins); err != nil {
-				return sdkerrors.Wrapf(err, "mint vouchers coins: %s", coins)
+				return errors.Wrapf(err, "mint vouchers coins: %s", coins)
 			}
 		}
 
@@ -79,13 +79,13 @@ func (k Keeper) Handle(ctx sdk.Context, eve types.EthereumEvent) (err error) {
 		return nil
 
 	default:
-		return sdkerrors.Wrapf(types.ErrInvalid, "event type: %T", event)
+		return errors.Wrapf(types.ErrInvalid, "event type: %T", event)
 	}
 }
 
 func (k Keeper) verifyERC20DeployedEvent(ctx sdk.Context, event *types.ERC20DeployedEvent) error {
 	if existingERC20, exists := k.getCosmosOriginatedERC20(ctx, event.CosmosDenom); exists {
-		return sdkerrors.Wrapf(
+		return errors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"ERC20 token %s already exists for denom %s", existingERC20.Hex(), event.CosmosDenom,
 		)
@@ -109,28 +109,28 @@ func (k Keeper) verifyERC20DeployedEvent(ctx sdk.Context, event *types.ERC20Depl
 	}
 
 	if supply := k.bankKeeper.GetSupply(ctx, event.CosmosDenom); supply.IsZero() {
-		return sdkerrors.Wrapf(
+		return errors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"no supply exists for token %s without metadata", event.CosmosDenom,
 		)
 	}
 
 	if event.Erc20Name != event.CosmosDenom {
-		return sdkerrors.Wrapf(
+		return errors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"invalid ERC20 name for token without metadata; got: %s, expected: %s", event.Erc20Name, event.CosmosDenom,
 		)
 	}
 
 	if event.Erc20Symbol != "" {
-		return sdkerrors.Wrapf(
+		return errors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"expected empty ERC20 symbol for token without metadata; got: %s", event.Erc20Symbol,
 		)
 	}
 
 	if event.Erc20Decimals != 0 {
-		return sdkerrors.Wrapf(
+		return errors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"expected zero ERC20 decimals for token without metadata; got: %d", event.Erc20Decimals,
 		)
@@ -141,14 +141,14 @@ func (k Keeper) verifyERC20DeployedEvent(ctx sdk.Context, event *types.ERC20Depl
 
 func verifyERC20Token(metadata banktypes.Metadata, event *types.ERC20DeployedEvent) error {
 	if event.Erc20Name != metadata.Display {
-		return sdkerrors.Wrapf(
+		return errors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"ERC20 name %s does not match the denom display %s", event.Erc20Name, metadata.Display,
 		)
 	}
 
 	if event.Erc20Symbol != metadata.Display {
-		return sdkerrors.Wrapf(
+		return errors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"ERC20 symbol %s does not match denom display %s", event.Erc20Symbol, metadata.Display,
 		)
@@ -179,7 +179,7 @@ func verifyERC20Token(metadata banktypes.Metadata, event *types.ERC20DeployedEve
 	}
 
 	if uint64(decimals) != event.Erc20Decimals {
-		return sdkerrors.Wrapf(
+		return errors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"ERC20 decimals %d does not match denom decimals %d", event.Erc20Decimals, decimals,
 		)

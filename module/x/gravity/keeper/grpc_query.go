@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/errors"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
@@ -105,7 +105,7 @@ func (k Keeper) SignerSetTxs(c context.Context, req *types.SignerSetTxsRequest) 
 	pageRes, err := k.PaginateOutgoingTxsByType(sdk.UnwrapSDKContext(c), req.Pagination, types.SignerSetTxPrefixByte, func(_ []byte, otx types.OutgoingTx) (hit bool) {
 		signer, ok := otx.(*types.SignerSetTx)
 		if !ok {
-			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %s", otx))
+			panic(errors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %s", otx))
 		}
 		signers = append(signers, signer)
 
@@ -123,7 +123,7 @@ func (k Keeper) BatchTxs(c context.Context, req *types.BatchTxsRequest) (*types.
 	pageRes, err := k.PaginateOutgoingTxsByType(sdk.UnwrapSDKContext(c), req.Pagination, types.BatchTxPrefixByte, func(_ []byte, otx types.OutgoingTx) (hit bool) {
 		batch, ok := otx.(*types.BatchTx)
 		if !ok {
-			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
+			panic(errors.Wrapf(types.ErrInvalid, "couldn't cast to batch tx for %s", otx))
 		}
 		batches = append(batches, batch)
 		return true
@@ -140,7 +140,7 @@ func (k Keeper) ContractCallTxs(c context.Context, req *types.ContractCallTxsReq
 	pageRes, err := k.PaginateOutgoingTxsByType(sdk.UnwrapSDKContext(c), req.Pagination, types.ContractCallTxPrefixByte, func(_ []byte, otx types.OutgoingTx) (hit bool) {
 		call, ok := otx.(*types.ContractCallTx)
 		if !ok {
-			panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %s", otx))
+			panic(errors.Wrapf(types.ErrInvalid, "couldn't cast to contract call for %s", otx))
 		}
 		calls = append(calls, call)
 		return true
@@ -281,7 +281,7 @@ func (k Keeper) ERC20ToDenom(c context.Context, req *types.ERC20ToDenomRequest) 
 func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20ParamsRequest) (*types.DenomToERC20ParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	if existingERC20, exists := k.getCosmosOriginatedERC20(ctx, req.Denom); exists {
-		return nil, sdkerrors.Wrapf(
+		return nil, errors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"ERC20 token %s already exists for denom %s", existingERC20.Hex(), req.Denom,
 		)
@@ -306,7 +306,7 @@ func (k Keeper) DenomToERC20Params(c context.Context, req *types.DenomToERC20Par
 	}
 
 	if supply := k.bankKeeper.GetSupply(ctx, req.Denom); supply.IsZero() {
-		return nil, sdkerrors.Wrapf(
+		return nil, errors.Wrapf(
 			types.ErrInvalidERC20Event,
 			"no supply exists for token %s without metadata", req.Denom,
 		)
@@ -394,7 +394,7 @@ func (k Keeper) DelegateKeysByValidator(c context.Context, req *types.DelegateKe
 func (k Keeper) DelegateKeysByEthereumSigner(c context.Context, req *types.DelegateKeysByEthereumSignerRequest) (*types.DelegateKeysByEthereumSignerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	if !common.IsHexAddress(req.EthereumSigner) {
-		return nil, sdkerrors.Wrapf(types.ErrInvalid, "ethereum signer needs to be a hex address")
+		return nil, errors.Wrapf(types.ErrInvalid, "ethereum signer needs to be a hex address")
 	}
 	ethAddr := common.HexToAddress(req.EthereumSigner)
 	orchAddr := k.GetEthereumOrchestratorAddress(ctx, ethAddr)

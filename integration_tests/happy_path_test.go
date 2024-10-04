@@ -294,6 +294,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 	s.Run("Test orchestrator EthereumTxConfirmation after transaction execution", func() {
 		val := s.chain.validators[0]
 		keyring, err := val.keyring()
+		s.Require().NoError(err)
 		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", val.address())
 		s.Require().NoError(err)
 
@@ -309,6 +310,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		testDenomERC20 := common.HexToAddress(gravityResponse.Erc20)
 
 		initialBalance, err := s.getEthTokenBalanceOf(common.HexToAddress(recipient), testDenomERC20)
+		s.Require().NoError(err, "error getting initial balance")
 		// Turn off one orchestrator (let's use the second one)
 		s.T().Log("Turning off orchestrator1")
 		err = s.dockerPool.RemoveContainerByName("orchestrator1")

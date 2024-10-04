@@ -6,8 +6,8 @@ import (
 	"math"
 	"sort"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -18,7 +18,7 @@ import (
 // ValidateBasic performs stateless checks on validity
 func (b *EthereumSigner) ValidateBasic() error {
 	if !common.IsHexAddress(b.EthereumAddress) {
-		return sdkerrors.Wrap(ErrInvalid, "ethereum address")
+		return errors.Wrap(ErrInvalid, "ethereum address")
 	}
 	return nil
 }
