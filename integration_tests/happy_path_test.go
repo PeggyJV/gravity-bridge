@@ -339,6 +339,18 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 		)
 		s.T().Logf("Sent %s %s to %s", sendAmount, testDenom, recipient)
 
+		// Getting latest Batch Nonce
+		completed, err := gravityQueryClient.CompletedBatchTxs(context.Background(), &types.CompletedBatchTxsRequest{})
+		s.Require().NoError(err, "error querying CompletedBatchTxs")
+		// Search through completed batch txs to get the highest nonce
+		var highestNonce uint64
+		for _, batchTx := range completed.CompletedBatchTxs {
+			if batchTx.BatchNonce > highestNonce {
+				highestNonce = batchTx.BatchNonce
+			}
+		}
+		s.T().Logf("Highest completed batch nonce: %d", highestNonce)
+
 		// Send the message
 		s.T().Logf("Sending SendToEthereum message with %s", val.address().String())
 		response, err := s.chain.sendMsgs(*clientCtx, sendToEthereumMsg)
@@ -358,6 +370,26 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			expectedBalance := initialBalance.Add(sendAmount)
 			return balance.Equal(expectedBalance)
 		}, 5*time.Minute, 10*time.Second, "Transaction did not complete on Ethereum")
+
+		// Wait for the CompletedOutgoingTx to be created
+		s.T().Log("Waiting for CompletedOutgoingTx to be created")
+		expectedNonce := highestNonce + 1
+		s.T().Logf("Expected nonce: %d", expectedNonce)
+		s.Require().Eventually(func() bool {
+			res, err := gravityQueryClient.CompletedBatchTxs(context.Background(), &types.CompletedBatchTxsRequest{})
+			if err != nil {
+				s.T().Logf("Error querying CompletedBatchTxs: %v", err)
+				return false
+			}
+
+			for _, batchTx := range res.CompletedBatchTxs {
+				if batchTx.BatchNonce >= expectedNonce {
+					return true
+				}
+			}
+
+			return false
+		}, 5*time.Minute, 3*time.Second, "CompletedBatchTx was not found")
 
 		// Turn the orchestrator back on
 		s.T().Log("Turning orchestrator1 back on")
