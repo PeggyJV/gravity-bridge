@@ -6,7 +6,6 @@ import (
 	"math/big"
 
 	"cosmossdk.io/errors"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -18,7 +17,7 @@ const (
 // NewEthereumSignature creates a new signuature over a given byte array
 func NewEthereumSignature(hash []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
 	if privateKey == nil {
-		return nil, sdkerrors.Wrap(ErrInvalid, "did not pass in private key")
+		return nil, errors.Wrap(ErrInvalid, "did not pass in private key")
 	}
 	protectedHash := crypto.Keccak256Hash(append([]byte(signaturePrefix), hash...))
 	return crypto.Sign(protectedHash.Bytes(), privateKey)
@@ -80,11 +79,11 @@ func ValidateEthereumSignature(hash []byte, signature []byte, ethAddress common.
 
 	pubkey, err := crypto.SigToPub(crypto.Keccak256Hash(hash).Bytes(), sigCopy)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "signature to public key sig %x hash %x", sigCopy, hash)
+		return errors.Wrapf(err, "signature to public key sig %x hash %x", sigCopy, hash)
 	}
 
 	if addr := crypto.PubkeyToAddress(*pubkey); addr != ethAddress {
-		return sdkerrors.Wrapf(ErrInvalid, "signature not matching addr %x sig %x hash %x", addr, signature, hash)
+		return errors.Wrapf(ErrInvalid, "signature not matching addr %x sig %x hash %x", addr, signature, hash)
 	}
 
 	return nil

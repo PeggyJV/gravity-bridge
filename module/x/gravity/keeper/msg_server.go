@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -32,35 +32,35 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(types.ErrInvalidValidatorAddress, err.Error())
 	}
 
 	orchAddr, err := sdk.AccAddressFromBech32(msg.OrchestratorAddress)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(types.ErrInvalidOrchestratorAddress, err.Error())
 	}
 
 	ethAddr := common.HexToAddress(msg.EthereumAddress)
 
 	// ensure that the validator exists
 	if k.Keeper.StakingKeeper.Validator(ctx, valAddr) == nil {
-		return nil, sdkerrors.Wrap(stakingtypes.ErrNoValidatorFound, valAddr.String())
+		return nil, errors.Wrap(stakingtypes.ErrNoValidatorFound, valAddr.String())
 	}
 
 	// check if the Ethereum address is currently not used
 	if k.validatorForEthAddressExists(ctx, ethAddr) {
-		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "ethereum address %s in use", ethAddr)
+		return nil, errors.Wrapf(types.ErrDelegateKeys, "ethereum address %s in use", ethAddr)
 	}
 
 	// check if the orchestrator address is currently not used
 	if k.ethAddressForOrchestratorExists(ctx, orchAddr) {
-		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "orchestrator address %s in use", orchAddr)
+		return nil, errors.Wrapf(types.ErrDelegateKeys, "orchestrator address %s in use", orchAddr)
 	}
 
 	valAccAddr := sdk.AccAddress(valAddr)
 	valAccSeq, err := k.accountKeeper.GetSequence(ctx, valAccAddr)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(types.ErrDelegateKeys, "failed to get sequence for validator account %s", valAccAddr)
+		return nil, errors.Wrapf(types.ErrDelegateKeys, "failed to get sequence for validator account %s", valAccAddr)
 	}
 
 	var nonce uint64
@@ -78,7 +78,7 @@ func (k msgServer) SetDelegateKeys(c context.Context, msg *types.MsgDelegateKeys
 	hash := crypto.Keccak256Hash(signMsgBz).Bytes()
 
 	if err = types.ValidateEthereumSignature(hash, msg.EthSignature, ethAddr); err != nil {
-		return nil, sdkerrors.Wrapf(
+		return nil, errors.Wrapf(
 			types.ErrDelegateKeys,
 			"failed to validate delegate keys signature for Ethereum address %X; %s ;%d",
 			ethAddr, err, nonce,
@@ -125,7 +125,7 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 				"store index", fmt.Sprintf("%x", confirmation.GetStoreIndex()),
 			)
 
-			return nil, sdkerrors.Wrap(types.ErrInvalid, "couldn't find outgoing tx")
+			return nil, errors.Wrap(types.ErrInvalid, "couldn't find outgoing tx")
 		}
 	}
 
@@ -134,7 +134,7 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 
 	ethAddress := k.GetValidatorEthereumAddress(ctx, val)
 	if ethAddress != confirmation.GetSigner() {
-		return nil, sdkerrors.Wrap(types.ErrInvalid, "eth address does not match signer eth address")
+		return nil, errors.Wrap(types.ErrInvalid, "eth address does not match signer eth address")
 	}
 
 	if err = types.ValidateEthereumSignature(checkpoint, confirmation.GetSignature(), ethAddress); err != nil {
@@ -145,7 +145,7 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 			"type url", msg.Confirmation.TypeUrl,
 			"signature", hex.EncodeToString(confirmation.GetSignature()),
 			"error", err)
-		return nil, sdkerrors.Wrap(types.ErrInvalid, fmt.Sprintf(
+		return nil, errors.Wrap(types.ErrInvalid, fmt.Sprintf(
 			"signature verification failed ethAddress %s gravityID %s checkpoint %s typeURL %s signature %s err %s",
 			ethAddress.Hex(),
 			gravityID,
@@ -157,7 +157,7 @@ func (k msgServer) SubmitEthereumTxConfirmation(c context.Context, msg *types.Ms
 	}
 	// TODO: should validators be able to overwrite their signatures?
 	if k.getEthereumSignature(ctx, confirmation.GetStoreIndex(), val) != nil {
-		return nil, sdkerrors.Wrap(types.ErrInvalid, "signature duplicate")
+		return nil, errors.Wrap(types.ErrInvalid, "signature duplicate")
 	}
 
 	key := k.SetEthereumSignature(ctx, confirmation, val)
@@ -190,7 +190,7 @@ func (k msgServer) SubmitEthereumEvent(c context.Context, msg *types.MsgSubmitEt
 	// Add the claim to the store
 	_, err = k.recordEventVote(ctx, event, val)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "create event vote record")
+		return nil, errors.Wrap(err, "create event vote record")
 	}
 
 	// Emit the handle message event
@@ -285,7 +285,7 @@ func (k msgServer) SubmitEthereumHeightVote(c context.Context, msg *types.MsgEth
 func (k Keeper) getSignerValidator(ctx sdk.Context, signerString string) (sdk.ValAddress, error) {
 	signer, err := sdk.AccAddressFromBech32(signerString)
 	if err != nil {
-		return nil, sdkerrors.Wrap(types.ErrInvalid, "signer address")
+		return nil, errors.Wrap(types.ErrInvalid, "signer address")
 	}
 	var validatorI stakingtypes.ValidatorI
 	if validator := k.GetOrchestratorValidatorAddress(ctx, signer); validator == nil {
@@ -295,9 +295,9 @@ func (k Keeper) getSignerValidator(ctx sdk.Context, signerString string) (sdk.Va
 	}
 
 	if validatorI == nil {
-		return nil, sdkerrors.Wrap(types.ErrInvalid, "not orchestrator or validator")
+		return nil, errors.Wrap(types.ErrInvalid, "not orchestrator or validator")
 	} else if !validatorI.IsBonded() {
-		return nil, sdkerrors.Wrap(types.ErrInvalid, fmt.Sprintf("validator is not bonded: %s", validatorI.GetOperator()))
+		return nil, errors.Wrap(types.ErrInvalid, fmt.Sprintf("validator is not bonded: %s", validatorI.GetOperator()))
 	}
 
 	return validatorI.GetOperator(), nil

@@ -2,13 +2,19 @@ package integration_tests
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"path"
+	"path/filepath"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ory/dockertest/v3"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
 
@@ -284,4 +290,245 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			return true
 		}, time.Second*180, time.Second*10, "community funds did not reach destination")
 	})
+
+	s.Run("Test orchestrator EthereumTxConfirmation after transaction execution", func() {
+		val := s.chain.validators[0]
+		keyring, err := val.keyring()
+		s.Require().NoError(err)
+		clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", val.address())
+		s.Require().NoError(err)
+
+		recipient := s.chain.validators[3].ethereumKey.address
+		gravityQueryClient := types.NewQueryClient(clientCtx)
+		gravityResponse, err := gravityQueryClient.DenomToERC20(context.Background(),
+			&types.DenomToERC20Request{
+				Denom: testDenom,
+			},
+		)
+		s.Require().NoError(err, "error querying ERC20 for testgb denom")
+		s.Require().True(gravityResponse.CosmosOriginated)
+		testDenomERC20 := common.HexToAddress(gravityResponse.Erc20)
+
+		initialBalance, err := s.getEthTokenBalanceOf(common.HexToAddress(recipient), testDenomERC20)
+		s.Require().NoError(err, "error getting initial balance")
+		// Turn off one orchestrator (let's use the second one)
+		s.T().Log("Turning off orchestrator1")
+		err = s.dockerPool.RemoveContainerByName("orchestrator1")
+		s.Require().NoError(err, "Failed to remove orchestrator1 container")
+
+		// Prepare SendToEthereum message
+		s.T().Log("Preparing SendToEthereum message")
+		// Query the balance of testERC20Denom for validator0
+		bankQueryClient := banktypes.NewQueryClient(clientCtx)
+		balanceRes, err := bankQueryClient.AllBalances(
+			context.Background(),
+			&banktypes.QueryAllBalancesRequest{
+				Address: val.address().String(),
+			},
+		)
+		s.Require().NoError(err)
+
+		s.T().Logf("Validator0 balances: %s", balanceRes.Balances)
+		sendAmount := sdk.NewInt(420)
+		feeAmount := sdk.NewInt(1)
+		sendToEthereumMsg := types.NewMsgSendToEthereum(
+			s.chain.validators[0].address(),
+			recipient,
+			sdk.NewCoin(testDenom, sendAmount),
+			sdk.NewCoin(testDenom, feeAmount),
+		)
+		s.T().Logf("Sent %s %s to %s", sendAmount, testDenom, recipient)
+
+		// Getting latest Batch Nonce
+		completed, err := gravityQueryClient.CompletedBatchTxs(context.Background(), &types.CompletedBatchTxsRequest{})
+		s.Require().NoError(err, "error querying CompletedBatchTxs")
+		// Search through completed batch txs to get the highest nonce
+		var highestNonce uint64
+		for _, batchTx := range completed.CompletedBatchTxs {
+			if batchTx.BatchNonce > highestNonce {
+				highestNonce = batchTx.BatchNonce
+			}
+		}
+		s.T().Logf("Highest completed batch nonce: %d", highestNonce)
+
+		// Send the message
+		s.T().Logf("Sending SendToEthereum message with %s", val.address().String())
+		response, err := s.chain.sendMsgs(*clientCtx, sendToEthereumMsg)
+		s.Require().NoError(err)
+		s.Require().Zero(response.Code, "SendToEthereum failed: %s", response.RawLog)
+
+		// Wait for the transaction to complete on Ethereum
+		s.T().Log("Waiting for transaction to complete on Ethereum")
+		s.T().Logf("Recipient: %s, initial balance: %s", recipient, initialBalance.String())
+		s.Require().Eventually(func() bool {
+			balance, err := s.getEthTokenBalanceOf(common.HexToAddress(recipient), testDenomERC20)
+			if err != nil {
+				s.T().Logf("Error getting balance: %v", err)
+				return false
+			}
+			s.T().Logf("Balance: %s", balance.String())
+			expectedBalance := initialBalance.Add(sendAmount)
+			return balance.Equal(expectedBalance)
+		}, 5*time.Minute, 10*time.Second, "Transaction did not complete on Ethereum")
+
+		// Wait for the CompletedOutgoingTx to be created
+		s.T().Log("Waiting for CompletedOutgoingTx to be created")
+		expectedNonce := highestNonce + 1
+		s.T().Logf("Expected nonce: %d", expectedNonce)
+		s.Require().Eventually(func() bool {
+			res, err := gravityQueryClient.CompletedBatchTxs(context.Background(), &types.CompletedBatchTxsRequest{})
+			if err != nil {
+				s.T().Logf("Error querying CompletedBatchTxs: %v", err)
+				return false
+			}
+
+			for _, batchTx := range res.CompletedBatchTxs {
+				if batchTx.BatchNonce >= expectedNonce {
+					return true
+				}
+			}
+
+			return false
+		}, 5*time.Minute, 3*time.Second, "CompletedBatchTx was not found")
+
+		// Turn the orchestrator back on
+		s.T().Log("Turning orchestrator1 back on")
+		err = s.startOrchestrator1()
+		s.Require().NoError(err, "Failed to restart orchestrator1")
+
+		// Watch for EthereumTxConfirmation from the restarted orchestrator
+		s.T().Log("Watching for EthereumTxConfirmation from restarted orchestrator")
+		s.Require().Eventually(func() bool {
+			val := s.chain.validators[1]
+			keyring, err := val.keyring()
+			s.Require().NoError(err)
+			clientCtx, err := s.chain.clientContext("tcp://localhost:26657", &keyring, "val", val.address())
+			s.Require().NoError(err)
+
+			// Get the validator address with cosmosvaloper prefix
+			cosmosValOperAddr, err := getValOperatorAddress(val.address().String())
+			s.Require().NoError(err)
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.BatchTxConfirmationsByValidator(context.Background(), &types.BatchTxConfirmationsByValidatorRequest{
+				ValidatorAddress: cosmosValOperAddr,
+			})
+			if err != nil {
+				s.T().Logf("Error querying EthereumTxConfirmation: %v", err)
+				return false
+			}
+
+			// Check if the height has increased, indicating that the orchestrator has caught up
+			return len(res.BatchTxConfirmations) > 0
+		}, 5*time.Minute, 10*time.Second, "Orchestrator did not submit EthereumTxConfirmation after restart")
+
+		s.T().Log("Orchestrator successfully submitted EthereumTxConfirmation after transaction execution")
+	})
+}
+
+func (s *IntegrationTestSuite) startOrchestrator1() error {
+	i := 1
+	orch := s.chain.orchestrators[i]
+	gorcCfg := fmt.Sprintf(`keystore = "/root/gorc/keystore/"
+
+[gravity]
+contract = "%s"
+fees_denom = "%s"
+
+[ethereum]
+key_derivation_path = "m/44'/60'/0'/0/0"
+rpc = "http://%s:8545"
+
+[cosmos]
+key_derivation_path = "m/44'/118'/1'/0/0"
+grpc = "http://%s:9090"
+gas_price = { amount = %s, denom = "%s" }
+prefix = "cosmos"
+gas_adjustment = 2.0
+msg_batch_size = 5
+`,
+		gravityContract.String(),
+		testDenom,
+		// NOTE: container names are prefixed with '/'
+		s.ethResource.Container.Name[1:],
+		s.valResources[i].Container.Name[1:],
+		minGasPrice,
+		testDenom,
+	)
+
+	val := s.chain.validators[i]
+
+	gorcCfgPath := path.Join(val.configDir(), "gorc")
+	err := os.MkdirAll(gorcCfgPath, 0755)
+	if err != nil {
+		return err
+	}
+
+	filePath := path.Join(gorcCfgPath, "config.toml")
+	err = writeFile(filePath, []byte(gorcCfg))
+	if err != nil {
+		return err
+	}
+
+	// We must first populate the orchestrator's keystore prior to starting
+	// the orchestrator gorc process. The keystore must contain the Ethereum
+	// and orchestrator keys. These keys will be used for relaying txs to
+	// and from the test network and Ethereum. The gorc_bootstrap.sh scripts encapsulates
+	// this entire process.
+	//
+	// NOTE: If the Docker build changes, the script might have to be modified
+	// as it relies on busybox.
+	err = copyFile(
+		filepath.Join("integration_tests", "gorc_bootstrap.sh"),
+		filepath.Join(gorcCfgPath, "gorc_bootstrap.sh"),
+	)
+	if err != nil {
+		return err
+	}
+
+	resource, err := s.dockerPool.RunWithOptions(
+		&dockertest.RunOptions{
+			Name:       orch.instanceName(),
+			NetworkID:  s.dockerNetwork.Network.ID,
+			Repository: "orchestrator",
+			Tag:        "prebuilt",
+			Mounts: []string{
+				fmt.Sprintf("%s/:/root/gorc", gorcCfgPath),
+			},
+			Env: []string{
+				fmt.Sprintf("ORCH_MNEMONIC=%s", orch.mnemonic),
+				fmt.Sprintf("ETH_PRIV_KEY=%s", val.ethereumKey.privateKey),
+				"RUST_BACKTRACE=full",
+				"RUST_LOG=debug",
+			},
+			Entrypoint: []string{
+				"sh",
+				"-c",
+				"chmod +x /root/gorc/gorc_bootstrap.sh && /root/gorc/gorc_bootstrap.sh",
+			},
+		},
+		noRestart,
+	)
+	if err != nil {
+		return err
+	}
+
+	s.orchResources[i] = resource
+	s.T().Logf("started orchestrator container: %s", resource.Container.ID)
+	return nil
+}
+
+func getValOperatorAddress(address string) (string, error) {
+	// Decode the old address
+	_, bz, err := bech32.DecodeAndConvert(address)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode address: %w", err)
+	}
+
+	// Encode with the new prefix
+	newAddress, err := bech32.ConvertAndEncode("cosmosvaloper", bz)
+	if err != nil {
+		return "", fmt.Errorf("failed to encode address: %w", err)
+	}
+
+	return newAddress, nil
 }

@@ -3,8 +3,8 @@ package keeper
 import (
 	"sort"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
 )
 
@@ -21,7 +21,7 @@ func (k Keeper) SignerSetExecuted(ctx sdk.Context, nonce uint64) {
 
 	sstx, ok := otx.(*types.SignerSetTx)
 	if !ok {
-		panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for outgoing tx %s", otx))
+		panic(errors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for outgoing tx %s", otx))
 	}
 
 	k.setLastObservedSignerSetTx(ctx, *sstx)
@@ -38,7 +38,7 @@ func (k Keeper) GetUnsignedSignerSetTxs(ctx sdk.Context, val sdk.ValAddress) []*
 		if len(sig) == 0 {
 			signerSet, ok := cotx.(*types.SignerSetTx)
 			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for completed tx %s", cotx))
+				panic(errors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for completed tx %s", cotx))
 			}
 			unconfirmed = append(unconfirmed, signerSet)
 		}
@@ -49,7 +49,7 @@ func (k Keeper) GetUnsignedSignerSetTxs(ctx sdk.Context, val sdk.ValAddress) []*
 		if len(sig) == 0 {
 			signerSet, ok := otx.(*types.SignerSetTx)
 			if !ok {
-				panic(sdkerrors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %s", otx))
+				panic(errors.Wrapf(types.ErrInvalid, "couldn't cast to signer set for %s", otx))
 			}
 			unconfirmed = append(unconfirmed, signerSet)
 		}

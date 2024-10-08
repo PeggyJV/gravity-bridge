@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/errors"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -104,12 +104,12 @@ func EventVoteRecordPowerThreshold(totalPower sdk.Int) sdk.Int {
 // calling their validation functions
 func (s GenesisState) ValidateBasic() error {
 	if err := s.Params.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "params")
+		return errors.Wrap(err, "params")
 	}
 	if len(s.DelegateKeys) != 0 {
 		for _, delegateKey := range s.DelegateKeys {
 			if err := delegateKey.ValidateBasic(); err != nil {
-				return sdkerrors.Wrap(err, "delegates")
+				return errors.Wrap(err, "delegates")
 			}
 		}
 	}
@@ -150,55 +150,55 @@ func DefaultParams() *Params {
 // ValidateBasic checks that the parameters have valid values.
 func (p Params) ValidateBasic() error {
 	if err := validateGravityID(p.GravityId); err != nil {
-		return sdkerrors.Wrap(err, "gravity id")
+		return errors.Wrap(err, "gravity id")
 	}
 	if err := validateContractHash(p.ContractSourceHash); err != nil {
-		return sdkerrors.Wrap(err, "contract hash")
+		return errors.Wrap(err, "contract hash")
 	}
 	if err := validateBridgeContractAddress(p.BridgeEthereumAddress); err != nil {
-		return sdkerrors.Wrap(err, "bridge contract address")
+		return errors.Wrap(err, "bridge contract address")
 	}
 	if err := validateBridgeChainID(p.BridgeChainId); err != nil {
-		return sdkerrors.Wrap(err, "bridge chain id")
+		return errors.Wrap(err, "bridge chain id")
 	}
 	if err := validateTargetEthTxTimeout(p.TargetEthTxTimeout); err != nil {
-		return sdkerrors.Wrap(err, "Batch timeout")
+		return errors.Wrap(err, "Batch timeout")
 	}
 	if err := validateAverageBlockTime(p.AverageBlockTime); err != nil {
-		return sdkerrors.Wrap(err, "Block time")
+		return errors.Wrap(err, "Block time")
 	}
 	if err := validateAverageEthereumBlockTime(p.AverageEthereumBlockTime); err != nil {
-		return sdkerrors.Wrap(err, "Ethereum block time")
+		return errors.Wrap(err, "Ethereum block time")
 	}
 	if err := validateSignedSignerSetTxsWindow(p.SignedSignerSetTxsWindow); err != nil {
-		return sdkerrors.Wrap(err, "signed blocks window")
+		return errors.Wrap(err, "signed blocks window")
 	}
 	if err := validateSignedBatchesWindow(p.SignedBatchesWindow); err != nil {
-		return sdkerrors.Wrap(err, "signed blocks window")
+		return errors.Wrap(err, "signed blocks window")
 	}
 	if err := validateEthereumSignaturesWindow(p.EthereumSignaturesWindow); err != nil {
-		return sdkerrors.Wrap(err, "signed blocks window")
+		return errors.Wrap(err, "signed blocks window")
 	}
 	if err := validateSlashFractionSignerSetTx(p.SlashFractionSignerSetTx); err != nil {
-		return sdkerrors.Wrap(err, "slash fraction signersettx")
+		return errors.Wrap(err, "slash fraction signersettx")
 	}
 	if err := validateSlashFractionBatch(p.SlashFractionBatch); err != nil {
-		return sdkerrors.Wrap(err, "slash fraction batch tx")
+		return errors.Wrap(err, "slash fraction batch tx")
 	}
 	if err := validateSlashFractionEthereumSignature(p.SlashFractionEthereumSignature); err != nil {
-		return sdkerrors.Wrap(err, "slash fraction ethereum signature")
+		return errors.Wrap(err, "slash fraction ethereum signature")
 	}
 	if err := validateSlashFractionConflictingEthereumSignature(p.SlashFractionConflictingEthereumSignature); err != nil {
-		return sdkerrors.Wrap(err, "slash fraction conflicting ethereum signature")
+		return errors.Wrap(err, "slash fraction conflicting ethereum signature")
 	}
 	if err := validateUnbondSlashingSignerSetTxsWindow(p.UnbondSlashingSignerSetTxsWindow); err != nil {
-		return sdkerrors.Wrap(err, "unbond slashing signersettx window")
+		return errors.Wrap(err, "unbond slashing signersettx window")
 	}
 	if err := validateEthereumEventVoteWindow(p.EthereumEventVoteWindow); err != nil {
-		return sdkerrors.Wrap(err, "event vote window")
+		return errors.Wrap(err, "event vote window")
 	}
 	if err := validateConfirmedOutgoingTxWindow(p.ConfirmedOutgoingTxWindow); err != nil {
-		return sdkerrors.Wrap(err, "confirmed outgoing tx window")
+		return errors.Wrap(err, "confirmed outgoing tx window")
 	}
 
 	return nil

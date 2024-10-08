@@ -241,6 +241,9 @@ func (c *chain) clientContext(nodeURI string, kb *keyring.Keyring, fromName stri
 	)
 	encodingConfig.InterfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &secp256k1.PubKey{}, &ed25519.PubKey{})
 
+	//simapp.ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	//simapp.ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+
 	rpcClient, err := rpchttp.New(nodeURI, "/websocket")
 	if err != nil {
 		return nil, err

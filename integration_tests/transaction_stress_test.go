@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -89,6 +90,17 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 		}
 		fmt.Println("Ethereum -> Cosmos stress test completed.")
 
+		// Initialize a map to store the initial balances of each validator's Ethereum address
+		initialBalances := make(map[string]*sdkmath.Int)
+
+		// Record initial balances for each validator
+		for _, validator := range s.chain.validators {
+			balance, err := s.getEthTokenBalanceOf(common.HexToAddress(validator.ethereumKey.address), testERC20contract)
+			s.Require().NoError(err, "error getting initial balance")
+			initialBalances[validator.ethereumKey.address] = balance
+			s.T().Logf("Initial balance for validator %s: %s", validator.ethereumKey.address, balance.String())
+		}
+
 		for i, validator := range s.chain.validators {
 			s.Require().Eventuallyf(func() bool {
 				s.T().Logf("sending %d tx's to ethereum for validator %d ..", transactions_per_validator, i+1)
@@ -107,13 +119,15 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 
 				for j := 0; j < int(transactions_per_validator); j++ {
 					response, err := s.chain.sendMsgs(*clientCtx, sendToEthereumMsg)
+					// Wait for 2s between transactions
+					time.Sleep(2000 * time.Millisecond)
 					if err != nil {
 						s.T().Logf("error: %s", err)
 						return false
 					}
 					if response.Code != 0 {
 						if response.Code != 32 {
-							s.T().Log(response)
+							s.T().Logf("response: %v", response)
 						}
 						return false
 					}
@@ -131,8 +145,9 @@ func (s *IntegrationTestSuite) TestTransactionStress() {
 				balance, err := s.getEthTokenBalanceOf(common.HexToAddress(validator.ethereumKey.address), testERC20contract)
 				s.Require().NoError(err, "error getting destination balance")
 
-				if balance.LT(sdk.NewInt(10000 - (cosmos_sent_amt * transactions_per_validator) + (eth_sent_amt * transactions_per_validator))) {
-					s.T().Logf("funds not received yet, dest balance: %s", balance.String())
+				expectedBalance := initialBalances[validator.ethereumKey.address].Add(sdkmath.NewInt(eth_sent_amt * transactions_per_validator))
+				if balance.LT(expectedBalance) {
+					s.T().Logf("funds not received yet, dest balance: %s, expected: %s", balance.String(), expectedBalance.String())
 					return false
 				}
 
