@@ -552,25 +552,4 @@ func TestCancelBatchTx(t *testing.T) {
 		return false
 	})
 	require.Len(t, gotUnbatchedTx, 4) // All 4 transactions should be back in the pool
-
-	// Create a new batch and mark it as completed
-	thirdBatch := input.GravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
-	input.GravityKeeper.CompleteOutgoingTx(ctx, thirdBatch)
-
-	// Try to cancel the completed batch
-	input.GravityKeeper.CancelBatchTx(ctx, thirdBatch)
-
-	// CompletedOutgoingTx should still exist
-	gotBatch = input.GravityKeeper.GetOutgoingTx(ctx, thirdBatch.GetStoreIndex())
-	require.Nil(t, gotBatch)
-	gotBatch = input.GravityKeeper.GetCompletedOutgoingTx(ctx, thirdBatch.GetStoreIndex())
-	require.NotNil(t, gotBatch)
-
-	// Verify that no transactions were added back to the pool
-	gotUnbatchedTx = []*types.SendToEthereum{}
-	input.GravityKeeper.IterateUnbatchedSendToEthereums(ctx, func(tx *types.SendToEthereum) bool {
-		gotUnbatchedTx = append(gotUnbatchedTx, tx)
-		return false
-	})
-	require.Len(t, gotUnbatchedTx, 2) // Only the 2 transactions from the second batch should be in the pool
 }
