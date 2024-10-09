@@ -108,7 +108,7 @@ func (AppModule) Name() string {
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 {
-	return 4
+	return 5
 }
 
 // RegisterInvariants implements app module
@@ -126,6 +126,13 @@ func (am AppModule) QuerierRoute() string {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+
+	// The 4 to 5 migration is a no-op, no store migrations are required
+	if err := cfg.RegisterMigration(types.ModuleName, 4, func(ctx sdk.Context) error {
+		return nil
+	}); err != nil {
+		panic(fmt.Errorf("failed to register migration handler: %w", err))
+	}
 }
 
 // InitGenesis initializes the genesis state for this module and implements app module.

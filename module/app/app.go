@@ -95,6 +95,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	"github.com/gorilla/mux"
 	gravityparams "github.com/peggyjv/gravity-bridge/module/v4/app/params"
+	v5 "github.com/peggyjv/gravity-bridge/module/v4/app/upgrades/v5"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity"
 	gravityclient "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/client"
 	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/keeper"
@@ -922,5 +923,11 @@ func (app *Gravity) setupUpgradeStoreLoaders() {
 }
 
 func (app *Gravity) setupUpgradeHandlers() {
-
+	app.upgradeKeeper.SetUpgradeHandler(
+		v5.UpgradeName,
+		v5.CreateUpgradeHandler(
+			app.mm,
+			app.configurator,
+		),
+	)
 }
