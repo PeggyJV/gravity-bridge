@@ -12,9 +12,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity"
-	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity"
+	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
 )
 
 func TestSignerSetTxCreationIfNotAvailable(t *testing.T) {

@@ -18,9 +18,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/client/cli"
-	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/client/cli"
+	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
 )
 
 // type check to ensure the interface is properly implemented

@@ -31,8 +31,8 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
-	"github.com/peggyjv/gravity-bridge/module/v4/app"
-	"github.com/peggyjv/gravity-bridge/module/v4/app/params"
+	"github.com/peggyjv/gravity-bridge/module/v5/app"
+	"github.com/peggyjv/gravity-bridge/module/v5/app/params"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the

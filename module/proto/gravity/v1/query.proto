@@ -11,7 +11,7 @@ import "gravity/v1/genesis.proto";
 import "gravity/v1/gravity.proto";
 import "gravity/v1/msgs.proto";
 
-option go_package = "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types";
+option go_package = "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types";
 option (gogoproto.messagename_all) = true;
 
 // Query defines the gRPC querier service
@@ -30,7 +30,7 @@ service Query {
     option (google.api.http).get = "/gravity/v1/signer_set_txs/latest";
   }
   rpc BatchTx(BatchTxRequest) returns (BatchTxResponse) {
-    option (google.api.http).get = "/gravity/v1/batch_txs/{token_contract}/{batch_nonce}"; 
+    option (google.api.http).get = "/gravity/v1/batch_txs/{token_contract}/{batch_nonce}";
   }
   rpc ContractCallTx(ContractCallTxRequest) returns (ContractCallTxResponse) {
     option (google.api.http).get = "/gravity/v1/contract_call_txs/{invalidation_scope}/{invalidation_nonce}";

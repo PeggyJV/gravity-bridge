@@ -10,13 +10,13 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types";
+option go_package = "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types";
 option (gogoproto.messagename_all) = true;
 
 // Msg defines the state transitions possible within gravity
 service Msg {
   option (cosmos.msg.v1.service) = true;
-  
+
   rpc SendToEthereum(MsgSendToEthereum) returns (MsgSendToEthereumResponse) {
     // option (google.api.http).post = "/gravity/v1/send_to_ethereum";
   }
@@ -129,7 +129,7 @@ message MsgSubmitEthereumEventResponse {}
 // to a given orchestrator address. This key is then used as an optional
 // authentication method for attesting events from Ethereum.
 message MsgDelegateKeys {
-  option (cosmos.msg.v1.signer) = "validator_address";  
+  option (cosmos.msg.v1.signer) = "validator_address";
   option (amino.name)           = "gravity/MsgDelegateKeys";
 
   string validator_address = 1;

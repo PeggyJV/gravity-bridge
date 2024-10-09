@@ -59,10 +59,10 @@ import (
 	ibctransfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	gethcommon "github.com/ethereum/go-ethereum/common"
-	gravityclient "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/client"
+	gravityclient "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/client"
 	"github.com/stretchr/testify/require"
 
-	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
 )
 
 var (
