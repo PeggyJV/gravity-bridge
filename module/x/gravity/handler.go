@@ -6,8 +6,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
 )
 
 // NewHandler returns a handler for "Gravity" type messages.

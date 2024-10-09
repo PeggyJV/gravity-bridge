@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/peggyjv/gravity-bridge/module/v4/app"
+	"github.com/peggyjv/gravity-bridge/module/v5/app"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )

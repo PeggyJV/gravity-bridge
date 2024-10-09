@@ -37,7 +37,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v4/x/gravity/types"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
 )
 
 // GenTxCmd builds the application's gentx command.
