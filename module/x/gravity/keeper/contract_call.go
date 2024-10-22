@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"sort"
 
 	"cosmossdk.io/errors"
@@ -65,6 +66,12 @@ func (k Keeper) contractCallExecuted(ctx sdk.Context, invalidationScope []byte, 
 	})
 
 	k.CompleteOutgoingTx(ctx, completedCallTx)
+
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.EventTypeContractCallExecuted,
+		sdk.NewAttribute(types.AttributeKeyContractCallInvalidationScope, hex.EncodeToString(invalidationScope)),
+		sdk.NewAttribute(types.AttributeKeyContractCallInvalidationNonce, fmt.Sprint(invalidationNonce)),
+	))
 }
 
 // orderContractCallsByNonceAscending sorts a slice of contract calls by nonce in ascending order
