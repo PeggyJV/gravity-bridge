@@ -9,6 +9,7 @@ const (
 	EventTypeBridgeWithdrawalReceived = "withdrawal_received"
 	EventTypeBridgeDepositReceived    = "deposit_received"
 	EventTypeBridgeWithdrawCanceled   = "withdraw_canceled"
+	EventTypeContractCallTxCompleted  = "contract_call_tx_completed"
 
 	AttributeKeyEthereumEventVoteRecordID     = "ethereum_event_vote_record_id"
 	AttributeKeyBatchConfirmKey               = "batch_confirm_key"
