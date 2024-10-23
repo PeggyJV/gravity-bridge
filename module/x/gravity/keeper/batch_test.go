@@ -553,3 +553,61 @@ func TestCancelBatchTx(t *testing.T) {
 	})
 	require.Len(t, gotUnbatchedTx, 4) // All 4 transactions should be back in the pool
 }
+
+func TestOrderBatchesByNonceAscending(t *testing.T) {
+	t.Run("normal case", func(t *testing.T) {
+		// Create test batches with different nonces
+		batches := []*types.BatchTx{
+			{BatchNonce: 3},
+			{BatchNonce: 1},
+			{BatchNonce: 4},
+			{BatchNonce: 2},
+		}
+
+		// Order the batches
+		orderedBatches := orderBatchesByNonceAscending(batches)
+
+		// Check if the batches are ordered correctly
+		assert.Equal(t, uint64(1), orderedBatches[0].BatchNonce)
+		assert.Equal(t, uint64(2), orderedBatches[1].BatchNonce)
+		assert.Equal(t, uint64(3), orderedBatches[2].BatchNonce)
+		assert.Equal(t, uint64(4), orderedBatches[3].BatchNonce)
+
+		// Check if the length of the slice remains the same
+		assert.Equal(t, len(batches), len(orderedBatches))
+	})
+
+	t.Run("empty slice", func(t *testing.T) {
+		batches := []*types.BatchTx{}
+		orderedBatches := orderBatchesByNonceAscending(batches)
+		assert.Empty(t, orderedBatches)
+	})
+
+	t.Run("nil slice", func(t *testing.T) {
+		var batches []*types.BatchTx
+		orderedBatches := orderBatchesByNonceAscending(batches)
+		assert.Nil(t, orderedBatches)
+	})
+
+	t.Run("single element", func(t *testing.T) {
+		batches := []*types.BatchTx{{BatchNonce: 1}}
+		orderedBatches := orderBatchesByNonceAscending(batches)
+		assert.Equal(t, 1, len(orderedBatches))
+		assert.Equal(t, uint64(1), orderedBatches[0].BatchNonce)
+	})
+
+	t.Run("duplicate nonces", func(t *testing.T) {
+		batches := []*types.BatchTx{
+			{BatchNonce: 2},
+			{BatchNonce: 1},
+			{BatchNonce: 2},
+			{BatchNonce: 1},
+		}
+		orderedBatches := orderBatchesByNonceAscending(batches)
+		assert.Equal(t, 4, len(orderedBatches))
+		assert.Equal(t, uint64(1), orderedBatches[0].BatchNonce)
+		assert.Equal(t, uint64(1), orderedBatches[1].BatchNonce)
+		assert.Equal(t, uint64(2), orderedBatches[2].BatchNonce)
+		assert.Equal(t, uint64(2), orderedBatches[3].BatchNonce)
+	})
+}

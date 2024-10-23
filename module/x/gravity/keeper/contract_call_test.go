@@ -139,3 +139,61 @@ func TestGetUnconfirmedContractCallTxs(t *testing.T) {
 	require.Empty(t, gk.GetUnsignedContractCallTxs(ctx, val1))
 	require.Equal(t, 1, len(gk.GetUnsignedContractCallTxs(ctx, val2)))
 }
+
+func TestOrderContractCallsByNonceAscending(t *testing.T) {
+	t.Run("normal case", func(t *testing.T) {
+		// Create test contract calls with different nonces
+		calls := []*types.ContractCallTx{
+			{InvalidationNonce: 3},
+			{InvalidationNonce: 1},
+			{InvalidationNonce: 4},
+			{InvalidationNonce: 2},
+		}
+
+		// Order the contract calls
+		orderedCalls := orderContractCallsByNonceAscending(calls)
+
+		// Check if the contract calls are ordered correctly
+		assert.Equal(t, uint64(1), orderedCalls[0].InvalidationNonce)
+		assert.Equal(t, uint64(2), orderedCalls[1].InvalidationNonce)
+		assert.Equal(t, uint64(3), orderedCalls[2].InvalidationNonce)
+		assert.Equal(t, uint64(4), orderedCalls[3].InvalidationNonce)
+
+		// Check if the length of the slice remains the same
+		assert.Equal(t, len(calls), len(orderedCalls))
+	})
+
+	t.Run("empty slice", func(t *testing.T) {
+		calls := []*types.ContractCallTx{}
+		orderedCalls := orderContractCallsByNonceAscending(calls)
+		assert.Empty(t, orderedCalls)
+	})
+
+	t.Run("nil slice", func(t *testing.T) {
+		var calls []*types.ContractCallTx
+		orderedCalls := orderContractCallsByNonceAscending(calls)
+		assert.Nil(t, orderedCalls)
+	})
+
+	t.Run("single element", func(t *testing.T) {
+		calls := []*types.ContractCallTx{{InvalidationNonce: 1}}
+		orderedCalls := orderContractCallsByNonceAscending(calls)
+		assert.Equal(t, 1, len(orderedCalls))
+		assert.Equal(t, uint64(1), orderedCalls[0].InvalidationNonce)
+	})
+
+	t.Run("duplicate nonces", func(t *testing.T) {
+		calls := []*types.ContractCallTx{
+			{InvalidationNonce: 2},
+			{InvalidationNonce: 1},
+			{InvalidationNonce: 2},
+			{InvalidationNonce: 1},
+		}
+		orderedCalls := orderContractCallsByNonceAscending(calls)
+		assert.Equal(t, 4, len(orderedCalls))
+		assert.Equal(t, uint64(1), orderedCalls[0].InvalidationNonce)
+		assert.Equal(t, uint64(1), orderedCalls[1].InvalidationNonce)
+		assert.Equal(t, uint64(2), orderedCalls[2].InvalidationNonce)
+		assert.Equal(t, uint64(2), orderedCalls[3].InvalidationNonce)
+	})
+}
