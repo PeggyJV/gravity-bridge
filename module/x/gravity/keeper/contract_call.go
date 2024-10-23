@@ -68,7 +68,7 @@ func (k Keeper) contractCallExecuted(ctx sdk.Context, invalidationScope []byte, 
 	k.CompleteOutgoingTx(ctx, completedCallTx)
 
 	ctx.EventManager().EmitEvent(sdk.NewEvent(
-		types.EventTypeContractCallExecuted,
+		types.EventTypeContractCallTxCompleted,
 		sdk.NewAttribute(types.AttributeKeyContractCallInvalidationScope, hex.EncodeToString(invalidationScope)),
 		sdk.NewAttribute(types.AttributeKeyContractCallInvalidationNonce, fmt.Sprint(invalidationNonce)),
 	))
