@@ -6,15 +6,15 @@ toolchain go1.22.2
 
 require (
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/math v1.3.0
+	cosmossdk.io/math v1.4.0
 	github.com/cometbft/cometbft v0.37.5
 	github.com/cosmos/cosmos-sdk v0.47.13
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/ibc-go/v7 v7.3.2
+	github.com/cosmos/ibc-go/v7 v7.8.0
 	github.com/ethereum/go-ethereum v1.10.22
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.2
 	github.com/ory/dockertest/v3 v3.10.0
-	github.com/peggyjv/gravity-bridge/module/v4 v4.0.0-00010101000000-000000000000
+	github.com/peggyjv/gravity-bridge/module/v5 v5.0.0-20241023135054-397d3b1298c8
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
 )
