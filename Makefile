@@ -18,6 +18,9 @@ e2e_slow_loris:
 e2e_clean_slate:
 	@./clean_slate.sh
 
+e2e_fee_overflow: e2e_clean_slate
+	E2E_SKIP_CLEANUP=true integration_tests/integration-tests.test -test.failfast -test.v -test.run IntegrationTestSuite -testify.m TestUnbatchedTxsTotalFeeOverflow || make -s fail
+
 e2e_batch_stress: e2e_clean_slate
 	@testnet/testnet.test -test.run TestBatchStress -test.failfast -test.v || make -s fail
 
