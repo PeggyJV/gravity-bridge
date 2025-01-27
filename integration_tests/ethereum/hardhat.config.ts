@@ -43,6 +43,11 @@ task(
         await testERC20.deployed();
         console.log(`test ERC20 TestGB TGB deployed at - ${testERC20.address}`)
 
+        const MaliciousERC20 = await hre.ethers.getContractFactory("MaliciousERC20");
+        const maliciousERC20 = (await MaliciousERC20.deploy());
+        await maliciousERC20.deployed();
+        console.log(`MaliciousERC20 deployed at - ${maliciousERC20.address}`)
+
         await hre.network.provider.send("evm_setIntervalMining", [1000]);
 
         await hre.run('node');

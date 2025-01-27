@@ -12,9 +12,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 func TestSignerSetTxCreationIfNotAvailable(t *testing.T) {
@@ -404,18 +404,20 @@ func TestBatchTxTimeout(t *testing.T) {
 	require.NoError(t, fundAccount(ctx, input.BankKeeper, mySender, allVouchers))
 
 	// add some TX to the pool
-	input.AddSendToEthTxsToPool(t, ctx, myTokenContractAddr, mySender, myReceiver, 2, 3, 2, 1, 5, 6)
+	input.AddSendToEthTxsToPoolWithFee(t, ctx, myTokenContractAddr, mySender, myReceiver, 6, 10)
 
 	// when
 	ctx = ctx.WithBlockTime(now).WithBlockHeight(250)
 
 	// check that we can make a batch without first setting an ethereum block height
-	b1 := gravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
+	b1 := gravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 1)
+	require.NotNil(t, b1)
 	require.Equal(t, b1.Timeout, uint64(0))
 
 	gravityKeeper.SetLastObservedEthereumBlockHeight(ctx, 500)
 
 	b2 := gravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
+	require.NotNil(t, b2)
 	// this is exactly block 500 plus twelve hours
 	require.Equal(t, b2.Timeout, uint64(504))
 
@@ -428,8 +430,8 @@ func TestBatchTxTimeout(t *testing.T) {
 	// when, way into the future
 	ctx = ctx.WithBlockTime(now).WithBlockHeight(9)
 
-	b3 := gravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
-
+	b3 := gravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 3)
+	require.NotNil(t, b3)
 	gravity.BeginBlocker(ctx, gravityKeeper)
 
 	// this had a timeout of zero should be deleted.

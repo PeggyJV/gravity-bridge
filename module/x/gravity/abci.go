@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 // BeginBlocker is called at the beginning of every block

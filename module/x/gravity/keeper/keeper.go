@@ -21,7 +21,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 // Keeper maintains the link to storage and exposes getter/setter methods for the various parts of the state machine

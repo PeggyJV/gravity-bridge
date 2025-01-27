@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 func TestCurrentValsetNormalization(t *testing.T) {

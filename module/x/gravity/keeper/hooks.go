@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 type Hooks struct {

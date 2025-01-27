@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 func (k Keeper) GetUnsignedContractCallTxs(ctx sdk.Context, val sdk.ValAddress) []*types.ContractCallTx {

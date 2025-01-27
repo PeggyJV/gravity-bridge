@@ -94,12 +94,13 @@ import (
 	icaexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	"github.com/gorilla/mux"
-	gravityparams "github.com/peggyjv/gravity-bridge/module/v5/app/params"
-	v5 "github.com/peggyjv/gravity-bridge/module/v5/app/upgrades/v5"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity"
-	gravityclient "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/client"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/keeper"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	gravityparams "github.com/peggyjv/gravity-bridge/module/v6/app/params"
+	v5 "github.com/peggyjv/gravity-bridge/module/v6/app/upgrades/v5"
+	v6 "github.com/peggyjv/gravity-bridge/module/v6/app/upgrades/v6"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity"
+	gravityclient "github.com/peggyjv/gravity-bridge/module/v6/x/gravity/client"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/keeper"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 
@@ -926,6 +927,14 @@ func (app *Gravity) setupUpgradeHandlers() {
 	app.upgradeKeeper.SetUpgradeHandler(
 		v5.UpgradeName,
 		v5.CreateUpgradeHandler(
+			app.mm,
+			app.configurator,
+		),
+	)
+
+	app.upgradeKeeper.SetUpgradeHandler(
+		v6.UpgradeName,
+		v6.CreateUpgradeHandler(
 			app.mm,
 			app.configurator,
 		),

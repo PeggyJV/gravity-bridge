@@ -2,7 +2,7 @@ package client
 
 import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/client/cli"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/client/cli"
 )
 
 // ProposalHandler is the community Ethereum spend proposal handler.

@@ -38,7 +38,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 )
@@ -60,10 +60,11 @@ func MNEMONICS() []string {
 }
 
 var (
-	stakeAmount, _    = sdk.NewIntFromString("100000000000")
-	stakeAmountCoin   = sdk.NewCoin(testDenom, stakeAmount)
-	gravityContract   = common.HexToAddress("0x04C89607413713Ec9775E14b954286519d836FEf")
-	testERC20contract = common.HexToAddress("0x4C4a2f8c81640e47606d3fd77B353E87Ba015584")
+	stakeAmount, _         = sdk.NewIntFromString("100000000000")
+	stakeAmountCoin        = sdk.NewCoin(testDenom, stakeAmount)
+	gravityContract        = common.HexToAddress("0x04C89607413713Ec9775E14b954286519d836FEf")
+	testERC20contract      = common.HexToAddress("0x4C4a2f8c81640e47606d3fd77B353E87Ba015584")
+	maliciousERC20contract = common.HexToAddress("0x4C4a2f8c81640e47606d3fd77B353E87Ba015584")
 )
 
 type IntegrationTestSuite struct {
@@ -514,6 +515,18 @@ func (s *IntegrationTestSuite) runEthContainer() {
 		return false
 	}, time.Minute*5, time.Second*10, "unable to retrieve test erc20 address from logs")
 	s.T().Logf("test erc20 contract deployed at %s", testERC20contract.String())
+
+	s.Require().Eventuallyf(func() bool {
+		for _, s := range strings.Split(ethereumLogOutput.String(), "\n") {
+			if strings.HasPrefix(s, "MaliciousERC20 deployed at") {
+				strSpl := strings.Split(s, "-")
+				maliciousERC20contract = common.HexToAddress(strings.ReplaceAll(strSpl[1], " ", ""))
+				return true
+			}
+		}
+		return false
+	}, time.Minute*5, time.Second*10, "unable to retrieve test erc20 address from logs")
+	s.T().Logf("malicious erc20 contract deployed at %s", maliciousERC20contract.String())
 
 	s.T().Logf("started Ethereum container: %s", s.ethResource.Container.ID)
 }

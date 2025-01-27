@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 func TestSignerSetTxExecuted(t *testing.T) {
@@ -82,4 +82,62 @@ func TestGetUnconfirmedSignerSetTxs(t *testing.T) {
 
 	require.Empty(t, gk.GetUnsignedSignerSetTxs(ctx, val1))
 	require.Equal(t, 1, len(gk.GetUnsignedSignerSetTxs(ctx, val2)))
+}
+
+func TestOrderSignerSetsByNonceAscending(t *testing.T) {
+	t.Run("normal case", func(t *testing.T) {
+		// Create test signer sets with different nonces
+		signerSets := []*types.SignerSetTx{
+			{Nonce: 3},
+			{Nonce: 1},
+			{Nonce: 4},
+			{Nonce: 2},
+		}
+
+		// Order the signer sets
+		orderedSignerSets := orderSignerSetsByNonceAscending(signerSets)
+
+		// Check if the signer sets are ordered correctly
+		assert.Equal(t, uint64(1), orderedSignerSets[0].Nonce)
+		assert.Equal(t, uint64(2), orderedSignerSets[1].Nonce)
+		assert.Equal(t, uint64(3), orderedSignerSets[2].Nonce)
+		assert.Equal(t, uint64(4), orderedSignerSets[3].Nonce)
+
+		// Check if the length of the slice remains the same
+		assert.Equal(t, len(signerSets), len(orderedSignerSets))
+	})
+
+	t.Run("empty slice", func(t *testing.T) {
+		signerSets := []*types.SignerSetTx{}
+		orderedSignerSets := orderSignerSetsByNonceAscending(signerSets)
+		assert.Empty(t, orderedSignerSets)
+	})
+
+	t.Run("nil slice", func(t *testing.T) {
+		var signerSets []*types.SignerSetTx
+		orderedSignerSets := orderSignerSetsByNonceAscending(signerSets)
+		assert.Nil(t, orderedSignerSets)
+	})
+
+	t.Run("single element", func(t *testing.T) {
+		signerSets := []*types.SignerSetTx{{Nonce: 1}}
+		orderedSignerSets := orderSignerSetsByNonceAscending(signerSets)
+		assert.Equal(t, 1, len(orderedSignerSets))
+		assert.Equal(t, uint64(1), orderedSignerSets[0].Nonce)
+	})
+
+	t.Run("duplicate nonces", func(t *testing.T) {
+		signerSets := []*types.SignerSetTx{
+			{Nonce: 2},
+			{Nonce: 1},
+			{Nonce: 2},
+			{Nonce: 1},
+		}
+		orderedSignerSets := orderSignerSetsByNonceAscending(signerSets)
+		assert.Equal(t, 4, len(orderedSignerSets))
+		assert.Equal(t, uint64(1), orderedSignerSets[0].Nonce)
+		assert.Equal(t, uint64(1), orderedSignerSets[1].Nonce)
+		assert.Equal(t, uint64(2), orderedSignerSets[2].Nonce)
+		assert.Equal(t, uint64(2), orderedSignerSets[3].Nonce)
+	})
 }

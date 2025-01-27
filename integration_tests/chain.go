@@ -39,10 +39,10 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	ibctransfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
-	"github.com/peggyjv/gravity-bridge/module/v5/app"
-	"github.com/peggyjv/gravity-bridge/module/v5/app/params"
-	gravityclient "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/client"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/app"
+	"github.com/peggyjv/gravity-bridge/module/v6/app/params"
+	gravityclient "github.com/peggyjv/gravity-bridge/module/v6/x/gravity/client"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 const (

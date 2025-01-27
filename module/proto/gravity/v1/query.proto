@@ -11,7 +11,7 @@ import "gravity/v1/genesis.proto";
 import "gravity/v1/gravity.proto";
 import "gravity/v1/msgs.proto";
 
-option go_package = "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types";
+option go_package = "github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types";
 option (gogoproto.messagename_all) = true;
 
 // Query defines the gRPC querier service

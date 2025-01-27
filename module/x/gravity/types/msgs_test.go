@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/peggyjv/gravity-bridge/module/v5/app"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/app"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 func TestValidateMsgDelegateKeys(t *testing.T) {
