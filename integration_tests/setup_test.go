@@ -38,7 +38,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 )

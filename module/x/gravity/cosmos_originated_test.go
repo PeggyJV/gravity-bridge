@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/peggyjv/gravity-bridge/module/v5/app"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/app"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 // Have the validators put in a erc20<>denom relation with ERC20DeployedEvent

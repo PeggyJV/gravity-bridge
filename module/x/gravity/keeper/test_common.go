@@ -59,10 +59,10 @@ import (
 	ibctransfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	gethcommon "github.com/ethereum/go-ethereum/common"
-	gravityclient "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/client"
+	gravityclient "github.com/peggyjv/gravity-bridge/module/v6/x/gravity/client"
 	"github.com/stretchr/testify/require"
 
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 var (
@@ -229,6 +229,15 @@ func (input TestInput) AddSendToEthTxsToPool(t *testing.T, ctx sdk.Context, toke
 	for i, id := range ids {
 		amount := types.NewERC20Token(uint64(i+100), tokenContract).GravityCoin()
 		fee := types.NewERC20Token(id, tokenContract).GravityCoin()
+		_, err := input.GravityKeeper.createSendToEthereum(ctx, sender, receiver.Hex(), amount, fee)
+		require.NoError(t, err)
+	}
+}
+
+func (input TestInput) AddSendToEthTxsToPoolWithFee(t *testing.T, ctx sdk.Context, tokenContract gethcommon.Address, sender sdk.AccAddress, receiver gethcommon.Address, num, fee uint64) {
+	for i := 0; i < int(num); i++ {
+		amount := types.NewERC20Token(uint64(i+100), tokenContract).GravityCoin()
+		fee := types.NewERC20Token(fee, tokenContract).GravityCoin()
 		_, err := input.GravityKeeper.createSendToEthereum(ctx, sender, receiver.Hex(), amount, fee)
 		require.NoError(t, err)
 	}

@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 // InitGenesis starts a chain from a genesis state
@@ -28,6 +28,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data types.GenesisState) {
 		if err := event.Validate(); err != nil {
 			panic(fmt.Sprintf("invalid event in genesis: %s", err))
 		}
+		ctx.Logger().Info("gravity: event hash", "hash", event.Hash(), "nonce", event.GetEventNonce())
 		k.setEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash(), evr)
 	}
 

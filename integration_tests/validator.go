@@ -28,8 +28,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/peggyjv/gravity-bridge/module/v5/app"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/app"
+	gravitytypes "github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 type validator struct {

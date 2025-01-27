@@ -123,10 +123,15 @@ func NewSignerSetTx(nonce, height uint64, members EthereumSigners) *SignerSetTx 
 }
 
 // GetFees returns the total fees contained within a given batch
-func (b BatchTx) GetFees() sdk.Int {
+// NOTE: Just a sanity check to ensure no halting occurs after a previous bugfix.
+func (b BatchTx) GetFees() (sdk.Int, error) {
 	sum := sdk.ZeroInt()
 	for _, t := range b.Transactions {
-		sum.Add(t.Erc20Fee.Amount)
+		newSum, err := sum.SafeAdd(t.Erc20Fee.Amount)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+		sum = newSum
 	}
-	return sum
+	return sum, nil
 }

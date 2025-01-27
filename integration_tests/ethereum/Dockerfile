@@ -1,4 +1,4 @@
-FROM node:14-alpine3.13
+FROM node:23.6-alpine3.21
 
 RUN apk update
 RUN apk add --no-cache git python3 make build-base

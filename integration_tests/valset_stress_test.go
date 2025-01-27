@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	gravity "github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	gravity "github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 // call stress_test for a range of nonce values

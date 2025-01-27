@@ -18,9 +18,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/client/cli"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/keeper"
-	"github.com/peggyjv/gravity-bridge/module/v5/x/gravity/types"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/client/cli"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/keeper"
+	"github.com/peggyjv/gravity-bridge/module/v6/x/gravity/types"
 )
 
 // type check to ensure the interface is properly implemented
@@ -108,7 +108,7 @@ func (AppModule) Name() string {
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 {
-	return 5
+	return 6
 }
 
 // RegisterInvariants implements app module
@@ -127,9 +127,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
-	// The 4 to 5 migration is a no-op, no store migrations are required
-	if err := cfg.RegisterMigration(types.ModuleName, 4, func(ctx sdk.Context) error {
-		return nil
+	// The 5 to 6 migration handles clearing in-flight event confirmations to prevent unmatching hashes
+	migrator := keeper.NewMigrator(am.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 5, func(ctx sdk.Context) error {
+		return migrator.MigrateStore(ctx)
 	}); err != nil {
 		panic(fmt.Errorf("failed to register migration handler: %w", err))
 	}
