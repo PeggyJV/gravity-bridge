@@ -47,11 +47,17 @@ func (m Migrator) DeletePendingEventVoteRecords(ctx sdk.Context) error {
 	var lowestNonce uint64
 	var unapprovedEventSigners []string
 	m.keeper.IterateEthereumEventVoteRecords(ctx, func(key []byte, eventVoteRecord *types.EthereumEventVoteRecord) bool {
+		// Skip approved events
+		if eventVoteRecord.Accepted {
+			return false
+		}
+
 		event, err := types.UnpackEvent(eventVoteRecord.Event)
 		if err != nil {
 			panic(err)
 		}
-		if !eventVoteRecord.Accepted && event.GetEventNonce() > lastObservedEventNonce {
+
+		if event.GetEventNonce() > lastObservedEventNonce {
 			v5Hash := OldHash(event)
 			ctx.Logger().Info("gravity: v5 event hash: ", v5Hash)
 			ctx.Logger().Info("gravity: v6 event hash: ", event.Hash())
