@@ -106,7 +106,7 @@ async fn get_batches_and_signatures(
             );
         }
     }
-    
+
     possible_batches
 }
 

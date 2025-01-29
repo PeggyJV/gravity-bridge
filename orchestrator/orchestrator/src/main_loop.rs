@@ -257,7 +257,10 @@ pub async fn eth_signer_main_loop(
 
     let gravity_id = get_gravity_id(contract_address, eth_client.clone()).await;
     if gravity_id.is_err() {
-        error!("Failed to get GravityID, check your Eth node");
+        error!(
+            "Failed to get GravityID, check your Eth node: {:?}",
+            gravity_id
+        );
         return;
     }
     let gravity_id = gravity_id.unwrap();
