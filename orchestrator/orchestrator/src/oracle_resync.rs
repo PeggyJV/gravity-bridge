@@ -113,7 +113,7 @@ pub async fn get_last_checked_block(
         // a valset update event for nonce 0 is emitted in the contract constructor meaning once you
         // find that event you can exit the search with confidence that you have not missed any events
         // without searching the entire blockchain history
-        let valset_updated_events = match eth_client.get_logs(&valset_updated_filter).await {
+        let mut valset_updated_events = match eth_client.get_logs(&valset_updated_filter).await {
             Ok(events) => events,
             Err(e) => {
                 error!("Failed to get valset updated events (may be transient): {:?}", e);
