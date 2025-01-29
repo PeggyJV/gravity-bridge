@@ -77,32 +77,50 @@ pub async fn get_last_checked_block(
         transaction_batch_filter = transaction_batch_filter.select(search_range.clone());
         valset_updated_filter = valset_updated_filter.select(search_range.clone());
 
-        let erc20_deployed_events = eth_client.get_logs(&erc20_deployed_filter).await;
-        let logic_call_events = eth_client.get_logs(&logic_call_filter).await;
-        let send_to_cosmos_events = eth_client.get_logs(&send_to_cosmos_filter).await;
-        let transaction_batch_events = eth_client.get_logs(&transaction_batch_filter).await;
+        let erc20_deployed_events = match eth_client.get_logs(&erc20_deployed_filter).await {
+            Ok(events) => events,
+            Err(e) => {
+                error!("Failed to get ERC20 deployed events (may be transient): {:?}", e);
+                delay_for(RETRY_TIME).await;
+                continue;
+            }
+        };
+        let logic_call_events = match eth_client.get_logs(&logic_call_filter).await {
+            Ok(events) => events,
+            Err(e) => {
+                error!("Failed to get logic call events (may be transient): {:?}", e);
+                delay_for(RETRY_TIME).await;
+                continue;
+            }
+        };
+        let send_to_cosmos_events = match eth_client.get_logs(&send_to_cosmos_filter).await {
+            Ok(events) => events,
+            Err(e) => {
+                error!("Failed to get send to cosmos events (may be transient): {:?}", e);
+                delay_for(RETRY_TIME).await;
+                continue;
+            }
+        };
+        let transaction_batch_events = match eth_client.get_logs(&transaction_batch_filter).await {
+            Ok(events) => events,
+            Err(e) => {
+                error!("Failed to get transaction batch events (may be transient): {:?}", e);
+                delay_for(RETRY_TIME).await;
+                continue;
+            }
+        };
         // valset update events have one special property that is useful to us in this handler:
         // a valset update event for nonce 0 is emitted in the contract constructor meaning once you
         // find that event you can exit the search with confidence that you have not missed any events
         // without searching the entire blockchain history
-        let valset_updated_events = eth_client.get_logs(&valset_updated_filter).await;
-
-        if erc20_deployed_events.is_err()
-            || logic_call_events.is_err()
-            || send_to_cosmos_events.is_err()
-            || transaction_batch_events.is_err()
-            || valset_updated_events.is_err()
-        {
-            error!("Failed to get blockchain events while resyncing, is your Eth node working? If you see only one of these it's fine");
-            delay_for(RETRY_TIME).await;
-            continue;
-        }
-
-        let erc20_deployed_events = erc20_deployed_events.unwrap();
-        let logic_call_events = logic_call_events.unwrap();
-        let send_to_cosmos_events = send_to_cosmos_events.unwrap();
-        let transaction_batch_events = transaction_batch_events.unwrap();
-        let mut valset_updated_events = valset_updated_events.unwrap();
+        let valset_updated_events = match eth_client.get_logs(&valset_updated_filter).await {
+            Ok(events) => events,
+            Err(e) => {
+                error!("Failed to get valset updated events (may be transient): {:?}", e);
+                delay_for(RETRY_TIME).await;
+                continue;
+            }
+        };
 
         // look for and return the block number of the event last seen on the Cosmos chain
         // then we will play events from that block (including that block, just in case

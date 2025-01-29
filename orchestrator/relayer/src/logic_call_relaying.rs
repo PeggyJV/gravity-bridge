@@ -169,7 +169,7 @@ pub async fn relay_logic_calls(
         .await;
 
         if res.is_err() {
-            warn!("LogicCall submission failed");
+            warn!("LogicCall submission failed with {:?}", res);
             let should_permanently_skip = handle_contract_error(res.unwrap_err());
             if should_permanently_skip {
                 logic_call_skips.skip_permanently(&oldest_signed_call);

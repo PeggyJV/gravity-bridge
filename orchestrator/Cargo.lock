@@ -1947,7 +1947,7 @@ dependencies = [
 
 [[package]]
 name = "gravity_bridge"
-version = "4.0.0"
+version = "4.0.1"
 dependencies = [
  "cosmos_gravity",
  "ethereum_gravity",
