@@ -80,7 +80,10 @@ pub async fn get_last_checked_block(
         let erc20_deployed_events = match eth_client.get_logs(&erc20_deployed_filter).await {
             Ok(events) => events,
             Err(e) => {
-                error!("Failed to get ERC20 deployed events (may be transient): {:?}", e);
+                error!(
+                    "Failed to get ERC20 deployed events (may be transient): {:?}",
+                    e
+                );
                 delay_for(RETRY_TIME).await;
                 continue;
             }
@@ -88,7 +91,10 @@ pub async fn get_last_checked_block(
         let logic_call_events = match eth_client.get_logs(&logic_call_filter).await {
             Ok(events) => events,
             Err(e) => {
-                error!("Failed to get logic call events (may be transient): {:?}", e);
+                error!(
+                    "Failed to get logic call events (may be transient): {:?}",
+                    e
+                );
                 delay_for(RETRY_TIME).await;
                 continue;
             }
@@ -96,7 +102,10 @@ pub async fn get_last_checked_block(
         let send_to_cosmos_events = match eth_client.get_logs(&send_to_cosmos_filter).await {
             Ok(events) => events,
             Err(e) => {
-                error!("Failed to get send to cosmos events (may be transient): {:?}", e);
+                error!(
+                    "Failed to get send to cosmos events (may be transient): {:?}",
+                    e
+                );
                 delay_for(RETRY_TIME).await;
                 continue;
             }
@@ -104,7 +113,10 @@ pub async fn get_last_checked_block(
         let transaction_batch_events = match eth_client.get_logs(&transaction_batch_filter).await {
             Ok(events) => events,
             Err(e) => {
-                error!("Failed to get transaction batch events (may be transient): {:?}", e);
+                error!(
+                    "Failed to get transaction batch events (may be transient): {:?}",
+                    e
+                );
                 delay_for(RETRY_TIME).await;
                 continue;
             }
@@ -116,7 +128,10 @@ pub async fn get_last_checked_block(
         let mut valset_updated_events = match eth_client.get_logs(&valset_updated_filter).await {
             Ok(events) => events,
             Err(e) => {
-                error!("Failed to get valset updated events (may be transient): {:?}", e);
+                error!(
+                    "Failed to get valset updated events (may be transient): {:?}",
+                    e
+                );
                 delay_for(RETRY_TIME).await;
                 continue;
             }
