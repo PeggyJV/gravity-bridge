@@ -199,7 +199,7 @@ func TestSignerSetTxSlashing_UnbondingValidator_UnbondWindow_NotExpired(t *testi
 	// check if tokens shouldn't be slashed for val2.
 }
 
-// TestBatchAndContractCallSlashingAndPruning tests that slashing and pruning are working properly for the
+// TestTxSlashingAndPruning tests that slashing and pruning are working properly for the
 // batch and contract call implementations of OutgoingTx. It also implicitly tests that two slashes against
 // a validator do not result in a second jail call, which would cause panic and chain halt.
 func TestTxSlashingAndPruning(t *testing.T) {

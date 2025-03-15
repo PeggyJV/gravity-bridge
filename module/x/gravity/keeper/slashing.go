@@ -53,7 +53,7 @@ func (k Keeper) GetBondedValidatorSlashingInfos(ctx sdk.Context) ([]stakingtypes
 	return bondedValidators, bondedValInfos
 }
 
-// GetValidatorInfo returns the consensus key address, signing info, and whether or not the validator exists, for the purposes of slashing/jailing
+// GetValidatorSlashingInfo returns the consensus key address, signing info, and whether or not the validator exists, for the purposes of slashing/jailing
 func (k Keeper) GetValidatorSlashingInfo(ctx sdk.Context, validator stakingtypes.Validator) ValidatorSlashingInfo {
 	consensusKeyAddress, err := validator.GetConsAddr()
 	if err != nil {
