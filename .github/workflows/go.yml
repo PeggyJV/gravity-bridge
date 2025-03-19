@@ -20,7 +20,7 @@ jobs:
       - name: Checkout Branch
         uses: actions/checkout@v2
       - name: Create Go cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cache/go-build

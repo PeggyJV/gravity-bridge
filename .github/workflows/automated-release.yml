@@ -36,19 +36,19 @@ jobs:
       # Checkout repository code
       - name: checkout-code
         uses: actions/checkout@v2
-        with: 
+        with:
           toolchain: 1.63
       # Golang Cache
       - name: go-cache
-        uses: actions/cache@v2
-        with: 
+        uses: actions/cache@v3
+        with:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('module/go.sum') }}
       # Rust Cache
       - name: rust-cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/bin/
@@ -59,7 +59,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('orchestrator/Cargo.lock') }}
       # Node Cache
       - name: node-cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('solidity/package-lock.json') }}
