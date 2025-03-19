@@ -28,7 +28,7 @@ tokio = { version = "1.28", features = ["macros", "rt-multi-thread"] }
 rand = "0.8"
 tonic = "0.4"
 futures = "0.3.18"
-openssl-probe = "0.1"
+openssl-probe = { workspace = true }
 
 axum = "0.1.2"
 hyper = "0.14.11"

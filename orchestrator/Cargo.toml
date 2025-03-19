@@ -11,6 +11,8 @@ description = """
 
 """
 
+resolver = "2"
+
 [workspace]
 default-members = ["gorc", "orchestrator", "test_runner"]
 members = [
@@ -37,6 +39,9 @@ gravity_proto = { path = "./gravity_proto" }
 gorc = { path = "./gorc" }
 relayer = { path = "./relayer" }
 gravity_abi = { path = "./gravity_abi" }
+
+[workspace.dependencies]
+openssl-probe = "0.1.6"
 
 [features]
 ethermint = [
