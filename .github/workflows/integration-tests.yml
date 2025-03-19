@@ -58,7 +58,7 @@ jobs:
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
           outputs: type=docker,dest=${{ env.UPLOAD_DIR }}/${{ env.ORCHESTRATOR_ARTIFACT }}
       - name: Make Orchestrator artifact available to other jobs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ORCHESTRATOR_IMAGE_NAME }}
           path: ${{ env.UPLOAD_DIR }}/${{ env.ORCHESTRATOR_ARTIFACT }}
@@ -282,7 +282,7 @@ jobs:
       - name: Make download dir
         run: mkdir -p ${{ env.DOWNLOAD_DIR }}
       - name: Get orchestrator artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.ORCHESTRATOR_IMAGE_NAME }}
           path: ${{ env.DOWNLOAD_DIR }}
