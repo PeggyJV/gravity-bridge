@@ -271,7 +271,7 @@ impl LogicCallSkips {
                 // first time we've seen this invalidation id and nonce combo, start at 2 skips
                 id_skips.insert(call.invalidation_nonce.clone(), new_skip_state);
             } else {
-                let mut skip_state = skip_state.unwrap();
+                let skip_state = skip_state.unwrap();
                 if !skip_state.permanently_skipped {
                     if skip_state.skips_left == 0 {
                         // exponential backoff: double the number of skips and reset the skip counter
