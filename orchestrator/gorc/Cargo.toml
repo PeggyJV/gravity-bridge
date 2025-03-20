@@ -13,7 +13,6 @@ clap = "4"
 clarity = { workspace = true }
 cosmos_gravity = { path = "../cosmos_gravity" }
 deep_space = { workspace = true }
-ethereum_gravity = { path = "../ethereum_gravity" }
 ethers = { workspace = true }
 gravity_proto = { path = "../gravity_proto" }
 gravity_utils = { path = "../gravity_utils" }

@@ -11,7 +11,6 @@ bytes = { workspace = true }
 clarity = { workspace = true }
 cosmos-sdk-proto = "0.6.3"
 deep_space = { workspace = true }
-ethereum_gravity = {path = "../ethereum_gravity"}
 ethers = { workspace = true }
 gravity_proto = {path = "../gravity_proto/"}
 gravity_utils = {path = "../gravity_utils"}

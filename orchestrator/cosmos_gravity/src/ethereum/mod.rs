@@ -1,4 +1,4 @@
-//! This crate contains various components and utilities for interacting with the Gravity Ethereum contract.
+//! This module contains various components and utilities for interacting with the Gravity Ethereum contract.
 
 use ethers::types::U256;
 
