@@ -1,5 +1,7 @@
-use crate::types::{LogicCall, TransactionBatch, Valset};
+use crate::utils::ethereum::{hex_str_to_bytes, u8_slice_to_fixed_32};
+use crate::utils::types::{LogicCall, TransactionBatch, Valset};
 use ethers::core::abi::{self, Token};
+use ethers::core::k256::ecdsa::SigningKey;
 use ethers::prelude::*;
 use ethers::utils::hash_message;
 use ethers::utils::keccak256;
@@ -38,8 +40,7 @@ pub fn encode_valset_confirm_hashed(gravity_id: String, valset: Valset) -> Vec<u
 
 #[test]
 fn test_valset_signature() {
-    use crate::{ethereum::hex_str_to_bytes, types::ValsetMember};
-    use ethers::utils::keccak256;
+    use super::*;
 
     let correct_hash: Vec<u8> =
         hex_str_to_bytes("0x8cd4cc7f06bd39d4f77d94643a9ae6b3bdc3d3b78263683933cdd5c088452b9d")
@@ -141,10 +142,7 @@ pub fn encode_tx_batch_confirm_hashed(gravity_id: String, batch: TransactionBatc
 
 #[tokio::test]
 async fn test_batch_signature() {
-    use crate::{
-        ethereum::{hex_str_to_bytes, u8_slice_to_fixed_32},
-        types::{BatchTransaction, Erc20Token},
-    };
+    use super::*;
     use ethers::core::k256::ecdsa::SigningKey;
     use ethers::prelude::*;
     use ethers::utils::keccak256;
@@ -204,11 +202,7 @@ async fn test_batch_signature() {
 
 #[tokio::test]
 async fn test_specific_batch_signature() {
-    use crate::{
-        ethereum::u8_slice_to_fixed_32,
-        types::{BatchTransaction, Erc20Token},
-    };
-    use ethers::core::k256::ecdsa::SigningKey;
+    use super::*;
     use ethers::prelude::*;
     use ethers::utils::keccak256;
     use rand::Rng;
@@ -307,10 +301,7 @@ pub fn encode_logic_call_confirm_hashed(gravity_id: String, call: LogicCall) -> 
 
 #[test]
 fn test_logic_call_signature() {
-    use crate::{
-        ethereum::hex_str_to_bytes,
-        types::{Erc20Token, LogicCall},
-    };
+    use super::*;
     use ethers::utils::keccak256;
 
     let correct_hash: Vec<u8> =

@@ -1092,20 +1092,23 @@ dependencies = [
  "cosmos-sdk-proto",
  "deep_space",
  "env_logger",
- "ethereum_gravity",
  "ethers",
+ "gravity_abi",
  "gravity_proto",
- "gravity_utils",
  "lazy_static",
  "log",
+ "num-bigint 0.4.4",
+ "num256",
  "prost",
  "prost-types",
  "rand 0.8.5",
  "regex",
+ "rustc-hex",
  "serde",
  "sha3",
  "tokio",
  "tonic",
+ "url",
 ]
 
 [[package]]
@@ -1475,18 +1478,6 @@ dependencies = [
  "impl-serde",
  "primitive-types",
  "uint",
-]
-
-[[package]]
-name = "ethereum_gravity"
-version = "0.1.0"
-dependencies = [
- "deep_space",
- "ethers",
- "gravity_abi",
- "gravity_utils",
- "log",
- "tokio",
 ]
 
 [[package]]
@@ -1959,10 +1950,8 @@ dependencies = [
  "clarity",
  "cosmos_gravity",
  "deep_space",
- "ethereum_gravity",
  "ethers",
  "gravity_proto",
- "gravity_utils",
  "k256",
  "log",
  "once_cell",
@@ -2006,11 +1995,9 @@ name = "gravity_bridge"
 version = "4.0.0"
 dependencies = [
  "cosmos_gravity",
- "ethereum_gravity",
  "gorc",
  "gravity_abi",
  "gravity_proto",
- "gravity_utils",
  "orchestrator",
  "relayer",
 ]
@@ -2037,32 +2024,6 @@ dependencies = [
  "tonic",
  "tonic-build",
  "walkdir",
-]
-
-[[package]]
-name = "gravity_utils"
-version = "0.1.0"
-dependencies = [
- "actix",
- "clarity",
- "cosmos-sdk-proto",
- "deep_space",
- "ethers",
- "gravity_abi",
- "gravity_proto",
- "lazy_static",
- "log",
- "num-bigint 0.4.4",
- "num256",
- "rand 0.8.5",
- "rustc-hex",
- "serde",
- "serde_derive",
- "serde_json",
- "sha3",
- "tokio",
- "tonic",
- "url",
 ]
 
 [[package]]
@@ -2868,12 +2829,10 @@ dependencies = [
  "clarity",
  "cosmos_gravity",
  "deep_space",
- "ethereum_gravity",
  "ethers",
  "futures",
  "gravity_abi",
  "gravity_proto",
- "gravity_utils",
  "hyper",
  "lazy_static",
  "log",
@@ -3441,10 +3400,8 @@ dependencies = [
  "deep_space",
  "docopt",
  "env_logger",
- "ethereum_gravity",
  "ethers",
  "gravity_proto",
- "gravity_utils",
  "lazy_static",
  "log",
  "openssl-probe",
@@ -3466,11 +3423,9 @@ dependencies = [
  "deep_space",
  "docopt",
  "env_logger",
- "ethereum_gravity",
  "ethers",
  "gravity_abi",
  "gravity_proto",
- "gravity_utils",
  "lazy_static",
  "log",
  "openssl-probe",
@@ -4231,12 +4186,10 @@ dependencies = [
  "cosmos_gravity",
  "deep_space",
  "env_logger",
- "ethereum_gravity",
  "ethers",
  "futures",
  "gravity_abi",
  "gravity_proto",
- "gravity_utils",
  "hex",
  "lazy_static",
  "log",

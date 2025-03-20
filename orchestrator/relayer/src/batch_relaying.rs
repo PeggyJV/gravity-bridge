@@ -1,15 +1,16 @@
+use cosmos_gravity::ethereum::one_eth_f32;
+use cosmos_gravity::ethereum::submit_batch::estimate_tx_batch_cost;
+use cosmos_gravity::ethereum::{
+    submit_batch::send_eth_transaction_batch, types::EthClient, utils::get_tx_batch_nonce,
+};
 use cosmos_gravity::query::get_latest_transaction_batches;
 use cosmos_gravity::query::get_transaction_batch_signatures;
-use ethereum_gravity::{
-    one_eth_f32, submit_batch::send_eth_transaction_batch, types::EthClient,
-    utils::get_tx_batch_nonce,
-};
+use cosmos_gravity::utils::ethereum::downcast_to_f32;
+use cosmos_gravity::utils::message_signatures::encode_tx_batch_confirm_hashed;
+use cosmos_gravity::utils::types::{BatchConfirmResponse, TransactionBatch, Valset};
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::ethereum::downcast_to_f32;
-use gravity_utils::message_signatures::encode_tx_batch_confirm_hashed;
-use gravity_utils::types::{BatchConfirmResponse, TransactionBatch, Valset};
 use std::collections::HashMap;
 use std::time::Duration;
 use tonic::transport::Channel;
@@ -171,7 +172,7 @@ async fn submit_batches(
 
             let latest_cosmos_batch_nonce = oldest_signed_batch.clone().nonce;
             if latest_cosmos_batch_nonce > latest_ethereum_batch {
-                let cost = ethereum_gravity::submit_batch::estimate_tx_batch_cost(
+                let cost = estimate_tx_batch_cost(
                     current_valset.clone(),
                     oldest_signed_batch.clone(),
                     &oldest_signatures,

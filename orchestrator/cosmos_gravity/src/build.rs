@@ -1,15 +1,15 @@
+use crate::ethereum::types::EthClient;
+use crate::utils::ethereum::{downcast_to_u64, format_eth_address};
+use crate::utils::message_signatures::{
+    encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
+};
+use crate::utils::types::*;
 use deep_space::Contact;
 use deep_space::Msg;
-use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::utils::keccak256;
 use gravity_proto::gravity as proto;
 use gravity_proto::ToAny;
-use gravity_utils::ethereum::{downcast_to_u64, format_eth_address};
-use gravity_utils::message_signatures::{
-    encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
-};
-use gravity_utils::types::*;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::BTreeMap;

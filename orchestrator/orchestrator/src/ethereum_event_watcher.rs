@@ -6,24 +6,23 @@ use crate::get_with_retry::get_chain_id_with_retry;
 use crate::metrics;
 use cosmos_gravity::build;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
+use cosmos_gravity::ethereum::types::EthClient;
 use cosmos_gravity::query::get_last_event_nonce;
+use cosmos_gravity::utils::ethereum::bytes_to_hex_str;
+use cosmos_gravity::utils::ethereum::downcast_to_u64;
+use cosmos_gravity::utils::types::{FromLogs, FromLogsWithPrefix};
+use cosmos_gravity::utils::Erc20DeployedEvent;
+use cosmos_gravity::utils::EventNonceFilter;
+use cosmos_gravity::utils::LogicCallExecutedEvent;
+use cosmos_gravity::utils::SendToCosmosEvent;
+use cosmos_gravity::utils::TransactionBatchExecutedEvent;
+use cosmos_gravity::utils::ValsetUpdatedEvent;
+use cosmos_gravity::utils::error::GravityError;
 use deep_space::{Contact, Msg};
-use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::ethereum::downcast_to_u64;
-use gravity_utils::types::EventNonceFilter;
-use gravity_utils::types::{FromLogs, FromLogsWithPrefix};
-use gravity_utils::{
-    error::GravityError,
-    ethereum::bytes_to_hex_str,
-    types::{
-        Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent,
-        TransactionBatchExecutedEvent, ValsetUpdatedEvent,
-    },
-};
 use std::{result::Result, time};
 use tonic::transport::Channel;
 

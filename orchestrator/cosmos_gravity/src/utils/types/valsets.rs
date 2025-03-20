@@ -1,10 +1,11 @@
 use super::*;
-use crate::{
+use crate::utils::{
     error::GravityError,
     ethereum::{format_eth_address, u8_slice_to_fixed_32},
 };
 use deep_space::error::CosmosGrpcError;
 use ethers::types::{Address as EthAddress, Signature as EthSignature};
+use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::{

@@ -5,13 +5,14 @@
 //! For now reference the ABI encoding document here https://docs.soliditylang.org/en/v0.8.3/abi-spec.html
 
 use super::ValsetMember;
-use crate::error::GravityError;
-use crate::ethereum::downcast_to_u64;
+use crate::utils::ethereum::downcast_to_u64;
+use crate::utils::GravityError;
 use deep_space::Address as CosmosAddress;
 use ethers::abi::RawLog;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
+use serde::{Deserialize, Serialize};
 use std::result::Result;
 
 // given a Log retrieved by querying the Ethereum chain, decode it into one of

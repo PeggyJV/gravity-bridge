@@ -1,14 +1,18 @@
 use crate::{
-    types::{EthClient, EthSignerMiddleware},
-    utils::{get_gas_price, get_logic_call_nonce, GasCost},
+    ethereum::{
+        types::{EthClient, EthSignerMiddleware},
+        utils::{get_gas_price, get_logic_call_nonce, GasCost},
+    },
+    utils::{
+        ethereum::{bytes_to_hex_str, vec_u8_to_fixed_32},
+        message_signatures::encode_logic_call_confirm_hashed,
+        GravityError, LogicCall, LogicCallConfirmResponse, Valset,
+    },
 };
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
-use gravity_utils::ethereum::{bytes_to_hex_str, vec_u8_to_fixed_32};
-use gravity_utils::types::*;
-use gravity_utils::{error::GravityError, message_signatures::encode_logic_call_confirm_hashed};
 use std::{collections::HashMap, result::Result, time::Duration};
 
 /// this function generates an appropriate Ethereum transaction

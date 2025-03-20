@@ -17,7 +17,6 @@ ethers = { workspace = true }
 futures = { workspace = true }
 gravity_abi = { path = "../gravity_abi" }
 gravity_proto = { path = "../gravity_proto" }
-gravity_utils = { path = "../gravity_utils" }
 hyper = "0.14.11"
 lazy_static = { workspace = true }
 log = { workspace = true }

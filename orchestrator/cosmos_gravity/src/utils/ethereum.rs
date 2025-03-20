@@ -1,5 +1,5 @@
 #![allow(clippy::needless_question_mark)]
-use crate::error::GravityError;
+use crate::utils::error::GravityError;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use std::{panic, result::Result};
@@ -137,7 +137,7 @@ fn decode_odd_amount_of_bytes() {
 
 #[test]
 fn bytes_raises_decode_error() {
-    use crate::error::GravityError;
+    use crate::utils::error::GravityError;
 
     let e = hex_str_to_bytes(&"\u{012345}deadbeef".to_owned()).unwrap_err();
 
@@ -149,7 +149,7 @@ fn bytes_raises_decode_error() {
 
 #[test]
 fn bytes_raises_parse_error() {
-    use crate::error::GravityError;
+    use crate::utils::error::GravityError;
 
     let e = hex_str_to_bytes(&"Lorem ipsum".to_owned()).unwrap_err();
     match e {

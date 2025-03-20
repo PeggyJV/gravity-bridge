@@ -18,7 +18,6 @@ default-members = ["gorc", "orchestrator", "test_runner"]
 members = [
 	"orchestrator",
 	"cosmos_gravity",
-	"gravity_utils",
 	"gravity_proto_build",
 	"test_runner",
 	"gravity_proto",
@@ -32,7 +31,6 @@ members = [
 [dependencies]
 orchestrator = { path = "./orchestrator" }
 cosmos_gravity = { path = "./cosmos_gravity" }
-gravity_utils = { path = "./gravity_utils" }
 gravity_proto = { path = "./gravity_proto" }
 gorc = { path = "./gorc" }
 relayer = { path = "./relayer" }

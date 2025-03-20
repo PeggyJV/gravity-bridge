@@ -5,9 +5,10 @@ mod logic_call;
 mod signatures;
 mod valsets;
 
-use crate::error::GravityError;
+use crate::utils::error::GravityError;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use serde::{Deserialize, Serialize};
 use std::result::Result;
 
 pub use batches::*;

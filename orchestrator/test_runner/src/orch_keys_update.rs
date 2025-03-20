@@ -3,6 +3,7 @@
 use crate::utils::ValidatorKeys;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::send::update_gravity_delegate_addresses;
+use cosmos_gravity::utils::ethereum::format_eth_address;
 use deep_space::address::Address as CosmosAddress;
 use deep_space::Contact;
 use ethers::types::Address as EthAddress;
@@ -11,7 +12,6 @@ use gravity_proto::gravity::{
     query_client::QueryClient as GravityQueryClient, DelegateKeysByEthereumSignerRequest,
     DelegateKeysByOrchestratorRequest,
 };
-use gravity_utils::ethereum::format_eth_address;
 use rand::Rng;
 use std::time::Duration;
 use tonic::transport::Channel;

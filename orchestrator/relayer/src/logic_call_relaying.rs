@@ -1,16 +1,19 @@
 use crate::main_loop::LOOP_SPEED;
-use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
-use ethereum_gravity::logic_call::LogicCallSkips;
-use ethereum_gravity::one_eth_f32;
-use ethereum_gravity::utils::handle_contract_error;
-use ethereum_gravity::{
+use cosmos_gravity::ethereum::logic_call::estimate_logic_call_cost;
+use cosmos_gravity::ethereum::logic_call::LogicCallSkips;
+use cosmos_gravity::ethereum::one_eth_f32;
+use cosmos_gravity::ethereum::utils::handle_contract_error;
+use cosmos_gravity::ethereum::{
     logic_call::send_eth_logic_call, types::EthClient, utils::get_logic_call_nonce,
+};
+use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
+use cosmos_gravity::utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
+use cosmos_gravity::utils::types::{LogicCallConfirmResponse, Valset};
+use cosmos_gravity::utils::{
+    message_signatures::encode_logic_call_confirm_hashed, types::LogicCall,
 };
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
-use gravity_utils::types::{LogicCallConfirmResponse, Valset};
-use gravity_utils::{message_signatures::encode_logic_call_confirm_hashed, types::LogicCall};
 use std::time::Duration;
 use tonic::transport::Channel;
 
@@ -109,7 +112,7 @@ pub async fn relay_logic_calls(
     let latest_ethereum_call = latest_ethereum_call.unwrap();
     let latest_cosmos_call_nonce = oldest_signed_call.clone().invalidation_nonce;
     if latest_cosmos_call_nonce > latest_ethereum_call {
-        let cost = ethereum_gravity::logic_call::estimate_logic_call_cost(
+        let cost = estimate_logic_call_cost(
             current_valset.clone(),
             oldest_signed_call.clone(),
             &oldest_signatures,

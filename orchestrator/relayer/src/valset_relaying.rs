@@ -3,15 +3,17 @@
 
 use std::time::Duration;
 
+use cosmos_gravity::ethereum::valset_update::estimate_valset_cost;
+use cosmos_gravity::ethereum::{
+    one_eth_f32, types::EthClient, valset_update::send_eth_valset_update,
+};
 use cosmos_gravity::query::get_latest_valset;
 use cosmos_gravity::query::{get_all_valset_confirms, get_valset};
-use ethereum_gravity::{one_eth_f32, types::EthClient, valset_update::send_eth_valset_update};
+use cosmos_gravity::utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
+use cosmos_gravity::utils::message_signatures::encode_valset_confirm_hashed;
+use cosmos_gravity::utils::types::Valset;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::{
-    ethereum::bytes_to_hex_str, ethereum::downcast_to_f32,
-    message_signatures::encode_valset_confirm_hashed, types::Valset,
-};
 use tonic::transport::Channel;
 
 /// Check the last validator set on Ethereum, if it's lower than our latest validator
@@ -147,7 +149,7 @@ pub async fn relay_valsets(
     );
 
     if should_relay {
-        let cost = ethereum_gravity::valset_update::estimate_valset_cost(
+        let cost = estimate_valset_cost(
             &latest_cosmos_valset,
             &current_eth_valset,
             &latest_cosmos_confirmed,

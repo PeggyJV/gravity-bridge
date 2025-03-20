@@ -1,5 +1,5 @@
 use super::*;
-use crate::error::GravityError;
+use crate::utils::error::GravityError;
 use ethers::types::{Address as EthAddress, Signature as EthSignature};
 use std::{convert::TryFrom, result::Result};
 

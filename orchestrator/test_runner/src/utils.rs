@@ -1,9 +1,9 @@
 use crate::one_eth;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
+use cosmos_gravity::ethereum::{erc20_utils::get_erc20_balance, types::EthClient};
 use deep_space::address::Address as CosmosAddress;
 use deep_space::coin::Coin;
 use deep_space::Contact;
-use ethereum_gravity::{erc20_utils::get_erc20_balance, types::EthClient};
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;

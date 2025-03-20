@@ -1,10 +1,10 @@
-use ethereum_gravity::types::EthClient;
+use cosmos_gravity::ethereum::types::EthClient;
+use cosmos_gravity::utils::types::{FromLog, ValsetUpdatedEvent};
+use cosmos_gravity::utils::{error::GravityError, ethereum::downcast_to_u64, types::Valset};
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::types::{FromLog, ValsetUpdatedEvent};
-use gravity_utils::{error::GravityError, ethereum::downcast_to_u64, types::Valset};
 use std::{panic, result::Result};
 use tonic::transport::Channel;
 

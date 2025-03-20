@@ -1,15 +1,17 @@
 use crate::{
-    types::{EthClient, EthSignerMiddleware},
-    utils::{get_gas_price, get_valset_nonce, GasCost},
+    ethereum::utils::get_valset_nonce,
+    utils::{error::GravityError, message_signatures::encode_valset_confirm_hashed, types::*},
 };
 use ethers::contract::builders::ContractCall;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
-use gravity_utils::{
-    error::GravityError, message_signatures::encode_valset_confirm_hashed, types::*,
-};
 use std::{result::Result, time::Duration};
+
+use super::{
+    types::{EthClient, EthSignerMiddleware},
+    utils::{get_gas_price, GasCost},
+};
 
 /// this function generates an appropriate Ethereum transaction
 /// to submit the provided validator set and signatures.

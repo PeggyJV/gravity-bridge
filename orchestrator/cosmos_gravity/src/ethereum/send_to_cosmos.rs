@@ -1,13 +1,13 @@
 //! Helper functions for sending tokens to Cosmos
 
+use crate::utils::error::GravityError;
 use crate::{
-    erc20_utils::{approve_erc20_transfers, check_erc20_approved},
-    types::EthClient,
+    ethereum::erc20_utils::{approve_erc20_transfers, check_erc20_approved},
+    ethereum::types::EthClient,
 };
 use deep_space::address::Address as CosmosAddress;
 use ethers::prelude::*;
 use gravity_abi::gravity::*;
-use gravity_utils::error::GravityError;
 use std::{result::Result, time::Duration};
 
 const SEND_TO_COSMOS_GAS_LIMIT: u128 = 100_000;

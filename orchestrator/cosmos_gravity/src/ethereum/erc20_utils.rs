@@ -1,7 +1,6 @@
-use crate::types::EthClient;
+use crate::{ethereum::types::EthClient, utils::error::GravityError};
 use ethers::prelude::*;
 use gravity_abi::erc20::ERC20;
-use gravity_utils::error::GravityError;
 use std::{result::Result, time::Duration};
 
 /// Checks if any given contract is approved to spend money from any given erc20 contract

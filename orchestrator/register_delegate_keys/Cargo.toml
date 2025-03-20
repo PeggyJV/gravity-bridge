@@ -16,7 +16,6 @@ docopt = "1"
 env_logger = { workspace = true }
 ethers = { workspace = true }
 gravity_proto = {path = "../gravity_proto/"}
-gravity_utils = {path = "../gravity_utils"}
 lazy_static = { workspace = true }
 log = { workspace = true }
 openssl-probe = { workspace = true }

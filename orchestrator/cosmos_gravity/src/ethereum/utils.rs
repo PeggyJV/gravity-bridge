@@ -1,12 +1,12 @@
-use crate::types::EthClient;
+use crate::ethereum::types::EthClient;
+use crate::utils::error::GravityError;
+use crate::utils::ethereum::{downcast_to_u64, hex_str_to_bytes, vec_u8_to_fixed_32};
+use crate::utils::types::{decode_gravity_error, GravityContractError};
 use ethers::middleware::gas_oracle::Etherscan;
 use ethers::prelude::gas_oracle::GasOracle;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
-use gravity_utils::error::GravityError;
-use gravity_utils::ethereum::{downcast_to_u64, hex_str_to_bytes, vec_u8_to_fixed_32};
-use gravity_utils::types::{decode_gravity_error, GravityContractError};
 use std::result::Result;
 
 /// Gets the latest validator set nonce

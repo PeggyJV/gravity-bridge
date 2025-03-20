@@ -2,7 +2,7 @@
 //! It's a common problem to have conflicts between ipv4 and ipv6 localhost and this module is first and foremost supposed to resolve that problem
 //! by trying more than one thing to handle potentially misconfigured inputs.
 
-use crate::ethereum::format_eth_address;
+use crate::utils::ethereum::format_eth_address;
 use deep_space::client::ChainStatus;
 use deep_space::Address as CosmosAddress;
 use deep_space::Contact;

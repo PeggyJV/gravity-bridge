@@ -15,7 +15,6 @@ cosmos_gravity = { path = "../cosmos_gravity" }
 deep_space = { workspace = true }
 ethers = { workspace = true }
 gravity_proto = { path = "../gravity_proto" }
-gravity_utils = { path = "../gravity_utils" }
 k256 = { version = "0.9", features = ["pem"] }
 log = { workspace = true }
 openssl-probe = { workspace = true }

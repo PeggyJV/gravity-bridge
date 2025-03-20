@@ -1,11 +1,11 @@
+use crate::utils::error::GravityError;
+use crate::utils::ethereum::format_eth_address;
+use crate::utils::types::*;
 use clarity::Signature;
 use deep_space::address::Address;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use gravity_proto::gravity::*;
-use gravity_utils::error::GravityError;
-use gravity_utils::ethereum::format_eth_address;
-use gravity_utils::types::*;
 use tonic::transport::Channel;
 
 /// get the valset for a given nonce (block) height

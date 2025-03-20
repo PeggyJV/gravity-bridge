@@ -2,7 +2,9 @@ use crate::{
     batch_relaying::relay_batches, find_latest_valset::find_latest_valset,
     logic_call_relaying::relay_logic_calls, valset_relaying::relay_valsets,
 };
-use ethereum_gravity::{logic_call::LogicCallSkips, types::EthClient, utils::get_gravity_id};
+use cosmos_gravity::ethereum::{
+    logic_call::LogicCallSkips, types::EthClient, utils::get_gravity_id,
+};
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use std::time::Duration;

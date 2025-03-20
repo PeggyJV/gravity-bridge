@@ -10,7 +10,10 @@ use crate::{
     oracle_resync::get_last_checked_block,
 };
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
+use cosmos_gravity::ethereum::types::EthClient;
+use cosmos_gravity::ethereum::utils::get_gravity_id;
 use cosmos_gravity::send::send_main_loop;
+use cosmos_gravity::utils::ethereum::bytes_to_hex_str;
 use cosmos_gravity::{
     build,
     query::{
@@ -21,11 +24,8 @@ use cosmos_gravity::{
 use deep_space::client::ChainStatus;
 use deep_space::error::CosmosGrpcError;
 use deep_space::{Contact, Msg};
-use ethereum_gravity::types::EthClient;
-use ethereum_gravity::utils::get_gravity_id;
 use ethers::{prelude::*, types::Address as EthAddress};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::ethereum::bytes_to_hex_str;
 use relayer::main_loop::relayer_main_loop;
 use std::convert::TryInto;
 use std::process::exit;
@@ -224,7 +224,7 @@ pub async fn eth_oracle_main_loop(
                     Err(e) => {
                         metrics::ETHEREUM_EVENT_CHECK_FAILURES.inc();
                         error!("Failed to get events for block range, Check your Eth node and Cosmos gRPC {:?}", e);
-                        if let gravity_utils::error::GravityError::CosmosGrpcError(
+                        if let cosmos_gravity::utils::error::GravityError::CosmosGrpcError(
                             CosmosGrpcError::TransactionFailed { tx: _, time: _ },
                         ) = e
                         {

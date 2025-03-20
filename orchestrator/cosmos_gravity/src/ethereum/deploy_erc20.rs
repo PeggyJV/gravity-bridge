@@ -2,14 +2,18 @@
 //! the event for this deployment is then ferried over to Cosmos where the validators will accept the ERC20 contract address
 //! as the representation of this asset on Ethereum
 
-use crate::{types::EthClient, utils::get_gas_price};
+use crate::{
+    ethereum::utils::get_gas_price,
+    utils::{
+        error::GravityError,
+        ethereum::{downcast_to_f64, format_eth_hash},
+    },
+};
 use ethers::prelude::*;
 use gravity_abi::gravity::*;
-use gravity_utils::{
-    error::GravityError,
-    ethereum::{downcast_to_f64, format_eth_hash},
-};
 use std::{result::Result, time::Duration};
+
+use super::types::EthClient;
 
 /// Calls the Gravity ethereum contract to deploy the ERC20 representation of the given Cosmos asset
 /// denom. If an existing contract is already deployed representing this asset this call will cost

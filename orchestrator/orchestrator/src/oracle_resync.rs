@@ -1,14 +1,14 @@
+use cosmos_gravity::ethereum::types::EthClient;
+use cosmos_gravity::utils::types::{
+    Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent, TransactionBatchExecutedEvent,
+    ValsetUpdatedEvent,
+};
+use cosmos_gravity::utils::types::{FromLog, FromLogWithPrefix};
 use deep_space::address::Address as CosmosAddress;
-use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::types::{
-    Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent, TransactionBatchExecutedEvent,
-    ValsetUpdatedEvent,
-};
-use gravity_utils::types::{FromLog, FromLogWithPrefix};
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;
 

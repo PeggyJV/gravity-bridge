@@ -1,8 +1,9 @@
 use super::*;
-use crate::error::GravityError;
+use crate::utils::error::GravityError;
 use deep_space::Address as CosmosAddress;
 use ethers::core::abi::Token;
 use ethers::types::{Address as EthAddress, Signature as EthSignature};
+use serde::{Deserialize, Serialize};
 use std::{convert::TryFrom, result::Result};
 
 /// This represents an individual transaction being bridged over to Ethereum

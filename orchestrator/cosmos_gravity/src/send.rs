@@ -1,3 +1,5 @@
+use crate::utils::error::GravityError;
+use crate::utils::ethereum::format_eth_address;
 use bytes::BytesMut;
 use deep_space::address::Address;
 use deep_space::coin::Coin;
@@ -11,8 +13,6 @@ use ethers::utils::keccak256;
 use gravity_proto::cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
 use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use gravity_proto::gravity as proto;
-use gravity_utils::error::GravityError;
-use gravity_utils::ethereum::format_eth_address;
 use prost::Message;
 use std::cmp;
 use std::collections::HashSet;
