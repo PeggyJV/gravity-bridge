@@ -143,9 +143,7 @@ pub fn get_user_key() -> BridgeUserKey {
     let eth_address = LocalWallet::from(eth_key.clone()).address();
     // the destination on cosmos that sends along to the final ethereum destination
     let cosmos_key = CosmosPrivateKey::from_secret(&secret);
-    let cosmos_address = cosmos_key
-        .to_address("cosmos")
-        .unwrap();
+    let cosmos_address = cosmos_key.to_address("cosmos").unwrap();
     let mut rng = rand::thread_rng();
     let secret: [u8; 32] = rng.gen();
     // the final destination of the tokens back on Ethereum

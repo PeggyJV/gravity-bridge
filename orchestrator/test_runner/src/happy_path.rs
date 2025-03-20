@@ -61,9 +61,7 @@ pub async fn happy_path_test(
     let mut rng = rand::thread_rng();
     let secret: [u8; 32] = rng.gen();
     let dest_cosmos_private_key = CosmosPrivateKey::from_secret(&secret);
-    let dest_cosmos_address = dest_cosmos_private_key
-        .to_address("cosmos")
-        .unwrap();
+    let dest_cosmos_address = dest_cosmos_private_key.to_address("cosmos").unwrap();
     let dest_eth_private_key = SigningKey::from_bytes(&secret).unwrap();
     let dest_eth_wallet = LocalWallet::from(dest_eth_private_key.clone());
     let dest_eth_address = dest_eth_wallet.address();

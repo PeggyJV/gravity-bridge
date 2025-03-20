@@ -126,12 +126,7 @@ pub async fn main() {
 
     info!("Staring Gravity test-runner");
 
-    let contact = Contact::new(
-        COSMOS_NODE_GRPC.as_str(),
-        OPERATION_TIMEOUT,
-        "cosmos",
-    )
-    .unwrap();
+    let contact = Contact::new(COSMOS_NODE_GRPC.as_str(), OPERATION_TIMEOUT, "cosmos").unwrap();
     info!("COSMOS_NODE_GRPC {}", COSMOS_NODE_GRPC.as_str());
     info!("Waiting for Cosmos chain to come online");
     wait_for_cosmos_online(&contact, TOTAL_TIMEOUT).await;
@@ -191,12 +186,7 @@ pub async fn main() {
             return;
         } else if test_type == "BATCH_STRESS" {
             info!("Starting batch stress test");
-            let contact = Contact::new(
-                COSMOS_NODE_GRPC.as_str(),
-                TOTAL_TIMEOUT,
-                "cosmos",
-            )
-            .unwrap();
+            let contact = Contact::new(COSMOS_NODE_GRPC.as_str(), TOTAL_TIMEOUT, "cosmos").unwrap();
             transaction_stress_test(
                 &eth_provider,
                 &contact,

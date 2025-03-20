@@ -126,7 +126,9 @@ pub async fn send_messages(
     };
 
     let mut args = contact.get_message_args(cosmos_address, fee, None).await?;
-    let gas = contact.simulate_tx(messages.as_slice(), None, cosmos_key).await?;
+    let gas = contact
+        .simulate_tx(messages.as_slice(), None, cosmos_key)
+        .await?;
 
     // multiply the estimated gas by the configured gas adjustment
     if let Some(gas_info) = gas.gas_info {

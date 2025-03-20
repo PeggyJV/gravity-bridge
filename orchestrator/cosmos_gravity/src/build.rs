@@ -4,8 +4,8 @@ use crate::utils::message_signatures::{
     encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
 };
 use crate::utils::types::*;
-use deep_space::{Contact, CosmosPrivateKey, PrivateKey};
 use deep_space::Msg;
+use deep_space::{Contact, CosmosPrivateKey, PrivateKey};
 use ethers::prelude::*;
 use ethers::utils::keccak256;
 use gravity_proto::gravity as proto;

@@ -224,7 +224,11 @@ pub async fn eth_oracle_main_loop(
                         metrics::ETHEREUM_EVENT_CHECK_FAILURES.inc();
                         error!("Failed to get events for block range, Check your Eth node and Cosmos gRPC {:?}", e);
                         if let cosmos_gravity::utils::error::GravityError::CosmosGrpcError(
-                            CosmosGrpcError::TransactionFailed { tx: _, time: _, sdk_error: _ },
+                            CosmosGrpcError::TransactionFailed {
+                                tx: _,
+                                time: _,
+                                sdk_error: _,
+                            },
                         ) = e
                         {
                             delay_for(Duration::from_secs(10)).await;
