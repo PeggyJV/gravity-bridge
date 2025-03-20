@@ -10,7 +10,7 @@ edition = "2018"
 gravity_abi = { path = "../gravity_abi" }
 gravity_proto = { path = "../gravity_proto/" }
 cosmos-sdk-proto = "0.6.3"
-deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
+deep_space = { workspace = true }
 ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
 clarity = "0.4.11"
 lazy_static = "1.4.0"

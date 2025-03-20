@@ -18,7 +18,7 @@ gravity_utils = { path = "../gravity_utils" }
 orchestrator = { path = "../orchestrator" }
 relayer = { path = "../relayer" }
 
-deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
+deep_space = { workspace = true }
 ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
 clarity = "0.4.12"
 rpassword = "5"

@@ -41,6 +41,7 @@ relayer = { path = "./relayer" }
 gravity_abi = { path = "./gravity_abi" }
 
 [workspace.dependencies]
+deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
 openssl-probe = "0.1.6"
 
 [features]
