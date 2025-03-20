@@ -29,6 +29,7 @@ pub struct StartCommand {
 
 impl Runnable for StartCommand {
     fn run(&self) {
+        #[allow(deprecated)]
         openssl_probe::init_ssl_cert_env_vars();
 
         let config = APP.config();

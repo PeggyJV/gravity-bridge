@@ -11,12 +11,12 @@ env:
 
 jobs:
   rust-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Rust caches
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: rust-cache
         with:
           path: |
@@ -30,25 +30,17 @@ jobs:
         run: cd orchestrator && cargo test --all --verbose
   fmt:
     name: Rustfmt
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v2
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+        uses: actions/checkout@v3
       - name: Run Rust fmt
         run: cd orchestrator && cargo fmt
   clippy:
     name: Clippy
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v2
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+        uses: actions/checkout@v3
       - name: Run Cargo Clippy
         run: cd orchestrator && cargo clippy

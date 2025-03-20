@@ -15,13 +15,13 @@ env:
 
 jobs:
   local-tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         node-version: [ 16.x ]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
         with:
           path: |
             ~/.solcx
@@ -41,4 +41,4 @@ jobs:
         run: cd solidity && brownie pm install OpenZeppelin/openzeppelin-contracts@4.3.2
       - name: Run brownie tests
         run: cd solidity && brownie test tests/local -s
-        
+

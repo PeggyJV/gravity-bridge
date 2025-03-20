@@ -59,6 +59,7 @@ async fn main() {
     env_logger::init();
     // On Linux static builds we need to probe ssl certs path to be able to
     // do TLS stuff.
+    #[allow(deprecated)]
     openssl_probe::init_ssl_cert_env_vars();
 
     let args: Args = Docopt::new(USAGE.as_str())

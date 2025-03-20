@@ -23,15 +23,15 @@ jobs:
     permissions:
       contents: read
       packages: write
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: docker-cache
         with:
           path: /tmp/.buildx-cache
@@ -58,11 +58,11 @@ jobs:
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
           outputs: type=docker,dest=${{ env.UPLOAD_DIR }}/${{ env.ORCHESTRATOR_ARTIFACT }}
       - name: Make Orchestrator artifact available to other jobs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ORCHESTRATOR_IMAGE_NAME }}
           path: ${{ env.UPLOAD_DIR }}/${{ env.ORCHESTRATOR_ARTIFACT }}
-          retention-days: 1 
+          retention-days: 1
       - name: Move Docker cache
         run: |
           rm -rf /tmp/.buildx-cache
@@ -72,18 +72,18 @@ jobs:
     permissions:
       contents: read
       packages: write
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Set up Go 1.22
         uses: actions/setup-go@v2
         with:
           go-version: 1.22
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: docker-cache
         with:
           path: /tmp/.buildx-cache
@@ -127,14 +127,14 @@ jobs:
     permissions:
       contents: read
       packages: write
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: docker-cache
         with:
           path: /tmp/.buildx-cache
@@ -177,14 +177,14 @@ jobs:
     permissions:
       contents: read
       packages: write
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: docker-cache
         with:
           path: /tmp/.buildx-cache
@@ -226,7 +226,7 @@ jobs:
 
   integration-tests:
     environment: CI
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [ rust-build, go-build, hardhat-build ]
     strategy:
       fail-fast: false
@@ -244,9 +244,9 @@ jobs:
         with:
           go-version: 1.22
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: go-cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cache/go-build
@@ -282,7 +282,7 @@ jobs:
       - name: Make download dir
         run: mkdir -p ${{ env.DOWNLOAD_DIR }}
       - name: Get orchestrator artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.ORCHESTRATOR_IMAGE_NAME }}
           path: ${{ env.DOWNLOAD_DIR }}

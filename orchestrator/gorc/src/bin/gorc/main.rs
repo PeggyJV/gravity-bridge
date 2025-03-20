@@ -8,6 +8,7 @@ extern crate openssl_probe;
 
 /// Boot Gorc
 fn main() {
+    #[allow(deprecated)]
     openssl_probe::init_ssl_cert_env_vars();
     abscissa_core::boot(&APP);
 }

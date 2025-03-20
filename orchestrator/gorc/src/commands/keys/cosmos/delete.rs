@@ -15,7 +15,7 @@ impl Runnable for DeleteCosmosKeyCmd {
         let config = APP.config();
         // Path where key is stored.
         let keystore = Path::new(&config.keystore);
-        let keystore = signatory::FsKeyStore::create_or_open(keystore).unwrap();
+        let keystore = FsKeyStore::create_or_open(keystore).unwrap();
         // Collect key name from args.
         let name = self.args.get(0).expect("name is required");
         let name = name.parse().expect("Could not parse name");
