@@ -44,7 +44,7 @@ pub async fn send_to_cosmos(
     // so small values like addresses that don't take up the full length of the byte vector
     // are pushed up to the top. This duplicates the way Ethereum encodes it's own addresses
     // as closely as possible.
-    let mut cosmos_dest_address_bytes = cosmos_destination.as_bytes().to_vec();
+    let mut cosmos_dest_address_bytes = cosmos_destination.get_bytes().to_vec();
     while cosmos_dest_address_bytes.len() < 32 {
         cosmos_dest_address_bytes.insert(0, 0u8);
     }

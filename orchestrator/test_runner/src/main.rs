@@ -13,8 +13,8 @@ use crate::utils::*;
 use arbitrary_logic::arbitrary_logic_test;
 use clarity::Uint256;
 use cosmos_gravity::deep_space::coin::Coin;
-use cosmos_gravity::deep_space::Address as CosmosAddress;
 use cosmos_gravity::deep_space::Contact;
+use cosmos_gravity::deep_space::PrivateKey;
 use cosmos_gravity::ethereum::types::EthClient;
 use cosmos_gravity::utils::ethereum::hex_str_to_bytes;
 use cosmos_gravity::utils::wait_for_cosmos_online;
@@ -129,7 +129,7 @@ pub async fn main() {
     let contact = Contact::new(
         COSMOS_NODE_GRPC.as_str(),
         OPERATION_TIMEOUT,
-        CosmosAddress::DEFAULT_PREFIX,
+        "cosmos",
     )
     .unwrap();
     info!("COSMOS_NODE_GRPC {}", COSMOS_NODE_GRPC.as_str());
@@ -194,7 +194,7 @@ pub async fn main() {
             let contact = Contact::new(
                 COSMOS_NODE_GRPC.as_str(),
                 TOTAL_TIMEOUT,
-                CosmosAddress::DEFAULT_PREFIX,
+                "cosmos",
             )
             .unwrap();
             transaction_stress_test(

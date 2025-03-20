@@ -2,6 +2,7 @@ use crate::application::APP;
 use abscissa_core::{clap::Parser, status_err, Application, Command, Runnable};
 use clarity::Uint256;
 use cosmos_gravity::deep_space::coin::Coin;
+use cosmos_gravity::deep_space::PrivateKey;
 use cosmos_gravity::send::send_to_eth;
 use cosmos_gravity::utils::connection_prep::{check_for_fee_denom, create_rpc_connections};
 use ethers::types::Address as EthAddress;

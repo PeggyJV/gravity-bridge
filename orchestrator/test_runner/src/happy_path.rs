@@ -7,10 +7,11 @@ use crate::MINER_CLIENT;
 use crate::OPERATION_TIMEOUT;
 use crate::TOTAL_TIMEOUT;
 use clarity::Uint256;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::deep_space::address::Address as CosmosAddress;
 use cosmos_gravity::deep_space::coin::Coin;
 use cosmos_gravity::deep_space::Contact;
+use cosmos_gravity::deep_space::CosmosPrivateKey;
+use cosmos_gravity::deep_space::PrivateKey;
 use cosmos_gravity::ethereum::erc20_utils::get_erc20_balance;
 use cosmos_gravity::ethereum::utils::get_valset_nonce;
 use cosmos_gravity::ethereum::{send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce};
@@ -61,7 +62,7 @@ pub async fn happy_path_test(
     let secret: [u8; 32] = rng.gen();
     let dest_cosmos_private_key = CosmosPrivateKey::from_secret(&secret);
     let dest_cosmos_address = dest_cosmos_private_key
-        .to_address(CosmosAddress::DEFAULT_PREFIX)
+        .to_address("cosmos")
         .unwrap();
     let dest_eth_private_key = SigningKey::from_bytes(&secret).unwrap();
     let dest_eth_wallet = LocalWallet::from(dest_eth_private_key.clone());
@@ -185,7 +186,7 @@ pub async fn test_valset_update(
                     delegate_address.parse().unwrap(),
                     amount.clone(),
                     get_fee(),
-                    keys_to_change.orch_key.into(),
+                    keys_to_change.orch_key,
                     Some(OPERATION_TIMEOUT),
                 )
                 .await;

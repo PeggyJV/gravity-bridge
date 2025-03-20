@@ -23,7 +23,7 @@ impl Runnable for ShowEthKeyCmd {
         // maintaining the functionality here
         let key = config.load_clarity_key(name.clone());
 
-        let pub_key = key.to_public_key().expect("Could not build public key");
+        let pub_key = key.to_address();
 
         if self.show_name {
             print!("{}\t", name);

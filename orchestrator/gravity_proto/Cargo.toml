@@ -11,4 +11,5 @@ prost = { workspace = true }
 prost-types = { workspace = true }
 bytes = "1"
 cosmos-sdk-proto = { workspace = true }
+cosmos-sdk-proto-althea = { workspace = true }
 tonic = { workspace = true }

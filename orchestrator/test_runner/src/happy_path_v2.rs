@@ -116,12 +116,12 @@ pub async fn happy_path_test_v2(
     let user = get_user_key();
     // send the user some footoken
     contact
-        .send_tokens(
+        .send_coins(
             send_to_user_coin.clone(),
             Some(get_fee()),
             user.cosmos_address,
-            keys[0].validator_key.into(),
             Some(TOTAL_TIMEOUT),
+            keys[0].validator_key,
         )
         .await
         .unwrap();

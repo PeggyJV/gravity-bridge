@@ -1,8 +1,7 @@
 use crate::one_eth;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::deep_space::address::Address as CosmosAddress;
 use cosmos_gravity::deep_space::coin::Coin;
-use cosmos_gravity::deep_space::Contact;
+use cosmos_gravity::deep_space::{Contact, CosmosPrivateKey, PrivateKey};
 use cosmos_gravity::ethereum::{erc20_utils::get_erc20_balance, types::EthClient};
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::prelude::*;
@@ -145,7 +144,7 @@ pub fn get_user_key() -> BridgeUserKey {
     // the destination on cosmos that sends along to the final ethereum destination
     let cosmos_key = CosmosPrivateKey::from_secret(&secret);
     let cosmos_address = cosmos_key
-        .to_address(CosmosAddress::DEFAULT_PREFIX)
+        .to_address("cosmos")
         .unwrap();
     let mut rng = rand::thread_rng();
     let secret: [u8; 32] = rng.gen();

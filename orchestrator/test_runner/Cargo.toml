@@ -14,16 +14,16 @@ cosmos_gravity = {path = "../cosmos_gravity"}
 gravity_abi = { path = "../gravity_abi" }
 gravity_proto = {path = "../gravity_proto/"}
 
-serde_derive = "1.0"
-clarity = "0.4.11"
+serde_derive = { workspace = true }
+clarity = { workspace = true }
 ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
-serde = "1.0"
-lazy_static = "1"
-url = "2"
-log = "0.4"
-env_logger = "0.8"
-tokio = "1.4.0"
-rand = "0.8"
+serde = { workspace = true }
+lazy_static = { workspace = true }
+url = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+tokio = { workspace = true }
+rand = { workspace = true }
 tonic = { workspace = true }
 futures = "0.3.18"
 hex = "0.4.3"

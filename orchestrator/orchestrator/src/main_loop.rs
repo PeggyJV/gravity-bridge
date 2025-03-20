@@ -9,10 +9,9 @@ use crate::{
     ethereum_event_watcher::check_for_events, metrics::metrics_main_loop,
     oracle_resync::get_last_checked_block,
 };
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::deep_space::client::ChainStatus;
 use cosmos_gravity::deep_space::error::CosmosGrpcError;
-use cosmos_gravity::deep_space::{Contact, Msg};
+use cosmos_gravity::deep_space::{Contact, CosmosPrivateKey, Msg, PrivateKey};
 use cosmos_gravity::ethereum::types::EthClient;
 use cosmos_gravity::ethereum::utils::get_gravity_id;
 use cosmos_gravity::send::send_main_loop;
@@ -225,7 +224,7 @@ pub async fn eth_oracle_main_loop(
                         metrics::ETHEREUM_EVENT_CHECK_FAILURES.inc();
                         error!("Failed to get events for block range, Check your Eth node and Cosmos gRPC {:?}", e);
                         if let cosmos_gravity::utils::error::GravityError::CosmosGrpcError(
-                            CosmosGrpcError::TransactionFailed { tx: _, time: _ },
+                            CosmosGrpcError::TransactionFailed { tx: _, time: _, sdk_error: _ },
                         ) = e
                         {
                             delay_for(Duration::from_secs(10)).await;

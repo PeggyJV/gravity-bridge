@@ -1,24 +1,25 @@
 use crate::utils::error::GravityError;
 use crate::utils::ethereum::format_eth_address;
+use crate::Coin as FromCoin;
 use bytes::BytesMut;
+use cosmos_sdk_proto_althea::cosmos::base::abci::v1beta1::TxResponse;
+use cosmos_sdk_proto_althea::cosmos::tx::v1beta1::BroadcastMode;
 use deep_space::address::Address;
 use deep_space::coin::Coin;
 use deep_space::error::CosmosGrpcError;
 use deep_space::Contact;
+use deep_space::CosmosPrivateKey;
 use deep_space::Fee;
 use deep_space::Msg;
+use deep_space::PrivateKey;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use ethers::utils::keccak256;
-use gravity_proto::cosmos_sdk_proto::cosmos::base::abci::v1beta1::TxResponse;
-use gravity_proto::cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use gravity_proto::gravity as proto;
 use prost::Message;
 use std::cmp;
 use std::collections::HashSet;
 use std::{result::Result, time::Duration};
-
-use crate::crypto::PrivateKey as CosmosPrivateKey;
 
 pub const MEMO: &str = "Sent using Gravity Bridge Orchestrator";
 pub const TIMEOUT: Duration = Duration::from_secs(60);
@@ -91,12 +92,13 @@ pub async fn send_to_eth(
     }
 
     let cosmos_address = cosmos_key.to_address(&contact.get_prefix()).unwrap();
-
+    let from_amount_coin: FromCoin = amount.into();
+    let from_bridge_fee_coin: FromCoin = bridge_fee.into();
     let msg = proto::MsgSendToEthereum {
         sender: cosmos_address.to_string(),
         ethereum_recipient: format_eth_address(destination),
-        amount: Some(amount.into()),
-        bridge_fee: Some(bridge_fee.clone().into()),
+        amount: Some(from_amount_coin.clone().into()),
+        bridge_fee: Some(from_bridge_fee_coin.clone().into()),
     };
     let msg = Msg::new("/gravity.v1.MsgSendToEthereum", msg);
     send_messages(contact, cosmos_key, gas_price, vec![msg], gas_adjustment).await
@@ -123,14 +125,17 @@ pub async fn send_messages(
         payer: None,
     };
 
-    let mut args = contact.get_message_args(cosmos_address, fee).await?;
-
-    let tx_parts = cosmos_key.build_tx(&messages, args.clone(), MEMO)?;
-    let gas = contact.simulate_tx(tx_parts).await?;
+    let mut args = contact.get_message_args(cosmos_address, fee, None).await?;
+    let gas = contact.simulate_tx(messages.as_slice(), None, cosmos_key).await?;
 
     // multiply the estimated gas by the configured gas adjustment
-    let gas_limit: f64 = (gas.gas_used as f64) * gas_adjustment;
-    args.fee.gas_limit = cmp::max(gas_limit as u64, 500000 * messages.len() as u64);
+    if let Some(gas_info) = gas.gas_info {
+        let gas_limit: f64 = (gas_info.gas_used as f64) * gas_adjustment;
+        args.fee.gas_limit = cmp::max(gas_limit as u64, 500000 * messages.len() as u64);
+    } else {
+        // Is this a good gas limit max?
+        args.fee.gas_limit = cmp::max(2500000 as u64, 500000 * messages.len() as u64);
+    }
 
     // compute the fee as fee=ceil(gas_limit * gas_price)
     let fee_amount: f64 = args.fee.gas_limit as f64 * gas_price.0;
@@ -146,7 +151,10 @@ pub async fn send_messages(
         .send_transaction(msg_bytes, BroadcastMode::Sync)
         .await?;
 
-    Ok(contact.wait_for_tx(response, TIMEOUT).await?)
+    let response = contact.wait_for_tx(response, TIMEOUT).await?;
+    let tx_response: TxResponse = response.into();
+
+    Ok(tx_response)
 }
 
 pub async fn send_main_loop(

@@ -6,8 +6,8 @@ extern crate serde_derive;
 extern crate lazy_static;
 
 use clarity::PrivateKey as EthPrivateKey;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
 use cosmos_gravity::deep_space::mnemonic::Mnemonic;
+use cosmos_gravity::deep_space::{CosmosPrivateKey, PrivateKey};
 use cosmos_gravity::send::update_gravity_delegate_addresses;
 use cosmos_gravity::utils::connection_prep::check_for_fee_denom;
 use cosmos_gravity::utils::connection_prep::{create_rpc_connections, wait_for_cosmos_node_ready};
@@ -100,11 +100,11 @@ async fn main() {
     } else {
         let mut rng = thread_rng();
         let key: [u8; 32] = rng.gen();
-        let key = EthPrivateKey::from_slice(&key).unwrap();
+        let key = EthPrivateKey::from_bytes(key).unwrap();
         println!(
             "No Ethereum key provided, your generated key is\n {} -> {}",
             key,
-            key.to_public_key().unwrap()
+            key.to_address()
         );
         key
     };
@@ -129,14 +129,14 @@ async fn main() {
     .await
     .expect("Failed to update Eth address");
 
-    let res = contact.wait_for_tx(res, TIMEOUT).await;
+    let res = contact.wait_for_tx(res.into(), TIMEOUT).await;
 
     if let Err(e) = res {
         error!("Failed trying to register delegate addresses error {:?}, correct the error and try again", e);
         std::process::exit(1);
     }
 
-    let eth_address = ethereum_key.to_public_key().unwrap();
+    let eth_address = ethereum_key.to_address();
     println!(
         "Registered Delegate Ethereum address {} and Cosmos address {}",
         eth_address, cosmos_address

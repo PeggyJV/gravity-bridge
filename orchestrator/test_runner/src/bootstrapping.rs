@@ -1,5 +1,5 @@
 use crate::utils::ValidatorKeys;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
+use cosmos_gravity::deep_space::{CosmosPrivateKey, PrivateKey};
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::types::Address as EthAddress;
 use std::fs::File;

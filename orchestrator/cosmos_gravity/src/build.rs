@@ -4,7 +4,7 @@ use crate::utils::message_signatures::{
     encode_logic_call_confirm, encode_tx_batch_confirm, encode_valset_confirm,
 };
 use crate::utils::types::*;
-use deep_space::Contact;
+use deep_space::{Contact, CosmosPrivateKey, PrivateKey};
 use deep_space::Msg;
 use ethers::prelude::*;
 use ethers::utils::keccak256;
@@ -13,8 +13,6 @@ use gravity_proto::ToAny;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::BTreeMap;
-
-use crate::crypto::PrivateKey as CosmosPrivateKey;
 
 lazy_static! {
     static ref DENOM_REGEX: Regex = Regex::new("^[a-zA-Z][a-zA-Z0-9/-]{2,127}$").unwrap();

@@ -1,5 +1,6 @@
 use crate::{application::APP, prelude::*};
 use abscissa_core::{clap::Parser, Command, Runnable};
+use cosmos_gravity::deep_space::PrivateKey;
 use cosmos_gravity::utils::connection_prep::{
     check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
     wait_for_cosmos_node_ready,
