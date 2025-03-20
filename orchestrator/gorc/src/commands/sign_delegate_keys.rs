@@ -24,7 +24,7 @@ impl Runnable for SignDelegateKeysCmd {
                 Some(nonce) => nonce.parse().expect("cannot parse nonce"),
                 None => {
                     let timeout = Duration::from_secs(10);
-                    let contact = deep_space::Contact::new(
+                    let contact = cosmos_gravity::deep_space::Contact::new(
                         &config.cosmos.grpc,
                         timeout,
                         &config.cosmos.prefix,

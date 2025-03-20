@@ -1,10 +1,10 @@
+use cosmos_gravity::deep_space::Address as CosmosAddress;
 use cosmos_gravity::ethereum::types::EthClient;
 use cosmos_gravity::utils::types::{
     Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent, TransactionBatchExecutedEvent,
     ValsetUpdatedEvent,
 };
 use cosmos_gravity::utils::types::{FromLog, FromLogWithPrefix};
-use deep_space::address::Address as CosmosAddress;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_abi::gravity::*;

@@ -35,7 +35,7 @@ impl GorcConfig {
 
     pub fn load_deep_space_key(&self, name: String) -> cosmos_gravity::crypto::PrivateKey {
         let key = self.load_secret_key(name).to_bytes();
-        let key = deep_space::utils::bytes_to_hex_str(&key);
+        let key = cosmos_gravity::deep_space::utils::bytes_to_hex_str(&key);
         key.parse().expect("Could not parse private key")
     }
 }

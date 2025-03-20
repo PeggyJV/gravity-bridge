@@ -8,16 +8,15 @@ use crate::OPERATION_TIMEOUT;
 use crate::TOTAL_TIMEOUT;
 use clarity::Uint256;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
+use cosmos_gravity::deep_space::address::Address as CosmosAddress;
+use cosmos_gravity::deep_space::coin::Coin;
+use cosmos_gravity::deep_space::Contact;
 use cosmos_gravity::ethereum::erc20_utils::get_erc20_balance;
 use cosmos_gravity::ethereum::utils::get_valset_nonce;
 use cosmos_gravity::ethereum::{send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce};
 use cosmos_gravity::send::send_to_eth;
-use cosmos_gravity::utils::ethereum::downcast_to_u64;
 use cosmos_gravity::utils::types::SendToCosmosEvent;
 use cosmos_gravity::{build, query::get_oldest_unsigned_transaction_batch, send};
-use deep_space::address::Address as CosmosAddress;
-use deep_space::coin::Coin;
-use deep_space::Contact;
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -164,7 +163,7 @@ pub async fn test_valset_update(
     // should be about 4% of the total power to start
     // let amount = crate::STARTING_STAKE_PER_VALIDATOR / 4; // 12.5B
     let amount = crate::STAKE_SUPPLY_PER_VALIDATOR / 4; // 25B
-    let amount = deep_space::Coin {
+    let amount = cosmos_gravity::deep_space::coin::Coin {
         amount: amount.into(),
         denom: "stake".to_string(),
     };

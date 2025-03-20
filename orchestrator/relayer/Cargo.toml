@@ -15,7 +15,6 @@ path = "src/main.rs"
 [dependencies]
 clarity = { workspace = true }
 cosmos_gravity = { path = "../cosmos_gravity" }
-deep_space = { workspace = true }
 docopt = "1"
 env_logger = { workspace = true }
 ethers = { workspace = true }

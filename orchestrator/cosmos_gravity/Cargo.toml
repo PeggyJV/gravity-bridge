@@ -10,7 +10,7 @@ edition = "2018"
 bytes = { workspace = true }
 clarity = { workspace = true }
 cosmos-sdk-proto = "0.6.3"
-deep_space = { workspace = true }
+deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
 ethers = { workspace = true }
 gravity_abi = { path = "../gravity_abi" }
 gravity_proto = {path = "../gravity_proto/"}

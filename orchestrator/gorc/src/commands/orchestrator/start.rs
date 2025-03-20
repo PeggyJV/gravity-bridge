@@ -1,12 +1,12 @@
 use crate::{application::APP, prelude::*};
 use abscissa_core::{clap::Parser, Command, Runnable};
-use ethers::{prelude::*, types::Address as EthAddress};
 use cosmos_gravity::utils::connection_prep::{
     check_delegate_addresses, check_for_eth, check_for_fee_denom, create_rpc_connections,
     wait_for_cosmos_node_ready,
 };
 use cosmos_gravity::utils::ethereum::downcast_to_u64;
 use cosmos_gravity::utils::ethereum::format_eth_address;
+use ethers::{prelude::*, types::Address as EthAddress};
 use orchestrator::main_loop::{
     orchestrator_main_loop, ETH_ORACLE_LOOP_SPEED, ETH_SIGNER_LOOP_SPEED,
 };

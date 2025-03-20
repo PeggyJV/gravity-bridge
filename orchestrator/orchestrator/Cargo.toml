@@ -12,7 +12,6 @@ path = "src/lib.rs"
 axum = "0.1.2"
 clarity = { workspace = true }
 cosmos_gravity = { path = "../cosmos_gravity" }
-deep_space = { workspace = true }
 ethers = { workspace = true }
 futures = { workspace = true }
 gravity_abi = { path = "../gravity_abi" }

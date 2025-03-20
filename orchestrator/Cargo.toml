@@ -40,7 +40,6 @@ gravity_abi = { path = "./gravity_abi" }
 bytes = "1"
 clarity = "0.4.11"
 cosmos-sdk-proto = "0.6.3"
-deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
 env_logger = "0.8"
 ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
 futures = "0.3.18"

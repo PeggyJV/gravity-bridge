@@ -64,7 +64,6 @@ pub fn get_keys() -> Vec<ValidatorKeys> {
 pub struct BootstrapContractAddresses {
     pub gravity_contract: EthAddress,
     pub erc20_addresses: Vec<EthAddress>,
-    pub uniswap_liquidity_address: Option<EthAddress>,
 }
 
 /// Parses the ERC20 and Gravity contract addresses from the file created
@@ -76,7 +75,6 @@ pub fn parse_contract_addresses() -> BootstrapContractAddresses {
     file.read_to_string(&mut output).unwrap();
     let mut maybe_gravity_address = None;
     let mut erc20_addresses = Vec::new();
-    let mut uniswap_liquidity = None;
     for line in output.lines() {
         if line.contains("Gravity deployed at Address -") {
             let address_string = line.split('-').last().unwrap();
@@ -84,16 +82,12 @@ pub fn parse_contract_addresses() -> BootstrapContractAddresses {
         } else if line.contains("ERC20 deployed at Address -") {
             let address_string = line.split('-').last().unwrap();
             erc20_addresses.push(address_string.trim().parse().unwrap());
-        } else if line.contains("Uniswap Liquidity test deployed at Address - ") {
-            let address_string = line.split('-').last().unwrap();
-            uniswap_liquidity = Some(address_string.trim().parse().unwrap());
         }
     }
     let gravity_contract: EthAddress = maybe_gravity_address.unwrap();
     BootstrapContractAddresses {
         gravity_contract,
         erc20_addresses,
-        uniswap_liquidity_address: uniswap_liquidity,
     }
 }
 

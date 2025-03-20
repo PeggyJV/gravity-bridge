@@ -10,6 +10,9 @@ use crate::{
     oracle_resync::get_last_checked_block,
 };
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
+use cosmos_gravity::deep_space::client::ChainStatus;
+use cosmos_gravity::deep_space::error::CosmosGrpcError;
+use cosmos_gravity::deep_space::{Contact, Msg};
 use cosmos_gravity::ethereum::types::EthClient;
 use cosmos_gravity::ethereum::utils::get_gravity_id;
 use cosmos_gravity::send::send_main_loop;
@@ -21,9 +24,6 @@ use cosmos_gravity::{
         get_oldest_unsigned_valsets,
     },
 };
-use deep_space::client::ChainStatus;
-use deep_space::error::CosmosGrpcError;
-use deep_space::{Contact, Msg};
 use ethers::{prelude::*, types::Address as EthAddress};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use relayer::main_loop::relayer_main_loop;

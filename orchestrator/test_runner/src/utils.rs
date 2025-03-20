@@ -1,9 +1,9 @@
 use crate::one_eth;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
+use cosmos_gravity::deep_space::address::Address as CosmosAddress;
+use cosmos_gravity::deep_space::coin::Coin;
+use cosmos_gravity::deep_space::Contact;
 use cosmos_gravity::ethereum::{erc20_utils::get_erc20_balance, types::EthClient};
-use deep_space::address::Address as CosmosAddress;
-use deep_space::coin::Coin;
-use deep_space::Contact;
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
@@ -157,7 +157,6 @@ pub fn get_user_key() -> BridgeUserKey {
         eth_key,
         cosmos_address,
         cosmos_key,
-        eth_dest_key,
         eth_dest_address,
     }
 }
@@ -171,7 +170,6 @@ pub struct BridgeUserKey {
     pub cosmos_key: CosmosPrivateKey,
     // the location tokens are sent back to on Ethereum
     pub eth_dest_address: EthAddress,
-    pub eth_dest_key: SigningKey,
 }
 
 #[derive(Debug, Clone)]

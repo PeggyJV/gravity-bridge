@@ -12,6 +12,7 @@ pub mod ethereum;
 pub mod query;
 pub mod send;
 pub mod utils;
+pub use deep_space;
 
 // Re-export ethereum functions for backward compatibility
 pub use ethereum::{one_eth, one_eth_f32};

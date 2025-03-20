@@ -2,10 +2,10 @@
 
 use crate::utils::ValidatorKeys;
 use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
+use cosmos_gravity::deep_space::Address as CosmosAddress;
+use cosmos_gravity::deep_space::Contact;
 use cosmos_gravity::send::update_gravity_delegate_addresses;
 use cosmos_gravity::utils::ethereum::format_eth_address;
-use deep_space::address::Address as CosmosAddress;
-use deep_space::Contact;
 use ethers::types::Address as EthAddress;
 use ethers::{core::k256::ecdsa::SigningKey, prelude::*};
 use gravity_proto::gravity::{

@@ -14,7 +14,6 @@ cosmos_gravity = {path = "../cosmos_gravity"}
 gravity_abi = { path = "../gravity_abi" }
 gravity_proto = {path = "../gravity_proto/"}
 
-deep_space = { workspace = true }
 serde_derive = "1.0"
 clarity = "0.4.11"
 ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
