@@ -7,29 +7,28 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-gravity_utils = {path = "../gravity_utils"}
-ethereum_gravity = {path = "../ethereum_gravity"}
-gravity_proto = {path = "../gravity_proto/"}
-
-deep_space = { workspace = true }
-ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch="zaki/error_abi_support", features = ["abigen"] }
-clarity = "0.4.11"
-serde = "1.0"
-log = "0.4"
-sha3 = "0.9"
-tokio = "1.4"
-tonic = "0.4"
+bytes = { workspace = true }
+clarity = { workspace = true }
 cosmos-sdk-proto = "0.6.3"
-prost = "0.7"
-prost-types = "0.7"
-bytes = "1"
-regex = "1.5.4"
+deep_space = { workspace = true }
+ethereum_gravity = {path = "../ethereum_gravity"}
+ethers = { workspace = true }
+gravity_proto = {path = "../gravity_proto/"}
+gravity_utils = {path = "../gravity_utils"}
 lazy_static = "1.4.0"
+log = { workspace = true }
+prost = { workspace = true }
+prost-types = "0.7"
+regex = "1.5.4"
+serde = { workspace = true }
+sha3 = { workspace = true }
+tokio = { workspace = true }
+tonic = { workspace = true }
 
 [dev-dependencies]
-env_logger = "0.8"
-rand = "0.8"
 actix = "0.12"
+env_logger = { workspace = true }
+rand = { workspace = true }
 
 [features]
 ethermint = []

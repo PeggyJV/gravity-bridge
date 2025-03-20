@@ -9,30 +9,29 @@ name = "orchestrator"
 path = "src/lib.rs"
 
 [dependencies]
-relayer = { path = "../relayer" }
-ethereum_gravity = { path = "../ethereum_gravity" }
-cosmos_gravity = { path = "../cosmos_gravity" }
-gravity_abi = { path = "../gravity_abi" }
-gravity_utils = { path = "../gravity_utils" }
-gravity_proto = { path = "../gravity_proto" }
-
-deep_space = { workspace = true }
-ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
-serde_derive = "1.0"
-clarity = "0.4.11"
-serde = "1.0"
-lazy_static = "1"
-log = "0.4"
-serde_json = "1.0"
-tokio = { version = "1.28", features = ["macros", "rt-multi-thread"] }
-rand = "0.8"
-tonic = "0.4"
-futures = "0.3.18"
-openssl-probe = { workspace = true }
-
 axum = "0.1.2"
+clarity = { workspace = true }
+cosmos_gravity = { path = "../cosmos_gravity" }
+deep_space = { workspace = true }
+ethereum_gravity = { path = "../ethereum_gravity" }
+ethers = { workspace = true }
+futures = { workspace = true }
+gravity_abi = { path = "../gravity_abi" }
+gravity_proto = { path = "../gravity_proto" }
+gravity_utils = { path = "../gravity_utils" }
 hyper = "0.14.11"
+lazy_static = { workspace = true }
+log = { workspace = true }
+openssl = { workspace = true }
+openssl-probe = { workspace = true }
 prometheus = "0.12.0"
+rand = { workspace = true }
+relayer = { path = "../relayer" }
+serde = { workspace = true }
+serde_derive = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tonic = { workspace = true }
 
 # this is a dirty trick, we depent transitively on OpenSSL it's never
 # called directly in this crate, but if we specify this dep we can enable
@@ -40,7 +39,6 @@ prometheus = "0.12.0"
 # this crate. This allows for easy cross compiled builds because the 'vendored'
 # feature includes it's own OpenSSL version that's compiled on the fly
 # If ANY crate in this workspace has this it will work for all of them.
-openssl = { version = "0.10", features = ["vendored"] }
 
 [features]
 ethermint = ["cosmos_gravity/ethermint", "relayer/ethermint"]

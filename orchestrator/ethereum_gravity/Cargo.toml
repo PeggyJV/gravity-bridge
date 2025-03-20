@@ -11,6 +11,6 @@ gravity_abi = { path = "../gravity_abi" }
 gravity_utils = { path = "../gravity_utils" }
 
 deep_space = { workspace = true }
-ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
-log = "0.4"
-tokio = "1.13.0"
+ethers = { workspace = true }
+log = { workspace = true }
+tokio = { workspace = true }

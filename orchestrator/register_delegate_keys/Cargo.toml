@@ -9,25 +9,24 @@ name = "register-delegate-keys"
 path = "src/main.rs"
 
 [dependencies]
-relayer = {path = "../relayer/"}
-ethereum_gravity = {path = "../ethereum_gravity"}
+clarity = { workspace = true }
 cosmos_gravity = {path = "../cosmos_gravity"}
-gravity_utils = {path = "../gravity_utils"}
-gravity_proto = {path = "../gravity_proto/"}
-
 deep_space = { workspace = true }
-ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
-serde_derive = "1.0"
-clarity = "0.4.11"
 docopt = "1"
-serde = "1.0"
-tokio = { version = "1.28", features = ["macros", "rt-multi-thread"] }
-lazy_static = "1"
-web30 = "0.15"
-env_logger = "0.8"
-log = "0.4.14"
+env_logger = { workspace = true }
+ethereum_gravity = {path = "../ethereum_gravity"}
+ethers = { workspace = true }
+gravity_proto = {path = "../gravity_proto/"}
+gravity_utils = {path = "../gravity_utils"}
+lazy_static = { workspace = true }
+log = { workspace = true }
 openssl-probe = { workspace = true }
-rand = "0.8"
+rand = { workspace = true }
+relayer = {path = "../relayer/"}
+serde = { workspace = true }
+serde_derive = { workspace = true }
+tokio = { workspace = true }
+web30 = "0.15"
 
 [features]
 ethermint = ["cosmos_gravity/ethermint", "relayer/ethermint"]

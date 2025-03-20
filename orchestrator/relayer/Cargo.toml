@@ -13,24 +13,23 @@ name = "relayer"
 path = "src/main.rs"
 
 [dependencies]
-ethereum_gravity = { path = "../ethereum_gravity" }
+clarity = { workspace = true }
 cosmos_gravity = { path = "../cosmos_gravity" }
-gravity_abi = { path = "../gravity_abi" }
-gravity_utils = { path = "../gravity_utils" }
-gravity_proto = { path = "../gravity_proto" }
-
 deep_space = { workspace = true }
-ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
-serde_derive = "1.0"
-clarity = "0.4.11"
 docopt = "1"
-serde = "1.0"
-lazy_static = "1"
-log = "0.4"
-env_logger = "0.8"
-tokio = { version = "1.28", features = ["macros", "rt-multi-thread"] }
-tonic = "0.4"
+env_logger = { workspace = true }
+ethereum_gravity = { path = "../ethereum_gravity" }
+ethers = { workspace = true }
+gravity_abi = { path = "../gravity_abi" }
+gravity_proto = { path = "../gravity_proto" }
+gravity_utils = { path = "../gravity_utils" }
+lazy_static = { workspace = true }
+log = { workspace = true }
 openssl-probe = { workspace = true }
+serde = { workspace = true }
+serde_derive = { workspace = true }
+tokio = { workspace = true }
+tonic = { workspace = true }
 
 [dev-dependencies]
 actix = "0.12"
