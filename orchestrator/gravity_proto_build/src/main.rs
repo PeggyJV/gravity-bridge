@@ -91,9 +91,8 @@ fn compile_protos(out_dir: &Path, tmp_dir: &Path) {
     tonic_build::configure()
         .build_client(true)
         .build_server(false)
-        .format(true)
         .out_dir(tmp_dir)
-        .compile(&protos, &proto_include_paths)
+        .compile_protos(&protos, &proto_include_paths)
         .unwrap();
 
     copy_generated_files(tmp_dir, out_dir);
