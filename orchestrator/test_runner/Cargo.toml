@@ -16,7 +16,7 @@ gravity_proto = {path = "../gravity_proto/"}
 
 serde_derive = { workspace = true }
 clarity = { workspace = true }
-ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
+ethers = { workspace = true }
 serde = { workspace = true }
 lazy_static = { workspace = true }
 url = { workspace = true }
