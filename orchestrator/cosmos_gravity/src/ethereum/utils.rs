@@ -237,14 +237,11 @@ pub fn extract_gravity_contract_error(gravity_error: GravityError) -> Option<Gra
                     match sme {
                         ethers::providers::ProviderError::JsonRpcClientError(jrpce) => {
                             if jrpce.is_error_response() {
-                                let jre = jrpce
-                                    .as_error_response()
-                                    .unwrap();
+                                let jre = jrpce.as_error_response().unwrap();
                                 if jre.code == 3 && jre.data.is_some() {
                                     let data = jre.data.to_owned().unwrap();
                                     if data.is_string() {
-                                        let data_bytes =
-                                            hex_str_to_bytes(data.as_str().unwrap());
+                                        let data_bytes = hex_str_to_bytes(data.as_str().unwrap());
                                         if data_bytes.is_ok() {
                                             decode_gravity_error(data_bytes.unwrap())
                                         } else {
