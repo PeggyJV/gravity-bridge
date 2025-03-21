@@ -17,7 +17,7 @@ resolver = "2"
 default-members = ["gorc", "orchestrator", "test_runner"]
 members = [
 	"orchestrator",
-	"cosmos_gravity",
+	"gravity",
 	"gravity_proto_build",
 	"test_runner",
 	"gravity_proto",
@@ -30,7 +30,7 @@ members = [
 
 [dependencies]
 orchestrator = { path = "./orchestrator" }
-cosmos_gravity = { path = "./cosmos_gravity" }
+gravity = { path = "./gravity" }
 gravity_proto = { path = "./gravity_proto" }
 gorc = { path = "./gorc" }
 relayer = { path = "./relayer" }
@@ -62,7 +62,7 @@ url = "2"
 [features]
 ethermint = [
     "orchestrator/ethermint",
-    "cosmos_gravity/ethermint",
+    "gravity/ethermint",
     "relayer/ethermint",
     "gorc/ethermint",
 ]

@@ -3,16 +3,14 @@
 
 use std::time::Duration;
 
-use cosmos_gravity::ethereum::valset_update::estimate_valset_cost;
-use cosmos_gravity::ethereum::{
-    one_eth_f32, types::EthClient, valset_update::send_eth_valset_update,
-};
-use cosmos_gravity::query::get_latest_valset;
-use cosmos_gravity::query::{get_all_valset_confirms, get_valset};
-use cosmos_gravity::utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
-use cosmos_gravity::utils::message_signatures::encode_valset_confirm_hashed;
-use cosmos_gravity::utils::types::Valset;
 use ethers::types::Address as EthAddress;
+use gravity::ethereum::valset_update::estimate_valset_cost;
+use gravity::ethereum::{one_eth_f32, types::EthClient, valset_update::send_eth_valset_update};
+use gravity::query::get_latest_valset;
+use gravity::query::{get_all_valset_confirms, get_valset};
+use gravity::utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
+use gravity::utils::message_signatures::encode_valset_confirm_hashed;
+use gravity::utils::types::Valset;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use tonic::transport::Channel;
 

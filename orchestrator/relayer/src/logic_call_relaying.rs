@@ -1,18 +1,16 @@
 use crate::main_loop::LOOP_SPEED;
-use cosmos_gravity::ethereum::logic_call::estimate_logic_call_cost;
-use cosmos_gravity::ethereum::logic_call::LogicCallSkips;
-use cosmos_gravity::ethereum::one_eth_f32;
-use cosmos_gravity::ethereum::utils::handle_contract_error;
-use cosmos_gravity::ethereum::{
+use ethers::types::Address as EthAddress;
+use gravity::ethereum::logic_call::estimate_logic_call_cost;
+use gravity::ethereum::logic_call::LogicCallSkips;
+use gravity::ethereum::one_eth_f32;
+use gravity::ethereum::utils::handle_contract_error;
+use gravity::ethereum::{
     logic_call::send_eth_logic_call, types::EthClient, utils::get_logic_call_nonce,
 };
-use cosmos_gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
-use cosmos_gravity::utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
-use cosmos_gravity::utils::types::{LogicCallConfirmResponse, Valset};
-use cosmos_gravity::utils::{
-    message_signatures::encode_logic_call_confirm_hashed, types::LogicCall,
-};
-use ethers::types::Address as EthAddress;
+use gravity::query::{get_latest_logic_calls, get_logic_call_signatures};
+use gravity::utils::ethereum::{bytes_to_hex_str, downcast_to_f32};
+use gravity::utils::types::{LogicCallConfirmResponse, Valset};
+use gravity::utils::{message_signatures::encode_logic_call_confirm_hashed, types::LogicCall};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use std::time::Duration;
 use tonic::transport::Channel;

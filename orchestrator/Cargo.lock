@@ -1137,36 +1137,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cosmos_gravity"
-version = "2.0.4"
-dependencies = [
- "actix",
- "bytes",
- "clarity 1.5.1",
- "cosmos-sdk-proto",
- "cosmos-sdk-proto-althea",
- "deep_space",
- "env_logger",
- "ethers",
- "gravity_abi",
- "gravity_proto",
- "lazy_static",
- "log",
- "num-bigint 0.4.4",
- "num256 0.6.0",
- "prost",
- "prost-types",
- "rand 0.8.5",
- "regex",
- "rustc-hex",
- "serde",
- "sha3 0.9.1",
- "tokio",
- "tonic",
- "url",
-]
-
-[[package]]
 name = "cpufeatures"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2227,8 +2197,8 @@ dependencies = [
  "bytes",
  "clap",
  "clarity 1.5.1",
- "cosmos_gravity",
  "ethers",
+ "gravity",
  "gravity_proto",
  "k256 0.9.5",
  "log",
@@ -2246,6 +2216,36 @@ dependencies = [
  "thiserror 1.0.50",
  "tokio",
  "toml 0.5.11",
+]
+
+[[package]]
+name = "gravity"
+version = "2.0.4"
+dependencies = [
+ "actix",
+ "bytes",
+ "clarity 1.5.1",
+ "cosmos-sdk-proto",
+ "cosmos-sdk-proto-althea",
+ "deep_space",
+ "env_logger",
+ "ethers",
+ "gravity_abi",
+ "gravity_proto",
+ "lazy_static",
+ "log",
+ "num-bigint 0.4.4",
+ "num256 0.6.0",
+ "prost",
+ "prost-types",
+ "rand 0.8.5",
+ "regex",
+ "rustc-hex",
+ "serde",
+ "sha3 0.9.1",
+ "tokio",
+ "tonic",
+ "url",
 ]
 
 [[package]]
@@ -2272,8 +2272,8 @@ dependencies = [
 name = "gravity_bridge"
 version = "4.0.0"
 dependencies = [
- "cosmos_gravity",
  "gorc",
+ "gravity",
  "gravity_abi",
  "gravity_proto",
  "orchestrator",
@@ -3326,9 +3326,9 @@ version = "4.0.0"
 dependencies = [
  "axum 0.1.3",
  "clarity 1.5.1",
- "cosmos_gravity",
  "ethers",
  "futures",
+ "gravity",
  "gravity_abi",
  "gravity_proto",
  "hyper 0.14.27",
@@ -4002,10 +4002,10 @@ name = "register_delegate_keys"
 version = "2.0.0"
 dependencies = [
  "clarity 1.5.1",
- "cosmos_gravity",
  "docopt",
  "env_logger",
  "ethers",
+ "gravity",
  "gravity_proto",
  "lazy_static",
  "log",
@@ -4024,10 +4024,10 @@ version = "4.0.0"
 dependencies = [
  "actix",
  "clarity 1.5.1",
- "cosmos_gravity",
  "docopt",
  "env_logger",
  "ethers",
+ "gravity",
  "gravity_abi",
  "gravity_proto",
  "lazy_static",
@@ -5054,10 +5054,10 @@ name = "test_runner"
 version = "0.1.0"
 dependencies = [
  "clarity 1.5.1",
- "cosmos_gravity",
  "env_logger",
  "ethers",
  "futures",
+ "gravity",
  "gravity_abi",
  "gravity_proto",
  "hex",

@@ -14,7 +14,7 @@ path = "src/main.rs"
 
 [dependencies]
 clarity = { workspace = true }
-cosmos_gravity = { path = "../cosmos_gravity" }
+gravity = { path = "../gravity" }
 docopt = "1"
 env_logger = { workspace = true }
 ethers = { workspace = true }
@@ -32,4 +32,4 @@ tonic = { workspace = true }
 actix = "0.12"
 
 [features]
-ethermint = ["cosmos_gravity/ethermint"]
+ethermint = ["gravity/ethermint"]

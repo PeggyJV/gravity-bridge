@@ -1,13 +1,13 @@
 use crate::application::APP;
 use abscissa_core::{clap::Parser, status_err, Application, Command, Runnable};
-use cosmos_gravity::deep_space::Address as CosmosAddress;
-use cosmos_gravity::ethereum::erc20_utils::get_erc20_balance;
-use cosmos_gravity::ethereum::send_to_cosmos::send_to_cosmos;
-use cosmos_gravity::utils::connection_prep::check_for_eth;
-use cosmos_gravity::utils::connection_prep::create_rpc_connections;
-use cosmos_gravity::utils::ethereum::downcast_to_u64;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use gravity::deep_space::Address as CosmosAddress;
+use gravity::ethereum::erc20_utils::get_erc20_balance;
+use gravity::ethereum::send_to_cosmos::send_to_cosmos;
+use gravity::utils::connection_prep::check_for_eth;
+use gravity::utils::connection_prep::create_rpc_connections;
+use gravity::utils::ethereum::downcast_to_u64;
 use std::{sync::Arc, time::Duration};
 
 const TIMEOUT: Duration = Duration::from_secs(60);

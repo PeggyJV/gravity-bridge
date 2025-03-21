@@ -1,11 +1,11 @@
 use crate::application::APP;
 use abscissa_core::{clap::Parser, status_err, Application, Command, Runnable};
 use clarity::Uint256;
-use cosmos_gravity::deep_space::coin::Coin;
-use cosmos_gravity::deep_space::PrivateKey;
-use cosmos_gravity::send::send_to_eth;
-use cosmos_gravity::utils::connection_prep::{check_for_fee_denom, create_rpc_connections};
 use ethers::types::Address as EthAddress;
+use gravity::deep_space::coin::Coin;
+use gravity::deep_space::PrivateKey;
+use gravity::send::send_to_eth;
+use gravity::utils::connection_prep::{check_for_fee_denom, create_rpc_connections};
 use gravity_proto::gravity::DenomToErc20Request;
 use std::{process::exit, time::Duration};
 

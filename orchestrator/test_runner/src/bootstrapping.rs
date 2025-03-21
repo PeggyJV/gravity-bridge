@@ -1,8 +1,8 @@
 use crate::utils::ValidatorKeys;
-use cosmos_gravity::deep_space::{CosmosPrivateKey, PrivateKey};
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::types::Address as EthAddress;
+use gravity::deep_space::{CosmosPrivateKey, PrivateKey};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 

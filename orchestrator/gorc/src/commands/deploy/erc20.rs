@@ -1,10 +1,10 @@
 use crate::{application::APP, prelude::*};
 use abscissa_core::{clap::Parser, Command, Runnable};
-use cosmos_gravity::ethereum::deploy_erc20::deploy_erc20;
-use cosmos_gravity::utils::connection_prep::create_rpc_connections;
-use cosmos_gravity::utils::ethereum::downcast_to_u64;
-use cosmos_gravity::utils::ethereum::format_eth_hash;
 use ethers::prelude::*;
+use gravity::ethereum::deploy_erc20::deploy_erc20;
+use gravity::utils::connection_prep::create_rpc_connections;
+use gravity::utils::ethereum::downcast_to_u64;
+use gravity::utils::ethereum::format_eth_hash;
 use gravity_proto::gravity::{DenomToErc20ParamsRequest, DenomToErc20Request};
 use orchestrator::main_loop::check_for_eth;
 use std::convert::TryFrom;

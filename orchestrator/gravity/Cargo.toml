@@ -1,7 +1,7 @@
 [package]
-name = "cosmos_gravity"
+name = "gravity"
 version = "2.0.4"
-authors = ["Justin Kilpatrick <justin@althea.net>"]
+authors = ["Justin Kilpatrick <justin@althea.net>, Collin Brittain <collin@iqlusion.io"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

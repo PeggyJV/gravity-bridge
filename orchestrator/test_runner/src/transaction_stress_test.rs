@@ -2,16 +2,16 @@ use crate::{
     one_eth, one_hundred_eth, one_hundred_eth_uint256, utils::*, MINER_CLIENT, TOTAL_TIMEOUT,
 };
 use clarity::Uint256;
-use cosmos_gravity::deep_space::coin::Coin;
-use cosmos_gravity::deep_space::Contact;
-use cosmos_gravity::ethereum::erc20_utils::get_erc20_balance;
-use cosmos_gravity::ethereum::send_to_cosmos::send_to_cosmos;
-use cosmos_gravity::ethereum::utils::get_tx_batch_nonce;
-use cosmos_gravity::send::send_to_eth;
-use cosmos_gravity::utils::ethereum::downcast_to_u64;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use futures::future::join_all;
+use gravity::deep_space::coin::Coin;
+use gravity::deep_space::Contact;
+use gravity::ethereum::erc20_utils::get_erc20_balance;
+use gravity::ethereum::send_to_cosmos::send_to_cosmos;
+use gravity::ethereum::utils::get_tx_batch_nonce;
+use gravity::send::send_to_eth;
+use gravity::utils::ethereum::downcast_to_u64;
 use std::{collections::HashSet, str::FromStr, sync::Arc, time::Duration};
 
 const TIMEOUT: Duration = Duration::from_secs(120);

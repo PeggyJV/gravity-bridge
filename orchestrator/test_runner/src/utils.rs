@@ -1,13 +1,13 @@
 use crate::one_eth;
-use cosmos_gravity::deep_space::address::Address as CosmosAddress;
-use cosmos_gravity::deep_space::coin::Coin;
-use cosmos_gravity::deep_space::{Contact, CosmosPrivateKey, PrivateKey};
-use cosmos_gravity::ethereum::{erc20_utils::get_erc20_balance, types::EthClient};
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use futures::future::join_all;
+use gravity::deep_space::address::Address as CosmosAddress;
+use gravity::deep_space::coin::Coin;
+use gravity::deep_space::{Contact, CosmosPrivateKey, PrivateKey};
+use gravity::ethereum::{erc20_utils::get_erc20_balance, types::EthClient};
 use gravity_abi::erc20::ERC20;
 use rand::Rng;
 

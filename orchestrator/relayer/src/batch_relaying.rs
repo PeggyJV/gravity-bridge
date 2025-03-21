@@ -1,15 +1,15 @@
-use cosmos_gravity::ethereum::one_eth_f32;
-use cosmos_gravity::ethereum::submit_batch::estimate_tx_batch_cost;
-use cosmos_gravity::ethereum::{
-    submit_batch::send_eth_transaction_batch, types::EthClient, utils::get_tx_batch_nonce,
-};
-use cosmos_gravity::query::get_latest_transaction_batches;
-use cosmos_gravity::query::get_transaction_batch_signatures;
-use cosmos_gravity::utils::ethereum::downcast_to_f32;
-use cosmos_gravity::utils::message_signatures::encode_tx_batch_confirm_hashed;
-use cosmos_gravity::utils::types::{BatchConfirmResponse, TransactionBatch, Valset};
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use gravity::ethereum::one_eth_f32;
+use gravity::ethereum::submit_batch::estimate_tx_batch_cost;
+use gravity::ethereum::{
+    submit_batch::send_eth_transaction_batch, types::EthClient, utils::get_tx_batch_nonce,
+};
+use gravity::query::get_latest_transaction_batches;
+use gravity::query::get_transaction_batch_signatures;
+use gravity::utils::ethereum::downcast_to_f32;
+use gravity::utils::message_signatures::encode_tx_batch_confirm_hashed;
+use gravity::utils::types::{BatchConfirmResponse, TransactionBatch, Valset};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use std::collections::HashMap;
 use std::time::Duration;

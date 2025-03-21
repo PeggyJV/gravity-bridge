@@ -1,7 +1,7 @@
 use crate::happy_path::test_valset_update;
 use crate::utils::ValidatorKeys;
-use cosmos_gravity::deep_space::Contact;
 use ethers::types::Address as EthAddress;
+use gravity::deep_space::Contact;
 
 pub async fn validator_set_stress_test(
     contact: &Contact,

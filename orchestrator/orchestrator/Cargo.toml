@@ -11,7 +11,7 @@ path = "src/lib.rs"
 [dependencies]
 axum = "0.1.2"
 clarity = { workspace = true }
-cosmos_gravity = { path = "../cosmos_gravity" }
+gravity = { path = "../gravity" }
 ethers = { workspace = true }
 futures = { workspace = true }
 gravity_abi = { path = "../gravity_abi" }
@@ -38,4 +38,4 @@ tonic = { workspace = true }
 # If ANY crate in this workspace has this it will work for all of them.
 
 [features]
-ethermint = ["cosmos_gravity/ethermint", "relayer/ethermint"]
+ethermint = ["gravity/ethermint", "relayer/ethermint"]

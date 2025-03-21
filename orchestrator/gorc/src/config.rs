@@ -1,6 +1,6 @@
-use cosmos_gravity::deep_space::private_key::DEFAULT_COSMOS_HD_PATH;
-use cosmos_gravity::deep_space::CosmosPrivateKey;
 use ethers::signers::LocalWallet;
+use gravity::deep_space::private_key::DEFAULT_COSMOS_HD_PATH;
+use gravity::deep_space::CosmosPrivateKey;
 use serde::{Deserialize, Serialize};
 use signatory::FsKeyStore;
 use std::net::SocketAddr;
@@ -40,7 +40,7 @@ impl GorcConfig {
 
     pub fn load_deep_space_key(&self, name: String) -> CosmosPrivateKey {
         let key = self.load_secret_key(name).to_bytes();
-        let key = cosmos_gravity::deep_space::utils::bytes_to_hex_str(&key);
+        let key = gravity::deep_space::utils::bytes_to_hex_str(&key);
         key.parse().expect("Could not parse private key")
     }
 }

@@ -2,16 +2,16 @@ use std::sync::Arc;
 
 use crate::main_loop::relayer_main_loop;
 use crate::main_loop::LOOP_SPEED;
-use cosmos_gravity::utils::connection_prep::check_for_eth;
-use cosmos_gravity::utils::connection_prep::create_rpc_connections;
-use cosmos_gravity::utils::connection_prep::wait_for_cosmos_node_ready;
-use cosmos_gravity::utils::ethereum::downcast_to_u64;
-use cosmos_gravity::utils::ethereum::format_eth_address;
 use docopt::Docopt;
 use env_logger::Env;
 use ethers::prelude::*;
 use ethers::signers::LocalWallet as EthWallet;
 use ethers::types::Address as EthAddress;
+use gravity::utils::connection_prep::check_for_eth;
+use gravity::utils::connection_prep::create_rpc_connections;
+use gravity::utils::connection_prep::wait_for_cosmos_node_ready;
+use gravity::utils::ethereum::downcast_to_u64;
+use gravity::utils::ethereum::format_eth_address;
 
 pub mod batch_relaying;
 pub mod find_latest_valset;

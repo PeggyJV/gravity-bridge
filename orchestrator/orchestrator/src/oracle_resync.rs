@@ -1,13 +1,16 @@
-use cosmos_gravity::deep_space::Address as CosmosAddress;
-use cosmos_gravity::ethereum::types::EthClient;
-use cosmos_gravity::utils::types::{
+use ethers::prelude::*;
+use ethers::types::Address as EthAddress;
+use gravity::deep_space::Address as CosmosAddress;
+use gravity::ethereum::types::EthClient;
+use gravity::utils::types::{
     Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent, TransactionBatchExecutedEvent,
     ValsetUpdatedEvent,
 };
-use cosmos_gravity::utils::types::{FromLog, FromLogWithPrefix};
-use ethers::prelude::*;
-use ethers::types::Address as EthAddress;
-use gravity_abi::gravity::*;
+use gravity::utils::types::{FromLog, FromLogWithPrefix};
+use gravity_abi::gravity::{
+    Erc20DeployedEventFilter, LogicCallEventFilter, SendToCosmosEventFilter,
+    TransactionBatchExecutedEventFilter, ValsetUpdatedEventFilter,
+};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;

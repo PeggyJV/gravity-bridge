@@ -7,21 +7,21 @@ use crate::MINER_CLIENT;
 use crate::OPERATION_TIMEOUT;
 use crate::TOTAL_TIMEOUT;
 use clarity::Uint256;
-use cosmos_gravity::deep_space::address::Address as CosmosAddress;
-use cosmos_gravity::deep_space::coin::Coin;
-use cosmos_gravity::deep_space::Contact;
-use cosmos_gravity::deep_space::CosmosPrivateKey;
-use cosmos_gravity::deep_space::PrivateKey;
-use cosmos_gravity::ethereum::erc20_utils::get_erc20_balance;
-use cosmos_gravity::ethereum::utils::get_valset_nonce;
-use cosmos_gravity::ethereum::{send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce};
-use cosmos_gravity::send::send_to_eth;
-use cosmos_gravity::utils::types::SendToCosmosEvent;
-use cosmos_gravity::{build, query::get_oldest_unsigned_transaction_batch, send};
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use gravity::deep_space::address::Address as CosmosAddress;
+use gravity::deep_space::coin::Coin;
+use gravity::deep_space::Contact;
+use gravity::deep_space::CosmosPrivateKey;
+use gravity::deep_space::PrivateKey;
+use gravity::ethereum::erc20_utils::get_erc20_balance;
+use gravity::ethereum::utils::get_valset_nonce;
+use gravity::ethereum::{send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce};
+use gravity::send::send_to_eth;
+use gravity::utils::types::SendToCosmosEvent;
+use gravity::{build, query::get_oldest_unsigned_transaction_batch, send};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use rand::Rng;
 use std::str::FromStr;
@@ -164,7 +164,7 @@ pub async fn test_valset_update(
     // should be about 4% of the total power to start
     // let amount = crate::STARTING_STAKE_PER_VALIDATOR / 4; // 12.5B
     let amount = crate::STAKE_SUPPLY_PER_VALIDATOR / 4; // 25B
-    let amount = cosmos_gravity::deep_space::coin::Coin {
+    let amount = gravity::deep_space::coin::Coin {
         amount: amount.into(),
         denom: "stake".to_string(),
     };
