@@ -213,7 +213,7 @@ mod tests {
         // checkpoint is correct lets make sure our signature code works
         let mut rng = rand::thread_rng();
         let secret: [u8; 32] = rng.gen();
-        let eth_key = SigningKey::from_bytes(&secret).unwrap();
+        let eth_key = SigningKey::from_bytes(&secret.into()).unwrap();
         let eth_wallet = LocalWallet::from(eth_key);
         let eth_address = eth_wallet.address();
         let checkpoint =
@@ -259,7 +259,7 @@ mod tests {
         let mut rng = rand::thread_rng();
         let secret: [u8; 32] = rng.gen();
         // the starting location of the funds
-        let eth_key = SigningKey::from_bytes(&secret).unwrap();
+        let eth_key = SigningKey::from_bytes(&secret.into()).unwrap();
         let eth_wallet = LocalWallet::from(eth_key);
         let eth_address = eth_wallet.address();
 

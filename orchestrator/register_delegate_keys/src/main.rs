@@ -13,6 +13,7 @@ use cosmos_gravity::utils::connection_prep::check_for_fee_denom;
 use cosmos_gravity::utils::connection_prep::{create_rpc_connections, wait_for_cosmos_node_ready};
 use docopt::Docopt;
 use ethers::core::k256::ecdsa::SigningKey;
+use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::prelude::*;
 use log::error;
 use rand::{thread_rng, Rng};
@@ -111,7 +112,9 @@ async fn main() {
 
     // TODO(bolten): left clarity in place for the above bit because it seems like
     // SigningKey/VerifyingKey don't implement the Display trait
-    let signing_key = SigningKey::from_bytes(&ethereum_key.to_bytes()).unwrap();
+    let ethereum_key_bytes = ethereum_key.to_bytes();
+    let key_bytes = GenericArray::from_slice(&ethereum_key_bytes);
+    let signing_key = SigningKey::from_bytes(&key_bytes).unwrap();
     let ethereum_wallet = LocalWallet::from(signing_key);
 
     let ethereum_address = ethereum_wallet.address();

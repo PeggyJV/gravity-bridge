@@ -1,6 +1,7 @@
 use crate::utils::ValidatorKeys;
 use cosmos_gravity::deep_space::{CosmosPrivateKey, PrivateKey};
 use ethers::core::k256::ecdsa::SigningKey;
+use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::types::Address as EthAddress;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
@@ -14,7 +15,8 @@ pub fn parse_ethereum_keys() -> Vec<SigningKey> {
     for line in reader.lines() {
         let line = line.expect("Error reading eth-keys file!");
         let key_hex = hex::decode(line.strip_prefix("0x").unwrap()).unwrap();
-        let key: SigningKey = SigningKey::from_bytes(&key_hex).unwrap();
+        let key_bytes = GenericArray::from_slice(&key_hex);
+        let key: SigningKey = SigningKey::from_bytes(&key_bytes).unwrap();
         ret.push(key);
     }
     ret

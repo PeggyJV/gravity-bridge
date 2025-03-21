@@ -19,6 +19,7 @@ use cosmos_gravity::send::send_to_eth;
 use cosmos_gravity::utils::types::SendToCosmosEvent;
 use cosmos_gravity::{build, query::get_oldest_unsigned_transaction_batch, send};
 use ethers::core::k256::ecdsa::SigningKey;
+use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
@@ -62,7 +63,8 @@ pub async fn happy_path_test(
     let secret: [u8; 32] = rng.gen();
     let dest_cosmos_private_key = CosmosPrivateKey::from_secret(&secret);
     let dest_cosmos_address = dest_cosmos_private_key.to_address("cosmos").unwrap();
-    let dest_eth_private_key = SigningKey::from_bytes(&secret).unwrap();
+    let key_bytes = GenericArray::from_slice(&secret);
+    let dest_eth_private_key = SigningKey::from_bytes(&key_bytes).unwrap();
     let dest_eth_wallet = LocalWallet::from(dest_eth_private_key.clone());
     let dest_eth_address = dest_eth_wallet.address();
 
@@ -391,6 +393,7 @@ async fn test_batch(
         value: Some(1_000_000_000_000_000_000u128.into()),
         data: Some(Vec::new().into()),
         nonce: None,
+        chain_id: None,
     };
 
     let pending_tx = eth_client.send_transaction(tx, None).await.unwrap();

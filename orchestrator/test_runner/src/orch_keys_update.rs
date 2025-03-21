@@ -7,6 +7,7 @@ use cosmos_gravity::deep_space::CosmosPrivateKey;
 use cosmos_gravity::deep_space::PrivateKey;
 use cosmos_gravity::send::update_gravity_delegate_addresses;
 use cosmos_gravity::utils::ethereum::format_eth_address;
+use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::types::Address as EthAddress;
 use ethers::{core::k256::ecdsa::SigningKey, prelude::*};
 use gravity_proto::gravity::{
@@ -63,7 +64,8 @@ pub async fn orch_keys_update(
         let mut rng = rand::thread_rng();
         let secret: [u8; 32] = rng.gen();
         // generate some new keys to replace the old ones
-        let ethereum_key = SigningKey::from_bytes(&secret).unwrap();
+        let key_bytes = GenericArray::from_slice(&secret);
+        let ethereum_key = SigningKey::from_bytes(&key_bytes).unwrap();
         let ethereum_wallet = LocalWallet::from(ethereum_key.clone());
         let cosmos_key = CosmosPrivateKey::from_secret(&secret);
         // update the keys in the key list

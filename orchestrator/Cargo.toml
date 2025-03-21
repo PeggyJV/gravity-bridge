@@ -42,7 +42,7 @@ clarity = "1.5.1"
 cosmos-sdk-proto = "0.26.1"
 cosmos-sdk-proto-althea = "0.18.0"
 env_logger = "0.8"
-ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
+ethers = "2.0.7"
 futures = "0.3.18"
 lazy_static = "1.4.0"
 log = "0.4"

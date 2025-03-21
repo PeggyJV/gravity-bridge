@@ -19,6 +19,7 @@ use cosmos_gravity::ethereum::types::EthClient;
 use cosmos_gravity::utils::ethereum::hex_str_to_bytes;
 use cosmos_gravity::utils::wait_for_cosmos_online;
 use ethers::core::k256::ecdsa::SigningKey;
+use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::prelude::*;
 use ethers::providers::Provider;
 use ethers::types::Address as EthAddress;
@@ -66,9 +67,9 @@ lazy_static! {
     // where the full node / miner sends its rewards. Therefore it's always going
     // to have a lot of ETH to pay for things like contract deployments
     static ref MINER_PRIVATE_KEY: SigningKey =
-        SigningKey::from_bytes(hex_str_to_bytes(
+        SigningKey::from_bytes(GenericArray::from_slice(hex_str_to_bytes(
             "0xb1bab011e03a9862664706fc3bbaa1b16651528e5f0e7fbfcbfdd8be302a13e7").unwrap().as_slice()
-        ).unwrap();
+        )).unwrap();
     static ref MINER_WALLET: LocalWallet = LocalWallet::from((*MINER_PRIVATE_KEY).clone());
     static ref MINER_ADDRESS: EthAddress = (*MINER_WALLET).address();
     static ref MINER_PROVIDER: Provider<Http> = Provider::<Http>::try_from((*ETH_NODE).clone()).unwrap();

@@ -4,6 +4,7 @@ use cosmos_gravity::deep_space::coin::Coin;
 use cosmos_gravity::deep_space::{Contact, CosmosPrivateKey, PrivateKey};
 use cosmos_gravity::ethereum::{erc20_utils::get_erc20_balance, types::EthClient};
 use ethers::core::k256::ecdsa::SigningKey;
+use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use futures::future::join_all;
@@ -19,6 +20,7 @@ pub async fn send_one_eth(dest: EthAddress, eth_client: EthClient) {
         value: Some(one_eth()),
         data: Some(Vec::new().into()),
         nonce: None,
+        chain_id: None,
     };
 
     let pending_tx = eth_client.send_transaction(tx, None).await.unwrap();
@@ -76,6 +78,7 @@ pub async fn send_erc20_bulk(
             value: Some(0u32.into()),
             data: Some(data),
             nonce: Some(nonce),
+            chain_id: None,
         };
 
         let tx = eth_client.send_transaction(tx, None);
@@ -119,6 +122,7 @@ pub async fn send_eth_bulk(amount: U256, destinations: &[EthAddress], eth_client
             value: Some(amount),
             data: Some(Vec::new().into()),
             nonce: Some(nonce),
+            chain_id: None,
         };
 
         let tx = eth_client.send_transaction(tx, None);
@@ -139,7 +143,8 @@ pub fn get_user_key() -> BridgeUserKey {
     let mut rng = rand::thread_rng();
     let secret: [u8; 32] = rng.gen();
     // the starting location of the funds
-    let eth_key = SigningKey::from_bytes(&secret).unwrap();
+    let key_bytes = GenericArray::from_slice(&secret);
+    let eth_key = SigningKey::from_bytes(&key_bytes).unwrap();
     let eth_address = LocalWallet::from(eth_key.clone()).address();
     // the destination on cosmos that sends along to the final ethereum destination
     let cosmos_key = CosmosPrivateKey::from_secret(&secret);
@@ -147,7 +152,8 @@ pub fn get_user_key() -> BridgeUserKey {
     let mut rng = rand::thread_rng();
     let secret: [u8; 32] = rng.gen();
     // the final destination of the tokens back on Ethereum
-    let eth_dest_key = SigningKey::from_bytes(&secret).unwrap();
+    let key_bytes = GenericArray::from_slice(&secret);
+    let eth_dest_key = SigningKey::from_bytes(&key_bytes).unwrap();
     let eth_dest_address = LocalWallet::from(eth_dest_key.clone()).address();
     BridgeUserKey {
         eth_address,

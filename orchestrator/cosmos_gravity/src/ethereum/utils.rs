@@ -226,37 +226,35 @@ pub fn handle_contract_error(gravity_error: GravityError) -> bool {
 
 // ethers is providing an extremely nested set of enums as an error type and decomposing it
 // results in this nightmare
+//
+// Collin: I had to update this while updating our ethers dependency and I'm not sure how to test it.
+// God help us.
 pub fn extract_gravity_contract_error(gravity_error: GravityError) -> Option<GravityContractError> {
     match gravity_error {
         GravityError::EthersContractError(ce) => match ce {
-            ethers::contract::ContractError::MiddlewareError(me) => match me {
+            ethers::contract::ContractError::MiddlewareError { e: me } => match me {
                 ethers::middleware::signer::SignerMiddlewareError::MiddlewareError(sme) => {
                     match sme {
                         ethers::providers::ProviderError::JsonRpcClientError(jrpce) => {
-                            if jrpce.is::<ethers::providers::HttpClientError>() {
-                                let httpe = *jrpce
-                                    .downcast::<ethers::providers::HttpClientError>()
+                            if jrpce.is_error_response() {
+                                let jre = jrpce
+                                    .as_error_response()
                                     .unwrap();
-                                match httpe {
-                                    ethers::providers::HttpClientError::JsonRpcError(jre) => {
-                                        if jre.code == 3 && jre.data.is_some() {
-                                            let data = jre.data.unwrap();
-                                            if data.is_string() {
-                                                let data_bytes =
-                                                    hex_str_to_bytes(data.as_str().unwrap());
-                                                if data_bytes.is_ok() {
-                                                    decode_gravity_error(data_bytes.unwrap())
-                                                } else {
-                                                    None
-                                                }
-                                            } else {
-                                                None
-                                            }
+                                if jre.code == 3 && jre.data.is_some() {
+                                    let data = jre.data.to_owned().unwrap();
+                                    if data.is_string() {
+                                        let data_bytes =
+                                            hex_str_to_bytes(data.as_str().unwrap());
+                                        if data_bytes.is_ok() {
+                                            decode_gravity_error(data_bytes.unwrap())
                                         } else {
                                             None
                                         }
+                                    } else {
+                                        None
                                     }
-                                    _ => None,
+                                } else {
+                                    None
                                 }
                             } else {
                                 None
