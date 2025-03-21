@@ -1,0 +1,38 @@
+[package]
+name = "gravity"
+version = "5.0.0"
+authors = ["Justin Kilpatrick <justin@althea.net>, Collin Brittain <collin@iqlusion.io"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bytes = { workspace = true }
+clarity = { workspace = true }
+cosmos-sdk-proto = { workspace = true }
+cosmos-sdk-proto-althea = { workspace = true }
+deep_space = "2.27.4"
+ethers = { workspace = true }
+gravity_abi = { path = "../gravity_abi" }
+gravity_proto = {path = "../gravity_proto/"}
+lazy_static = "1.4.0"
+log = { workspace = true }
+num-bigint = "0.4"
+num256 = "0.6"
+prost = { workspace = true }
+prost-types = { workspace = true }
+regex = "1.5.4"
+rustc-hex = "2.1.0"
+serde = { workspace = true }
+sha3 = { workspace = true }
+tokio = { workspace = true }
+tonic = { workspace = true }
+url = { workspace = true }
+
+[dev-dependencies]
+actix = "0.12"
+env_logger = { workspace = true }
+rand = { workspace = true }
+
+[features]
+ethermint = []

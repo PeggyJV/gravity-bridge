@@ -7,20 +7,22 @@ use crate::MINER_CLIENT;
 use crate::OPERATION_TIMEOUT;
 use crate::TOTAL_TIMEOUT;
 use clarity::Uint256;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
-use cosmos_gravity::send::send_to_eth;
-use cosmos_gravity::{build, query::get_oldest_unsigned_transaction_batch, send};
-use deep_space::address::Address as CosmosAddress;
-use deep_space::coin::Coin;
-use deep_space::Contact;
-use ethereum_gravity::erc20_utils::get_erc20_balance;
-use ethereum_gravity::utils::get_valset_nonce;
-use ethereum_gravity::{send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce};
 use ethers::core::k256::ecdsa::SigningKey;
+use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use gravity::deep_space::address::Address as CosmosAddress;
+use gravity::deep_space::coin::Coin;
+use gravity::deep_space::Contact;
+use gravity::deep_space::CosmosPrivateKey;
+use gravity::deep_space::PrivateKey;
+use gravity::ethereum::erc20_utils::get_erc20_balance;
+use gravity::ethereum::utils::get_valset_nonce;
+use gravity::ethereum::{send_to_cosmos::send_to_cosmos, utils::get_tx_batch_nonce};
+use gravity::send::send_to_eth;
+use gravity::utils::types::SendToCosmosEvent;
+use gravity::{build, query::get_oldest_unsigned_transaction_batch, send};
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::types::SendToCosmosEvent;
 use rand::Rng;
 use std::str::FromStr;
 use std::time::Duration;
@@ -60,10 +62,9 @@ pub async fn happy_path_test(
     let mut rng = rand::thread_rng();
     let secret: [u8; 32] = rng.gen();
     let dest_cosmos_private_key = CosmosPrivateKey::from_secret(&secret);
-    let dest_cosmos_address = dest_cosmos_private_key
-        .to_address(CosmosAddress::DEFAULT_PREFIX)
-        .unwrap();
-    let dest_eth_private_key = SigningKey::from_bytes(&secret).unwrap();
+    let dest_cosmos_address = dest_cosmos_private_key.to_address("cosmos").unwrap();
+    let key_bytes = GenericArray::from_slice(&secret);
+    let dest_eth_private_key = SigningKey::from_bytes(&key_bytes).unwrap();
     let dest_eth_wallet = LocalWallet::from(dest_eth_private_key.clone());
     let dest_eth_address = dest_eth_wallet.address();
 
@@ -163,7 +164,7 @@ pub async fn test_valset_update(
     // should be about 4% of the total power to start
     // let amount = crate::STARTING_STAKE_PER_VALIDATOR / 4; // 12.5B
     let amount = crate::STAKE_SUPPLY_PER_VALIDATOR / 4; // 25B
-    let amount = deep_space::Coin {
+    let amount = gravity::deep_space::coin::Coin {
         amount: amount.into(),
         denom: "stake".to_string(),
     };
@@ -185,7 +186,7 @@ pub async fn test_valset_update(
                     delegate_address.parse().unwrap(),
                     amount.clone(),
                     get_fee(),
-                    keys_to_change.orch_key.into(),
+                    keys_to_change.orch_key,
                     Some(OPERATION_TIMEOUT),
                 )
                 .await;
@@ -392,6 +393,7 @@ async fn test_batch(
         value: Some(1_000_000_000_000_000_000u128.into()),
         data: Some(Vec::new().into()),
         nonce: None,
+        chain_id: None,
     };
 
     let pending_tx = eth_client.send_transaction(tx, None).await.unwrap();

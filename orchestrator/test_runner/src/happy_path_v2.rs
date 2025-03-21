@@ -5,17 +5,17 @@ use crate::MINER_CLIENT;
 use crate::TOTAL_TIMEOUT;
 use crate::{get_fee, utils::ValidatorKeys};
 use clarity::Uint256;
-use cosmos_gravity::send::send_to_eth;
-use deep_space::coin::Coin;
-use deep_space::Contact;
-use ethereum_gravity::erc20_utils::get_erc20_balance;
-use ethereum_gravity::{deploy_erc20::deploy_erc20, utils::get_event_nonce};
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use gravity::deep_space::coin::Coin;
+use gravity::deep_space::Contact;
+use gravity::ethereum::erc20_utils::get_erc20_balance;
+use gravity::ethereum::{deploy_erc20::deploy_erc20, utils::get_event_nonce};
+use gravity::send::send_to_eth;
+use gravity::utils::ethereum::downcast_to_u64;
 use gravity_proto::gravity::{
     query_client::QueryClient as GravityQueryClient, DenomToErc20Request,
 };
-use gravity_utils::ethereum::downcast_to_u64;
 use std::str::FromStr;
 use std::sync::Arc;
 use tonic::transport::Channel;
@@ -116,12 +116,12 @@ pub async fn happy_path_test_v2(
     let user = get_user_key();
     // send the user some footoken
     contact
-        .send_tokens(
+        .send_coins(
             send_to_user_coin.clone(),
             Some(get_fee()),
             user.cosmos_address,
-            keys[0].validator_key.into(),
             Some(TOTAL_TIMEOUT),
+            keys[0].validator_key,
         )
         .await
         .unwrap();

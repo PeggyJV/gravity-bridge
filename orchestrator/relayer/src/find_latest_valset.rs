@@ -1,10 +1,11 @@
-use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
+use gravity::ethereum::types::EthClient;
+use gravity::utils::types::{FromLog, ValsetUpdatedEvent};
+use gravity::utils::{error::GravityError, ethereum::downcast_to_u64, types::Valset};
+use gravity_abi::gravity as gravity_abi;
 use gravity_abi::gravity::*;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::types::{FromLog, ValsetUpdatedEvent};
-use gravity_utils::{error::GravityError, ethereum::downcast_to_u64, types::Valset};
 use std::{panic, result::Result};
 use tonic::transport::Channel;
 
@@ -57,8 +58,7 @@ pub async fn find_latest_valset(
                         members: valset_updated_event.members,
                     };
                     let cosmos_chain_valset =
-                        cosmos_gravity::query::get_valset(grpc_client, latest_eth_valset.nonce)
-                            .await?;
+                        gravity::query::get_valset(grpc_client, latest_eth_valset.nonce).await?;
                     check_if_valsets_differ(cosmos_chain_valset, &latest_eth_valset)?;
                     return Ok(latest_eth_valset);
                 }

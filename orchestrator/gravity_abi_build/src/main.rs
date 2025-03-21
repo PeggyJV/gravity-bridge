@@ -13,8 +13,10 @@ fn main() {
     };
 
     let abi = match abigen
-        .add_event_derive("serde::Deserialize")
-        .add_event_derive("serde::Serialize")
+        .add_derive("serde::Deserialize")
+        .expect("Failed to add derive serde::Deserialize")
+        .add_derive("serde::Serialize")
+        .expect("Failed to add derive serde::Serialize")
         .generate()
     {
         Ok(abi) => abi,
@@ -40,8 +42,10 @@ fn main() {
     };
 
     let abi = match abigen
-        .add_event_derive("serde::Deserialize")
-        .add_event_derive("serde::Serialize")
+        .add_derive("serde::Deserialize")
+        .expect("Failed to add derive serde::Deserialize")
+        .add_derive("serde::Serialize")
+        .expect("Failed to add derive serde::Serialize")
         .generate()
     {
         Ok(abi) => abi,
