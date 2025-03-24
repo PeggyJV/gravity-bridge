@@ -133,8 +133,8 @@ pub async fn send_messages(
     args.fee.gas_limit = cmp::max(gas_limit as u64, 500000 * messages.len() as u64);
 
     // compute the fee as fee=ceil(gas_limit * gas_price)
-    let fee_amount: f64 = args.fee.gas_limit as f64 * gas_price.0;
-    let fee_amount: u64 = fee_amount.abs().ceil() as u64;
+    let fee_amount = (args.fee.gas_limit as u128).checked_mul(gas_price.0 as u128)
+        .ok_or_else( || GravityError::OverflowError("fee amount".to_string()))?;
     let fee_amount = Coin {
         denom: gas_price.1,
         amount: fee_amount.into(),
