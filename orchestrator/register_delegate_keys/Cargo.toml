@@ -1,6 +1,6 @@
 [package]
 name = "register_delegate_keys"
-version = "2.0.0"
+version = "5.0.0"
 authors = ["Justin Kilpatrick <justin@althea.net>"]
 edition = "2018"
 
@@ -9,25 +9,21 @@ name = "register-delegate-keys"
 path = "src/main.rs"
 
 [dependencies]
-relayer = {path = "../relayer/"}
-ethereum_gravity = {path = "../ethereum_gravity"}
-cosmos_gravity = {path = "../cosmos_gravity"}
-gravity_utils = {path = "../gravity_utils"}
-gravity_proto = {path = "../gravity_proto/"}
-
-deep_space = { git = "https://github.com/iqlusioninc/deep_space/", branch = "master" }
-ethers = { git = "https://github.com/iqlusioninc/ethers-rs.git", branch = "zaki/error_abi_support", features = ["abigen"] }
-serde_derive = "1.0"
-clarity = "0.4.11"
+clarity = { workspace = true }
+gravity = {path = "../gravity"}
 docopt = "1"
-serde = "1.0"
-tokio = { version = "1.28", features = ["macros", "rt-multi-thread"] }
-lazy_static = "1"
-web30 = "0.15"
-env_logger = "0.8"
-log = "0.4.14"
+env_logger = { workspace = true }
+ethers = { workspace = true }
+gravity_proto = {path = "../gravity_proto/"}
+lazy_static = { workspace = true }
+log = { workspace = true }
 openssl-probe = { workspace = true }
-rand = "0.8"
+rand = { workspace = true }
+relayer = {path = "../relayer/"}
+serde = { workspace = true }
+serde_derive = { workspace = true }
+tokio = { workspace = true }
+web30 = "0.15"
 
 [features]
-ethermint = ["cosmos_gravity/ethermint", "relayer/ethermint"]
+ethermint = ["gravity/ethermint", "relayer/ethermint"]

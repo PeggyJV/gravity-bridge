@@ -12,17 +12,18 @@ use crate::bootstrapping::*;
 use crate::utils::*;
 use arbitrary_logic::arbitrary_logic_test;
 use clarity::Uint256;
-use cosmos_gravity::utils::wait_for_cosmos_online;
-use deep_space::coin::Coin;
-use deep_space::Address as CosmosAddress;
-use deep_space::Contact;
-use ethereum_gravity::types::EthClient;
 use ethers::core::k256::ecdsa::SigningKey;
+use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::prelude::*;
 use ethers::providers::Provider;
 use ethers::types::Address as EthAddress;
+use gravity::deep_space::coin::Coin;
+use gravity::deep_space::Contact;
+use gravity::deep_space::PrivateKey;
+use gravity::ethereum::types::EthClient;
+use gravity::utils::ethereum::hex_str_to_bytes;
+use gravity::utils::wait_for_cosmos_online;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::ethereum::hex_str_to_bytes;
 use happy_path::happy_path_test;
 use happy_path_v2::happy_path_test_v2;
 use orch_keys_update::orch_keys_update;
@@ -66,9 +67,9 @@ lazy_static! {
     // where the full node / miner sends its rewards. Therefore it's always going
     // to have a lot of ETH to pay for things like contract deployments
     static ref MINER_PRIVATE_KEY: SigningKey =
-        SigningKey::from_bytes(hex_str_to_bytes(
+        SigningKey::from_bytes(GenericArray::from_slice(hex_str_to_bytes(
             "0xb1bab011e03a9862664706fc3bbaa1b16651528e5f0e7fbfcbfdd8be302a13e7").unwrap().as_slice()
-        ).unwrap();
+        )).unwrap();
     static ref MINER_WALLET: LocalWallet = LocalWallet::from((*MINER_PRIVATE_KEY).clone());
     static ref MINER_ADDRESS: EthAddress = (*MINER_WALLET).address();
     static ref MINER_PROVIDER: Provider<Http> = Provider::<Http>::try_from((*ETH_NODE).clone()).unwrap();
@@ -126,12 +127,7 @@ pub async fn main() {
 
     info!("Staring Gravity test-runner");
 
-    let contact = Contact::new(
-        COSMOS_NODE_GRPC.as_str(),
-        OPERATION_TIMEOUT,
-        CosmosAddress::DEFAULT_PREFIX,
-    )
-    .unwrap();
+    let contact = Contact::new(COSMOS_NODE_GRPC.as_str(), OPERATION_TIMEOUT, "cosmos").unwrap();
     info!("COSMOS_NODE_GRPC {}", COSMOS_NODE_GRPC.as_str());
     info!("Waiting for Cosmos chain to come online");
     wait_for_cosmos_online(&contact, TOTAL_TIMEOUT).await;
@@ -191,12 +187,7 @@ pub async fn main() {
             return;
         } else if test_type == "BATCH_STRESS" {
             info!("Starting batch stress test");
-            let contact = Contact::new(
-                COSMOS_NODE_GRPC.as_str(),
-                TOTAL_TIMEOUT,
-                CosmosAddress::DEFAULT_PREFIX,
-            )
-            .unwrap();
+            let contact = Contact::new(COSMOS_NODE_GRPC.as_str(), TOTAL_TIMEOUT, "cosmos").unwrap();
             transaction_stress_test(
                 &eth_provider,
                 &contact,

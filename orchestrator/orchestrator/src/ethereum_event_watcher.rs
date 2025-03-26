@@ -4,26 +4,30 @@
 use crate::get_with_retry::get_block_number_with_retry;
 use crate::get_with_retry::get_chain_id_with_retry;
 use crate::metrics;
-use cosmos_gravity::build;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
-use cosmos_gravity::query::get_last_event_nonce;
-use deep_space::{Contact, Msg};
-use ethereum_gravity::types::EthClient;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
-use gravity_abi::gravity::*;
+use gravity::build;
+use gravity::deep_space::CosmosPrivateKey;
+use gravity::deep_space::PrivateKey;
+use gravity::deep_space::{Contact, Msg};
+use gravity::ethereum::types::EthClient;
+use gravity::query::get_last_event_nonce;
+use gravity::utils::error::GravityError;
+use gravity::utils::ethereum::bytes_to_hex_str;
+use gravity::utils::ethereum::downcast_to_u64;
+use gravity::utils::types::{FromLogs, FromLogsWithPrefix};
+use gravity::utils::Erc20DeployedEvent;
+use gravity::utils::EventNonceFilter;
+use gravity::utils::LogicCallExecutedEvent;
+use gravity::utils::SendToCosmosEvent;
+use gravity::utils::TransactionBatchExecutedEvent;
+use gravity::utils::ValsetUpdatedEvent;
+use gravity_abi::gravity::Erc20DeployedEventFilter;
+use gravity_abi::gravity::LogicCallEventFilter;
+use gravity_abi::gravity::SendToCosmosEventFilter;
+use gravity_abi::gravity::TransactionBatchExecutedEventFilter;
+use gravity_abi::gravity::ValsetUpdatedEventFilter;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
-use gravity_utils::ethereum::downcast_to_u64;
-use gravity_utils::types::EventNonceFilter;
-use gravity_utils::types::{FromLogs, FromLogsWithPrefix};
-use gravity_utils::{
-    error::GravityError,
-    ethereum::bytes_to_hex_str,
-    types::{
-        Erc20DeployedEvent, LogicCallExecutedEvent, SendToCosmosEvent,
-        TransactionBatchExecutedEvent, ValsetUpdatedEvent,
-    },
-};
 use std::{result::Result, time};
 use tonic::transport::Channel;
 

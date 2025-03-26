@@ -2,7 +2,7 @@
 # Also, the name was changed from orchestrator to gravity_bridge.
 [package]
 name = "gravity_bridge"
-version = "4.0.0"
+version = "5.0.0"
 authors = ["PeggyJV"]
 license = "Apache-2.0"
 edition = "2018"
@@ -17,9 +17,7 @@ resolver = "2"
 default-members = ["gorc", "orchestrator", "test_runner"]
 members = [
 	"orchestrator",
-	"cosmos_gravity",
-	"ethereum_gravity",
-	"gravity_utils",
+	"gravity",
 	"gravity_proto_build",
 	"test_runner",
 	"gravity_proto",
@@ -32,21 +30,39 @@ members = [
 
 [dependencies]
 orchestrator = { path = "./orchestrator" }
-cosmos_gravity = { path = "./cosmos_gravity" }
-ethereum_gravity = { path = "./ethereum_gravity" }
-gravity_utils = { path = "./gravity_utils" }
+gravity = { path = "./gravity" }
 gravity_proto = { path = "./gravity_proto" }
 gorc = { path = "./gorc" }
 relayer = { path = "./relayer" }
 gravity_abi = { path = "./gravity_abi" }
 
 [workspace.dependencies]
+bytes = "1"
+clarity = "1.5.1"
+cosmos-sdk-proto = "0.26.1"
+cosmos-sdk-proto-althea = "0.18.0"
+env_logger = "0.8"
+ethers = "2.0.7"
+futures = "0.3.18"
+lazy_static = "1.4.0"
+log = "0.4"
+openssl = { version = "0.10", features = ["vendored"] }
 openssl-probe = "0.1.6"
+prost = "0.13"
+prost-types = "0.13"
+rand = "0.8"
+serde = { version = "1.0", features = ["serde_derive"] }
+serde_derive = "1.0"
+serde_json = "1.0.69"
+sha3 = "0.9"
+tokio = { version = "1.28", features = ["macros", "rt-multi-thread"] }
+tonic = "0.12"
+url = "2"
 
 [features]
 ethermint = [
     "orchestrator/ethermint",
-    "cosmos_gravity/ethermint",
+    "gravity/ethermint",
     "relayer/ethermint",
     "gorc/ethermint",
 ]

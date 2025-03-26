@@ -1,13 +1,13 @@
 use crate::one_eth;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
-use deep_space::address::Address as CosmosAddress;
-use deep_space::coin::Coin;
-use deep_space::Contact;
-use ethereum_gravity::{erc20_utils::get_erc20_balance, types::EthClient};
 use ethers::core::k256::ecdsa::SigningKey;
+use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use futures::future::join_all;
+use gravity::deep_space::address::Address as CosmosAddress;
+use gravity::deep_space::coin::Coin;
+use gravity::deep_space::{Contact, CosmosPrivateKey, PrivateKey};
+use gravity::ethereum::{erc20_utils::get_erc20_balance, types::EthClient};
 use gravity_abi::erc20::ERC20;
 use rand::Rng;
 
@@ -20,6 +20,7 @@ pub async fn send_one_eth(dest: EthAddress, eth_client: EthClient) {
         value: Some(one_eth()),
         data: Some(Vec::new().into()),
         nonce: None,
+        chain_id: None,
     };
 
     let pending_tx = eth_client.send_transaction(tx, None).await.unwrap();
@@ -77,6 +78,7 @@ pub async fn send_erc20_bulk(
             value: Some(0u32.into()),
             data: Some(data),
             nonce: Some(nonce),
+            chain_id: None,
         };
 
         let tx = eth_client.send_transaction(tx, None);
@@ -120,6 +122,7 @@ pub async fn send_eth_bulk(amount: U256, destinations: &[EthAddress], eth_client
             value: Some(amount),
             data: Some(Vec::new().into()),
             nonce: Some(nonce),
+            chain_id: None,
         };
 
         let tx = eth_client.send_transaction(tx, None);
@@ -140,24 +143,23 @@ pub fn get_user_key() -> BridgeUserKey {
     let mut rng = rand::thread_rng();
     let secret: [u8; 32] = rng.gen();
     // the starting location of the funds
-    let eth_key = SigningKey::from_bytes(&secret).unwrap();
+    let key_bytes = GenericArray::from_slice(&secret);
+    let eth_key = SigningKey::from_bytes(&key_bytes).unwrap();
     let eth_address = LocalWallet::from(eth_key.clone()).address();
     // the destination on cosmos that sends along to the final ethereum destination
     let cosmos_key = CosmosPrivateKey::from_secret(&secret);
-    let cosmos_address = cosmos_key
-        .to_address(CosmosAddress::DEFAULT_PREFIX)
-        .unwrap();
+    let cosmos_address = cosmos_key.to_address("cosmos").unwrap();
     let mut rng = rand::thread_rng();
     let secret: [u8; 32] = rng.gen();
     // the final destination of the tokens back on Ethereum
-    let eth_dest_key = SigningKey::from_bytes(&secret).unwrap();
+    let key_bytes = GenericArray::from_slice(&secret);
+    let eth_dest_key = SigningKey::from_bytes(&key_bytes).unwrap();
     let eth_dest_address = LocalWallet::from(eth_dest_key.clone()).address();
     BridgeUserKey {
         eth_address,
         eth_key,
         cosmos_address,
         cosmos_key,
-        eth_dest_key,
         eth_dest_address,
     }
 }
@@ -171,7 +173,6 @@ pub struct BridgeUserKey {
     pub cosmos_key: CosmosPrivateKey,
     // the location tokens are sent back to on Ethereum
     pub eth_dest_address: EthAddress,
-    pub eth_dest_key: SigningKey,
 }
 
 #[derive(Debug, Clone)]

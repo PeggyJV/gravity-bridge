@@ -2,8 +2,8 @@
 //! arbitrary call to an arbitrary sub contract along with a specific amount of funds, allowing for execution of whatever command is required
 
 use crate::TOTAL_TIMEOUT;
-use deep_space::Contact;
 use ethers::prelude::*;
+use gravity::deep_space::Contact;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
 use tokio::time::sleep as delay_for;
 use tonic::transport::Channel;

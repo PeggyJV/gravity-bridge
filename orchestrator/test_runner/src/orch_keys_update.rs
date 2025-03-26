@@ -1,17 +1,19 @@
 //! This test verifies that live updating of orchestrator keys works correctly
 
 use crate::utils::ValidatorKeys;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
-use cosmos_gravity::send::update_gravity_delegate_addresses;
-use deep_space::address::Address as CosmosAddress;
-use deep_space::Contact;
+use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::types::Address as EthAddress;
 use ethers::{core::k256::ecdsa::SigningKey, prelude::*};
+use gravity::deep_space::Address as CosmosAddress;
+use gravity::deep_space::Contact;
+use gravity::deep_space::CosmosPrivateKey;
+use gravity::deep_space::PrivateKey;
+use gravity::send::update_gravity_delegate_addresses;
+use gravity::utils::ethereum::format_eth_address;
 use gravity_proto::gravity::{
     query_client::QueryClient as GravityQueryClient, DelegateKeysByEthereumSignerRequest,
     DelegateKeysByOrchestratorRequest,
 };
-use gravity_utils::ethereum::format_eth_address;
 use rand::Rng;
 use std::time::Duration;
 use tonic::transport::Channel;
@@ -62,7 +64,8 @@ pub async fn orch_keys_update(
         let mut rng = rand::thread_rng();
         let secret: [u8; 32] = rng.gen();
         // generate some new keys to replace the old ones
-        let ethereum_key = SigningKey::from_bytes(&secret).unwrap();
+        let key_bytes = GenericArray::from_slice(&secret);
+        let ethereum_key = SigningKey::from_bytes(&key_bytes).unwrap();
         let ethereum_wallet = LocalWallet::from(ethereum_key.clone());
         let cosmos_key = CosmosPrivateKey::from_secret(&secret);
         // update the keys in the key list

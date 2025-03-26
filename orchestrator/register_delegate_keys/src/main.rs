@@ -6,14 +6,15 @@ extern crate serde_derive;
 extern crate lazy_static;
 
 use clarity::PrivateKey as EthPrivateKey;
-use cosmos_gravity::crypto::PrivateKey as CosmosPrivateKey;
-use cosmos_gravity::send::update_gravity_delegate_addresses;
-use deep_space::mnemonic::Mnemonic;
 use docopt::Docopt;
 use ethers::core::k256::ecdsa::SigningKey;
+use ethers::core::k256::elliptic_curve::generic_array::GenericArray;
 use ethers::prelude::*;
-use gravity_utils::connection_prep::check_for_fee_denom;
-use gravity_utils::connection_prep::{create_rpc_connections, wait_for_cosmos_node_ready};
+use gravity::deep_space::mnemonic::Mnemonic;
+use gravity::deep_space::{CosmosPrivateKey, PrivateKey};
+use gravity::send::update_gravity_delegate_addresses;
+use gravity::utils::connection_prep::check_for_fee_denom;
+use gravity::utils::connection_prep::{create_rpc_connections, wait_for_cosmos_node_ready};
 use log::error;
 use rand::{thread_rng, Rng};
 use std::time::Duration;
@@ -100,18 +101,20 @@ async fn main() {
     } else {
         let mut rng = thread_rng();
         let key: [u8; 32] = rng.gen();
-        let key = EthPrivateKey::from_slice(&key).unwrap();
+        let key = EthPrivateKey::from_bytes(key).unwrap();
         println!(
             "No Ethereum key provided, your generated key is\n {} -> {}",
             key,
-            key.to_public_key().unwrap()
+            key.to_address()
         );
         key
     };
 
     // TODO(bolten): left clarity in place for the above bit because it seems like
     // SigningKey/VerifyingKey don't implement the Display trait
-    let signing_key = SigningKey::from_bytes(&ethereum_key.to_bytes()).unwrap();
+    let ethereum_key_bytes = ethereum_key.to_bytes();
+    let key_bytes = GenericArray::from_slice(&ethereum_key_bytes);
+    let signing_key = SigningKey::from_bytes(&key_bytes).unwrap();
     let ethereum_wallet = LocalWallet::from(signing_key);
 
     let ethereum_address = ethereum_wallet.address();
@@ -129,14 +132,14 @@ async fn main() {
     .await
     .expect("Failed to update Eth address");
 
-    let res = contact.wait_for_tx(res, TIMEOUT).await;
+    let res = contact.wait_for_tx(res.into(), TIMEOUT).await;
 
     if let Err(e) = res {
         error!("Failed trying to register delegate addresses error {:?}, correct the error and try again", e);
         std::process::exit(1);
     }
 
-    let eth_address = ethereum_key.to_public_key().unwrap();
+    let eth_address = ethereum_key.to_address();
     println!(
         "Registered Delegate Ethereum address {} and Cosmos address {}",
         eth_address, cosmos_address

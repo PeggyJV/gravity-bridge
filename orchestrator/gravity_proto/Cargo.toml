@@ -7,8 +7,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-prost = "0.7"
-prost-types = "0.7"
+prost = { workspace = true }
+prost-types = { workspace = true }
 bytes = "1"
-cosmos-sdk-proto = "0.6.3"
-tonic = "0.4"
+cosmos-sdk-proto = { workspace = true }
+cosmos-sdk-proto-althea = { workspace = true }
+tonic = { workspace = true }
