@@ -1,5 +1,6 @@
 //! for things that don't belong in the cosmos or ethereum libraries but also don't belong
 //! in a function specific library
+use crate::ethereum::types::SignerType;
 use clarity::Error as ClarityError;
 use deep_space::error::AddressError as CosmosAddressError;
 use deep_space::error::CosmosGrpcError;
@@ -30,10 +31,10 @@ pub enum GravityError {
     CosmosAddressError(CosmosAddressError),
     CosmosPrivateKeyError(CosmosPrivateKeyError),
     EthereumBadDataError(String),
-    EthereumRestError(SignerMiddlewareError<Provider<Http>, LocalWallet>),
+    EthereumRestError(SignerMiddlewareError<Provider<Http>, SignerType>),
     EthersAbiError(EthersAbiError),
     EthersContractAbiError(EthersContractAbiError),
-    EthersContractError(ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>),
+    EthersContractError(ContractError<SignerMiddleware<Provider<Http>, SignerType>>),
     EthersGasOracleError(EthersGasOracleError),
     EthersParseAddressError(EthersParseAddressError),
     EthersParseUintError(EthersParseUintError),
@@ -149,8 +150,8 @@ impl From<ClarityError> for GravityError {
     }
 }
 
-impl From<SignerMiddlewareError<Provider<Http>, LocalWallet>> for GravityError {
-    fn from(error: SignerMiddlewareError<Provider<Http>, LocalWallet>) -> Self {
+impl From<SignerMiddlewareError<Provider<Http>, SignerType>> for GravityError {
+    fn from(error: SignerMiddlewareError<Provider<Http>, SignerType>) -> Self {
         GravityError::EthereumRestError(error)
     }
 }
@@ -167,8 +168,8 @@ impl From<EthersContractAbiError> for GravityError {
     }
 }
 
-impl From<ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>> for GravityError {
-    fn from(error: ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>) -> Self {
+impl From<ContractError<SignerMiddleware<Provider<Http>, SignerType>>> for GravityError {
+    fn from(error: ContractError<SignerMiddleware<Provider<Http>, SignerType>>) -> Self {
         GravityError::EthersContractError(error)
     }
 }

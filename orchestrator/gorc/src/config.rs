@@ -1,6 +1,7 @@
 use ethers::signers::LocalWallet;
 use gravity::deep_space::private_key::DEFAULT_COSMOS_HD_PATH;
 use gravity::deep_space::CosmosPrivateKey;
+use gravity::ethereum::types::SignerType;
 use serde::{Deserialize, Serialize};
 use signatory::FsKeyStore;
 use std::net::SocketAddr;
@@ -30,12 +31,12 @@ impl GorcConfig {
         clarity::PrivateKey::from_bytes(key.into()).expect("Could not convert key")
     }
 
-    pub fn load_ethers_wallet(&self, name: String) -> LocalWallet {
+    pub fn load_ethers_wallet(&self, name: String) -> SignerType {
         let secret_key = self.load_secret_key(name);
         let bytes = secret_key.to_bytes();
         let ethers_secret = ethers::core::k256::SecretKey::from_bytes(&bytes).unwrap();
         let signing_key = ethers::core::k256::ecdsa::SigningKey::from(ethers_secret);
-        LocalWallet::from(signing_key)
+        SignerType::Local(LocalWallet::from(signing_key))
     }
 
     pub fn load_deep_space_key(&self, name: String) -> CosmosPrivateKey {
