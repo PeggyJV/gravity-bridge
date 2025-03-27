@@ -5,13 +5,13 @@ use clarity::Uint256;
 use ethers::prelude::*;
 use ethers::types::Address as EthAddress;
 use futures::future::join_all;
-use gravity::deep_space::coin::Coin;
 use gravity::deep_space::Contact;
 use gravity::ethereum::erc20_utils::get_erc20_balance;
 use gravity::ethereum::send_to_cosmos::send_to_cosmos;
 use gravity::ethereum::utils::get_tx_batch_nonce;
 use gravity::send::send_to_eth;
 use gravity::utils::ethereum::downcast_to_u64;
+use gravity::{deep_space::coin::Coin, ethereum::types::SignerType};
 use std::{collections::HashSet, str::FromStr, sync::Arc, time::Duration};
 
 const TIMEOUT: Duration = Duration::from_secs(120);
@@ -67,7 +67,7 @@ pub async fn transaction_stress_test(
     for token in erc20_addresses.iter() {
         let mut sends = Vec::new();
         for keys in user_keys.iter() {
-            let eth_wallet = LocalWallet::from(keys.eth_key.clone());
+            let eth_wallet = SignerType::Local(LocalWallet::from(keys.eth_key.clone()));
             let provider = eth_provider.clone();
             let chain_id = provider
                 .get_chainid()
@@ -228,7 +228,7 @@ pub async fn transaction_stress_test(
 
     // we should find a batch nonce greater than zero since all the batches
     // executed
-    let eth_wallet = LocalWallet::from(keys[0].eth_key.clone());
+    let eth_wallet = SignerType::Local(LocalWallet::from(keys[0].eth_key.clone()));
     let eth_client = Arc::new(SignerMiddleware::new(eth_provider.clone(), eth_wallet));
     for token in erc20_addresses {
         assert!(

@@ -21,6 +21,7 @@ use gravity::deep_space::coin::Coin;
 use gravity::deep_space::Contact;
 use gravity::deep_space::PrivateKey;
 use gravity::ethereum::types::EthClient;
+use gravity::ethereum::types::SignerType;
 use gravity::utils::ethereum::hex_str_to_bytes;
 use gravity::utils::wait_for_cosmos_online;
 use gravity_proto::gravity::query_client::QueryClient as GravityQueryClient;
@@ -70,10 +71,10 @@ lazy_static! {
         SigningKey::from_bytes(GenericArray::from_slice(hex_str_to_bytes(
             "0xb1bab011e03a9862664706fc3bbaa1b16651528e5f0e7fbfcbfdd8be302a13e7").unwrap().as_slice()
         )).unwrap();
-    static ref MINER_WALLET: LocalWallet = LocalWallet::from((*MINER_PRIVATE_KEY).clone());
+    static ref MINER_WALLET: SignerType = SignerType::Local(LocalWallet::from((*MINER_PRIVATE_KEY).clone()));
     static ref MINER_ADDRESS: EthAddress = (*MINER_WALLET).address();
     static ref MINER_PROVIDER: Provider<Http> = Provider::<Http>::try_from((*ETH_NODE).clone()).unwrap();
-    static ref MINER_SIGNER: SignerMiddleware<Provider<Http>, LocalWallet> =
+    static ref MINER_SIGNER: SignerMiddleware<Provider<Http>, SignerType> =
         SignerMiddleware::new((*MINER_PROVIDER).clone(), (*MINER_WALLET).clone());
     static ref MINER_CLIENT: EthClient = Arc::new((*MINER_SIGNER).clone());
 
