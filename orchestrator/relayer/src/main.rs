@@ -7,6 +7,7 @@ use env_logger::Env;
 use ethers::prelude::*;
 use ethers::signers::LocalWallet as EthWallet;
 use ethers::types::Address as EthAddress;
+use gravity::ethereum::types::SignerType;
 use gravity::utils::connection_prep::check_for_eth;
 use gravity::utils::connection_prep::create_rpc_connections;
 use gravity::utils::connection_prep::wait_for_cosmos_node_ready;
@@ -73,6 +74,7 @@ async fn main() {
         .flag_ethereum_key
         .parse()
         .expect("Invalid Ethereum private key!");
+    let ethereum_wallet = SignerType::Local(ethereum_wallet);
     let gravity_contract_address: EthAddress = args
         .flag_contract_address
         .parse()

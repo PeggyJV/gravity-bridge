@@ -2,6 +2,7 @@
 //! It's a common problem to have conflicts between ipv4 and ipv6 localhost and this module is first and foremost supposed to resolve that problem
 //! by trying more than one thing to handle potentially misconfigured inputs.
 
+use crate::ethereum::types::SignerType;
 use crate::utils::ethereum::format_eth_address;
 use deep_space::client::ChainStatus;
 use deep_space::Address as CosmosAddress;
@@ -356,7 +357,7 @@ pub async fn check_for_fee_denom(fee_denom: &str, address: CosmosAddress, contac
 /// Checks the user has some Ethereum in their address to pay for things
 pub async fn check_for_eth(
     address: EthAddress,
-    eth_client: Arc<SignerMiddleware<Provider<Http>, LocalWallet>>,
+    eth_client: Arc<SignerMiddleware<Provider<Http>, SignerType>>,
 ) {
     let balance = eth_client.get_balance(address, None).await.unwrap();
     if balance == 0u8.into() {

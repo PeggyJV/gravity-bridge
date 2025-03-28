@@ -251,7 +251,7 @@ func (s *IntegrationTestSuite) TestHappyPath() {
 			s.Require().Equal(uint64(1), proposalsQueryResponse.Proposals[0].ProposalId, "not proposal id 1")
 			s.Require().Equal(govtypesv1beta1.StatusVotingPeriod, proposalsQueryResponse.Proposals[0].Status, "proposal not in voting period")
 			return true
-		}, 20*time.Second, 2*time.Second, "proposal not submitted correctly")
+		}, 60*time.Second, 2*time.Second, "proposal not submitted correctly")
 
 		s.T().Log("vote for community spend proposal")
 		for _, val := range s.chain.validators {

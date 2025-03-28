@@ -1,6 +1,6 @@
 # Reference: https://www.lpalmieri.com/posts/fast-rust-docker-builds/
 
-FROM rust:1.79-bullseye AS cargo-chef-rust
+FROM rust:1.81-bullseye AS cargo-chef-rust
 RUN cargo install cargo-chef --version 0.1.62 --locked
 
 FROM cargo-chef-rust AS planner

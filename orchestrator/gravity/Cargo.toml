@@ -7,12 +7,14 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+async-trait = "0.1.88"
 bytes = { workspace = true }
 clarity = { workspace = true }
 cosmos-sdk-proto = { workspace = true }
 cosmos-sdk-proto-althea = { workspace = true }
 deep_space = "2.27.4"
 ethers = { workspace = true }
+ethers-gcp-kms-signer = "0.1.5"
 gravity_abi = { path = "../gravity_abi" }
 gravity_proto = {path = "../gravity_proto/"}
 lazy_static = "1.4.0"

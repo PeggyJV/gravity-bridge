@@ -10,6 +10,7 @@ use ethers::types::Address as EthAddress;
 use gravity::deep_space::coin::Coin;
 use gravity::deep_space::Contact;
 use gravity::ethereum::erc20_utils::get_erc20_balance;
+use gravity::ethereum::types::SignerType;
 use gravity::ethereum::{deploy_erc20::deploy_erc20, utils::get_event_nonce};
 use gravity::send::send_to_eth;
 use gravity::utils::ethereum::downcast_to_u64;
@@ -28,7 +29,7 @@ pub async fn happy_path_test_v2(
     gravity_address: EthAddress,
 ) {
     let mut grpc_client = grpc_client;
-    let eth_wallet = LocalWallet::from(keys[0].eth_key.clone());
+    let eth_wallet = SignerType::Local(LocalWallet::from(keys[0].eth_key.clone()));
     let provider = eth_provider.clone();
     let chain_id = provider
         .get_chainid()
