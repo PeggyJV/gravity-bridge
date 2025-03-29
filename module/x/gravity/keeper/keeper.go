@@ -810,28 +810,27 @@ func (k Keeper) IterateEthereumHeightVotes(ctx sdk.Context, cb func(val sdk.ValA
 // This just does keeper state cleanup if a new gravity contract has been deployed
 func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string, bridgeDeploymentHeight uint64) {
 	// Delete Any Outgoing TXs.
-
 	prefixStoreOtx := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.OutgoingTxKey})
 	iterOtx := prefixStoreOtx.ReverseIterator(nil, nil)
 	defer iterOtx.Close()
+	var oxtToDeleteKeys [][]byte
 	for ; iterOtx.Valid(); iterOtx.Next() {
+		oxtToDeleteKeys = append(oxtToDeleteKeys, iterOtx.Key())
+	}
+	for _, key := range oxtToDeleteKeys {
+		prefixStoreOtx.Delete(key)
+	}
 
-		var any cdctypes.Any
-		k.cdc.MustUnmarshal(iterOtx.Value(), &any)
-		var otx types.OutgoingTx
-		if err := k.cdc.UnpackAny(&any, &otx); err != nil {
-			panic(err)
-		}
-		// Delete any partial Eth Signatures handging around
-		prefixStoreSig := prefix.NewStore(ctx.KVStore(k.storeKey), append([]byte{types.EthereumSignatureKey}, otx.GetStoreIndex()...))
-		iterSig := prefixStoreSig.Iterator(nil, nil)
-		defer iterSig.Close()
-
-		for ; iterSig.Valid(); iterSig.Next() {
-			prefixStoreSig.Delete(iterSig.Key())
-		}
-
-		prefixStoreOtx.Delete(iterOtx.Key())
+	// Delete all ethereum signature for all Outgoing TXs.
+	prefixStoreSig := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.EthereumSignatureKey})
+	iterSig := prefixStoreSig.Iterator(nil, nil)
+	defer iterSig.Close()
+	var sigToDeleteKeys [][]byte
+	for ; iterSig.Valid(); iterSig.Next() {
+		sigToDeleteKeys = append(sigToDeleteKeys, iterSig.Key())
+	}
+	for _, key := range sigToDeleteKeys {
+		prefixStoreSig.Delete(key)
 	}
 
 	// Reset the last observed signer set nonce
@@ -858,8 +857,12 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string,
 	prefixStoreEthereumEvent := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.EthereumEventVoteRecordKey})
 	iterEvent := prefixStoreEthereumEvent.Iterator(nil, nil)
 	defer iterEvent.Close()
+	var eventToDeleteKeys [][]byte
 	for ; iterEvent.Valid(); iterEvent.Next() {
-		prefixStoreEthereumEvent.Delete(iterEvent.Key())
+		eventToDeleteKeys = append(eventToDeleteKeys, iterEvent.Key())
+	}
+	for _, key := range eventToDeleteKeys {
+		prefixStoreEthereumEvent.Delete(key)
 	}
 
 	// Set the Last oberved Ethereum Blockheight to zero

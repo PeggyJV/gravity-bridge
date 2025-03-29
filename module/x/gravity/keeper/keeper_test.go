@@ -559,6 +559,28 @@ func TestKeeper_Migration(t *testing.T) {
 		},
 	}
 
+	// assume it is an expired event
+	stce2 := &types.SendToCosmosEvent{
+		EventNonce:     3,
+		TokenContract:  EthAddrs[0].Hex(),
+		EthereumSender: EthAddrs[0].Hex(),
+		CosmosReceiver: AccAddrs[0].String(),
+		EthereumHeight: 10,
+		Amount:         sdk.NewInt(1000000),
+	}
+	stcea2, err := types.PackEvent(stce2)
+	require.NoError(t, err)
+
+	evr21 := &types.EthereumEventVoteRecord{
+		Event: stcea2,
+		Votes: []string{
+			ValAddrs[0].String(),
+			ValAddrs[1].String(),
+			ValAddrs[2].String(),
+		},
+		Accepted: false,
+	}
+
 	//Put an outgoing transaction into the system
 
 	var (
@@ -593,6 +615,10 @@ func TestKeeper_Migration(t *testing.T) {
 	gk.setEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash(), evr)
 	gk.setLastObservedEventNonce(ctx, stce.GetEventNonce())
 	gk.setEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash(), evr2)
+	gk.setLastObservedEventNonce(ctx, cctxe.GetEventNonce())
+
+	// set only the event vote record of the expired event to simulate the bug from (https://github.com/crypto-org-chain/gravity-bridge/issues/112)
+	gk.setEthereumEventVoteRecord(ctx, stce2.GetEventNonce(), stce2.Hash(), evr21)
 	gk.setLastObservedEventNonce(ctx, cctxe.GetEventNonce())
 
 	stored := gk.GetEthereumEventVoteRecord(ctx, stce.GetEventNonce(), stce.Hash())
@@ -650,6 +676,9 @@ func TestKeeper_Migration(t *testing.T) {
 
 	stored2AfterMigrate := gk.GetEthereumEventVoteRecord(ctx, cctxe.GetEventNonce(), cctxe.Hash())
 	require.Nil(t, stored2AfterMigrate)
+
+	stored3AfterMigrate := gk.GetEthereumEventVoteRecord(ctx, stce2.GetEventNonce(), stce2.Hash())
+	require.Nil(t, stored3AfterMigrate)
 
 	nonce2 := gk.GetLastObservedEventNonce(ctx)
 	require.Equal(t, uint64(0), nonce2)
