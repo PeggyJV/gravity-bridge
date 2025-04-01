@@ -3,7 +3,7 @@ use ethers::{
     types::transaction::{eip2718::TypedTransaction, eip712::Eip712},
 };
 use ethers_gcp_kms_signer::GcpKmsSigner;
-use std::sync::Arc;
+use std::{cmp::Ordering, sync::Arc};
 
 pub type EthSignerMiddleware = SignerMiddleware<Provider<Http>, SignerType>;
 pub type EthClient = Arc<EthSignerMiddleware>;
@@ -13,6 +13,45 @@ pub type EthClient = Arc<EthSignerMiddleware>;
 pub enum SignerType {
     Local(LocalWallet),
     GcpKms(GcpKmsSigner),
+}
+
+impl SignerType {
+    pub fn set_v(
+        &self,
+        message: &[u8],
+        sig: &Signature,
+    ) -> Result<Signature, ethers::types::SignatureError> {
+        match self {
+            // Since GCP KMS doesn't produce signatures normalized for EVM, we need to correct v
+            SignerType::GcpKms(signer) => {
+                let expected_address = signer.address();
+                let mut sig = sig.to_owned();
+
+                sig.v = 0;
+
+                let sig0_address = sig.recover(message)?;
+
+                if sig0_address.cmp(&expected_address) == Ordering::Equal {
+                    return Ok(sig);
+                }
+
+                sig.v = 1;
+
+                let sig1_address = sig.recover(message)?;
+
+                if sig1_address.cmp(&expected_address) == Ordering::Equal {
+                    return Ok(sig);
+                }
+
+                Err(ethers::types::SignatureError::VerificationError(
+                    expected_address,
+                    sig0_address,
+                ))
+            }
+            // Don't need to correct v for LocalWallet
+            _ => Ok(sig.clone()),
+        }
+    }
 }
 
 #[async_trait::async_trait]
