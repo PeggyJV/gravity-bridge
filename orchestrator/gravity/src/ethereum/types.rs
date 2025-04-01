@@ -22,7 +22,7 @@ impl SignerType {
         sig: &Signature,
     ) -> Result<Signature, ethers::types::SignatureError> {
         match self {
-            // Since GCP KMS doesn't produce signatures normalized for EVM, we need to correct v
+            // Gravity does not implement eip155 modifications to v so we need to recompute v to the allowed range of 0 or 1
             SignerType::GcpKms(signer) => {
                 let expected_address = signer.address();
                 let mut sig = sig.to_owned();
