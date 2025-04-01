@@ -16,11 +16,11 @@ pub enum SignerType {
 }
 
 impl SignerType {
-    pub fn set_v(
+    pub fn normalize(
         &self,
-        message: &[u8],
+        message: impl AsRef<[u8]>,
         sig: &Signature,
-    ) -> Result<Signature, ethers::types::SignatureError> {
+    ) -> Result<Signature, ethers::providers::ProviderError> {
         match self {
             // Gravity does not implement eip155 modifications to v so we need to recompute v to the allowed range of 0 or 1
             SignerType::GcpKms(signer) => {
@@ -29,7 +29,9 @@ impl SignerType {
 
                 sig.v = 0;
 
-                let sig0_address = sig.recover(message)?;
+                let sig0_address = sig
+                    .recover(message.as_ref())
+                    .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string()))?;
 
                 if sig0_address.cmp(&expected_address) == Ordering::Equal {
                     return Ok(sig);
@@ -37,15 +39,16 @@ impl SignerType {
 
                 sig.v = 1;
 
-                let sig1_address = sig.recover(message)?;
+                let sig1_address = sig
+                    .recover(message.as_ref())
+                    .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string()))?;
 
                 if sig1_address.cmp(&expected_address) == Ordering::Equal {
                     return Ok(sig);
                 }
 
-                Err(ethers::types::SignatureError::VerificationError(
-                    expected_address,
-                    sig0_address,
+                Err(ethers::providers::ProviderError::CustomError(
+                    "Invalid signature while normalizing".to_string(),
                 ))
             }
             // Don't need to correct v for LocalWallet
@@ -62,7 +65,12 @@ impl Signer for SignerType {
         &self,
         message: S,
     ) -> Result<Signature, Self::Error> {
-        match self {
+        // We copy the msg because it's not Clone
+        let mut msg = vec![0u8; message.as_ref().len()];
+
+        msg.copy_from_slice(message.as_ref());
+
+        let sig = match self {
             SignerType::Local(wallet) => wallet
                 .sign_message(message)
                 .await
@@ -71,7 +79,9 @@ impl Signer for SignerType {
                 .sign_message(message)
                 .await
                 .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string())),
-        }
+        }?;
+
+        self.normalize(msg, &sig)
     }
 
     async fn sign_transaction(&self, tx: &TypedTransaction) -> Result<Signature, Self::Error> {
