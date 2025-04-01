@@ -85,7 +85,7 @@ impl Signer for SignerType {
     }
 
     async fn sign_transaction(&self, tx: &TypedTransaction) -> Result<Signature, Self::Error> {
-        match self {
+        let sig = match self {
             SignerType::Local(wallet) => wallet
                 .sign_transaction(tx)
                 .await
@@ -94,7 +94,11 @@ impl Signer for SignerType {
                 .sign_transaction(tx)
                 .await
                 .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string())),
-        }
+        }?;
+
+        // Get the transaction hash for recovery
+        let tx_hash = tx.sighash();
+        self.normalize(&tx_hash, &sig)
     }
 
     fn address(&self) -> Address {
@@ -122,7 +126,7 @@ impl Signer for SignerType {
         &self,
         payload: &T,
     ) -> Result<Signature, Self::Error> {
-        match self {
+        let sig = match self {
             SignerType::Local(wallet) => wallet
                 .sign_typed_data(payload)
                 .await
@@ -131,6 +135,11 @@ impl Signer for SignerType {
                 .sign_typed_data(payload)
                 .await
                 .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string())),
-        }
+        }?;
+
+        // Get the typed data hash for recovery
+        let hash = payload.encode_eip712()
+            .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string()))?;
+        self.normalize(&hash, &sig)
     }
 }
