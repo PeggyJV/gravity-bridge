@@ -16,37 +16,20 @@ pub enum SignerType {
 }
 
 impl SignerType {
-    // Normalizes signature for Gravity's signature validation
-    pub fn normalize(
+    pub fn set_v(
         &self,
-        message: impl AsRef<[u8]>,
+        message: &[u8],
         sig: &Signature,
-    ) -> Result<Signature, ethers::providers::ProviderError> {
+    ) -> Result<Signature, ethers::types::SignatureError> {
         match self {
             // Gravity does not implement eip155 modifications to v so we need to recompute v to the allowed range of 0 or 1
             SignerType::GcpKms(signer) => {
                 let expected_address = signer.address();
                 let mut sig = sig.to_owned();
-                let message = message.as_ref();
-
-                // secp256k1 curve order from go-ethereum/crypto/crypto.go
-                let n = U256::from_str_radix(
-                    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
-                    16,
-                )
-                .unwrap();
-                let n_half = n / U256::from(2);
-
-                // Normalize s to be less than n/2 (homestead rule)
-                if sig.s > n_half {
-                    sig.s = n - sig.s;
-                }
 
                 sig.v = 0;
 
-                let sig0_address = sig
-                    .recover(message)
-                    .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string()))?;
+                let sig0_address = sig.recover(message)?;
 
                 if sig0_address.cmp(&expected_address) == Ordering::Equal {
                     return Ok(sig);
@@ -54,16 +37,15 @@ impl SignerType {
 
                 sig.v = 1;
 
-                let sig1_address = sig
-                    .recover(message)
-                    .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string()))?;
+                let sig1_address = sig.recover(message)?;
 
                 if sig1_address.cmp(&expected_address) == Ordering::Equal {
                     return Ok(sig);
                 }
 
-                Err(ethers::providers::ProviderError::CustomError(
-                    "Invalid signature, unable to normalize".to_string(),
+                Err(ethers::types::SignatureError::VerificationError(
+                    expected_address,
+                    sig0_address,
                 ))
             }
             // Don't need to correct v for LocalWallet
@@ -80,12 +62,7 @@ impl Signer for SignerType {
         &self,
         message: S,
     ) -> Result<Signature, Self::Error> {
-        // We copy the msg because it's not Clone
-        let mut msg = vec![0u8; message.as_ref().len()];
-
-        msg.copy_from_slice(message.as_ref());
-
-        let sig = match self {
+        match self {
             SignerType::Local(wallet) => wallet
                 .sign_message(message)
                 .await
@@ -94,9 +71,7 @@ impl Signer for SignerType {
                 .sign_message(message)
                 .await
                 .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string())),
-        }?;
-
-        self.normalize(&msg, &sig)
+        }
     }
 
     async fn sign_transaction(&self, tx: &TypedTransaction) -> Result<Signature, Self::Error> {
