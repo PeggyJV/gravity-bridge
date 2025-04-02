@@ -126,18 +126,18 @@ pub async fn send_messages(
     };
 
     let mut args = contact.get_message_args(cosmos_address, fee, None).await?;
-    let gas = contact
-        .simulate_tx(messages.as_slice(), None, cosmos_key)
-        .await?;
+    // let gas = contact
+    //     .simulate_tx(messages.as_slice(), None, cosmos_key)
+    //     .await?;
 
     // multiply the estimated gas by the configured gas adjustment
-    if let Some(gas_info) = gas.gas_info {
-        let gas_limit: f64 = (gas_info.gas_used as f64) * gas_adjustment;
-        args.fee.gas_limit = cmp::max(gas_limit as u64, 500000 * messages.len() as u64);
-    } else {
+        // if let Some(gas_info) = gas.gas_info {
+        //     let gas_limit: f64 = (gas_info.gas_used as f64) * gas_adjustment;
+        //     args.fee.gas_limit = cmp::max(gas_limit as u64, 500000 * messages.len() as u64);
+        // } else {
         // Is this a good gas limit max?
         args.fee.gas_limit = cmp::max(2500000 as u64, 500000 * messages.len() as u64);
-    }
+    // }
 
     // compute the fee as fee=ceil(gas_limit * gas_price)
     let fee_amount: f64 = args.fee.gas_limit as f64 * gas_price.0;
