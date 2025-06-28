@@ -71,8 +71,20 @@ pub async fn get_all_valset_confirms(
                 item.ethereum_signer
             );
             debug!("reason given for invalid signature: {e:?}");
-
-            continue;
+            match e {
+                clarity::Error::InvalidV => {
+                    let mut corrected_sig = item.signature.clone();
+                    corrected_sig[64] = 28;
+                    let mut corrected = item.clone();
+                    corrected.signature = corrected_sig;
+                    parsed_confirms.push(ValsetConfirmResponse::from_proto(corrected)?);
+                    continue;
+                    //Do not skip the signature if the V value is invalid.
+                }
+                _ => {
+                    continue;
+                }
+            }
         }
 
         parsed_confirms.push(ValsetConfirmResponse::from_proto(item)?)
