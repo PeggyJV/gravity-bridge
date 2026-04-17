@@ -29,6 +29,24 @@ func (m Migrator) MigrateStore(ctx sdk.Context) error {
 	return nil
 }
 
+// MigrateStoreV6ToV7 initializes LastEventObservedEthereumBlockHeight from the
+// existing LastObservedEthereumBlockHeight. At a healthy upgrade boundary the
+// existing value reflects events that have actually been observed (height-vote
+// consensus only advances it past event-observed values, and any pending
+// timeout-cleanup race would have already fired pre-upgrade), so seeding the
+// new key with the same value is safe and preserves cleanup behaviour for
+// outgoing txs created before the upgrade.
+func (m Migrator) MigrateStoreV6ToV7(ctx sdk.Context) error {
+	ctx.Logger().Info("gravity: Initializing LastEventObservedEthereumBlockHeight from LastObservedEthereumBlockHeight")
+	current := m.keeper.GetLastObservedEthereumBlockHeight(ctx)
+	if current.EthereumHeight == 0 {
+		ctx.Logger().Info("gravity: No observed Ethereum height yet; leaving event-observed key unset")
+		return nil
+	}
+	m.keeper.SetLastEventObservedEthereumBlockHeight(ctx, current.EthereumHeight)
+	return nil
+}
+
 // DeletePendingEventVoteRecords deletes pending event vote records and adjusts the last observed nonce for validators
 // who voted on unapproved events. This upgrade includes changes to how event hashes are calculated, so we delete
 // pending event vote records that were created with the old hash calculation method to prevent inconsistent hashes.
