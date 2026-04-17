@@ -870,6 +870,13 @@ func (k Keeper) MigrateGravityContract(ctx sdk.Context, newBridgeAddress string,
 
 	store.Set([]byte{types.LastEthereumBlockHeightKey}, k.cdc.MustMarshal(&height))
 
+	// Clear the event-observed height too. Leaving stale data here would either
+	// (a) silently extend timeout cleanup decisions across a bridge contract
+	// swap with values that no longer reflect the live contract, or (b) trip
+	// the rollback panic in SetLastEventObservedEthereumBlockHeight when the
+	// first event on the new contract is observed at a lower Ethereum height.
+	store.Delete([]byte{types.LastEventObservedEthereumBlockHeightKey})
+
 	k.setLastObservedSignerSetTx(ctx, types.SignerSetTx{
 		Nonce:   0,
 		Height:  0,

@@ -29,21 +29,32 @@ func (m Migrator) MigrateStore(ctx sdk.Context) error {
 	return nil
 }
 
-// MigrateStoreV6ToV7 initializes LastEventObservedEthereumBlockHeight from the
-// existing LastObservedEthereumBlockHeight. At a healthy upgrade boundary the
-// existing value reflects events that have actually been observed (height-vote
-// consensus only advances it past event-observed values, and any pending
-// timeout-cleanup race would have already fired pre-upgrade), so seeding the
-// new key with the same value is safe and preserves cleanup behaviour for
-// outgoing txs created before the upgrade.
+// MigrateStoreV6ToV7 deliberately leaves LastEventObservedEthereumBlockHeight
+// unset (zero) at upgrade time. The pre-upgrade LastObservedEthereumBlockHeight
+// is unsafe to copy because it can be ahead of any event actually applied via
+// attestation: MsgEthereumHeightVote consensus advances it independently of
+// observation, and that decoupling is precisely the source of the race this
+// migration is part of fixing.
+//
+// Two failure modes are avoided by NOT seeding from the old key:
+//
+//  1. Stale-cleanup window. If a BatchExecutedEvent for an executed batch is
+//     pending under the attestation threshold at upgrade time and the old key
+//     has already been pushed past that batch's timeout by height-vote
+//     consensus, seeding the new key with the old value would let the next
+//     BeginBlock cleanup fire on the inflated value and re-trigger the
+//     double-spend the rest of this fix is meant to prevent.
+//  2. Chain-halt. SetLastEventObservedEthereumBlockHeight panics on rollback.
+//     If the new key is seeded ahead of a pending lower-height event, applying
+//     that event after upgrade would attempt a downward write and halt the
+//     chain.
+//
+// Cost of leaving it at zero: cleanup is paused until the first event is
+// applied post-upgrade, after which behaviour is normal. The pre-upgrade
+// LastObservedEthereumBlockHeight is left in place; getTimeoutHeight continues
+// reading it for new-batch timeout projection, which is unaffected by this fix.
 func (m Migrator) MigrateStoreV6ToV7(ctx sdk.Context) error {
-	ctx.Logger().Info("gravity: Initializing LastEventObservedEthereumBlockHeight from LastObservedEthereumBlockHeight")
-	current := m.keeper.GetLastObservedEthereumBlockHeight(ctx)
-	if current.EthereumHeight == 0 {
-		ctx.Logger().Info("gravity: No observed Ethereum height yet; leaving event-observed key unset")
-		return nil
-	}
-	m.keeper.SetLastEventObservedEthereumBlockHeight(ctx, current.EthereumHeight)
+	ctx.Logger().Info("gravity: Leaving LastEventObservedEthereumBlockHeight unset; will advance on next observed event")
 	return nil
 }
 
