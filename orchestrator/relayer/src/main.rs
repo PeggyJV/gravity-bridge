@@ -41,7 +41,7 @@ lazy_static! {
     "Usage: {} --ethereum-key=<key> --cosmos-grpc=<url> --address-prefix=<prefix> --ethereum-rpc=<url> --contract-address=<addr>
         Options:
             -h --help                    Show this screen.
-            --ethereum-key=<ekey>        An Ethereum private key containing non-trivial funds
+            --ethereum-key=<ekey>        An Ethereum private key containing non-trivial funds, or the literal value kms
             --cosmos-grpc=<gurl>         The Cosmos gRPC url
             --address-prefix=<prefix>    The prefix for addresses on this Cosmos chain
             --ethereum-rpc=<eurl>        The Ethereum RPC url, Geth light clients work and sync fast
@@ -51,6 +51,15 @@ lazy_static! {
             to the Ethereum blockchain, cosmos key and fees are optional since they are only used
             to request the creation of batches or validator sets to relay.
             for Althea-Gravity.
+            Signing. Passing a raw Ethereum private key is discouraged, because it is
+            visible in the process table to every local user on the host. Instead pass
+            the literal value kms, which signs through Google Cloud Kms so that the
+            private key never leaves Kms. That mode reads its configuration from these
+            environment variables, all of which are required.
+            Gravity_Gcp_Kms_Project, Gravity_Gcp_Kms_Location, Gravity_Gcp_Kms_Key_Ring,
+            Gravity_Gcp_Kms_Key_Name and Gravity_Gcp_Kms_Key_Version, upper cased.
+            The key must be a secp256k1 signing key. Each key version has its own
+            Ethereum address, which pays relayer gas and must be funded before use.
             Written By: {}
             Version {}",
             env!("CARGO_PKG_NAME"),
@@ -78,11 +87,18 @@ enum SigningConfig {
 }
 
 impl SigningConfig {
-    const KMS_VARS: [&'static str; 4] = [
+    /// All required. The key version is deliberately required rather than
+    /// defaulted: a GCP KMS signing address is version-specific, so silently
+    /// pinning to version 1 would both survive a key rotation without picking
+    /// it up (relaying stops when version 1 is disabled) and hide the fact
+    /// that moving versions changes the Ethereum address, which must be
+    /// funded for gas before it can relay.
+    const KMS_VARS: [&'static str; 5] = [
         "GRAVITY_GCP_KMS_PROJECT",
         "GRAVITY_GCP_KMS_LOCATION",
         "GRAVITY_GCP_KMS_KEY_RING",
         "GRAVITY_GCP_KMS_KEY_NAME",
+        "GRAVITY_GCP_KMS_KEY_VERSION",
     ];
 
     /// Sentinel value for --ethereum-key that selects the GCP KMS signer.
@@ -115,13 +131,9 @@ impl SigningConfig {
         }
 
         let get = |v: &str| std::env::var(v).unwrap();
-        let key_version = std::env::var("GRAVITY_GCP_KMS_KEY_VERSION")
-            .ok()
-            .map(|v| {
-                v.parse::<u64>()
-                    .expect("GRAVITY_GCP_KMS_KEY_VERSION must be an integer")
-            })
-            .unwrap_or(1);
+        let key_version = get("GRAVITY_GCP_KMS_KEY_VERSION")
+            .parse::<u64>()
+            .expect("GRAVITY_GCP_KMS_KEY_VERSION must be a positive integer");
 
         SigningConfig::GcpKms {
             project: get("GRAVITY_GCP_KMS_PROJECT"),

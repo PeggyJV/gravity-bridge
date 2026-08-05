@@ -90,6 +90,33 @@ impl SignerType {
     }
 }
 
+/// Maximum time to wait for a single Google Cloud KMS signing call.
+///
+/// KMS signing is a network RPC. The relayer's main loop drives valset, batch
+/// and logic-call relaying under a single `tokio::join!`, so a signing future
+/// that never resolves stops *all* relaying indefinitely rather than failing
+/// the one submission. The underlying client sets no deadline of its own, so
+/// we impose one here and surface a normal signer error, which the existing
+/// submission paths already log and retry on a later loop iteration.
+const KMS_SIGN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
+
+/// Apply [`KMS_SIGN_TIMEOUT`] to a KMS signing future, mapping both the
+/// signer's own error and a timeout into a `ProviderError`.
+async fn with_kms_timeout<T, E: std::fmt::Display>(
+    what: &str,
+    fut: impl std::future::Future<Output = Result<T, E>>,
+) -> Result<T, ethers::providers::ProviderError> {
+    match tokio::time::timeout(KMS_SIGN_TIMEOUT, fut).await {
+        Ok(Ok(v)) => Ok(v),
+        Ok(Err(e)) => Err(ethers::providers::ProviderError::CustomError(e.to_string())),
+        Err(_) => Err(ethers::providers::ProviderError::CustomError(format!(
+            "GCP KMS {} timed out after {}s",
+            what,
+            KMS_SIGN_TIMEOUT.as_secs()
+        ))),
+    }
+}
+
 #[async_trait::async_trait]
 impl Signer for SignerType {
     type Error = ethers::providers::ProviderError;
@@ -108,10 +135,9 @@ impl Signer for SignerType {
                 .sign_message(message)
                 .await
                 .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string())),
-            SignerType::GcpKms(signer) => signer
-                .sign_message(message)
-                .await
-                .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string())),
+            SignerType::GcpKms(signer) => {
+                with_kms_timeout("sign_message", signer.sign_message(message)).await
+            }
         }?;
 
         self.normalize(msg, &sig)
@@ -123,10 +149,9 @@ impl Signer for SignerType {
                 .sign_transaction(tx)
                 .await
                 .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string())),
-            SignerType::GcpKms(signer) => signer
-                .sign_transaction(tx)
-                .await
-                .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string())),
+            SignerType::GcpKms(signer) => {
+                with_kms_timeout("sign_transaction", signer.sign_transaction(tx)).await
+            }
         }?;
 
         // Get the transaction hash for recovery
@@ -164,10 +189,9 @@ impl Signer for SignerType {
                 .sign_typed_data(payload)
                 .await
                 .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string())),
-            SignerType::GcpKms(signer) => signer
-                .sign_typed_data(payload)
-                .await
-                .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string())),
+            SignerType::GcpKms(signer) => {
+                with_kms_timeout("sign_typed_data", signer.sign_typed_data(payload)).await
+            }
         }?;
 
         // Get the typed data hash for recovery
