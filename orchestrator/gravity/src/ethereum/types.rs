@@ -2,7 +2,7 @@ use ethers::{
     prelude::*,
     types::transaction::{eip2718::TypedTransaction, eip712::Eip712},
 };
-use ethers_gcp_kms_signer::GcpKmsSigner;
+use ethers_gcp_kms_signer::{CKMSError, GcpKeyRingRef, GcpKmsProvider, GcpKmsSigner};
 use std::{cmp::Ordering, sync::Arc};
 
 pub type EthSignerMiddleware = SignerMiddleware<Provider<Http>, SignerType>;
@@ -16,6 +16,39 @@ pub enum SignerType {
 }
 
 impl SignerType {
+    /// Construct a signer backed by a Google Cloud KMS asymmetric signing key.
+    ///
+    /// The private key never leaves KMS: every signature is produced by an
+    /// AsymmetricSign API call, so no key material is present in argv, in
+    /// process memory, or on disk. This is the difference that matters versus
+    /// `SignerType::Local`, whose key is passed in as raw bytes and is
+    /// therefore readable from `/proc/<pid>/cmdline` by any local user when
+    /// supplied on a command line.
+    ///
+    /// The key must be `EC_SIGN_SECP256K1_SHA256`; other algorithms will not
+    /// produce recoverable Ethereum signatures. Ambient GCP credentials
+    /// (workload identity, attached service account, or
+    /// GOOGLE_APPLICATION_CREDENTIALS) must hold
+    /// `cloudkms.cryptoKeyVersions.useToSign` and
+    /// `cloudkms.cryptoKeyVersions.viewPublicKey` on the key version.
+    ///
+    /// `chain_id` is bound at construction because GcpKmsSigner captures it;
+    /// callers must therefore resolve the chain ID before building the signer.
+    pub async fn new_gcp_kms(
+        project_id: &str,
+        location: &str,
+        key_ring: &str,
+        key_name: String,
+        key_version: u64,
+        chain_id: u64,
+    ) -> Result<Self, CKMSError> {
+        let key_ring_ref = GcpKeyRingRef::new(project_id, location, key_ring);
+        let provider = GcpKmsProvider::new(key_ring_ref).await?;
+        let signer = GcpKmsSigner::new(provider, key_name, key_version, chain_id).await?;
+
+        Ok(SignerType::GcpKms(signer))
+    }
+
     pub fn normalize(
         &self,
         message: impl AsRef<[u8]>,
@@ -138,7 +171,8 @@ impl Signer for SignerType {
         }?;
 
         // Get the typed data hash for recovery
-        let hash = payload.encode_eip712()
+        let hash = payload
+            .encode_eip712()
             .map_err(|e| ethers::providers::ProviderError::CustomError(e.to_string()))?;
         self.normalize(&hash, &sig)
     }

@@ -59,6 +59,111 @@ lazy_static! {
         );
 }
 
+/// How the relayer will obtain Ethereum signatures.
+///
+/// Resolved from CLI flags up front so that an invalid combination aborts
+/// before any network connections are made.
+enum SigningConfig {
+    /// Raw private key supplied on the command line. Readable via
+    /// /proc/<pid>/cmdline by any local user; retained for compatibility.
+    Local(String),
+    /// Google Cloud KMS. No key material is held by this process.
+    GcpKms {
+        project: String,
+        location: String,
+        key_ring: String,
+        key_name: String,
+        key_version: u64,
+    },
+}
+
+impl SigningConfig {
+    const KMS_VARS: [&'static str; 4] = [
+        "GRAVITY_GCP_KMS_PROJECT",
+        "GRAVITY_GCP_KMS_LOCATION",
+        "GRAVITY_GCP_KMS_KEY_RING",
+        "GRAVITY_GCP_KMS_KEY_NAME",
+    ];
+
+    /// Sentinel value for --ethereum-key that selects the GCP KMS signer.
+    const KMS_SENTINEL: &'static str = "kms";
+
+    fn from_args(args: &Args) -> Self {
+        if args.flag_ethereum_key != Self::KMS_SENTINEL {
+            warn!(
+                "Signing with a raw --ethereum-key. This key is visible in the process \
+                 table to every local user on this host. Prefer GCP KMS: pass \
+                 --ethereum-key={} and set {}, so the key never leaves KMS.",
+                Self::KMS_SENTINEL,
+                Self::KMS_VARS.join(", ")
+            );
+            return SigningConfig::Local(args.flag_ethereum_key.clone());
+        }
+
+        let missing: Vec<&str> = Self::KMS_VARS
+            .iter()
+            .filter(|v| std::env::var(v).is_err())
+            .copied()
+            .collect();
+        if !missing.is_empty() {
+            panic!(
+                "--ethereum-key={} selects the GCP KMS signer, but these required \
+                 environment variables are unset: {}.",
+                Self::KMS_SENTINEL,
+                missing.join(", ")
+            );
+        }
+
+        let get = |v: &str| std::env::var(v).unwrap();
+        let key_version = std::env::var("GRAVITY_GCP_KMS_KEY_VERSION")
+            .ok()
+            .map(|v| {
+                v.parse::<u64>()
+                    .expect("GRAVITY_GCP_KMS_KEY_VERSION must be an integer")
+            })
+            .unwrap_or(1);
+
+        SigningConfig::GcpKms {
+            project: get("GRAVITY_GCP_KMS_PROJECT"),
+            location: get("GRAVITY_GCP_KMS_LOCATION"),
+            key_ring: get("GRAVITY_GCP_KMS_KEY_RING"),
+            key_name: get("GRAVITY_GCP_KMS_KEY_NAME"),
+            key_version,
+        }
+    }
+
+    async fn into_signer(self, chain_id: u64) -> SignerType {
+        match self {
+            SigningConfig::Local(key) => {
+                let wallet: EthWallet = key.parse().expect("Invalid Ethereum private key!");
+                SignerType::Local(wallet).with_chain_id(chain_id)
+            }
+            SigningConfig::GcpKms {
+                project,
+                location,
+                key_ring,
+                key_name,
+                key_version,
+            } => {
+                info!(
+                    "Using GCP KMS signer: projects/{}/locations/{}/keyRings/{}/cryptoKeys/{}/cryptoKeyVersions/{}",
+                    project, location, key_ring, key_name, key_version
+                );
+                SignerType::new_gcp_kms(
+                    &project,
+                    &location,
+                    &key_ring,
+                    key_name,
+                    key_version,
+                    chain_id,
+                )
+                .await
+                .expect("Failed to construct GCP KMS signer")
+            }
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
@@ -70,11 +175,10 @@ async fn main() {
     let args: Args = Docopt::new(USAGE.as_str())
         .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
-    let ethereum_wallet: EthWallet = args
-        .flag_ethereum_key
-        .parse()
-        .expect("Invalid Ethereum private key!");
-    let ethereum_wallet = SignerType::Local(ethereum_wallet);
+    // Decide how we will sign before doing any network work, so a
+    // misconfiguration fails immediately rather than after connecting.
+    let signing_config = SigningConfig::from_args(&args);
+
     let gravity_contract_address: EthAddress = args
         .flag_contract_address
         .parse()
@@ -93,8 +197,12 @@ async fn main() {
         .await
         .expect("Could not retrieve chain ID during relayer start");
     let chain_id = downcast_to_u64(chain_id).expect("Chain ID overflowed when downcasting to u64");
-    let eth_client =
-        SignerMiddleware::new(provider, ethereum_wallet.clone().with_chain_id(chain_id));
+
+    // GcpKmsSigner binds chain_id at construction, so the signer can only be
+    // built once the chain ID is known.
+    let ethereum_wallet = signing_config.into_signer(chain_id).await;
+
+    let eth_client = SignerMiddleware::new(provider, ethereum_wallet);
     let eth_client = Arc::new(eth_client);
 
     let public_eth_key = eth_client.address();
