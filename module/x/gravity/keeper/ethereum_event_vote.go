@@ -94,6 +94,10 @@ func (k Keeper) TryEventVoteRecord(ctx sdk.Context, eventVoteRecord *types.Ether
 				}
 				k.setLastObservedEventNonce(ctx, event.GetEventNonce())
 				k.SetLastObservedEthereumBlockHeight(ctx, event.GetEthereumHeight())
+				// Record the event-observed height separately. Cleanup of timed-out
+				// outgoing txs reads this key to ensure that no in-flight
+				// BatchExecutedEvent for the cancelled batch could still arrive.
+				k.SetLastEventObservedEthereumBlockHeight(ctx, event.GetEthereumHeight())
 
 				eventVoteRecord.Accepted = true
 				k.setEthereumEventVoteRecord(ctx, event.GetEventNonce(), event.Hash(), eventVoteRecord)
@@ -252,6 +256,42 @@ func (k Keeper) SetLastObservedEthereumBlockHeightWithCosmos(ctx sdk.Context, et
 		CosmosHeight:   cosmosHeight,
 	}
 	store.Set([]byte{types.LastEthereumBlockHeightKey}, k.cdc.MustMarshal(&height))
+}
+
+// GetLastEventObservedEthereumBlockHeight returns the highest Ethereum block
+// height for which an EthereumEvent has actually been observed and applied via
+// attestation. Unlike GetLastObservedEthereumBlockHeight, this value never
+// advances purely from MsgEthereumHeightVote consensus, so a pending
+// BatchExecutedEvent cannot be silently skipped past by validator height votes.
+func (k Keeper) GetLastEventObservedEthereumBlockHeight(ctx sdk.Context) types.LatestEthereumBlockHeight {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte{types.LastEventObservedEthereumBlockHeightKey})
+	if len(bz) == 0 {
+		return types.LatestEthereumBlockHeight{}
+	}
+	height := types.LatestEthereumBlockHeight{}
+	k.cdc.MustUnmarshal(bz, &height)
+	return height
+}
+
+// SetLastEventObservedEthereumBlockHeight records the Ethereum height of the
+// most recently observed event. Refuses to roll backwards: events are applied
+// in strict event-nonce order and Ethereum nonces are emitted in block order,
+// so the recorded height must be monotonically non-decreasing.
+func (k Keeper) SetLastEventObservedEthereumBlockHeight(ctx sdk.Context, ethereumHeight uint64) {
+	previous := k.GetLastEventObservedEthereumBlockHeight(ctx)
+	if previous.EthereumHeight > ethereumHeight {
+		panic(fmt.Sprintf(
+			"refusing to roll back last event-observed Ethereum block height: have %d, attempted %d",
+			previous.EthereumHeight, ethereumHeight,
+		))
+	}
+	store := ctx.KVStore(k.storeKey)
+	height := types.LatestEthereumBlockHeight{
+		EthereumHeight: ethereumHeight,
+		CosmosHeight:   uint64(ctx.BlockHeight()),
+	}
+	store.Set([]byte{types.LastEventObservedEthereumBlockHeightKey}, k.cdc.MustMarshal(&height))
 }
 
 // setLastObservedEventNonce sets the latest observed event nonce

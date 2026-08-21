@@ -108,7 +108,7 @@ func (AppModule) Name() string {
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 {
-	return 6
+	return 7
 }
 
 // RegisterInvariants implements app module
@@ -131,6 +131,17 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	migrator := keeper.NewMigrator(am.keeper)
 	if err := cfg.RegisterMigration(types.ModuleName, 5, func(ctx sdk.Context) error {
 		return migrator.MigrateStore(ctx)
+	}); err != nil {
+		panic(fmt.Errorf("failed to register migration handler: %w", err))
+	}
+
+	// The 6 to 7 migration deliberately leaves
+	// LastEventObservedEthereumBlockHeight unset rather than seeding it from
+	// LastObservedEthereumBlockHeight, which can be ahead of any attested
+	// event. Timeout cleanup stays paused until the first event is applied
+	// post-upgrade. See MigrateStoreV6ToV7 for why seeding is unsafe.
+	if err := cfg.RegisterMigration(types.ModuleName, 6, func(ctx sdk.Context) error {
+		return migrator.MigrateStoreV6ToV7(ctx)
 	}); err != nil {
 		panic(fmt.Errorf("failed to register migration handler: %w", err))
 	}

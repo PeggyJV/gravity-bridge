@@ -415,6 +415,9 @@ func TestBatchTxTimeout(t *testing.T) {
 	require.Equal(t, b1.Timeout, uint64(0))
 
 	gravityKeeper.SetLastObservedEthereumBlockHeight(ctx, 500)
+	// Cleanup reads the event-observed height; mirror it so getTimeoutHeight
+	// inputs and cleanup inputs stay consistent in this legacy test.
+	gravityKeeper.SetLastEventObservedEthereumBlockHeight(ctx, 500)
 
 	b2 := gravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 2)
 	require.NotNil(t, b2)
@@ -445,6 +448,7 @@ func TestBatchTxTimeout(t *testing.T) {
 	require.NotNil(t, gotThirdBatch)
 
 	gravityKeeper.SetLastObservedEthereumBlockHeight(ctx, 5000)
+	gravityKeeper.SetLastEventObservedEthereumBlockHeight(ctx, 5000)
 	gravity.BeginBlocker(ctx, gravityKeeper)
 
 	// make sure the end blocker does delete these, as we've got a new Ethereum block height
@@ -454,6 +458,140 @@ func TestBatchTxTimeout(t *testing.T) {
 	require.Nil(t, gotSecondBatch)
 	gotThirdBatch = input.GravityKeeper.GetOutgoingTx(ctx, types.MakeBatchTxKey(common.HexToAddress(b3.TokenContract), b3.BatchNonce))
 	require.NotNil(t, gotThirdBatch)
+}
+
+// TestBatchTxTimeoutRequiresEventObservedHeight verifies that a batch is only
+// cancelled by cleanupTimedOutBatchTxs when an Ethereum event has actually been
+// observed past the batch timeout. Height-vote-driven advances of
+// LastObservedEthereumBlockHeight must NOT trigger cancellation, because the
+// corresponding BatchExecutedEvent for an executed batch could still be pending
+// attestation. Cancelling in that window is the race that allows double-spend.
+func TestBatchTxTimeoutRequiresEventObservedHeight(t *testing.T) {
+	input, ctx := keeper.SetupFiveValChain(t)
+	gravityKeeper := input.GravityKeeper
+	params := gravityKeeper.GetParams(ctx)
+	var (
+		now                 = time.Now().UTC()
+		mySender, _         = sdk.AccAddressFromBech32("cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn")
+		myReceiver          = common.HexToAddress("0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7")
+		myTokenContractAddr = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
+		allVouchers         = sdk.NewCoins(types.NewERC20Token(99999, myTokenContractAddr).GravityCoin())
+	)
+
+	require.Greater(t, params.AverageBlockTime, uint64(0))
+	require.Greater(t, params.AverageEthereumBlockTime, uint64(0))
+
+	require.NoError(t, input.BankKeeper.MintCoins(ctx, types.ModuleName, allVouchers))
+	input.AccountKeeper.NewAccountWithAddress(ctx, mySender)
+	require.NoError(t, fundAccount(ctx, input.BankKeeper, mySender, allVouchers))
+
+	input.AddSendToEthTxsToPoolWithFee(t, ctx, myTokenContractAddr, mySender, myReceiver, 6, 10)
+
+	// Establish an event-observed height so getTimeoutHeight can compute a real
+	// timeout for the batch we create.
+	ctx = ctx.WithBlockTime(now).WithBlockHeight(250)
+	gravityKeeper.SetLastEventObservedEthereumBlockHeight(ctx, 500)
+	gravityKeeper.SetLastObservedEthereumBlockHeight(ctx, 500)
+
+	batch := gravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 1)
+	require.NotNil(t, batch)
+	batchTimeout := batch.Timeout
+	require.Greater(t, batchTimeout, uint64(0))
+
+	storeKey := types.MakeBatchTxKey(common.HexToAddress(batch.TokenContract), batch.BatchNonce)
+	require.NotNil(t, gravityKeeper.GetOutgoingTx(ctx, storeKey))
+
+	// Simulate a height-vote-driven advance of the public LastObservedEthereumBlockHeight
+	// well past the batch timeout. No BatchExecutedEvent has been observed: the
+	// event-observed height is still 500, below the timeout.
+	gravityKeeper.SetLastObservedEthereumBlockHeight(ctx, batchTimeout+100)
+	gravity.BeginBlocker(ctx, gravityKeeper)
+
+	// The batch must NOT have been cancelled. Cancelling here while the
+	// BatchExecutedEvent could still arrive is the bug we are fixing.
+	require.NotNil(t, gravityKeeper.GetOutgoingTx(ctx, storeKey),
+		"batch was cancelled before any event was observed past its timeout")
+
+	// Once an event is actually observed past the timeout, cleanup should fire.
+	gravityKeeper.SetLastEventObservedEthereumBlockHeight(ctx, batchTimeout+100)
+	gravity.BeginBlocker(ctx, gravityKeeper)
+	require.Nil(t, gravityKeeper.GetOutgoingTx(ctx, storeKey),
+		"batch should be cancelled once an event is observed past its timeout")
+}
+
+// TestMigrateStoreV6ToV7DoesNotSeedTaintedHeight covers the upgrade-boundary
+// failure modes flagged during code review:
+//
+//  1. The pre-upgrade LastObservedEthereumBlockHeight may be ahead of any event
+//     actually applied via attestation (because MsgEthereumHeightVote consensus
+//     advances it independently). Seeding the new key from it would re-open
+//     the timeout race for one BeginBlocker after upgrade.
+//  2. SetLastEventObservedEthereumBlockHeight panics on rollback. Seeding the
+//     new key with the tainted value and then applying the still-pending lower-
+//     height event would halt the chain.
+//
+// The migration must therefore leave the new key unset; cleanup pauses until
+// the next attested event, then resumes correctly.
+func TestMigrateStoreV6ToV7DoesNotSeedTaintedHeight(t *testing.T) {
+	input, ctx := keeper.SetupFiveValChain(t)
+	gravityKeeper := input.GravityKeeper
+	params := gravityKeeper.GetParams(ctx)
+	var (
+		now                 = time.Now().UTC()
+		mySender, _         = sdk.AccAddressFromBech32("cosmos1ahx7f8wyertuus9r20284ej0asrs085case3kn")
+		myReceiver          = common.HexToAddress("0xd041c41EA1bf0F006ADBb6d2c9ef9D425dE5eaD7")
+		myTokenContractAddr = common.HexToAddress("0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5")
+		allVouchers         = sdk.NewCoins(types.NewERC20Token(99999, myTokenContractAddr).GravityCoin())
+	)
+
+	require.Greater(t, params.AverageBlockTime, uint64(0))
+	require.Greater(t, params.AverageEthereumBlockTime, uint64(0))
+
+	require.NoError(t, input.BankKeeper.MintCoins(ctx, types.ModuleName, allVouchers))
+	input.AccountKeeper.NewAccountWithAddress(ctx, mySender)
+	require.NoError(t, fundAccount(ctx, input.BankKeeper, mySender, allVouchers))
+
+	input.AddSendToEthTxsToPoolWithFee(t, ctx, myTokenContractAddr, mySender, myReceiver, 6, 10)
+
+	// Pre-upgrade state: the legacy LastObservedEthereumBlockHeight has been
+	// advanced by MsgEthereumHeightVote consensus; the event-observed key does
+	// not yet exist (we are simulating the v6 chain on the cusp of upgrading).
+	ctx = ctx.WithBlockTime(now).WithBlockHeight(250)
+	gravityKeeper.SetLastObservedEthereumBlockHeight(ctx, 500)
+	batch := gravityKeeper.CreateBatchTx(ctx, myTokenContractAddr, 1)
+	require.NotNil(t, batch)
+	batchTimeout := batch.Timeout
+	require.Greater(t, batchTimeout, uint64(0))
+	storeKey := types.MakeBatchTxKey(common.HexToAddress(batch.TokenContract), batch.BatchNonce)
+
+	// Height-vote consensus pushes the legacy key past the batch timeout while
+	// the corresponding BatchExecutedEvent is still pending under threshold.
+	taintedHeight := batchTimeout + 100
+	gravityKeeper.SetLastObservedEthereumBlockHeight(ctx, taintedHeight)
+
+	// Run the v6 -> v7 migration.
+	migrator := keeper.NewMigrator(gravityKeeper)
+	require.NoError(t, migrator.MigrateStoreV6ToV7(ctx))
+
+	// Critical post-migration invariants:
+	//   (a) the new key MUST NOT be seeded with the tainted height.
+	postMigrationHeight := gravityKeeper.GetLastEventObservedEthereumBlockHeight(ctx)
+	require.Equal(t, uint64(0), postMigrationHeight.EthereumHeight,
+		"migration must not seed LastEventObservedEthereumBlockHeight from the legacy (vote-tainted) key")
+
+	//   (b) BeginBlocker cleanup MUST NOT fire on the tainted height.
+	gravity.BeginBlocker(ctx, gravityKeeper)
+	require.NotNil(t, gravityKeeper.GetOutgoingTx(ctx, storeKey),
+		"batch must not be cancelled immediately after upgrade based on the legacy vote-tainted height")
+
+	//   (c) Applying the previously-pending event at a height BELOW the tainted
+	//       legacy value MUST NOT panic. The event-observed setter is monotonic;
+	//       if the migration had seeded the new key with taintedHeight, this
+	//       call would halt the chain.
+	pendingEventHeight := batchTimeout - 1
+	require.NotPanics(t, func() {
+		gravityKeeper.SetLastEventObservedEthereumBlockHeight(ctx, pendingEventHeight)
+	}, "applying a pending event at a height below the legacy key must not panic post-upgrade")
 }
 
 func TestUpdateObservedEthereumHeight(t *testing.T) {

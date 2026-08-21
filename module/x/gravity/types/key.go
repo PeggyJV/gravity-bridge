@@ -65,6 +65,14 @@ const (
 
 	// CompletedOutgoingTxKey indexes the completed outgoing txs
 	CompletedOutgoingTxKey
+
+	// LastEventObservedEthereumBlockHeightKey indexes the highest Ethereum block
+	// height for which an EthereumEvent has actually been observed and applied
+	// via attestation. Distinct from LastEthereumBlockHeightKey, which can also
+	// advance via MsgEthereumHeightVote consensus without any event being
+	// observed. Used by batch/contract-call timeout cleanup so that a pending
+	// BatchExecutedEvent cannot race against vote-driven height advancement.
+	LastEventObservedEthereumBlockHeightKey
 )
 
 ////////////////////
