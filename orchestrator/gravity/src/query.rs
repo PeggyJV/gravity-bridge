@@ -71,8 +71,24 @@ pub async fn get_all_valset_confirms(
                 item.ethereum_signer
             );
             debug!("reason given for invalid signature: {e:?}");
-
-            continue;
+            match e {
+                clarity::Error::InvalidV => {
+                    let mut corrected_sig = item.signature.clone();
+                    corrected_sig[64] += 27;
+                    let mut corrected = item.clone();
+                    corrected.signature = corrected_sig;
+                    Signature::from_bytes(&corrected.signature)?
+                        .error_check()
+                        .unwrap();
+                    debug!("Corrected the V value on signature");
+                    parsed_confirms.push(ValsetConfirmResponse::from_proto(corrected)?);
+                    continue;
+                    //Do not skip the signature if the V value is invalid.
+                }
+                _ => {
+                    continue;
+                }
+            }
         }
 
         parsed_confirms.push(ValsetConfirmResponse::from_proto(item)?)
@@ -148,7 +164,24 @@ pub async fn get_transaction_batch_signatures(
             );
             debug!("reason given for invalid signature: {e:?}");
 
-            continue;
+            match e {
+                clarity::Error::InvalidV => {
+                    let mut corrected_sig = confirm.signature.clone();
+                    corrected_sig[64] += 27;
+                    let mut corrected = confirm.clone();
+                    corrected.signature = corrected_sig;
+                    Signature::from_bytes(&corrected.signature)?
+                        .error_check()
+                        .unwrap();
+                    debug!("Corrected the V value on signature");
+                    out.push(BatchConfirmResponse::from_proto(corrected)?);
+                    continue;
+                    //Do not skip the signature if the V value is invalid.
+                }
+                _ => {
+                    continue;
+                }
+            }
         }
 
         out.push(BatchConfirmResponse::from_proto(confirm)?)
@@ -211,9 +244,24 @@ pub async fn get_logic_call_signatures(
                 "ignoring logic call confirmation with invalid signature from {}",
                 confirm.ethereum_signer
             );
-            debug!("reason given for invalid signature: {e:?}");
-
-            continue;
+            match e {
+                clarity::Error::InvalidV => {
+                    let mut corrected_sig = confirm.signature.clone();
+                    corrected_sig[64] += 27;
+                    let mut corrected = confirm.clone();
+                    corrected.signature = corrected_sig;
+                    Signature::from_bytes(&corrected.signature)?
+                        .error_check()
+                        .unwrap();
+                    debug!("Corrected the V value on signature");
+                    out.push(LogicCallConfirmResponse::from_proto(corrected)?);
+                    continue;
+                    //Do not skip the signature if the V value is invalid.
+                }
+                _ => {
+                    continue;
+                }
+            }
         }
 
         out.push(LogicCallConfirmResponse::from_proto(confirm)?)
