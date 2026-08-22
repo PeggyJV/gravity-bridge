@@ -91,6 +91,21 @@ func (k Keeper) verifyERC20DeployedEvent(ctx sdk.Context, event *types.ERC20Depl
 		)
 	}
 
+	if _, err := types.GravityDenomToERC20(event.CosmosDenom); err == nil {
+		return errors.Wrapf(
+			types.ErrInvalidERC20Event,
+			"cannot deploy ethereum-originated voucher denom %s as a Cosmos-originated ERC20", event.CosmosDenom,
+		)
+	}
+
+	tokenContract := common.HexToAddress(event.TokenContract)
+	if existingDenom, exists := k.getCosmosOriginatedDenom(ctx, tokenContract); exists {
+		return errors.Wrapf(
+			types.ErrInvalidERC20Event,
+			"ERC20 denom %s already exists for token contract %s", existingDenom, tokenContract.Hex(),
+		)
+	}
+
 	// We expect that all Cosmos-based tokens have metadata defined. In the case
 	// a token does not have metadata defined, e.g. an IBC token, we successfully
 	// handle the token under the following conditions:
